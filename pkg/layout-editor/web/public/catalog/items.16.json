@@ -729,8 +729,8 @@
       "layoutTier": "decor",
       "ingredientDecor": true,
       "ingredientGuid": "965ff691e25e50b0c5151ea9a97899d4",
-      "nameZh": "dlc08_choppedbun",
-      "nameEn": "dlc08_choppedbun",
+      "nameZh": "DLC08 切面包",
+      "nameEn": "dlc08 choppedbun",
       "typeKind": "food_model",
       "usage": "dressing",
       "icon": true

@@ -9,6 +9,11 @@ import { variantBaseId, VARIANT_TO_BASE } from "./itemVariants";
 import { escHtml } from "./coords";
 import type { Catalog, CatalogItem } from "../types";
 import { bindPaletteCardTooltip, catalogPaletteTooltipContent } from "./paletteTooltip";
+import {
+  decorPreviewUrl,
+  isDecorPreviewMissing,
+  markDecorPreviewFailed,
+} from "./decorPreviewCache";
 
 function clampPaletteCount(n: number): number {
   if (!isFinite(n)) return 1;
@@ -89,6 +94,15 @@ export function decorSizeTier(it: { footprint?: { cellsX?: number; cellsZ?: numb
   return "xl";
 }
 
+/** 占格文案：整数不补小数，半格（0.9）保留一位。 */
+function footprintLabelZh(it: { footprint?: { cellsX?: number; cellsZ?: number } }): string {
+  const x = Number(it.footprint?.cellsX);
+  const z = Number(it.footprint?.cellsZ);
+  if (!isFinite(x) || !isFinite(z) || x <= 0 || z <= 0) return "";
+  const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
+  return `${fmt(x)}×${fmt(z)} 格`;
+}
+
 /** 卡片副标题：英文名与 prefab id 相同（归一化后）时只显示 id，避免重复。 */
 function cardSubId(it: { nameEn?: string; id: string }): string {
   const en = it.nameEn ?? "";
@@ -102,9 +116,22 @@ export function applyPaletteGridCols(): void {
   const palette = document.getElementById("palette-panel");
   const cats = document.getElementById("palette-cats");
   if (!palette || !cats) return;
+  const mode = S.decorPreviewSize;
+  const previewOn = S.currentLayer === "decor" && mode !== "none";
   const w = palette.getBoundingClientRect().width || parseFloat(palette.style.width || "") || 280;
-  const cols = Math.max(1, Math.min(5, Math.floor(w / 92)));
+  // 三档按「最小卡片宽度」自适应：默认 280px → 小 3 列 / 中 2 列 / 大 1 列；
+  // 面板拉到 50% 屏宽（约 800px）时大档为 4 列 ≈ 当前旧版的大图尺寸。
+  let cols: number;
+  if (previewOn) {
+    const divisor = mode === "small" ? 72 : mode === "medium" ? 112 : 180;
+    const cap = mode === "small" ? 12 : mode === "medium" ? 10 : 6;
+    cols = Math.max(1, Math.min(cap, Math.floor(w / divisor)));
+  } else {
+    cols = Math.max(1, Math.min(5, Math.floor(w / 92)));
+  }
   cats.style.setProperty("--palette-cols", String(cols));
+  cats.classList.toggle("decor-preview-on", previewOn);
+  cats.dataset.decorPreviewSize = previewOn ? mode : "";
 }
 
 /** 装饰层「按类型 / 按用途」分组：按条目 typeKind/usage 字段动态聚合，
@@ -133,8 +160,19 @@ function deriveTaxonomyGroups(
   return { groups, byKey };
 }
 
+const paletteOpenState = new Map<string, Set<string>>();
+let paletteGroupActionsBound = false;
+
 export function buildPalette(catalog: Catalog, filter: string) {
+  const layer = S.currentLayer;
+  const firstBuildForLayer = !paletteOpenState.has(layer);
+  const prevScroll = firstBuildForLayer ? 0 : dom.paletteCats.scrollTop;
   dom.paletteCats.innerHTML = "";
+  let openState = paletteOpenState.get(layer);
+  if (!openState) {
+    openState = new Set<string>();
+    paletteOpenState.set(layer, openState);
+  }
   const q = filter.trim().toLowerCase();
   const sizeFilter: DecorSizeFilter =
     S.currentLayer === "decor" ? (S.decorSizeFilter ?? "all") : "all";
@@ -203,7 +241,13 @@ export function buildPalette(catalog: Catalog, filter: string) {
     const details = document.createElement("details");
     details.className = "cat-group";
     details.dataset.tier = group.layoutTier;
-    details.open = group.layoutTier === "core";
+    details.dataset.groupKey = group.key;
+    details.open = firstBuildForLayer ? group.layoutTier === "core" : openState.has(group.key);
+    if (firstBuildForLayer && details.open) openState.add(group.key);
+    details.addEventListener("toggle", () => {
+      if (details.open) openState.add(group.key);
+      else openState.delete(group.key);
+    });
     const summary = document.createElement("summary");
     summary.title = group.labelEn;
     details.appendChild(summary);
@@ -225,7 +269,11 @@ export function buildPalette(catalog: Catalog, filter: string) {
       const row = document.createElement("div");
       const catName = paletteCardCategory(it.category);
       row.className = `palette-card palette-cat-${catName}`;
+      const decorPreviewOn = it.layoutTier === "decor" && S.decorPreviewSize !== "none";
       if (it.layoutTier === "decor") row.classList.add("palette-decor");
+      if (decorPreviewOn) {
+        row.classList.add("palette-card-preview", `palette-card-preview-${S.decorPreviewSize}`);
+      }
       row.draggable = true;
       row.dataset.guid = it.guid;
       const animDecor = it.layoutTier === "decor" ? matchBuiltinAnimDecor(it.id, it.nameZh) : null;
@@ -235,23 +283,52 @@ export function buildPalette(catalog: Catalog, filter: string) {
         it.layoutTier === "decor"
           ? ` <span class="decor-size-badge" title="尺寸分级：按实测占位（footprint）最大边判定">${DECOR_SIZE_LABEL_ZH[decorSizeTier(it)]}</span>`
           : "";
+      const footprint = footprintLabelZh(it);
+      const heightText =
+        it.layoutTier === "decor" && typeof it.height === "number" && it.height > 0
+          ? ` · 高 ${it.height.toFixed(2)}m`
+          : "";
       const sub = it.stack
         ? `<div class="sub">配套${hostRuleLabelZh(it.stack.hostRule)} · 高 ${it.stack.y}m</div>`
         : it.layoutTier === "decor"
-          ? `<div class="sub">装饰${foodDecor ? " · 食材" : recipeDecor ? " · 成品菜" : ""}${decorSize}${animDecor ? ` · ${animDecor.emoji} ${animDecor.badgeZh}` : ""}</div>`
+          ? `<div class="sub">装饰${!decorPreviewOn && footprint ? ` · 占 ${footprint}` : ""}${heightText}${foodDecor ? " · 食材" : recipeDecor ? " · 成品菜" : ""}${decorSize}${animDecor ? ` · ${animDecor.emoji} ${animDecor.badgeZh}` : ""}</div>`
           : "";
+      const footprintRow = decorPreviewOn && footprint ? `<div class="fp">占地 ${footprint}</div>` : "";
       const skins = skinCounts.get(it.id) ?? 1;
       const skinBadge =
         skins > 1 ? ` <span class="variant-badge" title="同功能换肤 ${skins} 种：放置后右键可切换">×${skins}</span>` : "";
       const stubBadge = it.needsStub
         ? ` <span class="stub-badge" title="CustomStub 道具：游戏侧需携带关卡集 runtime（CustomStub）才能完整运行；web 导出 zip 会自动按需携带">⚙</span>`
         : "";
-      const thumb = it.ingredientDecor
+      const foodIcon = it.ingredientDecor
         ? foodIconImg("ingredients", it.id, true)
         : it.recipeDecor
           ? foodIconImg("recipes", it.id, true)
           : "";
-      row.innerHTML = `${thumb}<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}${skinBadge}${stubBadge}</div><div class="id">${cardSubId(it)}</div>${sub}`;
+      const previewUrl = decorPreviewOn ? decorPreviewUrl(it.guid) : null;
+      const fallbackChar = escHtml((tidyCatalogNameZh(it.nameZh, it.id) || it.id).slice(0, 1));
+      const thumb = previewUrl
+        ? `<div class="pc-thumb-wrap"><img class="pc-thumb" loading="lazy" decoding="async" src="${escHtml(previewUrl)}" alt="" data-preview-guid="${escHtml(it.guid)}" /><span class="pc-thumb-fallback">${fallbackChar}</span></div>`
+        : decorPreviewOn && isDecorPreviewMissing(it.guid) && foodIcon
+          ? foodIcon
+          : decorPreviewOn
+            ? `<div class="pc-thumb-wrap"><span class="pc-thumb-fallback" style="display:flex">${fallbackChar}</span></div>`
+            : foodIcon;
+      const idLine = decorPreviewOn ? escHtml(it.id) : cardSubId(it);
+      row.innerHTML = `${thumb}<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}${skinBadge}${stubBadge}</div><div class="id" title="${escHtml(it.id)}">${idLine}</div>${footprintRow}${sub}`;
+      const previewImg = row.querySelector<HTMLImageElement>("img.pc-thumb");
+      if (previewImg) {
+        previewImg.addEventListener("error", () => {
+          markDecorPreviewFailed(it.guid);
+          const wrap = previewImg.parentElement;
+          previewImg.remove();
+          if (wrap) {
+            const fb = wrap.querySelector<HTMLElement>(".pc-thumb-fallback");
+            if (fb) fb.style.display = "flex";
+          }
+          row.classList.add("preview-missing");
+        });
+      }
       bindPaletteCardTooltip(
         row,
         catalogPaletteTooltipContent(it, { animDecor, skinCount: skins })
@@ -299,4 +376,29 @@ export function buildPalette(catalog: Catalog, filter: string) {
   }
   applyPaletteGridCols();
   refreshPaletteQtyBadges();
+  dom.paletteCats.scrollTop = prevScroll;
+}
+
+
+/** 「展开全部 / 收起全部」按钮：作用于左侧调色板当前全部分组，并同步记忆状态。 */
+function setAllPaletteGroups(open: boolean): void {
+  let state = paletteOpenState.get(S.currentLayer);
+  if (!state) {
+    state = new Set<string>();
+    paletteOpenState.set(S.currentLayer, state);
+  }
+  dom.paletteCats.querySelectorAll<HTMLDetailsElement>("details.cat-group[data-group-key]").forEach((d) => {
+    d.open = open;
+    const key = d.dataset.groupKey;
+    if (!key) return;
+    if (open) state.add(key);
+    else state.delete(key);
+  });
+}
+
+export function initPaletteGroupActions(): void {
+  if (paletteGroupActionsBound) return;
+  paletteGroupActionsBound = true;
+  document.getElementById("palette-expand-all")?.addEventListener("click", () => setAllPaletteGroups(true));
+  document.getElementById("palette-collapse-all")?.addEventListener("click", () => setAllPaletteGroups(false));
 }

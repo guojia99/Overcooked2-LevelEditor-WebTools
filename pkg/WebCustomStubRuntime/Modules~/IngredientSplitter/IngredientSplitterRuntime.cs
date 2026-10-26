@@ -93,6 +93,35 @@ namespace IngredientSplitterRuntime
             return null;
         }
 
+        /// <summary>与 LoadOrderNode 同款加载路径：优先 SO 直引，其次按 bundleName/assetPath
+        /// 从已加载 bundle 取 GameObject（分料机 cookingUISO 指向 CookingUI.prefab）。</summary>
+        internal static GameObject LoadPrefab(PseudoPrefabSO so)
+        {
+            if (so == null)
+                return null;
+            try
+            {
+                var assetField = so.GetType().GetField("asset",
+                    BindingFlags.Public | BindingFlags.Instance);
+                var direct = assetField != null ? assetField.GetValue(so) as GameObject : null;
+                if (direct != null)
+                    return direct;
+                if (string.IsNullOrEmpty(so.bundleName) || string.IsNullOrEmpty(so.assetPath))
+                    return null;
+                var bundles = AssetBundle.GetAllLoadedAssetBundles();
+                foreach (var b in bundles)
+                {
+                    if (b == null || !string.Equals(b.name, so.bundleName, StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    return b.LoadAsset(so.assetPath, typeof(GameObject)) as GameObject;
+                }
+            }
+            catch
+            {
+            }
+            return null;
+        }
+
         internal static AssembledDefinitionNode OutputNode(GameObject prefab)
         {
             if (prefab == null)
@@ -111,6 +140,8 @@ namespace IngredientSplitterRuntime
         private AssembledDefinitionNode outputAssembledNode;
         private int ingredientCnt;
         private IngredientSplitterMessage message = new IngredientSplitterMessage();
+        private CookingUIController cntUI;
+        private bool counterUIWarned;
 
         public override EntityType GetEntityType()
         {
@@ -127,7 +158,68 @@ namespace IngredientSplitterRuntime
             var outputNode = RuntimeRecipeNodes.OutputNode(splitter.outputPrefab);
             outputAssembledNode = outputNode != null ? outputNode.Simpilfy() : null;
             ingredientCnt = 0;
+            EnsureCounterUI();
             UpdateVisuals();
+        }
+
+        /// <summary>上游进度条：cookingUISO 未配置/资源加载失败时静默跳过，绝不影响分料机主逻辑。</summary>
+        private void EnsureCounterUI()
+        {
+            if (splitter == null || splitter.cookingUISO == null)
+                return;
+
+            var uiPrefab = RuntimeRecipeNodes.LoadPrefab(splitter.cookingUISO);
+            if (uiPrefab == null)
+            {
+                if (!counterUIWarned)
+                {
+                    counterUIWarned = true;
+                    Debug.LogWarning("[IngredientSplitter] cookingUISO 资源加载失败，跳过进度条: "
+                        + splitter.cookingUISO.bundleName + ":" + splitter.cookingUISO.assetPath);
+                }
+                return;
+            }
+
+            GameObject ui = null;
+            try
+            {
+                ui = GameUtils.InstantiateUIController(uiPrefab, "HoverIconCanvas");
+            }
+            catch (Exception e)
+            {
+                if (!counterUIWarned)
+                {
+                    counterUIWarned = true;
+                    Debug.LogWarning("[IngredientSplitter] 进度条实例化失败: " + e.Message);
+                }
+                return;
+            }
+            if (ui == null)
+                return;
+
+            cntUI = ui.GetComponent<CookingUIController>();
+            if (cntUI == null)
+            {
+                UnityEngine.Object.Destroy(ui);
+                if (!counterUIWarned)
+                {
+                    counterUIWarned = true;
+                    Debug.LogWarning("[IngredientSplitter] CookingUI prefab 缺少 CookingUIController，已跳过");
+                }
+                return;
+            }
+
+            var visualRoot = NetworkUtils.FindVisualRoot(gameObject);
+            cntUI.SetFollowTransform(visualRoot != null ? visualRoot : transform, Vector3.zero);
+            cntUI.SetFollowOffset(splitter.uiPrefabOffset);
+            cntUI.SetState(CookingUIController.State.Progressing);
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            if (cntUI != null)
+                UnityEngine.Object.Destroy(cntUI.gameObject);
         }
 
         public override void ApplyServerEvent(Serialisable serialisable)
@@ -200,18 +292,26 @@ namespace IngredientSplitterRuntime
 
         private void UpdateVisuals()
         {
-            if (splitter.ingredientModels == null || splitter.ingredientModels.Length == 0)
-                return;
-            foreach (var model in splitter.ingredientModels)
-                if (model != null) model.gameObject.SetActive(false);
-            int n = splitter.ingredientModels.Length;
-            if (ingredientCnt >= splitter.capacity)
-                splitter.ingredientModels[n - 1].gameObject.SetActive(true);
-            else if (ingredientCnt > 0)
+            if (splitter.ingredientModels != null && splitter.ingredientModels.Length > 0)
             {
-                int k = Mathf.CeilToInt(MathUtils.ClampedRemap(ingredientCnt, 0, splitter.capacity - 1, -1, n - 2) - 0.001f);
-                if (k >= 0)
-                    splitter.ingredientModels[k].gameObject.SetActive(true);
+                foreach (var model in splitter.ingredientModels)
+                    if (model != null) model.gameObject.SetActive(false);
+                int n = splitter.ingredientModels.Length;
+                if (ingredientCnt >= splitter.capacity)
+                    splitter.ingredientModels[n - 1].gameObject.SetActive(true);
+                else if (ingredientCnt > 0)
+                {
+                    int k = Mathf.CeilToInt(MathUtils.ClampedRemap(ingredientCnt, 0, splitter.capacity - 1, -1, n - 2) - 0.001f);
+                    if (k >= 0)
+                        splitter.ingredientModels[k].gameObject.SetActive(true);
+                }
+            }
+
+            if (cntUI != null)
+            {
+                cntUI.gameObject.SetActive(gameObject.activeInHierarchy);
+                if (splitter.capacity > 0)
+                    cntUI.SetProgress((float)ingredientCnt / splitter.capacity);
             }
         }
 

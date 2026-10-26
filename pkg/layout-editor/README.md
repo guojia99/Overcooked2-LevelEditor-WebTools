@@ -27,6 +27,7 @@
   - 地板层：编辑场景内 `Floor` 平面（拖动移动、拖角点缩放、右键改尺寸/材质、`Del` 删除、`+ 新增地板` 放置）；显示当前尺寸（格/米）；相邻地板接缝画淡虚线；空洞/水域按死亡类型着色（水=蓝、坠落=暗）；冰面标记「❄」
   - 地板材质来自 `LevelSets/<set>/materials/`（`mat_*floor*` 等），改尺寸时自动按 `*_<W>x<H>` 匹配材质
   - 地板/背景类 prefab（ice_floor、alien_floor、Sky…）拖入画布即归入地板层
+- **装饰预览**：装饰层左侧卡片显示 Unity 渲染大图、中文名、ID、占格与高度（透明底 192×192）。装饰层左侧调色板顶部「预览：无/小/中/大」下拉（默认小；大档在面板拉到 50% 屏宽时约 4 列），与「尺寸」「分组」同一行（放不下自动换行）；调色板顶部另有「展开全部 / 收起全部」，切换预览尺寸不会重置分组展开状态；首次开启会后台预热全部预览到浏览器缓存。
 - **目录**：左侧按 **核心**（桌台 / 器具 / 机关 / 厨师）与 **装饰**（含 NPC）分组；中文名 + 英文 ID。桌台按工作流排序（备餐→烹饪→出餐/回收），厨具按**配套设备**聚类（锅具↔灶台、炸篮↔煎炸台、搅拌碗↔搅拌台、搅拌杯↔搅拌机、烤签↔烧烤架、烤叉/风箱/煎烤盘↔篝火、盘杯↔桌台），条目下方标注「配套XX · 高度」
 - **菜谱**：顶栏 **菜谱…** 按**菜谱类型**分组选择（汉堡/卷饼/披萨/意面/寿司/沙拉/汤/炸物/蒸菜/蛋糕/松饼/冰沙/烤串/早餐/棉花糖饼干/面糊），DLC/自定义来源以徽标标注  
 - **叠放**：盘、杯、搅拌碗等拖到桌台格上会自动对齐桌心（`Design/Utensils`，本地 Y≈1）；锅/蒸笼/煎锅对齐灶台（Y≈0.6）；画布上叠放物为半透明小方块，桌台/灶台等为实色块（按分类配色）  
@@ -90,6 +91,16 @@
 # 刷新全部资源目录（会同步到 web/public 与 web/dist）
 node layout-editor/scripts/build-catalog.mjs
 
+# 装饰/核心层翻译（names-dictionary.json 为 SSOT）
+node layout-editor/scripts/scaffold-dictionary.mjs --refresh --decor-core
+node layout-editor/scripts/scaffold-dictionary.mjs --check --decor-core
+
+# 装饰缩略图（Unity 菜单，勿加 -nographics）
+#   Layout Editor/素材导出 (Asset Export)/导出装饰物缩略图 (Export Decor Thumbnails)
+# 生成 web/public/icons/decor-preview/<guid>.png 后重建 manifest：
+node layout-editor/scripts/build-decor-preview-manifest.mjs
+# 说明：无网格的粒子/灯光/空壳资源会被跳过（manifest.missing 可查）；前端回退到食材/菜谱图标或首字占位。
+
 # 生成 / 更新 commonW3 Web 单果汁（葡萄/橙子/桃子）
 node layout-editor/scripts/gen-commonw3-smoothies.mjs --apply
 
@@ -142,7 +153,7 @@ python3 layout-editor/scripts/extract-icons.py --check    # 只统计覆盖率�
 
 菜谱组成数据来源：`layout-editor/scripts/data/recipe-knowledge.json`（Unity 端 `LayoutEditorRecipeKnowledge` 共用同一文件）。CustomRecipeSO 的组成由脚本直接解析 `compositionSOs` guid 引用；原始/DLC 菜谱查知识表；**组成信息不全的菜谱会被跳过**（脚本输出跳过清单）。新增 DLC 菜谱时在 `recipes[]` 中补一条 `{id, step, ingredients}` 即可；score-0 的运行时变体（Optional*/model_*）列入 `skip[]`。
 
-中英文显示名来源：`layout-editor/scripts/data/names-dictionary.json`（Unity 端 `LayoutEditorManualLookup` 共用同一文件），查找顺序为 **字典 JSON → 使用手册.md → ID 回退**。覆盖全部资源：核心桌台/厨具/机关/厨师、装饰/NPC/地板 prefab、食材/菜谱/烹饪步骤、音频与音效集（1100+ 条）。**后续新增资源时只需维护该文件**：在 `names[]` 中补 `{id, zh, en}` 后重跑 build-catalog 即可；也可先运行 `node layout-editor/scripts/scaffold-dictionary.mjs` 为新 ID 生成草稿翻译（词元规则），再在字典中人工修订。
+中英文显示名来源：`layout-editor/scripts/data/names-dictionary.json`（Unity 端 `LayoutEditorManualLookup` 共用同一文件），查找顺序为 **字典 JSON → 使用手册.md → ID 回退**。覆盖全部资源：核心桌台/厨具/机关/厨师、装饰/NPC/地板 prefab、食材/菜谱/烹饪步骤、音频与音效集（4500+ 条）。**后续新增资源时只需维护该文件**：在 `names[]` 中补 `{id, zh, en}` 后重跑 build-catalog 即可；也可先运行 `node layout-editor/scripts/scaffold-dictionary.mjs` 为新 ID 生成草稿翻译（词元规则），再在字典中人工修订。
 
 ### 版本与升级提醒
 

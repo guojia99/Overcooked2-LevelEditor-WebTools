@@ -52,6 +52,7 @@ public static class LayoutEditorCustomContentApi
     private const string Pot = "Assets/common01/prefabs/utensils/Pot.prefab";
     private const string Steamer = "Assets/common01/prefabs/utensils/Steamer.prefab";
     private const string Splitter = "Assets/Modules/IngredientSplitter/custom_counter_ingredient_splitter.prefab";
+    private const string CookingUI = "Assets/common04/_supplies/CookingUI.asset";
 
     private static readonly string[] PlaceableKinds = { "counter", "utensil", "sink", "tray", "splitter" };
 
@@ -1108,6 +1109,11 @@ public static class LayoutEditorCustomContentApi
                 SetObject(so, "outputPrefab", LoadAsset<GameObject>(dto.outputPrefabGuid));
             if (!string.IsNullOrEmpty(dto.splitAudioTag))
                 SetEnum(so, "splitAudioTag", "LevelEditorStub.LevelInfoSO+GameOneShotAudioTag", dto.splitAudioTag);
+            // 上游分料机进度条依赖 cookingUISO；模板默认未赋值，新建/更新时补默认，
+            // 避免编辑器 Play 在 StartSynchronising 里空引用。
+            var cookingUI = so.FindProperty("cookingUISO");
+            if (cookingUI != null && cookingUI.objectReferenceValue == null)
+                cookingUI.objectReferenceValue = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(CookingUI);
             so.ApplyModifiedProperties();
         }
     }

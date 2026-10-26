@@ -80,6 +80,16 @@ export type ViewMode = "2d" | "3d";
 /** 3D 地板板厚档位。real = 0.4（Unity Col_Floor 真实厚度，见 SceneLayoutApplier.CreateColFloor）。 */
 export type FloorSlabMode = "real" | "auto" | "thin";
 
+/** 左侧装饰预览尺寸：无 / 小 / 中 / 大。 */
+export type DecorPreviewSize = "none" | "small" | "medium" | "large";
+
+function initialDecorPreviewSize(): DecorPreviewSize {
+  const saved = localStorage.getItem("decorPreviewSize");
+  if (saved === "none" || saved === "small" || saved === "medium" || saved === "large") return saved;
+  // 兼容旧布尔开关：0=无，1=小（旧版默认过大）。
+  return localStorage.getItem("showDecorPreview") === "0" ? "none" : "small";
+}
+
 /** Content categories that can be shown / hidden on the canvas per layer. */
 export type VisibilityCategory = "items" | "decor" | "floors" | "background";
 
@@ -359,6 +369,8 @@ export const S = {
   /** 画布上显示相机视野范围（FOV 视锥与地面交线）。 */
   showCameraFov: localStorage.getItem("showCameraFov") !== "0",
   showSceneLights: localStorage.getItem("showSceneLights") !== "0",
+  /** 「🖼 装饰预览」尺寸：none / small / medium / large（localStorage 持久化，默认小）。 */
+  decorPreviewSize: initialDecorPreviewSize(),
   autoKillPlane: false,
   autoWalkable: true,
   allowWorkstationOverlap: false,

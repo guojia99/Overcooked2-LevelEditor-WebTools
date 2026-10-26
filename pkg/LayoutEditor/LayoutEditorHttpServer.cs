@@ -109,6 +109,9 @@ public class LayoutEditorHttpServer
             Debug.Log("Layout Editor: 静态前端 " + LayoutEditorPaths.WebUiUrl);
         }
 
+        // Application.dataPath 仅主线程可用：先缓存前端根目录与导出根目录，监听线程 fast-path 只读。
+        LayoutEditorPaths.PrecomputeRoots();
+        LayoutEditorSetExporter.PrecomputeExportRootPath();
         _listenerThread = new Thread(ListenLoop) { IsBackground = true };
         _listenerThread.Start();
 
@@ -174,6 +177,8 @@ public class LayoutEditorHttpServer
                 // 导出状态/下载走监听线程 fast-path：BuildPipeline 阻塞主线程泵期间，
                 // 这些请求若排队将永远得不到响应（前端轮询会超时）。
                 if (TryServeExportFastPath(captured))
+                    continue;
+                if (TryServeDecorPreviewFastPath(captured))
                     continue;
                 EnqueueMain(delegate { HandleRequest(captured); });
             }
@@ -307,6 +312,74 @@ public class LayoutEditorHttpServer
         catch (Exception ex)
         {
             Debug.LogWarning("[LayoutEditor] listener file write failed: " + ex.Message);
+        }
+    }
+
+    /// <summary>装饰缩略图/清单在监听线程直接读文件并响应。3000+ 张小图若走主线程队列
+    /// （Unity EditorApplication.update 泵）会明显拖慢场景加载与写回；这里纯文件 I/O，
+    /// 与导出 fast-path 同口径。优先 dist，未构建时回退 web/public。</summary>
+    private static bool TryServeDecorPreviewFastPath(HttpListenerContext context)
+    {
+        try
+        {
+            var request = context.Request;
+            if (request.HttpMethod != "GET")
+                return false;
+            var path = request.Url.AbsolutePath;
+            if (!path.StartsWith("/icons/decor-preview/", StringComparison.Ordinal))
+                return false;
+
+            string distRoot;
+            string publicRoot;
+            if (!LayoutEditorPaths.TryGetCachedRoots(out distRoot, out publicRoot))
+                return false;
+
+            string rel = path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+            string abs = Path.GetFullPath(Path.Combine(distRoot, rel));
+            if (!File.Exists(abs))
+            {
+                string pub = Path.GetFullPath(Path.Combine(publicRoot, rel));
+                if (File.Exists(pub) && LayoutEditorPaths.IsPathUnderRoot(pub, publicRoot))
+                    abs = pub;
+            }
+            if (!LayoutEditorPaths.IsPathUnderRoot(abs, distRoot)
+                && !LayoutEditorPaths.IsPathUnderRoot(abs, publicRoot))
+                return false;
+
+            var response = context.Response;
+            response.Headers.Add("Access-Control-Allow-Origin", "*");
+            if (!File.Exists(abs))
+            {
+                response.StatusCode = 404;
+                response.ContentLength64 = 0;
+                response.OutputStream.Close();
+                return true;
+            }
+
+            byte[] bytes = File.ReadAllBytes(abs);
+            bool isJson = abs.EndsWith(".json", StringComparison.OrdinalIgnoreCase);
+            response.StatusCode = 200;
+            response.ContentType = isJson ? "application/json; charset=utf-8" : "image/png";
+            if (isJson)
+                response.Headers["Cache-Control"] = "no-cache";
+            else
+                response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
+            response.ContentLength64 = bytes.Length;
+            response.OutputStream.Write(bytes, 0, bytes.Length);
+            response.OutputStream.Close();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[LayoutEditor] decor preview fast-path: " + ex.Message);
+            try
+            {
+                context.Response.StatusCode = 500;
+                context.Response.ContentLength64 = 0;
+                context.Response.OutputStream.Close();
+            }
+            catch { }
+            return true;
         }
     }
 
@@ -2184,6 +2257,17 @@ public class LayoutEditorHttpServer
         var bytes = File.ReadAllBytes(filePath);
         _responseSent = true;
         response.ContentType = GetContentType(filePath);
+        // 装饰缩略图按 guid 命名且带 ?v=<manifest version>，可长期缓存；
+        // manifest 自身必须每次校验，否则重新导出后前端拿不到新版本号。
+        if (path == "/icons/decor-preview/manifest.json")
+        {
+            response.Headers["Cache-Control"] = "no-cache";
+        }
+        else if (path.StartsWith("/icons/decor-preview/", StringComparison.Ordinal)
+            && path.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+        {
+            response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
+        }
         response.StatusCode = 200;
         response.ContentLength64 = bytes.Length;
         response.OutputStream.Write(bytes, 0, bytes.Length);

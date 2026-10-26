@@ -640,7 +640,7 @@
       },
       "height": 0.159,
       "layoutTier": "core",
-      "nameZh": "摇杆灯",
+      "nameZh": "控制终端标记",
       "nameEn": "Control Terminal Marker",
       "icon": false
     },
@@ -874,7 +874,7 @@
       },
       "height": 1.438,
       "layoutTier": "core",
-      "nameZh": "摇杆",
+      "nameZh": "多路控制终端",
       "nameEn": "Multi Control Terminal",
       "icon": false
     },
@@ -1354,8 +1354,8 @@
       },
       "layoutTier": "core",
       "needsStub": true,
-      "nameZh": "custom_utensil_clean_plate_stack",
-      "nameEn": "custom_utensil_clean_plate_stack",
+      "nameZh": "自定义干净盘堆",
+      "nameEn": "custom utensil clean plate stack",
       "icon": false
     },
     {
@@ -1371,8 +1371,8 @@
       },
       "layoutTier": "core",
       "needsStub": true,
-      "nameZh": "custom_utensil_clean_tray_stack",
-      "nameEn": "custom_utensil_clean_tray_stack",
+      "nameZh": "自定义干净餐盘堆",
+      "nameEn": "custom utensil clean tray stack",
       "icon": false
     },
     {
@@ -1388,8 +1388,8 @@
       },
       "layoutTier": "core",
       "needsStub": true,
-      "nameZh": "custom_utensil_dirty_plate",
-      "nameEn": "custom_utensil_dirty_plate",
+      "nameZh": "自定义脏盘",
+      "nameEn": "custom utensil dirty plate",
       "icon": false
     },
     {
@@ -1405,8 +1405,8 @@
       },
       "layoutTier": "core",
       "needsStub": true,
-      "nameZh": "custom_utensil_dirty_plate_stack",
-      "nameEn": "custom_utensil_dirty_plate_stack",
+      "nameZh": "自定义脏盘堆",
+      "nameEn": "custom utensil dirty plate stack",
       "icon": false
     },
     {
@@ -1422,8 +1422,8 @@
       },
       "layoutTier": "core",
       "needsStub": true,
-      "nameZh": "custom_utensil_dirty_tray",
-      "nameEn": "custom_utensil_dirty_tray",
+      "nameZh": "自定义脏餐盘",
+      "nameEn": "custom utensil dirty tray",
       "icon": false
     },
     {
@@ -1439,8 +1439,8 @@
       },
       "layoutTier": "core",
       "needsStub": true,
-      "nameZh": "custom_utensil_dirty_tray_stack",
-      "nameEn": "custom_utensil_dirty_tray_stack",
+      "nameZh": "自定义脏餐盘堆",
+      "nameEn": "custom utensil dirty tray stack",
       "icon": false
     },
     {
@@ -1456,8 +1456,8 @@
       },
       "layoutTier": "core",
       "needsStub": true,
-      "nameZh": "custom_utensil_plate",
-      "nameEn": "custom_utensil_plate",
+      "nameZh": "自定义盘子",
+      "nameEn": "custom utensil plate",
       "icon": false
     },
     {
@@ -1473,8 +1473,8 @@
       },
       "layoutTier": "core",
       "needsStub": true,
-      "nameZh": "custom_utensil_tray",
-      "nameEn": "custom_utensil_tray",
+      "nameZh": "自定义餐盘",
+      "nameEn": "custom utensil tray",
       "icon": false
     },
     {

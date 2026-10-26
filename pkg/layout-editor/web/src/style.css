@@ -1405,25 +1405,67 @@ mark.guide-search-mark,
   color-scheme: var(--ui-color-scheme);
 }
 
-/* 左侧调色板下拉（装饰层尺寸 / 分组） */
+/* 左侧调色板下拉（装饰层：尺寸 / 分组 / 预览尺寸；可放得下时同一行） */
+.palette-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.palette-filter-row.hidden {
+  display: none;
+}
+
+.palette-group-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.palette-group-actions.hidden {
+  display: none;
+}
+
+.palette-group-actions button {
+  flex: 1 1 0;
+  padding: 3px 6px;
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-bg-input);
+  color: var(--ui-text-muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.palette-group-actions button:hover {
+  color: var(--ui-text);
+  border-color: var(--ui-border-focus);
+  background: var(--ui-scene-item-hover);
+}
+
 .palette-header select,
 select.decor-size-filter,
-select.palette-group-mode {
-  width: 100%;
-  margin-top: 6px;
-  padding: 5px 8px;
+select.palette-group-mode,
+select.decor-preview-size {
+  flex: 1 1 80px;
+  min-width: 0;
+  width: auto;
+  margin-top: 0;
+  padding: 4px 6px;
   border-radius: var(--ui-radius-sm);
   border: 1px solid var(--ui-border-strong);
   background: var(--ui-bg-input);
   color: var(--ui-text);
   color-scheme: var(--ui-color-scheme);
-  font-size: 12px;
+  font-size: 11px;
   cursor: pointer;
 }
 
 .palette-header select:focus,
 select.decor-size-filter:focus,
 select.palette-group-mode:focus,
+select.decor-preview-size:focus,
 .palette-add-themed select:focus {
   outline: none;
   border-color: var(--ui-border-focus);
@@ -1432,8 +1474,10 @@ select.palette-group-mode:focus,
 
 .palette-header .decor-size-filter.hidden,
 .palette-header .palette-group-mode.hidden,
+.palette-header .decor-preview-size.hidden,
 select.decor-size-filter.hidden,
-select.palette-group-mode.hidden {
+select.palette-group-mode.hidden,
+select.decor-preview-size.hidden {
   display: none;
 }
 
@@ -1707,6 +1751,94 @@ select.palette-group-mode.hidden {
   align-self: center;
   margin-bottom: 2px;
   image-rendering: -webkit-optimize-contrast;
+}
+
+/* 装饰预览大图卡片：左侧调色板在「显示配置 → 🖼 装饰预览」开启时使用。
+   图片来自 Unity 导出 decor-preview/<guid>.png；透明底，按卡片宽度等比展示。 */
+.palette-card.palette-card-preview {
+  padding: 4px 6px 6px;
+  gap: 2px;
+}
+.palette-card-preview .pc-thumb-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 2px;
+  border-radius: 6px;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.07), transparent 62%),
+    rgba(0, 0, 0, 0.16);
+}
+.palette-card-preview .pc-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+.palette-card-preview .pc-thumb-fallback {
+  display: none;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--ui-palette-card-text-muted);
+  opacity: 0.8;
+}
+.palette-card-preview > .pc-img {
+  width: 64px;
+  height: 64px;
+  align-self: center;
+}
+.palette-card-preview .zh {
+  font-size: 12px;
+}
+.palette-card-preview .fp {
+  color: var(--ui-palette-card-text-sub);
+  font-size: 10px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.palette-card-preview-small {
+  padding: 3px 4px 4px;
+  gap: 1px;
+}
+.palette-card-preview-small .zh {
+  font-size: 10px;
+  line-height: 1.25;
+}
+.palette-card-preview-small .id,
+.palette-card-preview-small .fp {
+  font-size: 9px;
+}
+.palette-card-preview-small .sub {
+  display: none;
+}
+.palette-card-preview-small .pc-thumb-wrap {
+  margin-bottom: 1px;
+  border-radius: 4px;
+}
+.palette-card-preview-large .zh {
+  font-size: 13px;
+}
+.palette-card-preview-large .fp,
+.palette-card-preview-large .sub {
+  font-size: 11px;
+}
+.palette-card-preview .sub {
+  white-space: normal;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .palette-card .id {

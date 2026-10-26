@@ -8,6 +8,11 @@
  * Usage:
  *   node layout-editor/scripts/scaffold-dictionary.mjs           # add missing ids
  *   node layout-editor/scripts/scaffold-dictionary.mjs --refresh # re-draft poor zh
+ *   node layout-editor/scripts/scaffold-dictionary.mjs --refresh --decor-core
+ *   node layout-editor/scripts/scaffold-dictionary.mjs --check --decor-core
+ *
+ * --decor-core 只处理 catalog 中 layoutTier=decor|core 的条目，避免误改菜谱/音频名。
+ * --check      只检查（不写文件），发现残留英文或未翻译时以非 0 退出。
  */
 import fs from "fs";
 import path from "path";
@@ -300,6 +305,91 @@ const CURATED = {
   airballoon_frontspike_01: "热气球前刺",
   beachdoodads_clamshell_02: "海滩蛤蜊壳 2",
   beachdoodads_starfish_03: "海滩海星 3",
+
+  // ---- common04 自定义模板（核心层）----
+  custom_counter: "自定义工作台",
+  custom_counter_chopping: "自定义切菜台",
+  custom_counter_ingredient_splitter: "自定义食材分装机",
+  custom_counter_sink: "自定义水槽",
+  custom_utensil_clean_plate_stack: "自定义干净盘堆",
+  custom_utensil_clean_tray_stack: "自定义干净餐盘堆",
+  custom_utensil_dirty_plate: "自定义脏盘",
+  custom_utensil_dirty_plate_stack: "自定义脏盘堆",
+  custom_utensil_dirty_tray: "自定义脏餐盘",
+  custom_utensil_dirty_tray_stack: "自定义脏餐盘堆",
+  custom_utensil_plate: "自定义盘子",
+  custom_utensil_tray: "自定义餐盘",
+
+  // ---- DLC 装饰中词法拆分不可靠的条目 ----
+  PFX_ConfettiRain: "彩纸屑雨",
+  PFX_RaftWaterWake_001: "木筏尾流特效 1",
+  WaterSplash_GooSplash_Particle_001: "黏液水花粒子 1",
+  Space_Door_Airlock_Bool_Close: "太空气闸门（关闭·布尔）",
+  Space_Door_Airlock_Bool_Open: "太空气闸门（打开·布尔）",
+  Space_Door_Airlock_Close: "太空气闸门（关闭）",
+  Space_Door_Airlock_Open: "太空气闸门（打开）",
+  "p_dlc09_bendy_mirror_01": "DLC9 哈哈镜",
+  p_dlc09_bleachers_crowd_01: "DLC9 观众看台",
+  p_dlc09_stage_entrance_01: "DLC9 舞台入口",
+  p_dlc09_woodensupport_01: "DLC9 木支架",
+  p_dlc08_map_worldtext_standard_levels_01: "DLC8 地图世界文字（标准关卡）",
+  p_dlc7_road_yellow_x_01: "DLC7 黄色道路标线 1",
+  "p_dlc13_box_lantern_01": "DLC13 盒灯 1",
+  "p_dlc13_box_lantern_02": "DLC13 盒灯 2",
+  p_dlc5_moonshaft_dust: "DLC5 月光井尘土",
+  fire_hazard: "火灾隐患点",
+  traffic_light_animated_01: "交通信号灯（动画）1",
+  "traffic jam": "交通拥堵",
+  "traffic_light off": "信号灯（灭）",
+  results_onionking_and_kevin: "结算·洋葱王与凯文",
+  pineapple_plant_02NoFruit_1: "菠萝植物 2（无果）1",
+  "pineapple_plant_02NoFruit 1": "菠萝植物 2（无果）1",
+  plant_pot_with_collision: "植物花盆（带碰撞）",
+  planks_posts_dining: "木板柱（用餐区）",
+  wall_270_01: "270° 转角墙",
+  kitchen_tile_h3_upper: "厨房瓦片（高 3·上层）",
+  pfx_wide_wind_left: "宽风（左）",
+  pfx_falling_leaves: "飘落树叶",
+  PFX_sand_01: "沙粒特效 1",
+  "raft_barrier": "木筏护栏",
+  "Raft Floats": "木筏浮筒",
+  m_dlc09_iceplatform_1_5: "DLC9 冰台 1.5",
+  m_dlc3_icecliff_270: "DLC3 冰崖转角 270°",
+  m_dlc3_icecliff_90: "DLC3 冰崖转角 90°",
+  m_dlc3_icecliff_straight_01: "DLC3 冰崖直边 1",
+  m_dlc3_icecliff_straight_02: "DLC3 冰崖直边 2",
+  m_dlc3_stall_large: "DLC3 摊位（大）",
+  m_dlc3_stall_medium: "DLC3 摊位（中）",
+  m_dlc3_stall_small: "DLC3 摊位（小）",
+  m_dogbowl_01: "狗碗 1",
+  "m_dlc2_palmtree_canopy_01 (1)": "DLC2 棕榈树遮阳棚 1",
+  m_mine_bigplatform: "矿洞大平台",
+  m_mine_goldore_02: "矿洞金矿 2",
+  p_dlc07_ghost_pfx_01: "DLC7 幽灵特效 1",
+  p_dlc07_steam_01: "DLC7 蒸汽 1",
+  p_dlc07_rain_01: "DLC7 雨 1",
+  p_dlc08_cloud_clump: "DLC8 云团",
+  p_dlc09_gobstopper_01: "DLC9 大糖球 1",
+  p_dlc09_gobstopper_02: "DLC9 大糖球 2",
+  p_dlc09_gobstopper_03: "DLC9 大糖球 3",
+  p_dlc09_hay_bale_01: "DLC9 干草垛 1",
+  p_dlc09_juggling_pin_01: "DLC9 杂耍瓶 1",
+  p_dlc09_wagon_candy_01: "DLC9 糖果车 1",
+  p_dlc09_wagon_popcorn_01: "DLC9 爆米花车 1",
+  DLC07_NPCs_Ghost: "DLC7 幽灵顾客",
+  DLC07_NPCs_Keep: "DLC7 城堡顾客",
+  NPC_Penguin: "企鹅顾客",
+  Kevin_01_DLC5: "凯文（露营）",
+  StoryOnionKing_DLC5: "洋葱国王（露营）",
+  StoryKevin_Hawaiian: "剧情凯文（夏威夷）",
+  StoryOnionKing_Hawaiian: "剧情洋葱王（夏威夷）",
+  onionking_01: "洋葱王",
+  scenario_01: "场景 1",
+  p_dlc10_incense_pot: "DLC10 香炉",
+  p_dlc13_incense_pot_1: "DLC13 香炉 1",
+  p_dlc4_incense_pot: "DLC4 香炉",
+  p_dlc4_plant_pot: "DLC4 花盆",
+  p_dlc13_plant_pot_1: "DLC13 花盆 1",
 };
 
 const CURATED_IDS = new Set(Object.keys(CURATED));
@@ -315,6 +405,15 @@ const NPC_VARIANT_ZH = {
   Civ: "便装", Construction: "施工", HardHat: "安全帽", Waiter: "服务生",
   Wizard: "巫师", Hawaiian: "夏威夷",
 };
+
+const NPC_PERSONA_ZH_LOWER = {};
+for (const key of Object.keys(NPC_PERSONA_ZH)) {
+  NPC_PERSONA_ZH_LOWER[key.toLowerCase()] = NPC_PERSONA_ZH[key];
+}
+const NPC_VARIANT_ZH_LOWER = {};
+for (const key of Object.keys(NPC_VARIANT_ZH)) {
+  NPC_VARIANT_ZH_LOWER[key.toLowerCase()] = NPC_VARIANT_ZH[key];
+}
 
 // ---------------------------------------------------------------------------
 // Token rules for drafting
@@ -478,6 +577,146 @@ const TOKEN_ZH = {
   waterbase: "水面底座", water: "水", wet: "湿", sand: "沙",
 };
 
+// DLC 装饰/核心层补词（2026-10：清理 catalog 中残留英文）。
+// 只用于 id token 翻译；新增词条请按「名词优先、单字慎用」原则追加。
+Object.assign(TOKEN_ZH, {
+  // DLC7 城垛/庭院/城堡
+  battlements: "城垛", battlement: "城垛", portcullis: "吊闸",
+  sconce: "壁灯", pavement: "铺地", sewergrate: "下水道格栅",
+  gothic: "哥特", trefoil: "三叶饰", grotesque: "石像鬼",
+  stained: "彩绘", stainglass: "彩绘玻璃", glass: "玻璃",
+  pipe: "管道", cannister: "罐", furnace: "熔炉", silhouette: "剪影",
+  valve: "阀门", connector: "连接件", bracket: "支架", pannel: "面板",
+  walltile: "墙砖", tall: "高", half: "半", trip: "绊脚",
+  single: "单块", optimized: "优化", dressed: "装扮", start: "起点",
+  stone: "石", stoneblock: "石块", stonewall: "石墙", flagstone: "石板",
+  crypt: "地穴", tomb: "坟墓", tomblid: "墓盖", grave: "墓地",
+  curtain: "窗帘", wallwindow: "墙窗", standardwall: "标准墙",
+  standardwallcorner: "标准转角墙", restaurantwall: "餐厅墙",
+  restaurantwindow: "餐厅窗", widewall: "宽墙", liftbase: "升降底座",
+  sword: "剑", armor: "盔甲", weapon: "武器",
+
+  // DLC9 游乐场/节日混搭
+  accordion: "手风琴", bleachers: "看台", crowd: "人群",
+  gobstopper: "大糖球", juggling: "杂耍", pin: "瓶", mallet: "木槌",
+  kettlebell: "壶铃", horn: "号角", drum: "鼓", hoop: "圈",
+  podium: "表演台", scaffolding: "脚手架", stage: "舞台",
+  ticketstub: "票根", trapeze: "空中飞人", entrance: "入口",
+  hay: "干草", bale: "草垛", haybale: "干草垛", haypile: "干草堆",
+  wagon: "大篷车", canonball: "炮弹", railtrack: "轨道",
+  grate: "格栅", bigtop: "大帐篷", candy: "糖果",
+  candycane: "拐杖糖", gingerbreadman: "姜饼人", toy: "玩具",
+  snowpile: "雪堆", sled: "雪橇", streetlamp: "路灯",
+  evergreen: "常青树", icicle: "冰柱", gift: "礼物", bow: "蝴蝶结",
+  bigsack: "大麻袋", sack: "麻袋", snowglobe: "雪景球",
+  longbench: "长椅", longtable: "长桌", letterblock: "字母积木",
+  nutcracker: "胡桃夹子", pretzel: "椒盐卷饼", donut: "甜甜圈",
+  carousel: "旋转木马", ferris: "摩天轮", ringmaster: "马戏团长",
+  acrobat: "杂技", clown: "小丑", canon: "大炮", cannon: "大炮",
+
+  // DLC5 露营/度假村
+  camping: "露营", camp: "营地", campfire: "篝火",
+  cabin: "小屋", log: "原木", twig: "树枝", stump: "树桩",
+  fern: "蕨类", reed: "芦苇", mushroom: "蘑菇", owl: "猫头鹰",
+  canopy: "遮阳棚", mooonshaft: "月光井", moonshaft: "月光井",
+  mat: "垫子", deckchair: "甲板椅", sunbed: "日光浴床",
+
+  // DLC8 马戏团/海滩
+  ball: "球", circus: "马戏团", bigtent: "大帐篷", canonball: "炮弹",
+  jugglingpin: "杂耍瓶", popcorn: "爆米花", ticket: "票",
+  stand: "架", weaponstand: "武器架", dog: "狗", giraffe: "长颈鹿",
+  elephant: "大象", balloon: "气球", cloud: "云", clump: "团",
+  palm: "棕榈", palmtree: "棕榈树", lilyflower: "荷花",
+  lilypad: "睡莲叶", ripple: "涟漪", ripples: "涟漪",
+  wavefloat: "波浪浮筒", seafloat: "海漂", fishfloat: "鱼漂",
+
+  // DLC13 中秋
+  bamboo: "竹", dragon: "龙", archway: "牌坊", statue: "雕像",
+  lantern: "灯笼", boxlantern: "盒灯", lanterns: "灯笼群",
+  squarestone: "方石", muddy: "泥泞", mud: "泥地", mudpath: "泥路",
+  seafloat: "海漂", fishfloat: "鱼漂", lilypad: "睡莲叶",
+  pagoda: "宝塔", temple: "寺庙", vase: "花瓶", incense: "香炉",
+
+  // 通用装饰/城市/交通
+  customer: "顾客", countertop: "台面", tableandchairs: "桌椅",
+  oranges: "橙子", black: "黑", white: "白", medium: "中",
+  card: "卡片", patch: "补丁", left: "左", right: "右",
+  man: "人", hole: "孔", manhole: "井盖", kerb: "路缘",
+  traffic: "交通", jam: "拥堵", service: "服务", room: "房间",
+  workstation: "工作站", sink: "水槽", underground: "地下",
+  generic: "通用", ghost: "幽灵", music: "音乐", gamesconsole: "游戏机",
+  bookcase: "书架", recipebook: "菜谱书", frame: "框架", beam: "梁",
+  liftplatform: "升降平台", tram: "电车", bigplatform: "大平台",
+  cutscene: "过场", deathscreen: "死亡画面", nosides: "无侧边",
+  innerb: "内侧B", upper: "上层", units: "单位", lvl: "关",
+  wedge: "楔形", special: "特殊", clump: "团", new: "新",
+  posts: "柱", dining: "用餐", results: "结算", tiled: "铺砖",
+  smoke: "烟雾", dust: "尘土", stream: "溪流", flow: "流动",
+  arches: "拱门", frame: "框架", castle: "城堡", moon: "月亮",
+  basil: "罗勒", jar: "罐", jug: "罐", detail: "细节",
+  stack: "堆", patch: "补丁", wire: "线", line: "线", centreline: "中心线",
+  and: "", with: "", of: "", the: "",
+
+  // NPC / 角色
+  npc: "顾客", npcs: "顾客", kevin: "凯文", storykevin: "剧情凯文",
+  story: "剧情", onionking: "洋葱王", penguin: "企鹅", seagull: "海鸥",
+  raven: "渡鸦", pigeon: "鸽子", parrot: "鹦鹉", shark: "鲨鱼",
+  bear: "熊", cat: "猫", mouse: "老鼠", rat: "老鼠", bat: "蝙蝠",
+  hippo: "河马", crocodile: "鳄鱼", alligator: "鳄鱼", monkey: "猴子",
+  meerkat: "狐獴", badger: "獾", fox: "狐狸", rabbit: "兔子",
+  robin: "知更鸟", moth: "飞蛾", butterfly: "蝴蝶", spider: "蜘蛛",
+  boar: "野猪", cow: "奶牛", pig: "猪", sheep: "羊", goat: "山羊",
+  chicken: "鸡", duck: "鸭", flamingo: "火烈鸟", turtle: "海龟",
+  whale: "鲸鱼", dolphin: "海豚", octopus: "章鱼", squid: "鱿鱼",
+  crab: "螃蟹", fish: "鱼", catfish: "鲶鱼", eel: "鳗鱼",
+
+  // 材质/形状/变体修饰
+  optimized: "优化", dressed: "装扮", standing: "立式", hanging: "悬挂",
+  falling: "飘落", open: "打开", closed: "合拢", short: "短", long: "长",
+  alt: "变体", night: "夜晚", day: "白天", crack: "裂缝", ornate: "华丽",
+  orange: "橙", blue: "蓝", green: "绿", red: "红", yellow: "黄",
+  purple: "紫", pink: "粉", brown: "棕", dark: "暗", light: "浅",
+  front: "前端", back: "后端", middle: "中段", top: "顶部",
+  bottom: "底部", inside: "内侧", outer: "外", inner: "内", out: "外",
+  wide: "宽", small: "小", large: "大", medium: "中", high: "高", low: "低",
+  left: "左", right: "右", mid: "中段", single: "单块", double: "双",
+  quad: "四格", round: "圆形", square: "方形", flat: "扁平", thick: "厚",
+  thin: "薄", vertical: "竖直", horizontal: "水平", corner: "转角",
+  straight: "直", edge: "边缘", end: "尽头", side: "侧边", centre: "中心",
+  center: "中心", outer: "外", inner: "内", upper: "上层", lower: "下层",
+
+  // 常见名词补充
+  dispenser: "食材箱", sign: "招牌", signpost: "指示牌", rack: "架",
+  bench: "长椅", table: "桌", chair: "椅", crate: "板条箱",
+  barrel: "木桶", box: "箱子", bucket: "水桶", spade: "沙铲",
+  paddle: "桨", towel: "毛巾", umbrella: "遮阳伞", sunglasses: "太阳镜",
+  beachball: "沙滩球", airbed: "充气床", buoy: "浮标", rug: "地毯",
+  carpet: "地毯", masonjar: "玻璃罐", hatchet: "斧头", hotchoc: "热可可",
+  nail: "钉子", plywood: "胶合板", plank: "木板", planks: "木板",
+  wood: "木", wooden: "木制", logpile: "木堆", lilypad: "睡莲叶",
+  clamshell: "蛤蜊壳", pebbles: "鹅卵石", starfish: "海星", doodads: "小物件",
+  stonewall: "石墙", stoneblock: "石块", stonebase: "石基",
+  stonehenge: "巨石阵", boulder: "巨石", crystal: "水晶", crystals: "水晶",
+  gold: "金", goldore: "金矿", ore: "矿", cart: "矿车", minecart: "矿车",
+  rails: "轨道", rail: "轨道", railbroken: "断裂轨道", truss: "桁架",
+  trusslarge: "大桁架", pickaxe: "镐", shovel: "铲子", ropecoil: "绳卷",
+  torch: "火把", lantern: "灯笼", candle: "蜡烛", candelabra: "烛台",
+  chandelier: "吊灯", sconce: "壁灯", lamp: "灯", lights: "灯串",
+  streetlamp: "路灯", lamppost: "路灯", spotlight: "聚光灯",
+
+  // 复查残留（2026-10-24）
+  chairs: "椅子", medieval: "中世纪", choppedbun: "切面包",
+  gate: "大门", flight: "飞行", clouds: "云", slime: "黏液",
+  puddle: "水洼", deco: "装饰", support: "支撑", umbrealla: "遮阳伞",
+  woodensupport: "木支架", portalfloat: "传送门浮标", dcl: "DLC",
+  wallsection: "墙段", bricks: "砖", outermap: "外圈地图",
+  bend: "弯", string: "灯串", chef: "厨师", pot: "盆",
+  rain: "雨", raft: "木筏", no: "无", fruit: "水果",
+  "1units": "1格", "2units": "2格", "3units": "3格",
+  "4units": "4格", "5units": "5格", "10units": "10格",
+  plantpot: "花盆", incensepot: "香炉",
+});
+
 const COMPOUND_TOKEN_ZH = {
   beachdoodads: "海滩小物件",
   waterbase: "水面底座",
@@ -515,9 +754,12 @@ const LATIN_WORD_RE = /[a-zA-Z]{3,}/g;
 function latinWordCount(zh) {
   const cleaned = zh
     .replace(/DLC\d+/gi, "")
+    .replace(/DLC/gi, "")
     .replace(/BGM/gi, "")
-    .replace(/NPC/gi, "")
+    .replace(/NPCs?/gi, "")
     .replace(/PFX/gi, "")
+    .replace(/Web/gi, "")
+    .replace(/SO\b/g, "")
     .replace(/\d+°/g, "");
   const m = cleaned.match(LATIN_WORD_RE);
   return m ? m.length : 0;
@@ -592,16 +834,23 @@ const PREFIX_RULES = [
   { re: /^mi_/, prefixZh: "矿洞·" },
   { re: /^watersplash_/, prefixZh: "水花·" },
   { re: /^beachdoodads_/, prefixZh: "海滩小物件·" },
+  { re: /^pfx_/i, prefixZh: "特效·" },
 ];
 
 function draftZh(id) {
   if (COMPOUND_TOKEN_ZH[id]) return COMPOUND_TOKEN_ZH[id];
   if (CURATED[id]) return CURATED[id];
 
-  const npc = /^NPC_([A-Za-z]+)_([A-Za-z]+)_(\d+)$/.exec(id);
+  const npc = /^NPC_([A-Za-z]+)_([A-Za-z]+)_(\d+)$/i.exec(id);
   if (npc) {
-    const persona = NPC_PERSONA_ZH[npc[1]] || npc[1];
-    const variant = NPC_VARIANT_ZH[npc[2]] || npc[2];
+    const persona =
+      NPC_PERSONA_ZH[npc[1]] ||
+      NPC_PERSONA_ZH_LOWER[npc[1].toLowerCase()] ||
+      npc[1];
+    const variant =
+      NPC_VARIANT_ZH[npc[2]] ||
+      NPC_VARIANT_ZH_LOWER[npc[2].toLowerCase()] ||
+      npc[2];
     return `顾客·${persona}（${variant}）`;
   }
 
@@ -679,29 +928,120 @@ function draftEn(id) {
   return tokens.join(" ").replace(/\s+/g, " ").trim();
 }
 
+function readPublicJson(name) {
+  const p = path.join(PUBLIC_DIR, name);
+  if (!fs.existsSync(p)) {
+    throw new Error(`缺少 ${p}，请先运行 build-catalog.mjs`);
+  }
+  return JSON.parse(fs.readFileSync(p, "utf8"));
+}
+
+/** 读取 catalog 分块，返回全部目录条目（含 layoutTier/nameZh/nameEn）。 */
+function readCatalogItems() {
+  const catalog = readPublicJson("catalog.json");
+  const items = [];
+  for (const chunkFile of catalog.itemChunks || []) {
+    const chunk = readPublicJson(chunkFile);
+    for (const it of chunk.items || []) items.push(it);
+  }
+  return items;
+}
+
+function collectTierIds(tiers) {
+  const allowed = new Set(tiers);
+  const ids = new Set();
+  for (const it of readCatalogItems()) {
+    if (it && it.id && allowed.has(it.layoutTier)) ids.add(it.id);
+  }
+  return ids;
+}
+
 function collectIds() {
   const ids = new Set();
-  const read = (name) => JSON.parse(fs.readFileSync(path.join(PUBLIC_DIR, name), "utf8"));
   // catalog.json / recipes.json 已切分为索引 + 分块/分组文件，需聚合。
-  const catalog = read("catalog.json");
+  const catalog = readPublicJson("catalog.json");
   for (const chunkFile of catalog.itemChunks || []) {
-    for (const it of read(chunkFile).items || []) ids.add(it.id);
+    for (const it of readPublicJson(chunkFile).items || []) ids.add(it.id);
   }
-  for (const it of read("ingredients.json").ingredients || []) ids.add(it.id);
-  const recipesIndex = read("recipes.json");
+  for (const it of readPublicJson("ingredients.json").ingredients || []) ids.add(it.id);
+  const recipesIndex = readPublicJson("recipes.json");
   for (const groupFile of Object.values(recipesIndex.groupFiles || {})) {
-    for (const it of read(groupFile).recipes || []) ids.add(it.id);
+    for (const it of readPublicJson(groupFile).recipes || []) ids.add(it.id);
   }
-  for (const it of read("cooking-steps.json").cookingSteps || []) ids.add(it.id);
-  const audio = read("audio-catalog.json");
+  for (const it of readPublicJson("cooking-steps.json").cookingSteps || []) ids.add(it.id);
+  const audio = readPublicJson("audio-catalog.json");
   for (const it of audio.music || []) ids.add(it.id);
   for (const it of audio.audioDirectories || []) ids.add(it.id);
   for (const it of audio.deathEffects || []) ids.add(it.id);
   return ids;
 }
 
+/** 只检查 catalog 中指定 tier 的 nameZh；发现残留英文/未翻译时非 0 退出。 */
+function checkCatalogNames(tiers) {
+  const allowed = new Set(tiers);
+  const rows = new Map();
+  for (const it of readCatalogItems()) {
+    if (!it || !it.id || !allowed.has(it.layoutTier)) continue;
+    const zh = String(it.nameZh || "").trim();
+    const untranslated = !zh || zh === it.id;
+    const words = latinWordCount(zh);
+    if (!untranslated && words === 0) continue;
+    const key = `${it.layoutTier}|${it.id}|${zh}`;
+    if (!rows.has(key)) {
+      rows.set(key, { tier: it.layoutTier, id: it.id, zh, untranslated, words });
+    }
+  }
+  const list = [...rows.values()].sort((a, b) =>
+    a.tier === b.tier ? a.id.localeCompare(b.id) : a.tier.localeCompare(b.tier)
+  );
+  if (list.length === 0) {
+    console.log(`OK: ${tiers.join("/")} 资源名无残留英文。`);
+    return;
+  }
+  console.log(`FAIL: ${tiers.join("/")} 仍有 ${list.length} 条名称未完全中文化：`);
+  for (const row of list) {
+    const flag = row.untranslated ? "未翻译" : `残留英文×${row.words}`;
+    console.log(`  [${row.tier}] ${row.id} | ${row.zh} | ${flag}`);
+  }
+  process.exitCode = 1;
+}
+
+/** 调色板分组标题（主题/分类）同样要中文化：s_summer_1_1 之类不能被当成已翻译。 */
+function checkPaletteGroupNames(tiers) {
+  const allowed = new Set(tiers);
+  const catalog = readPublicJson("catalog.json");
+  const rows = [];
+  for (const g of catalog.paletteGroups || []) {
+    if (!g || !allowed.has(g.layoutTier)) continue;
+    const label = String(g.labelZh || "").trim();
+    const words = latinWordCount(label);
+    if (label && words === 0) continue;
+    rows.push({ tier: g.layoutTier, key: g.key, label, words });
+  }
+  if (rows.length === 0) {
+    console.log(`OK: ${tiers.join("/")} 调色板分组标题无残留英文。`);
+    return;
+  }
+  console.log(`FAIL: ${tiers.join("/")} 仍有 ${rows.length} 个调色板分组标题未中文化：`);
+  for (const row of rows) console.log(`  [${row.tier}] ${row.key} | ${row.label} | 残留英文×${row.words}`);
+  process.exitCode = 1;
+}
+
 function main() {
   const refresh = process.argv.includes("--refresh");
+  const decorCoreOnly = process.argv.includes("--decor-core");
+  const checkOnly = process.argv.includes("--check");
+  const tiers = ["decor", "core"];
+
+  if (checkOnly) {
+    checkCatalogNames(decorCoreOnly ? tiers : ["decor", "core", "floor"]);
+    checkPaletteGroupNames(tiers);
+    return;
+  }
+
+  const tierIds = decorCoreOnly ? collectTierIds(tiers) : null;
+  const inScope = (id) => !tierIds || tierIds.has(id);
+
   const doc = JSON.parse(fs.readFileSync(DICT_PATH, "utf8"));
   const names = doc.names || [];
   const have = new Set(names.map((n) => n.id));
@@ -709,10 +1049,11 @@ function main() {
   let refreshed = 0;
   if (refresh) {
     for (const entry of names) {
+      if (!inScope(entry.id)) continue;
       const curated = CURATED[entry.id];
       if (curated && entry.zh !== curated) {
         entry.zh = curated;
-        entry.en = draftEn(entry.id);
+        if (!entry.en) entry.en = draftEn(entry.id);
         refreshed++;
         continue;
       }
@@ -724,7 +1065,7 @@ function main() {
       const newScore = latinWordCount(newZh);
       if (newScore < oldScore || (newScore === 0 && oldScore > 0)) {
         entry.zh = newZh;
-        entry.en = draftEn(entry.id);
+        if (!entry.en) entry.en = draftEn(entry.id);
         refreshed++;
       }
     }
@@ -735,7 +1076,7 @@ function main() {
   const untranslated = [];
   let added = 0;
   for (const id of [...ids].sort()) {
-    if (have.has(id)) continue;
+    if (!inScope(id) || have.has(id)) continue;
     const zh = draftZh(id);
     if (!zh) {
       untranslated.push(id);

@@ -39,6 +39,7 @@ web/
 │   ├── floor-materials.json / switch-materials.json / bundle-manifest.json
 │   ├── audio-catalog.json / audio-exports.json（回退）
 │   ├── icons/{ingredients,recipes,catalog,steps}/   # 提取的 PNG 图标
+│   ├── icons/decor-preview/{<guid>.png,manifest.json} # 装饰层卡片大图（Unity 导出 + manifest）
 │   ├── recipe-ui/          # 菜谱卡片背景图
 │   ├── models/             # 3D 预览参考模型（预留）
 │   ├── OC2LevelRuntimeLoader.dll   # 随关卡包分发的加载器（手动与 BepInExPlugins 构建产物同步）
@@ -137,7 +138,7 @@ flowchart LR
 | **raft.ts** | 木筏官方双格点拼板算法：主格 + 半格对角偏移次格点 |
 | **floorColors.ts** | 地表配色、背景主题表 `BG_THEMES`、主题→水面/背景 prefab 映射、死亡类型↔主题推断 |
 | **floorMaterialLabels.ts** | 地板材质中文显示名 |
-| **displayLabels.ts** | 装饰物目录名兜底中文名表 |
+| **displayLabels.ts** | 目录名兜底清理（`tidyCatalogNameZh`）；完整翻译以 `scripts/data/names-dictionary.json` 为 SSOT |
 | **itemColors.ts** | 俯视图物品配色 + 透明叠放物/实色载体判定 |
 | **modelPreview.ts** | three.js 3D 预览弹窗（1042 行）：FBX/OBJ+MTL、OrbitControls、参考标的物、虚拟包围盒、自动适配目标尺寸（盘 85cm/杯 37cm） |
 | **modelUnits.ts** | 模型单位体系（1 单位=1m=100cm）与足迹/缩放换算 |
@@ -165,6 +166,7 @@ flowchart LR
 | **renderFloors.ts** | 地板绘制（材质色/主题/贴图平铺/图片/着色/空气地板）、接缝、可行走区、击杀面、命中测试 |
 | **labels.ts** | 画布文字/图标标签工具（换行、食材箱食材图） |
 | **iconCaches.ts** | 图片缓存（异步加载回调重绘）；`loadQuestionMarks` 拉 `/api/catalog/questionmarks` |
+| **decorPreviewCache.ts** | 装饰缩略图缓存中枢：manifest（guid→PNG + version）、后台并发预热全部装饰图到浏览器 HTTP 缓存、成功/失败状态位；卡片 `<img loading=lazy>` 命中缓存，缺失时回退食材/菜谱图标或占位字 |
 
 **交互**
 
@@ -187,7 +189,7 @@ flowchart LR
 | **floorHeight.ts** | 行走面高度约定（镜像后端 FloorWalkY）：`floorWalkY`、高度分层索引、`floorHeightAt` |
 | **floorPalette.ts** | 地板/背景层调色板 + 画布底部地板信息条 |
 | **floorEditorModal.ts** | 地板详情弹窗（750 行）：尺寸/材质/着色/图片地板（tile/stretch/warp）/平铺/主题信息 |
-| **palette.ts** | 调色板构建：分组、搜索、双击武装 N 连放、变体家族归并卡片 |
+| **palette.ts** | 调色板构建：分组、搜索、双击武装 N 连放、变体家族归并卡片；装饰层左侧调色板「预览：无/小/中/大」四档（与「尺寸」「分组」同行自适应）：卡片显示 Unity 渲染大图 + 占格/高度 + 尺寸徽标 |
 | **combos.ts** | 联合组合定义（一次放置多物品+自动联动）：饮料机/酱料机/断头台/传送门成对/热源+石炉。默认输出食材一律经 `ingredientGuidById()` 解析（别名感知 + 去重），**禁止 `find(i => i.id === id)` 精确匹配** |
 | **itemVariants.ts** | DLC 换肤变体表：调色板只显示基础版，右键切换变体 |
 | **stubControls.ts** | Stub 参数中枢（1311 行）：`STUB_KIND_BY_PREFAB_ID`、锅具计时、柜台外观/开关材质选择、`wireStubControls`；按钮控速块（`speedControlBlockHtml`/`wireSpeedControl`，步带/传送带共用：档位列表增删改 + 启用开关）、生成器按钮批次块（`ctx-fs-btn/count/cooldown`）；`isButtonPollingStubTarget`（stub 轮询目标判定）并入 `isSwitchLinkTarget` 白名单——步带/传送带（已启用控速）与食材生成器（已启用按钮批次）可作直连目标，触发名自动置空 |
@@ -289,7 +291,7 @@ flowchart LR
 
 ### 5.5 静态数据（桥无关）
 
-`/catalog.json`（+items.0~12 分块）、`/recipes.json`（+分组文件）、`/ingredients.json`、`/cooking-steps.json`、`/counter-appearances.json`、`/switch-materials.json`、`/bundle-manifest.json`、`/audio-exports.json`、`/UPDATE_LOG.md`、图标 `/icons/**`——均由 `scripts/build-catalog.mjs` 生成。
+`/catalog.json`（+items.0~12 分块）、`/recipes.json`（+分组文件）、`/ingredients.json`、`/cooking-steps.json`、`/counter-appearances.json`、`/switch-materials.json`、`/bundle-manifest.json`、`/audio-exports.json`、`/UPDATE_LOG.md`、图标 `/icons/**`——目录 JSON 由 `scripts/build-catalog.mjs` 生成；`icons/decor-preview/manifest.json` 由 `scripts/build-decor-preview-manifest.mjs` 生成。当前装饰缩略图覆盖 3169/3217（98.5%）；无网格的粒子/灯光/空壳资源记入 `manifest.missing`，前端回退食材/菜谱图标或首字占位。
 
 ---
 

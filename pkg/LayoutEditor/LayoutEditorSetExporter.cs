@@ -410,11 +410,22 @@ public static class LayoutEditorSetExporter
         return false;
     }
 
-    public static string ExportRootAbsPath()
+    // Application.dataPath 仅主线程可用；导出下载 fast-path 在监听线程只读缓存。
+    private static volatile string s_exportRootAbsPath;
+
+    public static void PrecomputeExportRootPath()
     {
+        if (!string.IsNullOrEmpty(s_exportRootAbsPath))
+            return;
         var dataPath = Application.dataPath.Replace('\\', '/');
         var root = Path.GetDirectoryName(dataPath);
-        return (root ?? "").Replace('\\', '/') + "/" + ExportRootDir;
+        s_exportRootAbsPath = (root ?? "").Replace('\\', '/') + "/" + ExportRootDir;
+    }
+
+    public static string ExportRootAbsPath()
+    {
+        PrecomputeExportRootPath();
+        return s_exportRootAbsPath;
     }
 
     /// <summary>状态快照（监听线程安全读取）。</summary>

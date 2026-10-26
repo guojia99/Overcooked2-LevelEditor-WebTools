@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-21T07:30:07.247Z",
+  "generatedAt": "2026-10-26T02:28:28.679Z",
   "schemaVersion": 10,
   "gridCellSize": 1.2,
   "itemCount": 3495,
@@ -68,7 +68,7 @@
     },
     {
       "key": "hotpot/web",
-      "labelZh": "火锅 · Web（CustomStub）",
+      "labelZh": "火锅 · Web（自定义桩）",
       "labelEn": "Hotpot · Web (CustomStub)",
       "layoutTier": "core",
       "itemCount": 6
@@ -145,7 +145,7 @@
     },
     {
       "key": "art/1_3",
-      "labelZh": "装饰 · 1_3",
+      "labelZh": "装饰 · 1-3 关卡",
       "labelEn": "Decor · 1_3",
       "layoutTier": "decor",
       "itemCount": 2
@@ -159,28 +159,28 @@
     },
     {
       "key": "art/animated",
-      "labelZh": "装饰 · animated",
+      "labelZh": "装饰 · 动画装饰",
       "labelEn": "Decor · animated",
       "layoutTier": "decor",
       "itemCount": 2
     },
     {
       "key": "art/arctic",
-      "labelZh": "装饰 · arctic",
+      "labelZh": "装饰 · 极地",
       "labelEn": "Decor · arctic",
       "layoutTier": "decor",
       "itemCount": 2
     },
     {
       "key": "art/battlements",
-      "labelZh": "装饰 · battlements",
+      "labelZh": "装饰 · 城垛",
       "labelEn": "Decor · battlements",
       "layoutTier": "decor",
       "itemCount": 8
     },
     {
       "key": "art/beach_theme",
-      "labelZh": "装饰 · beach_theme",
+      "labelZh": "装饰 · 海滩主题",
       "labelEn": "Decor · beach_theme",
       "layoutTier": "decor",
       "itemCount": 8
@@ -194,7 +194,7 @@
     },
     {
       "key": "art/characters",
-      "labelZh": "装饰 · characters",
+      "labelZh": "装饰 · 角色",
       "labelEn": "Decor · characters",
       "layoutTier": "decor",
       "itemCount": 24
@@ -208,7 +208,7 @@
     },
     {
       "key": "art/city",
-      "labelZh": "装饰 · city",
+      "labelZh": "装饰 · 城市",
       "labelEn": "Decor · city",
       "layoutTier": "decor",
       "itemCount": 2
@@ -222,21 +222,21 @@
     },
     {
       "key": "art/cityassets",
-      "labelZh": "装饰 · cityassets",
+      "labelZh": "装饰 · 城市素材",
       "labelEn": "Decor · cityassets",
       "layoutTier": "decor",
       "itemCount": 1
     },
     {
       "key": "art/courtyard",
-      "labelZh": "装饰 · courtyard",
+      "labelZh": "装饰 · 庭院",
       "labelEn": "Decor · courtyard",
       "layoutTier": "decor",
       "itemCount": 20
     },
     {
       "key": "art/data",
-      "labelZh": "装饰 · data",
+      "labelZh": "装饰 · 数据",
       "labelEn": "Decor · data",
       "layoutTier": "decor",
       "itemCount": 1
@@ -299,7 +299,7 @@
     },
     {
       "key": "art/dlc09_import",
-      "labelZh": "装饰 · dlc09_import",
+      "labelZh": "装饰 · DLC9 导入",
       "labelEn": "Decor · dlc09_import",
       "layoutTier": "decor",
       "itemCount": 2
@@ -334,35 +334,35 @@
     },
     {
       "key": "art/dressing",
-      "labelZh": "装饰 · dressing",
+      "labelZh": "装饰 · 装饰件",
       "labelEn": "Decor · dressing",
       "layoutTier": "decor",
       "itemCount": 9
     },
     {
       "key": "art/dressing_assets",
-      "labelZh": "装饰 · dressing_assets",
+      "labelZh": "装饰 · 装饰件",
       "labelEn": "Decor · dressing_assets",
       "layoutTier": "decor",
       "itemCount": 22
     },
     {
       "key": "art/dressingassets",
-      "labelZh": "装饰 · dressingassets",
+      "labelZh": "装饰 · 装饰件",
       "labelEn": "Decor · dressingassets",
       "layoutTier": "decor",
       "itemCount": 11
     },
     {
       "key": "art/enemies",
-      "labelZh": "装饰 · enemies",
+      "labelZh": "装饰 · 敌人",
       "labelEn": "Decor · enemies",
       "layoutTier": "decor",
       "itemCount": 1
     },
     {
       "key": "art/fireworksmechanical",
-      "labelZh": "装饰 · fireworksmechanical",
+      "labelZh": "装饰 · 烟花机关",
       "labelEn": "Decor · fireworksmechanical",
       "layoutTier": "decor",
       "itemCount": 2
@@ -376,7 +376,7 @@
     },
     {
       "key": "art/gameenvironments",
-      "labelZh": "装饰 · gameenvironments",
+      "labelZh": "装饰 · 环境",
       "labelEn": "Decor · gameenvironments",
       "layoutTier": "decor",
       "itemCount": 1
@@ -390,28 +390,28 @@
     },
     {
       "key": "art/gui",
-      "labelZh": "装饰 · gui",
+      "labelZh": "装饰 · 界面",
       "labelEn": "Decor · gui",
       "layoutTier": "decor",
       "itemCount": 1
     },
     {
       "key": "art/horde",
-      "labelZh": "装饰 · horde",
+      "labelZh": "装饰 · 部落",
       "labelEn": "Decor · horde",
       "layoutTier": "decor",
       "itemCount": 5
     },
     {
       "key": "art/keep",
-      "labelZh": "装饰 · keep",
+      "labelZh": "装饰 · 城堡",
       "labelEn": "Decor · keep",
       "layoutTier": "decor",
       "itemCount": 40
     },
     {
       "key": "art/landscapemechanism",
-      "labelZh": "装饰 · landscapemechanism",
+      "labelZh": "装饰 · 地貌机关",
       "labelEn": "Decor · landscapemechanism",
       "layoutTier": "decor",
       "itemCount": 1
@@ -425,28 +425,28 @@
     },
     {
       "key": "art/magic",
-      "labelZh": "装饰 · magic",
+      "labelZh": "装饰 · 魔法",
       "labelEn": "Decor · magic",
       "layoutTier": "decor",
       "itemCount": 1
     },
     {
       "key": "art/map",
-      "labelZh": "装饰 · map",
+      "labelZh": "装饰 · 地图",
       "labelEn": "Decor · map",
       "layoutTier": "decor",
       "itemCount": 1
     },
     {
       "key": "art/mechanics",
-      "labelZh": "装饰 · mechanics",
+      "labelZh": "装饰 · 机关",
       "labelEn": "Decor · mechanics",
       "layoutTier": "decor",
       "itemCount": 2
     },
     {
       "key": "art/meshes",
-      "labelZh": "装饰 · meshes",
+      "labelZh": "装饰 · 网格件",
       "labelEn": "Decor · meshes",
       "layoutTier": "decor",
       "itemCount": 30
@@ -460,63 +460,63 @@
     },
     {
       "key": "art/misc",
-      "labelZh": "装饰 · misc",
+      "labelZh": "装饰 · 杂项",
       "labelEn": "Decor · misc",
       "layoutTier": "decor",
       "itemCount": 9
     },
     {
       "key": "art/night",
-      "labelZh": "装饰 · night",
+      "labelZh": "装饰 · 夜晚",
       "labelEn": "Decor · night",
       "layoutTier": "decor",
       "itemCount": 1
     },
     {
       "key": "art/npcs",
-      "labelZh": "装饰 · npcs",
+      "labelZh": "装饰 · NPC 角色",
       "labelEn": "Decor · npcs",
       "layoutTier": "decor",
       "itemCount": 2
     },
     {
       "key": "art/onionhouse",
-      "labelZh": "装饰 · onionhouse",
+      "labelZh": "装饰 · 洋葱屋",
       "labelEn": "Decor · onionhouse",
       "layoutTier": "decor",
       "itemCount": 1
     },
     {
       "key": "art/outermapdressing",
-      "labelZh": "装饰 · outermapdressing",
+      "labelZh": "装饰 · 外圈地图装饰",
       "labelEn": "Decor · outermapdressing",
       "layoutTier": "decor",
       "itemCount": 2
     },
     {
       "key": "art/overcooked_legacy",
-      "labelZh": "装饰 · overcooked_legacy",
+      "labelZh": "装饰 · 经典复刻",
       "labelEn": "Decor · overcooked_legacy",
       "layoutTier": "decor",
       "itemCount": 3
     },
     {
       "key": "art/particle_fx",
-      "labelZh": "装饰 · particle_fx",
+      "labelZh": "装饰 · 粒子特效",
       "labelEn": "Decor · particle_fx",
       "layoutTier": "decor",
       "itemCount": 3
     },
     {
       "key": "art/particles",
-      "labelZh": "装饰 · particles",
+      "labelZh": "装饰 · 粒子",
       "labelEn": "Decor · particles",
       "layoutTier": "decor",
       "itemCount": 10
     },
     {
       "key": "art/prototype",
-      "labelZh": "装饰 · prototype",
+      "labelZh": "装饰 · 原型",
       "labelEn": "Decor · prototype",
       "layoutTier": "decor",
       "itemCount": 1
@@ -530,28 +530,28 @@
     },
     {
       "key": "art/revision_02",
-      "labelZh": "装饰 · revision_02",
+      "labelZh": "装饰 · 修订版",
       "labelEn": "Decor · revision_02",
       "layoutTier": "decor",
       "itemCount": 7
     },
     {
       "key": "art/s_summer_1_1",
-      "labelZh": "装饰 · s_summer_1_1",
+      "labelZh": "装饰 · 夏日关卡 1-1",
       "labelEn": "Decor · s_summer_1_1",
       "layoutTier": "decor",
       "itemCount": 7
     },
     {
       "key": "art/shared_kitchen",
-      "labelZh": "装饰 · shared_kitchen",
+      "labelZh": "装饰 · 共享厨房",
       "labelEn": "Decor · shared_kitchen",
       "layoutTier": "decor",
       "itemCount": 18
     },
     {
       "key": "art/sharedkitchen",
-      "labelZh": "装饰 · sharedkitchen",
+      "labelZh": "装饰 · 共享厨房",
       "labelEn": "Decor · sharedkitchen",
       "layoutTier": "decor",
       "itemCount": 1
@@ -565,7 +565,7 @@
     },
     {
       "key": "art/swamp",
-      "labelZh": "装饰 · swamp",
+      "labelZh": "装饰 · 沼泽",
       "labelEn": "Decor · swamp",
       "layoutTier": "decor",
       "itemCount": 23
@@ -579,14 +579,14 @@
     },
     {
       "key": "art/timelines",
-      "labelZh": "装饰 · timelines",
+      "labelZh": "装饰 · 演出",
       "labelEn": "Decor · timelines",
       "layoutTier": "decor",
       "itemCount": 2
     },
     {
       "key": "art/walls",
-      "labelZh": "装饰 · walls",
+      "labelZh": "装饰 · 墙体",
       "labelEn": "Decor · walls",
       "layoutTier": "decor",
       "itemCount": 3
@@ -600,7 +600,7 @@
     },
     {
       "key": "art/wizards_school",
-      "labelZh": "装饰 · wizards_school",
+      "labelZh": "装饰 · 魔法学校",
       "labelEn": "Decor · wizards_school",
       "layoutTier": "decor",
       "itemCount": 9

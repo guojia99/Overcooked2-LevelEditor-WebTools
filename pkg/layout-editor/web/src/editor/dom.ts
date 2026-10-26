@@ -128,18 +128,30 @@ export function buildLayoutDom(): void {
     <aside class="palette" id="palette-panel">
       <div class="palette-header">
         <input type="search" id="palette-search" placeholder="搜索 prefab…" />
-        <select id="decor-size-filter" class="decor-size-filter hidden" title="按装饰物实测尺寸筛选（小 / 中 / 大 / 特大）">
-          <option value="all">尺寸：全部</option>
-          <option value="small">尺寸：小</option>
-          <option value="medium">尺寸：中</option>
-          <option value="large">尺寸：大</option>
-          <option value="xl">尺寸：特大</option>
-        </select>
-        <select id="palette-group-mode" class="palette-group-mode hidden" title="装饰分组方式：按 DLC 主题 / 按物品类型 / 按物品用途">
-          <option value="theme">分组：主题</option>
-          <option value="type">分组：类型</option>
-          <option value="usage">分组：用途</option>
-        </select>
+        <div class="palette-filter-row hidden" id="palette-filter-row">
+          <select id="decor-size-filter" class="decor-size-filter hidden" title="按装饰物实测尺寸筛选（小 / 中 / 大 / 特大）">
+            <option value="all">尺寸：全部</option>
+            <option value="small">尺寸：小</option>
+            <option value="medium">尺寸：中</option>
+            <option value="large">尺寸：大</option>
+            <option value="xl">尺寸：特大</option>
+          </select>
+          <select id="palette-group-mode" class="palette-group-mode hidden" title="装饰分组方式：按 DLC 主题 / 按物品类型 / 按物品用途">
+            <option value="theme">分组：主题</option>
+            <option value="type">分组：类型</option>
+            <option value="usage">分组：用途</option>
+          </select>
+          <select id="decor-preview-size" class="decor-preview-size hidden" title="装饰预览尺寸（无 / 小 / 中 / 大）：控制左侧装饰卡片大图大小">
+            <option value="none">预览：无</option>
+            <option value="small">预览：小</option>
+            <option value="medium">预览：中</option>
+            <option value="large">预览：大</option>
+          </select>
+        </div>
+        <div class="palette-group-actions" id="palette-group-actions">
+          <button type="button" id="palette-expand-all" title="展开左侧全部分组">展开全部</button>
+          <button type="button" id="palette-collapse-all" title="收起左侧全部分组">收起全部</button>
+        </div>
       </div>
       <div class="palette-cats" id="palette-cats"></div>
     </aside>

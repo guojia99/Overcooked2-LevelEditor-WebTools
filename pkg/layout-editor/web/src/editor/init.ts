@@ -33,7 +33,8 @@ import {
 } from "./sceneIO";
 import { ingredientGuidById, rebuildIngredientLookup } from "./catalog";
 import { allDispenserPrefabIds, dispenserIngredientIds, utensilIntermediateRecipes } from "./recipeKnowledge";
-import { buildPalette } from "./palette";
+import { buildPalette, initPaletteGroupActions } from "./palette";
+import { loadDecorPreviewManifest, preloadDecorPreviews } from "./decorPreviewCache";
 import { setActiveCatalog, mergeCustomContentIntoCatalog } from "./customContentCatalog";
 import { buildFloorPalette, refreshFloorHeightPanel, refreshAfterHeightFilterChange } from "./floorPalette";
 import { recoverFloorsFromWalkableIfNeeded } from "./floors";
@@ -144,6 +145,26 @@ export function syncVisibilityPopover(): void {
       ? "背景 / 水面（含木筏水流）仅在 🌊 背景层显示与操作；关闭的类别不显示、也不可点选"
       : "关闭的类别将不显示、也不可点选（仅影响当前层）";
   }
+}
+
+/** 全部装饰 guid（去重）：用于后台预热左侧卡片大图到浏览器缓存。 */
+function decorPreviewGuids(): string[] {
+  const seen = new Set<string>();
+  for (const it of S.catalogByGuid.values()) {
+    if (it.layoutTier === "decor" && it.guid) seen.add(it.guid);
+  }
+  return [...seen];
+}
+
+let decorPreloadTimer = 0;
+function scheduleDecorPreviewPreload(delayMs = 1200): void {
+  if (S.decorPreviewSize === "none") return;
+  if (decorPreloadTimer) window.clearTimeout(decorPreloadTimer);
+  decorPreloadTimer = window.setTimeout(() => {
+    decorPreloadTimer = 0;
+    if (S.decorPreviewSize === "none") return;
+    preloadDecorPreviews(decorPreviewGuids());
+  }, delayMs);
 }
 
 /** 将 S 中的视图/行为开关同步到「显示配置」弹出层（打开面板时调用）。 */
@@ -309,6 +330,15 @@ export function setLayer(layer: LayerKey): void {
     groupModeEl.classList.toggle("hidden", layer !== "decor");
     if (layer === "decor") groupModeEl.value = S.paletteGroupMode;
   }
+  const previewSizeEl = document.getElementById("decor-preview-size") as HTMLSelectElement;
+  if (previewSizeEl) {
+    previewSizeEl.classList.toggle("hidden", layer !== "decor");
+    previewSizeEl.value = S.decorPreviewSize;
+  }
+  const filterRowEl = document.getElementById("palette-filter-row");
+  if (filterRowEl) filterRowEl.classList.toggle("hidden", layer !== "decor");
+  const groupActionsEl = document.getElementById("palette-group-actions");
+  if (groupActionsEl) groupActionsEl.classList.toggle("hidden", layer === "anim" || layer === "lights");
   syncFloorHeightUI(layer);
   if (layer === "floor") {
     const recovered = recoverFloorsFromWalkableIfNeeded();
@@ -382,6 +412,9 @@ export async function init() {
     if (!S.catalogById.has(it.id)) S.catalogById.set(it.id, it);
   }
   if (ROUTE.setId) await mergeCustomContentIntoCatalog(catalog, ROUTE.setId);
+  // 装饰缩略图清单（缺失时静默回退到直接 guid URL；不阻塞主流程太久）。
+  await loadDecorPreviewManifest();
+  scheduleDecorPreviewPreload(600);
   S.ingredientsCache = await fetchIngredients().catch(() => []);
   rebuildIngredientLookup();
   auditDispenserWhitelists();
@@ -621,6 +654,23 @@ export async function init() {
     e.returnValue = "";
   });
 
+  const decorPreviewSelect = document.getElementById("decor-preview-size") as HTMLSelectElement | null;
+  if (decorPreviewSelect) {
+    decorPreviewSelect.value = S.decorPreviewSize;
+    decorPreviewSelect.addEventListener("change", () => {
+      const v = decorPreviewSelect.value;
+      if (v === "none" || v === "small" || v === "medium" || v === "large") {
+        S.decorPreviewSize = v;
+        localStorage.setItem("decorPreviewSize", v);
+      }
+      if (S.currentLayer === "decor") {
+        const searchEl = document.getElementById("palette-search") as HTMLInputElement | null;
+        buildPalette(layoutCatalog, searchEl?.value ?? "");
+      }
+      if (S.decorPreviewSize !== "none") scheduleDecorPreviewPreload(0);
+    });
+  }
+
   document.getElementById("snap-grid")!.addEventListener("change", (e) => {
     S.snapEnabled = (e.target as HTMLInputElement).checked;
   });
@@ -738,6 +788,7 @@ export async function init() {
   initPanelResizer();
   initPaletteResizer();
   initLayerVisBulkButtons();
+  initPaletteGroupActions();
   wireVisibilityPopover();
   wireViewConfigPopover();
   setupCanvas();

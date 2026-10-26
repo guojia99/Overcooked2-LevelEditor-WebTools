@@ -7,6 +7,8 @@ using UnityEngine;
 
 public static class LayoutEditorStubIO
 {
+    private const string IngredientSplitterCookingUI = "Assets/common04/_supplies/CookingUI.asset";
+
     /// <summary>链路金丝雀：写回/导出后若 logs/layout_editor.log 无此行，说明编辑器
     /// 还在跑旧程序集（新代码未编译），一切“数据丢失”先查这条。</summary>
     static LayoutEditorStubIO()
@@ -568,6 +570,28 @@ public static class LayoutEditorStubIO
         }
     }
 
+    /// <summary>上游分料机进度条（ClientIngredientSplitter）依赖 cookingUISO；
+    /// 上游模板/旧场景未赋值时会在编辑器 Play 的空引用。写回时统一补默认 UI，
+    /// 只填空值，不覆盖用户已配置的 UI。</summary>
+    public static void EnsureIngredientSplitterDefaultUI(GameObject go)
+    {
+        if (go == null)
+            return;
+        var splitter = go.GetComponent("IngredientSplitter");
+        if (splitter == null)
+            return;
+        var so = new SerializedObject(splitter);
+        var p = so.FindProperty("cookingUISO");
+        if (p == null || p.objectReferenceValue != null)
+            return;
+        var cookingUI = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(IngredientSplitterCookingUI);
+        if (cookingUI == null)
+            return;
+        Undo.RecordObject(splitter, "Layout Editor Splitter CookingUI Default");
+        p.objectReferenceValue = cookingUI;
+        so.ApplyModifiedProperties();
+    }
+
     public static void ApplyStub(GameObject go, LayoutItemDto item)
     {
         if (go == null || item == null)
@@ -582,6 +606,8 @@ public static class LayoutEditorStubIO
                 " 位于管理器环境 rig 内（物品 " + (item.displayName ?? "?") + " 的组件不得挂载于此）");
             return;
         }
+
+        EnsureIngredientSplitterDefaultUI(go);
 
         if (!string.IsNullOrEmpty(item.pseudoPrefabGuid))
         {

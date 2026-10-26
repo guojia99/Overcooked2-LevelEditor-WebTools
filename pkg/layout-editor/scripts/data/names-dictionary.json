@@ -1189,7 +1189,7 @@
     },
     {
       "id": "city_restaurant_table_and_chairs_01",
-      "zh": "城市餐厅桌 and chairs 1",
+      "zh": "城市餐厅桌椅子 1",
       "en": "city restaurant table and chairs 1"
     },
     {
@@ -1234,7 +1234,7 @@
     },
     {
       "id": "city_wall_straight_tall_01",
-      "zh": "城市墙直 tall 1",
+      "zh": "城市墙直高 1",
       "en": "city wall straight tall 1"
     },
     {
@@ -1399,12 +1399,12 @@
     },
     {
       "id": "cobble_tiled_01",
-      "zh": "卵石 tiled 1",
+      "zh": "卵石铺砖 1",
       "en": "cobble tiled 1"
     },
     {
       "id": "ControlTerminal_Marker",
-      "zh": "摇杆灯",
+      "zh": "控制终端标记",
       "en": "Control Terminal Marker"
     },
     {
@@ -1454,7 +1454,7 @@
     },
     {
       "id": "countertop_02_standard_medieval_corner",
-      "zh": "台面 2 标准 medieval 转角",
+      "zh": "台面 2 标准中世纪转角",
       "en": "countertop 2 standard medieval corner"
     },
     {
@@ -1493,48 +1493,108 @@
       "en": "Cucumber"
     },
     {
+      "id": "custom_counter",
+      "zh": "自定义工作台",
+      "en": "custom counter"
+    },
+    {
+      "id": "custom_counter_chopping",
+      "zh": "自定义切菜台",
+      "en": "custom counter chopping"
+    },
+    {
+      "id": "custom_counter_ingredient_splitter",
+      "zh": "自定义食材分装机",
+      "en": "custom counter ingredient splitter"
+    },
+    {
+      "id": "custom_counter_sink",
+      "zh": "自定义水槽",
+      "en": "custom counter sink"
+    },
+    {
+      "id": "custom_utensil_clean_plate_stack",
+      "zh": "自定义干净盘堆",
+      "en": "custom utensil clean plate stack"
+    },
+    {
+      "id": "custom_utensil_clean_tray_stack",
+      "zh": "自定义干净餐盘堆",
+      "en": "custom utensil clean tray stack"
+    },
+    {
+      "id": "custom_utensil_dirty_plate",
+      "zh": "自定义脏盘",
+      "en": "custom utensil dirty plate"
+    },
+    {
+      "id": "custom_utensil_dirty_plate_stack",
+      "zh": "自定义脏盘堆",
+      "en": "custom utensil dirty plate stack"
+    },
+    {
+      "id": "custom_utensil_dirty_tray",
+      "zh": "自定义脏餐盘",
+      "en": "custom utensil dirty tray"
+    },
+    {
+      "id": "custom_utensil_dirty_tray_stack",
+      "zh": "自定义脏餐盘堆",
+      "en": "custom utensil dirty tray stack"
+    },
+    {
+      "id": "custom_utensil_plate",
+      "zh": "自定义盘子",
+      "en": "custom utensil plate"
+    },
+    {
+      "id": "custom_utensil_tray",
+      "zh": "自定义餐盘",
+      "en": "custom utensil tray"
+    },
+    {
       "id": "customer_countertop_01_black",
-      "zh": "customer 台面 1 black",
+      "zh": "顾客台面 1 黑",
       "en": "customer countertop 1 black"
     },
     {
       "id": "customer_countertop_01_black_corner_in",
-      "zh": "customer 台面 1 black 转角内",
+      "zh": "顾客台面 1 黑转角内",
       "en": "customer countertop 1 black corner in"
     },
     {
       "id": "customer_countertop_01_black_corner_out",
-      "zh": "customer 台面 1 black 转角外",
+      "zh": "顾客台面 1 黑转角外",
       "en": "customer countertop 1 black corner out"
     },
     {
       "id": "customer_countertop_01_black_light",
-      "zh": "customer 台面 1 black 灯",
+      "zh": "顾客台面 1 黑浅",
       "en": "customer countertop 1 black light"
     },
     {
       "id": "customer_countertop_01_oranges",
-      "zh": "customer 台面 1 oranges",
+      "zh": "顾客台面 1 橙子",
       "en": "customer countertop 1 oranges"
     },
     {
       "id": "customer_countertop_01_oranges_corner_in",
-      "zh": "customer 台面 1 oranges 转角内",
+      "zh": "顾客台面 1 橙子转角内",
       "en": "customer countertop 1 oranges corner in"
     },
     {
       "id": "customer_countertop_01_oranges_corner_out",
-      "zh": "customer 台面 1 oranges 转角外",
+      "zh": "顾客台面 1 橙子转角外",
       "en": "customer countertop 1 oranges corner out"
     },
     {
       "id": "customer_countertop_01_oranges_corner_out_2",
-      "zh": "customer 台面 1 oranges 转角外 2",
+      "zh": "顾客台面 1 橙子转角外 2",
       "en": "customer countertop 1 oranges corner out 2"
     },
     {
       "id": "customer_countertop_01_oranges_light",
-      "zh": "customer 台面 1 oranges 灯",
+      "zh": "顾客台面 1 橙子浅",
       "en": "customer countertop 1 oranges light"
     },
     {
@@ -1574,7 +1634,7 @@
     },
     {
       "id": "debris_smoke_01",
-      "zh": "残骸 smoke 1",
+      "zh": "残骸烟雾 1",
       "en": "debris smoke 1"
     },
     {
@@ -2274,12 +2334,12 @@
     },
     {
       "id": "DLC07_NPCs_Ghost",
-      "zh": "幽灵顾客",
+      "zh": "DLC7 幽灵顾客",
       "en": "DLC07 NPCs Ghost"
     },
     {
       "id": "DLC07_NPCs_Keep",
-      "zh": "城堡顾客",
+      "zh": "DLC7 城堡顾客",
       "en": "DLC07 NPCs Keep"
     },
     {
@@ -2381,6 +2441,11 @@
       "id": "DLC08_chickenburger",
       "zh": "鸡肉汉堡（DLC08）",
       "en": "Chicken Burger (DLC08)"
+    },
+    {
+      "id": "dlc08_choppedbun",
+      "zh": "DLC08 切面包",
+      "en": "dlc08 choppedbun"
     },
     {
       "id": "DLC08_ChoppedBun",
@@ -2844,7 +2909,7 @@
     },
     {
       "id": "dlc09_countertop_02_standard_camping_corner",
-      "zh": "DLC9 台面 2 标准 camping 转角",
+      "zh": "DLC09 台面 2 标准露营转角",
       "en": "dlc09 countertop 2 standard camping corner"
     },
     {
@@ -2864,17 +2929,17 @@
     },
     {
       "id": "dlc09_dispenser_crate_camping_new",
-      "zh": "DLC9 dispenser 板条箱 camping new",
+      "zh": "DLC09 食材箱板条箱露营新",
       "en": "dlc09 dispenser crate camping new"
     },
     {
       "id": "dlc09_dispenser_crate_circus",
-      "zh": "DLC9 dispenser 板条箱马戏团",
+      "zh": "DLC09 食材箱板条箱马戏团",
       "en": "dlc09 dispenser crate circus"
     },
     {
       "id": "dlc09_dispenser_crate_medieval",
-      "zh": "DLC9 dispenser 板条箱 medieval",
+      "zh": "DLC09 食材箱板条箱中世纪",
       "en": "dlc09 dispenser crate medieval"
     },
     {
@@ -2904,7 +2969,7 @@
     },
     {
       "id": "dlc09_gate",
-      "zh": "DLC9 gate",
+      "zh": "DLC09 大门",
       "en": "dlc09 gate"
     },
     {
@@ -2999,7 +3064,7 @@
     },
     {
       "id": "dlc09_RobinFlight_01",
-      "zh": "DLC09 知更鸟 Flight 1",
+      "zh": "DLC09 知更鸟飞行 1",
       "en": "dlc09 Robin Flight 1"
     },
     {
@@ -3009,7 +3074,7 @@
     },
     {
       "id": "dlc09_service_window",
-      "zh": "DLC9 service 窗",
+      "zh": "DLC09 服务窗",
       "en": "dlc09 service window"
     },
     {
@@ -3054,7 +3119,7 @@
     },
     {
       "id": "dlc09_workstation_sink_01_wood",
-      "zh": "DLC9 workstation sink 1 木",
+      "zh": "DLC09 工作站水槽 1 木",
       "en": "dlc09 workstation sink 1 wood"
     },
     {
@@ -3389,12 +3454,12 @@
     },
     {
       "id": "dlc11_exterior_man_hole_01",
-      "zh": "DLC11 室外 man 孔 1",
+      "zh": "DLC11 室外人孔 1",
       "en": "dlc11 exterior man hole 1"
     },
     {
       "id": "dlc11_exterior_man_hole_02",
-      "zh": "DLC11 室外 man 孔 2",
+      "zh": "DLC11 室外人孔 2",
       "en": "dlc11 exterior man hole 2"
     },
     {
@@ -5089,17 +5154,17 @@
     },
     {
       "id": "grave_clouds_01",
-      "zh": "墓地 clouds 1",
+      "zh": "墓地云 1",
       "en": "grave clouds 1"
     },
     {
       "id": "grave_crypt_01",
-      "zh": "墓地 crypt 1",
+      "zh": "墓地地穴 1",
       "en": "grave crypt 1"
     },
     {
       "id": "grave_cutscene_castle_01",
-      "zh": "墓地 cutscene castle 1",
+      "zh": "墓地过场城堡 1",
       "en": "grave cutscene castle 1"
     },
     {
@@ -5109,12 +5174,12 @@
     },
     {
       "id": "grave_gate_closed_01",
-      "zh": "墓地 gate 合拢 1",
+      "zh": "墓地大门合拢 1",
       "en": "grave gate closed 1"
     },
     {
       "id": "grave_gate_open_01",
-      "zh": "墓地 gate 打开 1",
+      "zh": "墓地大门打开 1",
       "en": "grave gate open 1"
     },
     {
@@ -5159,12 +5224,12 @@
     },
     {
       "id": "grave_gravestone_detail_01",
-      "zh": "墓地墓碑 detail 1",
+      "zh": "墓地墓碑细节 1",
       "en": "grave gravestone detail 1"
     },
     {
       "id": "grave_gravestone_detail_02",
-      "zh": "墓地墓碑 detail 2",
+      "zh": "墓地墓碑细节 2",
       "en": "grave gravestone detail 2"
     },
     {
@@ -5254,7 +5319,7 @@
     },
     {
       "id": "grave_moon_01",
-      "zh": "墓地 moon 1",
+      "zh": "墓地月亮 1",
       "en": "grave moon 1"
     },
     {
@@ -5349,12 +5414,12 @@
     },
     {
       "id": "grave_tomb_01",
-      "zh": "墓地 tomb 1",
+      "zh": "墓地坟墓 1",
       "en": "grave tomb 1"
     },
     {
       "id": "grave_tomblid_01",
-      "zh": "墓地 tomblid 1",
+      "zh": "墓地墓盖 1",
       "en": "grave tomblid 1"
     },
     {
@@ -5434,7 +5499,7 @@
     },
     {
       "id": "ground_butterfly",
-      "zh": "地面 butterfly",
+      "zh": "地面蝴蝶",
       "en": "ground butterfly"
     },
     {
@@ -5579,7 +5644,7 @@
     },
     {
       "id": "hover_butterfly",
-      "zh": "悬停 butterfly",
+      "zh": "悬停蝴蝶",
       "en": "hover butterfly"
     },
     {
@@ -5609,12 +5674,12 @@
     },
     {
       "id": "ice_corner_innerb",
-      "zh": "冰转角 innerb",
+      "zh": "冰转角内侧B",
       "en": "ice corner innerb"
     },
     {
       "id": "ice_corner_outer",
-      "zh": "冰转角 outer",
+      "zh": "冰转角外",
       "en": "ice corner outer"
     },
     {
@@ -5829,7 +5894,7 @@
     },
     {
       "id": "kitchen_tile_h3_upper",
-      "zh": "厨房瓦片 h 3 upper",
+      "zh": "厨房瓦片（高 3·上层）",
       "en": "kitchen tile h 3 upper"
     },
     {
@@ -5859,7 +5924,7 @@
     },
     {
       "id": "kitchen_tile_sushi_01_outer_14x9",
-      "zh": "厨房瓦片寿司 1 outer 14x9",
+      "zh": "厨房瓦片寿司 1 外 14x9",
       "en": "kitchen tile sushi 1 outer 14x9"
     },
     {
@@ -5879,7 +5944,7 @@
     },
     {
       "id": "large_stall_dressed_01",
-      "zh": "大摊位 dressed 1",
+      "zh": "大摊位装扮 1",
       "en": "large stall dressed 1"
     },
     {
@@ -5969,17 +6034,17 @@
     },
     {
       "id": "m_airballoon_rope_2units_01",
-      "zh": "热气球·绳 2units 1",
+      "zh": "热气球·绳 2格 1",
       "en": "airballoon rope 2units 1"
     },
     {
       "id": "m_airballoon_rope_bottom_01",
-      "zh": "热气球·绳 bottom 1",
+      "zh": "热气球·绳底部 1",
       "en": "airballoon rope bottom 1"
     },
     {
       "id": "m_airballoon_rope_bottom_03",
-      "zh": "热气球·绳 bottom 3",
+      "zh": "热气球·绳底部 3",
       "en": "airballoon rope bottom 3"
     },
     {
@@ -6019,7 +6084,7 @@
     },
     {
       "id": "m_city_basil_01",
-      "zh": "城市 basil 1",
+      "zh": "城市罗勒 1",
       "en": "city basil 1"
     },
     {
@@ -6069,12 +6134,12 @@
     },
     {
       "id": "m_city_liftbase_01",
-      "zh": "城市 liftbase 1",
+      "zh": "城市升降底座 1",
       "en": "city liftbase 1"
     },
     {
       "id": "m_city_liftplatform_01",
-      "zh": "城市 liftplatform 1",
+      "zh": "城市升降平台 1",
       "en": "city liftplatform 1"
     },
     {
@@ -6084,7 +6149,7 @@
     },
     {
       "id": "m_city_tram_rails_01",
-      "zh": "城市 tram 轨道 1",
+      "zh": "城市电车轨道 1",
       "en": "city tram rails 1"
     },
     {
@@ -6134,7 +6199,7 @@
     },
     {
       "id": "m_city_wall_window_02_glass",
-      "zh": "城市墙窗 2 glass",
+      "zh": "城市墙窗 2 玻璃",
       "en": "city wall window 2 glass"
     },
     {
@@ -6164,12 +6229,12 @@
     },
     {
       "id": "m_dlc07_city_car_beam_01",
-      "zh": "DLC7 城市车 beam 1",
+      "zh": "DLC07 城市车梁 1",
       "en": "dlc07 city car beam 1"
     },
     {
       "id": "m_dlc07_deathscreen_plane_01",
-      "zh": "DLC7 deathscreen 平面 1",
+      "zh": "DLC07 死亡画面平面 1",
       "en": "dlc07 deathscreen plane 1"
     },
     {
@@ -6194,7 +6259,7 @@
     },
     {
       "id": "m_dlc07_gothic_trefoil_01",
-      "zh": "DLC7 gothic trefoil 1",
+      "zh": "DLC07 哥特三叶饰 1",
       "en": "dlc07 gothic trefoil 1"
     },
     {
@@ -6229,52 +6294,52 @@
     },
     {
       "id": "m_dlc07_pillar_tall_01",
-      "zh": "DLC7 立柱 tall 1",
+      "zh": "DLC07 立柱高 1",
       "en": "dlc07 pillar tall 1"
     },
     {
       "id": "m_dlc07_pipe_small_valve_01",
-      "zh": "DLC7 pipe 小 valve 1",
+      "zh": "DLC07 管道小阀门 1",
       "en": "dlc07 pipe small valve 1"
     },
     {
       "id": "m_dlc07_pipe_vent_01",
-      "zh": "DLC7 pipe 通风口 1",
+      "zh": "DLC07 管道通风口 1",
       "en": "dlc07 pipe vent 1"
     },
     {
       "id": "m_dlc07_pipe_vent_02",
-      "zh": "DLC7 pipe 通风口 2",
+      "zh": "DLC07 管道通风口 2",
       "en": "dlc07 pipe vent 2"
     },
     {
       "id": "m_dlc07_pipe_vent_03",
-      "zh": "DLC7 pipe 通风口 3",
+      "zh": "DLC07 管道通风口 3",
       "en": "dlc07 pipe vent 3"
     },
     {
       "id": "m_dlc07_portcullis_01",
-      "zh": "DLC7 portcullis 1",
+      "zh": "DLC07 吊闸 1",
       "en": "dlc07 portcullis 1"
     },
     {
       "id": "m_dlc07_portcullis_02",
-      "zh": "DLC7 portcullis 2",
+      "zh": "DLC07 吊闸 2",
       "en": "dlc07 portcullis 2"
     },
     {
       "id": "m_dlc07_portcullis_03",
-      "zh": "DLC7 portcullis 3",
+      "zh": "DLC07 吊闸 3",
       "en": "dlc07 portcullis 3"
     },
     {
       "id": "m_dlc07_slime_flow_01",
-      "zh": "DLC7 slime flow 1",
+      "zh": "DLC07 黏液流动 1",
       "en": "dlc07 slime flow 1"
     },
     {
       "id": "m_dlc07_slime_puddle_01",
-      "zh": "DLC7 slime puddle 1",
+      "zh": "DLC07 黏液水洼 1",
       "en": "dlc07 slime puddle 1"
     },
     {
@@ -6309,22 +6374,22 @@
     },
     {
       "id": "m_dlc07_wall_deco_arches_01",
-      "zh": "DLC7 墙 deco arches 1",
+      "zh": "DLC07 墙装饰拱门 1",
       "en": "dlc07 wall deco arches 1"
     },
     {
       "id": "m_dlc07_wall_deco_support_01",
-      "zh": "DLC7 墙 deco 支撑 1",
+      "zh": "DLC07 墙装饰支撑 1",
       "en": "dlc07 wall deco support 1"
     },
     {
       "id": "m_dlc07_wall_deco_support_02",
-      "zh": "DLC7 墙 deco 支撑 2",
+      "zh": "DLC07 墙装饰支撑 2",
       "en": "dlc07 wall deco support 2"
     },
     {
       "id": "m_dlc07_wall_deco_support_03",
-      "zh": "DLC7 墙 deco 支撑 3",
+      "zh": "DLC07 墙装饰支撑 3",
       "en": "dlc07 wall deco support 3"
     },
     {
@@ -6334,7 +6399,7 @@
     },
     {
       "id": "m_dlc07_weapon_stand_01",
-      "zh": "DLC7 weapon stand 1",
+      "zh": "DLC07 武器架 1",
       "en": "dlc07 weapon stand 1"
     },
     {
@@ -6344,7 +6409,7 @@
     },
     {
       "id": "m_dlc08_bigtop_01",
-      "zh": "DLC8 bigtop 1",
+      "zh": "DLC08 大帐篷 1",
       "en": "dlc08 bigtop 1"
     },
     {
@@ -6354,12 +6419,12 @@
     },
     {
       "id": "m_dlc08_canonball_01",
-      "zh": "DLC8 canonball 1",
+      "zh": "DLC08 炮弹 1",
       "en": "dlc08 canonball 1"
     },
     {
       "id": "m_dlc08_canonball_pile_01",
-      "zh": "DLC8 canonball 堆 1",
+      "zh": "DLC08 炮弹堆 1",
       "en": "dlc08 canonball pile 1"
     },
     {
@@ -6369,22 +6434,22 @@
     },
     {
       "id": "m_dlc08_circus_ball_01",
-      "zh": "DLC8 马戏团 ball 1",
+      "zh": "DLC08 马戏团球 1",
       "en": "dlc08 circus ball 1"
     },
     {
       "id": "m_dlc08_circus_ball_02",
-      "zh": "DLC8 马戏团 ball 2",
+      "zh": "DLC08 马戏团球 2",
       "en": "dlc08 circus ball 2"
     },
     {
       "id": "m_dlc08_circus_ball_03",
-      "zh": "DLC8 马戏团 ball 3",
+      "zh": "DLC08 马戏团球 3",
       "en": "dlc08 circus ball 3"
     },
     {
       "id": "m_dlc08_circus_ball_04",
-      "zh": "DLC8 马戏团 ball 4",
+      "zh": "DLC08 马戏团球 4",
       "en": "dlc08 circus ball 4"
     },
     {
@@ -6414,7 +6479,7 @@
     },
     {
       "id": "m_dlc08_juggling_pin_01",
-      "zh": "DLC8 juggling pin 1",
+      "zh": "DLC08 杂耍瓶 1",
       "en": "dlc08 juggling pin 1"
     },
     {
@@ -6444,7 +6509,7 @@
     },
     {
       "id": "m_dlc08_pillar_trapeze_01",
-      "zh": "DLC8 立柱 trapeze 1",
+      "zh": "DLC08 立柱空中飞人 1",
       "en": "dlc08 pillar trapeze 1"
     },
     {
@@ -6499,27 +6564,27 @@
     },
     {
       "id": "m_dlc08_railtrack_end_01",
-      "zh": "DLC8 railtrack 尽头 1",
+      "zh": "DLC08 轨道尽头 1",
       "en": "dlc08 railtrack end 1"
     },
     {
       "id": "m_dlc08_railtrack_grate_01",
-      "zh": "DLC8 railtrack grate 1",
+      "zh": "DLC08 轨道格栅 1",
       "en": "dlc08 railtrack grate 1"
     },
     {
       "id": "m_dlc08_railtrack_middle_01",
-      "zh": "DLC8 railtrack 中段 1",
+      "zh": "DLC08 轨道中段 1",
       "en": "dlc08 railtrack middle 1"
     },
     {
       "id": "m_dlc08_railtrack_middle_02",
-      "zh": "DLC8 railtrack 中段 2",
+      "zh": "DLC08 轨道中段 2",
       "en": "dlc08 railtrack middle 2"
     },
     {
       "id": "m_dlc08_standing_sign_01",
-      "zh": "DLC8 standing 招牌 1",
+      "zh": "DLC08 立式招牌 1",
       "en": "dlc08 standing sign 1"
     },
     {
@@ -6544,7 +6609,7 @@
     },
     {
       "id": "m_dlc09_iceplatform_1_5",
-      "zh": "DLC9 iceplatform 1 5",
+      "zh": "DLC9 冰台 1.5",
       "en": "dlc09 iceplatform 1 5"
     },
     {
@@ -6629,7 +6694,7 @@
     },
     {
       "id": "m_dlc2_palmtree_canopy_01 (1)",
-      "zh": "DLC2 棕榈树遮阳棚 1 (1)",
+      "zh": "DLC2 棕榈树遮阳棚 1",
       "en": "dlc2 palmtree canopy 1 (1)"
     },
     {
@@ -6649,12 +6714,12 @@
     },
     {
       "id": "m_dlc2_pineapple_plant_02NoFruit 1",
-      "zh": "DLC2 菠萝植物 2 No Fruit 1",
+      "zh": "DLC2 菠萝植物 2 无水果 1",
       "en": "dlc2 pineapple plant 2 No Fruit 1"
     },
     {
       "id": "m_dlc2_quad_tile_3x1_01",
-      "zh": "DLC2 quad 瓦片 3x1 1",
+      "zh": "DLC2 四格瓦片 3x1 1",
       "en": "dlc2 quad tile 3x1 1"
     },
     {
@@ -6679,7 +6744,7 @@
     },
     {
       "id": "m_dlc2_umbrealla_open_02",
-      "zh": "DLC2 umbrealla 打开 2",
+      "zh": "DLC2 遮阳伞打开 2",
       "en": "dlc2 umbrealla open 2"
     },
     {
@@ -6709,22 +6774,22 @@
     },
     {
       "id": "m_dlc3_icecliff_270",
-      "zh": "DLC3 冰崖 270",
+      "zh": "DLC3 冰崖转角 270°",
       "en": "dlc3 icecliff 270"
     },
     {
       "id": "m_dlc3_icecliff_90",
-      "zh": "DLC3 冰崖 90",
+      "zh": "DLC3 冰崖转角 90°",
       "en": "dlc3 icecliff 90"
     },
     {
       "id": "m_dlc3_icecliff_straight_01",
-      "zh": "DLC3 冰崖直 1",
+      "zh": "DLC3 冰崖直边 1",
       "en": "dlc3 icecliff straight 1"
     },
     {
       "id": "m_dlc3_icecliff_straight_02",
-      "zh": "DLC3 冰崖直 2",
+      "zh": "DLC3 冰崖直边 2",
       "en": "dlc3 icecliff straight 2"
     },
     {
@@ -6789,17 +6854,17 @@
     },
     {
       "id": "m_dlc3_stall_large",
-      "zh": "DLC3 摊位大",
+      "zh": "DLC3 摊位（大）",
       "en": "dlc3 stall large"
     },
     {
       "id": "m_dlc3_stall_medium",
-      "zh": "DLC3 摊位 medium",
+      "zh": "DLC3 摊位（中）",
       "en": "dlc3 stall medium"
     },
     {
       "id": "m_dlc3_stall_small",
-      "zh": "DLC3 摊位小",
+      "zh": "DLC3 摊位（小）",
       "en": "dlc3 stall small"
     },
     {
@@ -6849,7 +6914,7 @@
     },
     {
       "id": "m_dlc4_lilyflower_01",
-      "zh": "DLC4 lilyflower 1",
+      "zh": "DLC4 荷花 1",
       "en": "dlc4 lilyflower 1"
     },
     {
@@ -6869,7 +6934,7 @@
     },
     {
       "id": "m_dlc4_lvl7_ripples_01",
-      "zh": "DLC4 lvl 7 ripples 1",
+      "zh": "DLC4 关 7 涟漪 1",
       "en": "dlc4 lvl 7 ripples 1"
     },
     {
@@ -6894,7 +6959,7 @@
     },
     {
       "id": "m_dlc4_mudpath_1_1",
-      "zh": "DLC4 mudpath 1 1",
+      "zh": "DLC4 泥路 1 1",
       "en": "dlc4 mudpath 1 1"
     },
     {
@@ -6919,7 +6984,7 @@
     },
     {
       "id": "m_dlc5_camp_ground_special",
-      "zh": "DLC5 营地地面 special",
+      "zh": "DLC5·营地地面特殊",
       "en": "dlc5 camp ground special"
     },
     {
@@ -7009,7 +7074,7 @@
     },
     {
       "id": "m_dlc7_woodensupport_01",
-      "zh": "DLC7 woodensupport 1",
+      "zh": "DLC7 木支架 1",
       "en": "dlc7 woodensupport 1"
     },
     {
@@ -7074,22 +7139,22 @@
     },
     {
       "id": "m_mine_bigplatform",
-      "zh": "矿洞 bigplatform",
+      "zh": "矿洞大平台",
       "en": "mine bigplatform"
     },
     {
       "id": "m_mine_goldore_01",
-      "zh": "矿洞 goldore 1",
+      "zh": "矿洞金矿 1",
       "en": "mine goldore 1"
     },
     {
       "id": "m_mine_goldore_02",
-      "zh": "矿洞 goldore 2",
+      "zh": "矿洞金矿 2",
       "en": "mine goldore 2"
     },
     {
       "id": "m_mine_goldore_03",
-      "zh": "矿洞 goldore 3",
+      "zh": "矿洞金矿 3",
       "en": "mine goldore 3"
     },
     {
@@ -7139,7 +7204,7 @@
     },
     {
       "id": "m_sk_spice_jar_01",
-      "zh": "sk 香料 jar 1",
+      "zh": "sk 香料罐 1",
       "en": "sk spice jar 1"
     },
     {
@@ -7184,7 +7249,7 @@
     },
     {
       "id": "m_sp_countertop_detail_01",
-      "zh": "太空台面 detail 1",
+      "zh": "太空台面细节 1",
       "en": "sp countertop detail 1"
     },
     {
@@ -7194,7 +7259,7 @@
     },
     {
       "id": "m_wizard_bookcase_02",
-      "zh": "魔法 bookcase 2",
+      "zh": "魔法书架 2",
       "en": "wizard bookcase 2"
     },
     {
@@ -7204,12 +7269,12 @@
     },
     {
       "id": "m_wizard_portalfloat_01",
-      "zh": "魔法 portalfloat 1",
+      "zh": "魔法传送门浮标 1",
       "en": "wizard portalfloat 1"
     },
     {
       "id": "m_wizard_portalfloat_02",
-      "zh": "魔法 portalfloat 2",
+      "zh": "魔法传送门浮标 2",
       "en": "wizard portalfloat 2"
     },
     {
@@ -9234,12 +9299,12 @@
     },
     {
       "id": "medium_stall_dressed_01",
-      "zh": "medium 摊位 dressed 1",
+      "zh": "中摊位装扮 1",
       "en": "medium stall dressed 1"
     },
     {
       "id": "medium_stall_dressed_02",
-      "zh": "medium 摊位 dressed 2",
+      "zh": "中摊位装扮 2",
       "en": "medium stall dressed 2"
     },
     {
@@ -9704,7 +9769,7 @@
     },
     {
       "id": "MultiControlTerminal",
-      "zh": "摇杆",
+      "zh": "多路控制终端",
       "en": "Multi Control Terminal"
     },
     {
@@ -9819,7 +9884,7 @@
     },
     {
       "id": "npc_asian_hawaiian_01",
-      "zh": "顾客 asian 夏威夷 1",
+      "zh": "顾客·亚裔（夏威夷）",
       "en": "npc asian hawaiian 1"
     },
     {
@@ -9869,7 +9934,7 @@
     },
     {
       "id": "npc_beard_hawaiian_01",
-      "zh": "顾客 beard 夏威夷 1",
+      "zh": "顾客·大胡子（夏威夷）",
       "en": "npc beard hawaiian 1"
     },
     {
@@ -9954,7 +10019,7 @@
     },
     {
       "id": "npc_dora_hawaiian_01",
-      "zh": "顾客 dora 夏威夷 1",
+      "zh": "顾客·朵拉（夏威夷）",
       "en": "npc dora hawaiian 1"
     },
     {
@@ -9999,7 +10064,7 @@
     },
     {
       "id": "npc_dorablonde_hawaiian_01",
-      "zh": "顾客 dorablonde 夏威夷 1",
+      "zh": "顾客·金发朵拉（夏威夷）",
       "en": "npc dorablonde hawaiian 1"
     },
     {
@@ -10064,7 +10129,7 @@
     },
     {
       "id": "npc_ginger_hawaiian_01",
-      "zh": "顾客 ginger 夏威夷 1",
+      "zh": "顾客·姜发（夏威夷）",
       "en": "npc ginger hawaiian 1"
     },
     {
@@ -10114,7 +10179,7 @@
     },
     {
       "id": "npc_hispanic_hawaiian_01",
-      "zh": "顾客 hispanic 夏威夷 1",
+      "zh": "顾客·拉丁裔（夏威夷）",
       "en": "npc hispanic hawaiian 1"
     },
     {
@@ -10189,7 +10254,7 @@
     },
     {
       "id": "npc_middleeatern_hawaiian_01",
-      "zh": "顾客 middleeatern 夏威夷 1",
+      "zh": "顾客·中东（夏威夷）",
       "en": "npc middleeatern hawaiian 1"
     },
     {
@@ -10244,7 +10309,7 @@
     },
     {
       "id": "npc_mike_hawaiian_01",
-      "zh": "顾客 mike 夏威夷 1",
+      "zh": "顾客·迈克（夏威夷）",
       "en": "npc mike hawaiian 1"
     },
     {
@@ -10309,7 +10374,7 @@
     },
     {
       "id": "npc_specs_hawaiian_01",
-      "zh": "顾客 specs 夏威夷 1",
+      "zh": "顾客·眼镜（夏威夷）",
       "en": "npc specs hawaiian 1"
     },
     {
@@ -10379,7 +10444,7 @@
     },
     {
       "id": "npc_wizboy_hawaiian_01",
-      "zh": "顾客 wizboy 夏威夷 1",
+      "zh": "顾客·巫师男孩（夏威夷）",
       "en": "npc wizboy hawaiian 1"
     },
     {
@@ -10414,7 +10479,7 @@
     },
     {
       "id": "onion_recipebook",
-      "zh": "洋葱 recipebook",
+      "zh": "洋葱菜谱书",
       "en": "onion recipebook"
     },
     {
@@ -10544,7 +10609,7 @@
     },
     {
       "id": "p_dcl13_log_float_01",
-      "zh": "dcl 13 原木浮筒 1",
+      "zh": "DLC 13 原木浮筒 1",
       "en": "dcl 13 log float 1"
     },
     {
@@ -10599,12 +10664,12 @@
     },
     {
       "id": "p_dlc07_arch_start_01",
-      "zh": "DLC7 拱门 start 1",
+      "zh": "DLC07 拱门起点 1",
       "en": "dlc07 arch start 1"
     },
     {
       "id": "p_dlc07_arch_start_02",
-      "zh": "DLC7 拱门 start 2",
+      "zh": "DLC07 拱门起点 2",
       "en": "dlc07 arch start 2"
     },
     {
@@ -10629,87 +10694,87 @@
     },
     {
       "id": "p_dlc07_battlement_wall_01",
-      "zh": "DLC7 battlement 墙 1",
+      "zh": "DLC07 城垛墙 1",
       "en": "dlc07 battlement wall 1"
     },
     {
       "id": "p_dlc07_battlement_wall_02",
-      "zh": "DLC7 battlement 墙 2",
+      "zh": "DLC07 城垛墙 2",
       "en": "dlc07 battlement wall 2"
     },
     {
       "id": "p_dlc07_battlements_01",
-      "zh": "DLC7 battlements 1",
+      "zh": "DLC07 城垛 1",
       "en": "dlc07 battlements 1"
     },
     {
       "id": "p_dlc07_battlements_arch_02",
-      "zh": "DLC7 battlements 拱门 2",
+      "zh": "DLC07 城垛拱门 2",
       "en": "dlc07 battlements arch 2"
     },
     {
       "id": "p_dlc07_battlements_arch_end_02",
-      "zh": "DLC7 battlements 拱门尽头 2",
+      "zh": "DLC07 城垛拱门尽头 2",
       "en": "dlc07 battlements arch end 2"
     },
     {
       "id": "p_dlc07_battlements_arch_middle_04",
-      "zh": "DLC7 battlements 拱门中段 4",
+      "zh": "DLC07 城垛拱门中段 4",
       "en": "dlc07 battlements arch middle 4"
     },
     {
       "id": "p_dlc07_battlements_arch_middle_05",
-      "zh": "DLC7 battlements 拱门中段 5",
+      "zh": "DLC07 城垛拱门中段 5",
       "en": "dlc07 battlements arch middle 5"
     },
     {
       "id": "p_dlc07_battlements_arch_middle_06",
-      "zh": "DLC7 battlements 拱门中段 6",
+      "zh": "DLC07 城垛拱门中段 6",
       "en": "dlc07 battlements arch middle 6"
     },
     {
       "id": "p_dlc07_battlements_arch_start_02",
-      "zh": "DLC7 battlements 拱门 start 2",
+      "zh": "DLC07 城垛拱门起点 2",
       "en": "dlc07 battlements arch start 2"
     },
     {
       "id": "p_dlc07_battlements_battlement_wall_03",
-      "zh": "DLC7 battlements battlement 墙 3",
+      "zh": "DLC07 城垛城垛墙 3",
       "en": "dlc07 battlements battlement wall 3"
     },
     {
       "id": "p_dlc07_battlements_battlement_wall_04",
-      "zh": "DLC7 battlements battlement 墙 4",
+      "zh": "DLC07 城垛城垛墙 4",
       "en": "dlc07 battlements battlement wall 4"
     },
     {
       "id": "p_dlc07_battlements_battlement_wall_top_02",
-      "zh": "DLC7 battlements battlement 墙顶部 2",
+      "zh": "DLC07 城垛城垛墙顶部 2",
       "en": "dlc07 battlements battlement wall top 2"
     },
     {
       "id": "p_dlc07_battlements_fog_01",
-      "zh": "DLC7 battlements 雾 1",
+      "zh": "DLC07 城垛雾 1",
       "en": "dlc07 battlements fog 1"
     },
     {
       "id": "p_dlc07_battlements_fog_02",
-      "zh": "DLC7 battlements 雾 2",
+      "zh": "DLC07 城垛雾 2",
       "en": "dlc07 battlements fog 2"
     },
     {
       "id": "p_dlc07_battlements_fog_03",
-      "zh": "DLC7 battlements 雾 3",
+      "zh": "DLC07 城垛雾 3",
       "en": "dlc07 battlements fog 3"
     },
     {
       "id": "p_dlc07_battlements_fog_04",
-      "zh": "DLC7 battlements 雾 4",
+      "zh": "DLC07 城垛雾 4",
       "en": "dlc07 battlements fog 4"
     },
     {
       "id": "p_dlc07_battlements_grotesque_02",
-      "zh": "DLC7 battlements grotesque 2",
+      "zh": "DLC07 城垛石像鬼 2",
       "en": "dlc07 battlements grotesque 2"
     },
     {
@@ -10719,72 +10784,72 @@
     },
     {
       "id": "p_dlc07_battlements_pillar_05",
-      "zh": "DLC7 battlements 立柱 5",
+      "zh": "DLC07 城垛立柱 5",
       "en": "dlc07 battlements pillar 5"
     },
     {
       "id": "p_dlc07_battlements_pillar_06",
-      "zh": "DLC7 battlements 立柱 6",
+      "zh": "DLC07 城垛立柱 6",
       "en": "dlc07 battlements pillar 6"
     },
     {
       "id": "p_dlc07_battlements_pillar_07",
-      "zh": "DLC7 battlements 立柱 7",
+      "zh": "DLC07 城垛立柱 7",
       "en": "dlc07 battlements pillar 7"
     },
     {
       "id": "p_dlc07_battlements_pillar_08",
-      "zh": "DLC7 battlements 立柱 8",
+      "zh": "DLC07 城垛立柱 8",
       "en": "dlc07 battlements pillar 8"
     },
     {
       "id": "p_dlc07_battlements_pillar_tall_02",
-      "zh": "DLC7 battlements 立柱 tall 2",
+      "zh": "DLC07 城垛立柱高 2",
       "en": "dlc07 battlements pillar tall 2"
     },
     {
       "id": "p_dlc07_battlements_plank_07",
-      "zh": "DLC7 battlements 木板 7",
+      "zh": "DLC07 城垛木板 7",
       "en": "dlc07 battlements plank 7"
     },
     {
       "id": "p_dlc07_battlements_plank_08",
-      "zh": "DLC7 battlements 木板 8",
+      "zh": "DLC07 城垛木板 8",
       "en": "dlc07 battlements plank 8"
     },
     {
       "id": "p_dlc07_battlements_plank_09",
-      "zh": "DLC7 battlements 木板 9",
+      "zh": "DLC07 城垛木板 9",
       "en": "dlc07 battlements plank 9"
     },
     {
       "id": "p_dlc07_battlements_plank_10",
-      "zh": "DLC7 battlements 木板 10",
+      "zh": "DLC07 城垛木板 10",
       "en": "dlc07 battlements plank 10"
     },
     {
       "id": "p_dlc07_battlements_plank_11",
-      "zh": "DLC7 battlements 木板 11",
+      "zh": "DLC07 城垛木板 11",
       "en": "dlc07 battlements plank 11"
     },
     {
       "id": "p_dlc07_battlements_plank_12",
-      "zh": "DLC7 battlements 木板 12",
+      "zh": "DLC07 城垛木板 12",
       "en": "dlc07 battlements plank 12"
     },
     {
       "id": "p_dlc07_battlements_sewergrate_01",
-      "zh": "DLC7 battlements sewergrate 1",
+      "zh": "DLC07 城垛下水道格栅 1",
       "en": "dlc07 battlements sewergrate 1"
     },
     {
       "id": "p_dlc07_battlements_small_window_02",
-      "zh": "DLC7 battlements 小窗 2",
+      "zh": "DLC07 城垛小窗 2",
       "en": "dlc07 battlements small window 2"
     },
     {
       "id": "p_dlc07_battlements_stone_block_01_a 1",
-      "zh": "DLC07 battlements 石块 1 a 1",
+      "zh": "DLC07 城垛石块 1 a 1",
       "en": "dlc07 battlements stone block 1 a 1"
     },
     {
@@ -10794,7 +10859,7 @@
     },
     {
       "id": "p_dlc07_battlements_stone_block_01_b 1",
-      "zh": "DLC07 battlements 石块 1 b 1",
+      "zh": "DLC07 城垛石块 1 b 1",
       "en": "dlc07 battlements stone block 1 b 1"
     },
     {
@@ -10814,7 +10879,7 @@
     },
     {
       "id": "p_dlc07_battlements_stone_block_02_a 1",
-      "zh": "DLC07 battlements 石块 2 a 1",
+      "zh": "DLC07 城垛石块 2 a 1",
       "en": "dlc07 battlements stone block 2 a 1"
     },
     {
@@ -10839,7 +10904,7 @@
     },
     {
       "id": "p_dlc07_battlements_stone_block_03_a 1",
-      "zh": "DLC07 battlements 石块 3 a 1",
+      "zh": "DLC07 城垛石块 3 a 1",
       "en": "dlc07 battlements stone block 3 a 1"
     },
     {
@@ -10864,7 +10929,7 @@
     },
     {
       "id": "p_dlc07_battlements_stone_block_04_a 1",
-      "zh": "DLC07 battlements 石块 4 a 1",
+      "zh": "DLC07 城垛石块 4 a 1",
       "en": "dlc07 battlements stone block 4 a 1"
     },
     {
@@ -10889,7 +10954,7 @@
     },
     {
       "id": "p_dlc07_battlements_stone_block_05_a 1",
-      "zh": "DLC07 battlements 石块 5 a 1",
+      "zh": "DLC07 城垛石块 5 a 1",
       "en": "dlc07 battlements stone block 5 a 1"
     },
     {
@@ -10914,7 +10979,7 @@
     },
     {
       "id": "p_dlc07_battlements_stone_block_06_a 1",
-      "zh": "DLC07 battlements 石块 6 a 1",
+      "zh": "DLC07 城垛石块 6 a 1",
       "en": "dlc07 battlements stone block 6 a 1"
     },
     {
@@ -10939,7 +11004,7 @@
     },
     {
       "id": "p_dlc07_battlements_stone_block_07_a 1",
-      "zh": "DLC07 battlements 石块 7 a 1",
+      "zh": "DLC07 城垛石块 7 a 1",
       "en": "dlc07 battlements stone block 7 a 1"
     },
     {
@@ -10964,22 +11029,22 @@
     },
     {
       "id": "p_dlc07_battlements_stone_block_trip_04",
-      "zh": "DLC07 battlements 石块 trip 4",
+      "zh": "DLC07 城垛石块绊脚 4",
       "en": "dlc07 battlements stone block trip 4"
     },
     {
       "id": "p_dlc07_battlements_stone_block_trip_05",
-      "zh": "DLC07 battlements 石块 trip 5",
+      "zh": "DLC07 城垛石块绊脚 5",
       "en": "dlc07 battlements stone block trip 5"
     },
     {
       "id": "p_dlc07_battlements_stone_block_trip_06",
-      "zh": "DLC07 battlements 石块 trip 6",
+      "zh": "DLC07 城垛石块绊脚 6",
       "en": "dlc07 battlements stone block trip 6"
     },
     {
       "id": "p_dlc07_battlements_stone_half_block_01_a 1",
-      "zh": "DLC07 battlements 石 half 块 1 a 1",
+      "zh": "DLC07 城垛石半块 1 a 1",
       "en": "dlc07 battlements stone half block 1 a 1"
     },
     {
@@ -11004,7 +11069,7 @@
     },
     {
       "id": "p_dlc07_battlements_stone_half_block_02_a 1",
-      "zh": "DLC07 battlements 石 half 块 2 a 1",
+      "zh": "DLC07 城垛石半块 2 a 1",
       "en": "dlc07 battlements stone half block 2 a 1"
     },
     {
@@ -11029,7 +11094,7 @@
     },
     {
       "id": "p_dlc07_battlements_stone_half_block_03_a 1",
-      "zh": "DLC07 battlements 石 half 块 3 a 1",
+      "zh": "DLC07 城垛石半块 3 a 1",
       "en": "dlc07 battlements stone half block 3 a 1"
     },
     {
@@ -11054,7 +11119,7 @@
     },
     {
       "id": "p_dlc07_battlements_stone_half_block_04_a 1",
-      "zh": "DLC07 battlements 石 half 块 4 a 1",
+      "zh": "DLC07 城垛石半块 4 a 1",
       "en": "dlc07 battlements stone half block 4 a 1"
     },
     {
@@ -11079,7 +11144,7 @@
     },
     {
       "id": "p_dlc07_battlements_stone_half_block_05_a 1",
-      "zh": "DLC07 battlements 石 half 块 5 a 1",
+      "zh": "DLC07 城垛石半块 5 a 1",
       "en": "dlc07 battlements stone half block 5 a 1"
     },
     {
@@ -11104,7 +11169,7 @@
     },
     {
       "id": "p_dlc07_battlements_stone_tall_block_01_a 1",
-      "zh": "DLC07 battlements 石 tall 块 1 a 1",
+      "zh": "DLC07 城垛石高块 1 a 1",
       "en": "dlc07 battlements stone tall block 1 a 1"
     },
     {
@@ -11129,52 +11194,52 @@
     },
     {
       "id": "p_dlc07_battlements_stone_wall_05",
-      "zh": "DLC7 battlements 石墙 5",
+      "zh": "DLC07 城垛石墙 5",
       "en": "dlc07 battlements stone wall 5"
     },
     {
       "id": "p_dlc07_battlements_stone_wall_06",
-      "zh": "DLC7 battlements 石墙 6",
+      "zh": "DLC07 城垛石墙 6",
       "en": "dlc07 battlements stone wall 6"
     },
     {
       "id": "p_dlc07_battlements_stone_wall_07",
-      "zh": "DLC7 battlements 石墙 7",
+      "zh": "DLC07 城垛石墙 7",
       "en": "dlc07 battlements stone wall 7"
     },
     {
       "id": "p_dlc07_battlements_stone_wall_08",
-      "zh": "DLC7 battlements 石墙 8",
+      "zh": "DLC07 城垛石墙 8",
       "en": "dlc07 battlements stone wall 8"
     },
     {
       "id": "p_dlc07_battlements_stone_wall_optimized_04",
-      "zh": "DLC7 battlements 石墙 optimized 4",
+      "zh": "DLC07 城垛石墙优化 4",
       "en": "dlc07 battlements stone wall optimized 4"
     },
     {
       "id": "p_dlc07_battlements_stone_wall_optimized_05",
-      "zh": "DLC7 battlements 石墙 optimized 5",
+      "zh": "DLC07 城垛石墙优化 5",
       "en": "dlc07 battlements stone wall optimized 5"
     },
     {
       "id": "p_dlc07_battlements_stone_wall_optimized_06",
-      "zh": "DLC7 battlements 石墙 optimized 6",
+      "zh": "DLC07 城垛石墙优化 6",
       "en": "dlc07 battlements stone wall optimized 6"
     },
     {
       "id": "p_dlc07_battlements_wallsection_01",
-      "zh": "DLC7 battlements wallsection 1",
+      "zh": "DLC07 城垛墙段 1",
       "en": "dlc07 battlements wallsection 1"
     },
     {
       "id": "p_dlc07_battlements_wallsection_arch_01",
-      "zh": "DLC7 battlements wallsection 拱门 1",
+      "zh": "DLC07 城垛墙段拱门 1",
       "en": "dlc07 battlements wallsection arch 1"
     },
     {
       "id": "p_dlc07_battlements_wallsection_corner_01",
-      "zh": "DLC7 battlements wallsection 转角 1",
+      "zh": "DLC07 城垛墙段转角 1",
       "en": "dlc07 battlements wallsection corner 1"
     },
     {
@@ -11249,22 +11314,22 @@
     },
     {
       "id": "p_dlc07_courtyard_arch_start_02",
-      "zh": "DLC7 庭院拱门 start 2",
+      "zh": "DLC07 庭院拱门起点 2",
       "en": "dlc07 courtyard arch start 2"
     },
     {
       "id": "p_dlc07_courtyard_battlement_wall_01",
-      "zh": "DLC7 庭院 battlement 墙 1",
+      "zh": "DLC07 庭院城垛墙 1",
       "en": "dlc07 courtyard battlement wall 1"
     },
     {
       "id": "p_dlc07_courtyard_battlement_wall_02",
-      "zh": "DLC7 庭院 battlement 墙 2",
+      "zh": "DLC07 庭院城垛墙 2",
       "en": "dlc07 courtyard battlement wall 2"
     },
     {
       "id": "p_dlc07_courtyard_candelabra_01",
-      "zh": "DLC7 庭院 candelabra 1",
+      "zh": "DLC07 庭院烛台 1",
       "en": "dlc07 courtyard candelabra 1"
     },
     {
@@ -11304,22 +11369,22 @@
     },
     {
       "id": "p_dlc07_courtyard_grass_card_01",
-      "zh": "DLC7 庭院草 card 1",
+      "zh": "DLC07 庭院草卡片 1",
       "en": "dlc07 courtyard grass card 1"
     },
     {
       "id": "p_dlc07_courtyard_grass_card_02",
-      "zh": "DLC7 庭院草 card 2",
+      "zh": "DLC07 庭院草卡片 2",
       "en": "dlc07 courtyard grass card 2"
     },
     {
       "id": "p_dlc07_courtyard_grass_card_03",
-      "zh": "DLC7 庭院草 card 3",
+      "zh": "DLC07 庭院草卡片 3",
       "en": "dlc07 courtyard grass card 3"
     },
     {
       "id": "p_dlc07_courtyard_grotesque_02",
-      "zh": "DLC7 庭院 grotesque 2",
+      "zh": "DLC07 庭院石像鬼 2",
       "en": "dlc07 courtyard grotesque 2"
     },
     {
@@ -11349,7 +11414,7 @@
     },
     {
       "id": "p_dlc07_courtyard_pillar_tall_02",
-      "zh": "DLC7 庭院立柱 tall 2",
+      "zh": "DLC07 庭院立柱高 2",
       "en": "dlc07 courtyard pillar tall 2"
     },
     {
@@ -11384,7 +11449,7 @@
     },
     {
       "id": "p_dlc07_courtyard_portcullis_01",
-      "zh": "DLC7 庭院 portcullis 1",
+      "zh": "DLC07 庭院吊闸 1",
       "en": "dlc07 courtyard portcullis 1"
     },
     {
@@ -11399,12 +11464,12 @@
     },
     {
       "id": "p_dlc07_courtyard_sconce_01",
-      "zh": "DLC7 庭院 sconce 1",
+      "zh": "DLC07 庭院壁灯 1",
       "en": "dlc07 courtyard sconce 1"
     },
     {
       "id": "p_dlc07_courtyard_sewergrate_02",
-      "zh": "DLC7 庭院 sewergrate 2",
+      "zh": "DLC07 庭院下水道格栅 2",
       "en": "dlc07 courtyard sewergrate 2"
     },
     {
@@ -11649,17 +11714,17 @@
     },
     {
       "id": "p_dlc07_courtyard_stone_block_trip_04",
-      "zh": "DLC07 庭院石块 trip 4",
+      "zh": "DLC07 庭院石块绊脚 4",
       "en": "dlc07 courtyard stone block trip 4"
     },
     {
       "id": "p_dlc07_courtyard_stone_block_trip_05",
-      "zh": "DLC07 庭院石块 trip 5",
+      "zh": "DLC07 庭院石块绊脚 5",
       "en": "dlc07 courtyard stone block trip 5"
     },
     {
       "id": "p_dlc07_courtyard_stone_block_trip_06",
-      "zh": "DLC07 庭院石块 trip 6",
+      "zh": "DLC07 庭院石块绊脚 6",
       "en": "dlc07 courtyard stone block trip 6"
     },
     {
@@ -11669,7 +11734,7 @@
     },
     {
       "id": "p_dlc07_courtyard_stone_half_block_01_a 1",
-      "zh": "DLC07 庭院石 half 块 1 a 1",
+      "zh": "DLC07 庭院石半块 1 a 1",
       "en": "dlc07 courtyard stone half block 1 a 1"
     },
     {
@@ -11694,7 +11759,7 @@
     },
     {
       "id": "p_dlc07_courtyard_stone_half_block_02_a 1",
-      "zh": "DLC07 庭院石 half 块 2 a 1",
+      "zh": "DLC07 庭院石半块 2 a 1",
       "en": "dlc07 courtyard stone half block 2 a 1"
     },
     {
@@ -11719,7 +11784,7 @@
     },
     {
       "id": "p_dlc07_courtyard_stone_half_block_03_a 1",
-      "zh": "DLC07 庭院石 half 块 3 a 1",
+      "zh": "DLC07 庭院石半块 3 a 1",
       "en": "dlc07 courtyard stone half block 3 a 1"
     },
     {
@@ -11744,7 +11809,7 @@
     },
     {
       "id": "p_dlc07_courtyard_stone_half_block_04_a 1",
-      "zh": "DLC07 庭院石 half 块 4 a 1",
+      "zh": "DLC07 庭院石半块 4 a 1",
       "en": "dlc07 courtyard stone half block 4 a 1"
     },
     {
@@ -11769,7 +11834,7 @@
     },
     {
       "id": "p_dlc07_courtyard_stone_half_block_05_a 1",
-      "zh": "DLC07 庭院石 half 块 5 a 1",
+      "zh": "DLC07 庭院石半块 5 a 1",
       "en": "dlc07 courtyard stone half block 5 a 1"
     },
     {
@@ -11794,7 +11859,7 @@
     },
     {
       "id": "p_dlc07_courtyard_stone_tall_block_01_a 1",
-      "zh": "DLC07 庭院石 tall 块 1 a 1",
+      "zh": "DLC07 庭院石高块 1 a 1",
       "en": "dlc07 courtyard stone tall block 1 a 1"
     },
     {
@@ -11839,22 +11904,22 @@
     },
     {
       "id": "p_dlc07_courtyard_stone_wall_optimized_04",
-      "zh": "DLC7 庭院石墙 optimized 4",
+      "zh": "DLC07 庭院石墙优化 4",
       "en": "dlc07 courtyard stone wall optimized 4"
     },
     {
       "id": "p_dlc07_courtyard_stone_wall_optimized_05",
-      "zh": "DLC7 庭院石墙 optimized 5",
+      "zh": "DLC07 庭院石墙优化 5",
       "en": "dlc07 courtyard stone wall optimized 5"
     },
     {
       "id": "p_dlc07_courtyard_stone_wall_optimized_06",
-      "zh": "DLC7 庭院石墙 optimized 6",
+      "zh": "DLC07 庭院石墙优化 6",
       "en": "dlc07 courtyard stone wall optimized 6"
     },
     {
       "id": "p_dlc07_courtyard_wallsection_01 1",
-      "zh": "DLC7 庭院 wallsection 1 1",
+      "zh": "DLC07 庭院墙段 1 1",
       "en": "dlc07 courtyard wallsection 1 1"
     },
     {
@@ -11864,17 +11929,17 @@
     },
     {
       "id": "p_dlc07_courtyard_wallsection_arch_01",
-      "zh": "DLC7 庭院 wallsection 拱门 1",
+      "zh": "DLC07 庭院墙段拱门 1",
       "en": "dlc07 courtyard wallsection arch 1"
     },
     {
       "id": "p_dlc07_courtyard_wallsection_corner_01",
-      "zh": "DLC7 庭院 wallsection 转角 1",
+      "zh": "DLC07 庭院墙段转角 1",
       "en": "dlc07 courtyard wallsection corner 1"
     },
     {
       "id": "p_dlc07_curtain_01",
-      "zh": "DLC7 curtain 1",
+      "zh": "DLC07 窗帘 1",
       "en": "dlc07 curtain 1"
     },
     {
@@ -11919,22 +11984,22 @@
     },
     {
       "id": "p_dlc07_ghost_pfx_01",
-      "zh": "DLC07 ghost 特效 1",
+      "zh": "DLC7 幽灵特效 1",
       "en": "dlc07 ghost pfx 1"
     },
     {
       "id": "p_dlc07_gothic_trefoil_01",
-      "zh": "DLC7 gothic trefoil 1",
+      "zh": "DLC07 哥特三叶饰 1",
       "en": "dlc07 gothic trefoil 1"
     },
     {
       "id": "p_dlc07_grotesque_01",
-      "zh": "DLC7 grotesque 1",
+      "zh": "DLC07 石像鬼 1",
       "en": "dlc07 grotesque 1"
     },
     {
       "id": "p_dlc07_jug_01",
-      "zh": "DLC7 jug 1",
+      "zh": "DLC07 罐 1",
       "en": "dlc07 jug 1"
     },
     {
@@ -11944,7 +12009,7 @@
     },
     {
       "id": "p_dlc07_keep_arch_bricks_01",
-      "zh": "DLC7 城堡拱门 bricks 1",
+      "zh": "DLC07 城堡拱门砖 1",
       "en": "dlc07 keep arch bricks 1"
     },
     {
@@ -11954,12 +12019,12 @@
     },
     {
       "id": "p_dlc07_keep_arch_gate_01",
-      "zh": "DLC7 城堡拱门 gate 1",
+      "zh": "DLC07 城堡拱门大门 1",
       "en": "dlc07 keep arch gate 1"
     },
     {
       "id": "p_dlc07_keep_arch_gate_02",
-      "zh": "DLC7 城堡拱门 gate 2",
+      "zh": "DLC07 城堡拱门大门 2",
       "en": "dlc07 keep arch gate 2"
     },
     {
@@ -11979,22 +12044,22 @@
     },
     {
       "id": "p_dlc07_keep_arch_start_02",
-      "zh": "DLC7 城堡拱门 start 2",
+      "zh": "DLC07 城堡拱门起点 2",
       "en": "dlc07 keep arch start 2"
     },
     {
       "id": "p_dlc07_keep_battlement_wall_03",
-      "zh": "DLC7 城堡 battlement 墙 3",
+      "zh": "DLC07 城堡城垛墙 3",
       "en": "dlc07 keep battlement wall 3"
     },
     {
       "id": "p_dlc07_keep_battlement_wall_04",
-      "zh": "DLC7 城堡 battlement 墙 4",
+      "zh": "DLC07 城堡城垛墙 4",
       "en": "dlc07 keep battlement wall 4"
     },
     {
       "id": "p_dlc07_keep_battlement_wall_top_02",
-      "zh": "DLC7 城堡 battlement 墙顶部 2",
+      "zh": "DLC07 城堡城垛墙顶部 2",
       "en": "dlc07 keep battlement wall top 2"
     },
     {
@@ -12229,7 +12294,7 @@
     },
     {
       "id": "p_dlc07_keep_pillar_tall_02",
-      "zh": "DLC7 城堡立柱 tall 2",
+      "zh": "DLC07 城堡立柱高 2",
       "en": "dlc07 keep pillar tall 2"
     },
     {
@@ -12264,7 +12329,7 @@
     },
     {
       "id": "p_dlc07_keep_sewergrate_02",
-      "zh": "DLC7 城堡 sewergrate 2",
+      "zh": "DLC07 城堡下水道格栅 2",
       "en": "dlc07 keep sewergrate 2"
     },
     {
@@ -12519,22 +12584,22 @@
     },
     {
       "id": "p_dlc07_keep_stone_block_trip_04",
-      "zh": "DLC07 城堡石块 trip 4",
+      "zh": "DLC07 城堡石块绊脚 4",
       "en": "dlc07 keep stone block trip 4"
     },
     {
       "id": "p_dlc07_keep_stone_block_trip_05",
-      "zh": "DLC07 城堡石块 trip 5",
+      "zh": "DLC07 城堡石块绊脚 5",
       "en": "dlc07 keep stone block trip 5"
     },
     {
       "id": "p_dlc07_keep_stone_block_trip_06",
-      "zh": "DLC07 城堡石块 trip 6",
+      "zh": "DLC07 城堡石块绊脚 6",
       "en": "dlc07 keep stone block trip 6"
     },
     {
       "id": "p_dlc07_keep_stone_half_block_01_a 1",
-      "zh": "DLC07 城堡石 half 块 1 a 1",
+      "zh": "DLC07 城堡石半块 1 a 1",
       "en": "dlc07 keep stone half block 1 a 1"
     },
     {
@@ -12544,7 +12609,7 @@
     },
     {
       "id": "p_dlc07_keep_stone_half_block_01_b 1",
-      "zh": "DLC07 城堡石 half 块 1 b 1",
+      "zh": "DLC07 城堡石半块 1 b 1",
       "en": "dlc07 keep stone half block 1 b 1"
     },
     {
@@ -12564,7 +12629,7 @@
     },
     {
       "id": "p_dlc07_keep_stone_half_block_02_a 1",
-      "zh": "DLC07 城堡石 half 块 2 a 1",
+      "zh": "DLC07 城堡石半块 2 a 1",
       "en": "dlc07 keep stone half block 2 a 1"
     },
     {
@@ -12574,7 +12639,7 @@
     },
     {
       "id": "p_dlc07_keep_stone_half_block_02_b 1",
-      "zh": "DLC07 城堡石 half 块 2 b 1",
+      "zh": "DLC07 城堡石半块 2 b 1",
       "en": "dlc07 keep stone half block 2 b 1"
     },
     {
@@ -12594,7 +12659,7 @@
     },
     {
       "id": "p_dlc07_keep_stone_half_block_03_a 1",
-      "zh": "DLC07 城堡石 half 块 3 a 1",
+      "zh": "DLC07 城堡石半块 3 a 1",
       "en": "dlc07 keep stone half block 3 a 1"
     },
     {
@@ -12619,7 +12684,7 @@
     },
     {
       "id": "p_dlc07_keep_stone_half_block_04_a 1",
-      "zh": "DLC07 城堡石 half 块 4 a 1",
+      "zh": "DLC07 城堡石半块 4 a 1",
       "en": "dlc07 keep stone half block 4 a 1"
     },
     {
@@ -12644,7 +12709,7 @@
     },
     {
       "id": "p_dlc07_keep_stone_half_block_05_a 1",
-      "zh": "DLC07 城堡石 half 块 5 a 1",
+      "zh": "DLC07 城堡石半块 5 a 1",
       "en": "dlc07 keep stone half block 5 a 1"
     },
     {
@@ -12659,7 +12724,7 @@
     },
     {
       "id": "p_dlc07_keep_stone_half_block_05_c 1",
-      "zh": "DLC07 城堡石 half 块 5 c 1",
+      "zh": "DLC07 城堡石半块 5 c 1",
       "en": "dlc07 keep stone half block 5 c 1"
     },
     {
@@ -12674,7 +12739,7 @@
     },
     {
       "id": "p_dlc07_keep_stone_tall_block_01_a 1",
-      "zh": "DLC07 城堡石 tall 块 1 a 1",
+      "zh": "DLC07 城堡石高块 1 a 1",
       "en": "dlc07 keep stone tall block 1 a 1"
     },
     {
@@ -12719,17 +12784,17 @@
     },
     {
       "id": "p_dlc07_keep_stone_wall_optimized_04",
-      "zh": "DLC7 城堡石墙 optimized 4",
+      "zh": "DLC07 城堡石墙优化 4",
       "en": "dlc07 keep stone wall optimized 4"
     },
     {
       "id": "p_dlc07_keep_stone_wall_optimized_05",
-      "zh": "DLC7 城堡石墙 optimized 5",
+      "zh": "DLC07 城堡石墙优化 5",
       "en": "dlc07 keep stone wall optimized 5"
     },
     {
       "id": "p_dlc07_keep_stone_wall_optimized_06",
-      "zh": "DLC7 城堡石墙 optimized 6",
+      "zh": "DLC07 城堡石墙优化 6",
       "en": "dlc07 keep stone wall optimized 6"
     },
     {
@@ -12749,27 +12814,27 @@
     },
     {
       "id": "p_dlc07_large_window_stainglass_01",
-      "zh": "DLC7 大窗 stainglass 1",
+      "zh": "DLC07 大窗彩绘玻璃 1",
       "en": "dlc07 large window stainglass 1"
     },
     {
       "id": "p_dlc07_large_window_stainglass_02",
-      "zh": "DLC7 大窗 stainglass 2",
+      "zh": "DLC07 大窗彩绘玻璃 2",
       "en": "dlc07 large window stainglass 2"
     },
     {
       "id": "p_dlc07_liftbase_01",
-      "zh": "DLC7 liftbase 1",
+      "zh": "DLC07 升降底座 1",
       "en": "dlc07 liftbase 1"
     },
     {
       "id": "p_dlc07_man_hole_01",
-      "zh": "DLC07 man 孔 1",
+      "zh": "DLC07 人孔 1",
       "en": "dlc07 man hole 1"
     },
     {
       "id": "p_dlc07_man_hole_02",
-      "zh": "DLC07 man 孔 2",
+      "zh": "DLC07 人孔 2",
       "en": "dlc07 man hole 2"
     },
     {
@@ -12834,12 +12899,12 @@
     },
     {
       "id": "p_dlc07_map_rock_outermap_05",
-      "zh": "DLC7 地图岩石 outermap 5",
+      "zh": "DLC07 地图岩石外圈地图 5",
       "en": "dlc07 map rock outermap 5"
     },
     {
       "id": "p_dlc07_map_rock_outermap_06",
-      "zh": "DLC7 地图岩石 outermap 6",
+      "zh": "DLC07 地图岩石外圈地图 6",
       "en": "dlc07 map rock outermap 6"
     },
     {
@@ -12884,12 +12949,12 @@
     },
     {
       "id": "p_dlc07_pavement_01",
-      "zh": "DLC7 pavement 1",
+      "zh": "DLC07 铺地 1",
       "en": "dlc07 pavement 1"
     },
     {
       "id": "p_dlc07_pavement_02",
-      "zh": "DLC7 pavement 2",
+      "zh": "DLC07 铺地 2",
       "en": "dlc07 pavement 2"
     },
     {
@@ -12919,132 +12984,132 @@
     },
     {
       "id": "p_dlc07_pipe_cannister_01",
-      "zh": "DLC7 pipe cannister 1",
+      "zh": "DLC07 管道罐 1",
       "en": "dlc07 pipe cannister 1"
     },
     {
       "id": "p_dlc07_pipe_furnace_01",
-      "zh": "DLC7 pipe furnace 1",
+      "zh": "DLC07 管道熔炉 1",
       "en": "dlc07 pipe furnace 1"
     },
     {
       "id": "p_dlc07_pipe_large_01",
-      "zh": "DLC7 pipe 大 1",
+      "zh": "DLC07 管道大 1",
       "en": "dlc07 pipe large 1"
     },
     {
       "id": "p_dlc07_pipe_large_02",
-      "zh": "DLC7 pipe 大 2",
+      "zh": "DLC07 管道大 2",
       "en": "dlc07 pipe large 2"
     },
     {
       "id": "p_dlc07_pipe_large_03",
-      "zh": "DLC7 pipe 大 3",
+      "zh": "DLC07 管道大 3",
       "en": "dlc07 pipe large 3"
     },
     {
       "id": "p_dlc07_pipe_large_04",
-      "zh": "DLC7 pipe 大 4",
+      "zh": "DLC07 管道大 4",
       "en": "dlc07 pipe large 4"
     },
     {
       "id": "p_dlc07_pipe_large_bend_01",
-      "zh": "DLC7 pipe 大 bend 1",
+      "zh": "DLC07 管道大弯 1",
       "en": "dlc07 pipe large bend 1"
     },
     {
       "id": "p_dlc07_pipe_large_bracket_01",
-      "zh": "DLC7 pipe 大 bracket 1",
+      "zh": "DLC07 管道大支架 1",
       "en": "dlc07 pipe large bracket 1"
     },
     {
       "id": "p_dlc07_pipe_large_bracket_02",
-      "zh": "DLC7 pipe 大 bracket 2",
+      "zh": "DLC07 管道大支架 2",
       "en": "dlc07 pipe large bracket 2"
     },
     {
       "id": "p_dlc07_pipe_large_bracket_03",
-      "zh": "DLC7 pipe 大 bracket 3",
+      "zh": "DLC07 管道大支架 3",
       "en": "dlc07 pipe large bracket 3"
     },
     {
       "id": "p_dlc07_pipe_large_connector_01",
-      "zh": "DLC7 pipe 大 connector 1",
+      "zh": "DLC07 管道大连接件 1",
       "en": "dlc07 pipe large connector 1"
     },
     {
       "id": "p_dlc07_pipe_large_valve_01",
-      "zh": "DLC7 pipe 大 valve 1",
+      "zh": "DLC07 管道大阀门 1",
       "en": "dlc07 pipe large valve 1"
     },
     {
       "id": "p_dlc07_pipe_silhouette_01",
-      "zh": "DLC7 pipe silhouette 1",
+      "zh": "DLC07 管道剪影 1",
       "en": "dlc07 pipe silhouette 1"
     },
     {
       "id": "p_dlc07_pipe_small_01",
-      "zh": "DLC7 pipe 小 1",
+      "zh": "DLC07 管道小 1",
       "en": "dlc07 pipe small 1"
     },
     {
       "id": "p_dlc07_pipe_small_02",
-      "zh": "DLC7 pipe 小 2",
+      "zh": "DLC07 管道小 2",
       "en": "dlc07 pipe small 2"
     },
     {
       "id": "p_dlc07_pipe_small_03",
-      "zh": "DLC7 pipe 小 3",
+      "zh": "DLC07 管道小 3",
       "en": "dlc07 pipe small 3"
     },
     {
       "id": "p_dlc07_pipe_small_04",
-      "zh": "DLC7 pipe 小 4",
+      "zh": "DLC07 管道小 4",
       "en": "dlc07 pipe small 4"
     },
     {
       "id": "p_dlc07_pipe_small_bend_01",
-      "zh": "DLC7 pipe 小 bend 1",
+      "zh": "DLC07 管道小弯 1",
       "en": "dlc07 pipe small bend 1"
     },
     {
       "id": "p_dlc07_pipe_small_bracket_01",
-      "zh": "DLC7 pipe 小 bracket 1",
+      "zh": "DLC07 管道小支架 1",
       "en": "dlc07 pipe small bracket 1"
     },
     {
       "id": "p_dlc07_pipe_small_connector_01",
-      "zh": "DLC7 pipe 小 connector 1",
+      "zh": "DLC07 管道小连接件 1",
       "en": "dlc07 pipe small connector 1"
     },
     {
       "id": "p_dlc07_pipe_small_connector_02",
-      "zh": "DLC7 pipe 小 connector 2",
+      "zh": "DLC07 管道小连接件 2",
       "en": "dlc07 pipe small connector 2"
     },
     {
       "id": "p_dlc07_pipe_small_pannel_01",
-      "zh": "DLC7 pipe 小 pannel 1",
+      "zh": "DLC07 管道小面板 1",
       "en": "dlc07 pipe small pannel 1"
     },
     {
       "id": "p_dlc07_pipe_small_pannel_02",
-      "zh": "DLC7 pipe 小 pannel 2",
+      "zh": "DLC07 管道小面板 2",
       "en": "dlc07 pipe small pannel 2"
     },
     {
       "id": "p_dlc07_pipe_vent_01",
-      "zh": "DLC7 pipe 通风口 1",
+      "zh": "DLC07 管道通风口 1",
       "en": "dlc07 pipe vent 1"
     },
     {
       "id": "p_dlc07_pipe_vent_02",
-      "zh": "DLC7 pipe 通风口 2",
+      "zh": "DLC07 管道通风口 2",
       "en": "dlc07 pipe vent 2"
     },
     {
       "id": "p_dlc07_pipe_vent_03",
-      "zh": "DLC7 pipe 通风口 3",
+      "zh": "DLC07 管道通风口 3",
       "en": "dlc07 pipe vent 3"
     },
     {
@@ -13054,12 +13119,12 @@
     },
     {
       "id": "p_dlc07_railtrack_end_01",
-      "zh": "DLC7 railtrack 尽头 1",
+      "zh": "DLC07 轨道尽头 1",
       "en": "dlc07 railtrack end 1"
     },
     {
       "id": "p_dlc07_railtrack_middle_01",
-      "zh": "DLC7 railtrack 中段 1",
+      "zh": "DLC07 轨道中段 1",
       "en": "dlc07 railtrack middle 1"
     },
     {
@@ -13104,12 +13169,12 @@
     },
     {
       "id": "p_dlc07_road_centreline_01",
-      "zh": "DLC7 路 centreline 1",
+      "zh": "DLC07 路中心线 1",
       "en": "dlc07 road centreline 1"
     },
     {
       "id": "p_dlc07_road_white_line_01",
-      "zh": "DLC7 路 white line 1",
+      "zh": "DLC07 路白线 1",
       "en": "dlc07 road white line 1"
     },
     {
@@ -13124,17 +13189,17 @@
     },
     {
       "id": "p_dlc07_sconce_01",
-      "zh": "DLC7 sconce 1",
+      "zh": "DLC07 壁灯 1",
       "en": "dlc07 sconce 1"
     },
     {
       "id": "p_dlc07_sconce_02",
-      "zh": "DLC7 sconce 2",
+      "zh": "DLC07 壁灯 2",
       "en": "dlc07 sconce 2"
     },
     {
       "id": "p_dlc07_sconce_throne_01",
-      "zh": "DLC7 sconce 王座 1",
+      "zh": "DLC07 壁灯王座 1",
       "en": "dlc07 sconce throne 1"
     },
     {
@@ -13149,7 +13214,7 @@
     },
     {
       "id": "p_dlc07_sewergrate_01",
-      "zh": "DLC7 sewergrate 1",
+      "zh": "DLC07 下水道格栅 1",
       "en": "dlc07 sewergrate 1"
     },
     {
@@ -13164,17 +13229,17 @@
     },
     {
       "id": "p_dlc07_slime_puddle_01",
-      "zh": "DLC7 slime puddle 1",
+      "zh": "DLC07 黏液水洼 1",
       "en": "dlc07 slime puddle 1"
     },
     {
       "id": "p_dlc07_slime_stream_01",
-      "zh": "DLC7 slime stream 1",
+      "zh": "DLC07 黏液溪流 1",
       "en": "dlc07 slime stream 1"
     },
     {
       "id": "p_dlc07_small_valve_01",
-      "zh": "DLC7 小 valve 1",
+      "zh": "DLC07 小阀门 1",
       "en": "dlc07 small valve 1"
     },
     {
@@ -13184,17 +13249,17 @@
     },
     {
       "id": "p_dlc07_stained_glass_01",
-      "zh": "DLC7 stained glass 1",
+      "zh": "DLC07 彩绘玻璃 1",
       "en": "dlc07 stained glass 1"
     },
     {
       "id": "p_dlc07_stained_glass_02",
-      "zh": "DLC7 stained glass 2",
+      "zh": "DLC07 彩绘玻璃 2",
       "en": "dlc07 stained glass 2"
     },
     {
       "id": "p_dlc07_standardwall",
-      "zh": "DLC7 standardwall",
+      "zh": "DLC07 标准墙",
       "en": "dlc07 standardwall"
     },
     {
@@ -13204,7 +13269,7 @@
     },
     {
       "id": "p_dlc07_standardwallcorner",
-      "zh": "DLC7 standardwallcorner",
+      "zh": "DLC07 标准转角墙",
       "en": "dlc07 standardwallcorner"
     },
     {
@@ -13214,7 +13279,7 @@
     },
     {
       "id": "p_dlc07_steam_01",
-      "zh": "DLC7 steam 1",
+      "zh": "DLC7 蒸汽 1",
       "en": "dlc07 steam 1"
     },
     {
@@ -13359,22 +13424,22 @@
     },
     {
       "id": "p_dlc07_stone_block_trip_01",
-      "zh": "DLC07 石块 trip 1",
+      "zh": "DLC07 石块绊脚 1",
       "en": "dlc07 stone block trip 1"
     },
     {
       "id": "p_dlc07_stone_block_trip_02",
-      "zh": "DLC07 石块 trip 2",
+      "zh": "DLC07 石块绊脚 2",
       "en": "dlc07 stone block trip 2"
     },
     {
       "id": "p_dlc07_stone_block_trip_03",
-      "zh": "DLC07 石块 trip 3",
+      "zh": "DLC07 石块绊脚 3",
       "en": "dlc07 stone block trip 3"
     },
     {
       "id": "p_dlc07_stone_half_block_01_a",
-      "zh": "DLC07 石 half 块 1 a",
+      "zh": "DLC07 石半块 1 a",
       "en": "dlc07 stone half block 1 a"
     },
     {
@@ -13389,12 +13454,12 @@
     },
     {
       "id": "p_dlc07_stone_half_block_01_d",
-      "zh": "DLC07 石 half 块 1 d",
+      "zh": "DLC07 石半块 1 d",
       "en": "dlc07 stone half block 1 d"
     },
     {
       "id": "p_dlc07_stone_half_block_02_a",
-      "zh": "DLC07 石 half 块 2 a",
+      "zh": "DLC07 石半块 2 a",
       "en": "dlc07 stone half block 2 a"
     },
     {
@@ -13404,7 +13469,7 @@
     },
     {
       "id": "p_dlc07_stone_half_block_02_c",
-      "zh": "DLC07 石 half 块 2 c",
+      "zh": "DLC07 石半块 2 c",
       "en": "dlc07 stone half block 2 c"
     },
     {
@@ -13414,12 +13479,12 @@
     },
     {
       "id": "p_dlc07_stone_half_block_03_a",
-      "zh": "DLC07 石 half 块 3 a",
+      "zh": "DLC07 石半块 3 a",
       "en": "dlc07 stone half block 3 a"
     },
     {
       "id": "p_dlc07_stone_half_block_03_b",
-      "zh": "DLC07 石 half 块 3 b",
+      "zh": "DLC07 石半块 3 b",
       "en": "dlc07 stone half block 3 b"
     },
     {
@@ -13434,7 +13499,7 @@
     },
     {
       "id": "p_dlc07_stone_half_block_04_a",
-      "zh": "DLC07 石 half 块 4 a",
+      "zh": "DLC07 石半块 4 a",
       "en": "dlc07 stone half block 4 a"
     },
     {
@@ -13454,7 +13519,7 @@
     },
     {
       "id": "p_dlc07_stone_half_block_05_a",
-      "zh": "DLC07 石 half 块 5 a",
+      "zh": "DLC07 石半块 5 a",
       "en": "dlc07 stone half block 5 a"
     },
     {
@@ -13474,12 +13539,12 @@
     },
     {
       "id": "p_dlc07_stone_kerb_01",
-      "zh": "DLC7 石 kerb 1",
+      "zh": "DLC07 石路缘 1",
       "en": "dlc07 stone kerb 1"
     },
     {
       "id": "p_dlc07_stone_tall_block_01_a",
-      "zh": "DLC07 石 tall 块 1 a",
+      "zh": "DLC07 石高块 1 a",
       "en": "dlc07 stone tall block 1 a"
     },
     {
@@ -13519,17 +13584,17 @@
     },
     {
       "id": "p_dlc07_stone_wall_optimized_01",
-      "zh": "DLC7 石墙 optimized 1",
+      "zh": "DLC07 石墙优化 1",
       "en": "dlc07 stone wall optimized 1"
     },
     {
       "id": "p_dlc07_stone_wall_optimized_02",
-      "zh": "DLC7 石墙 optimized 2",
+      "zh": "DLC07 石墙优化 2",
       "en": "dlc07 stone wall optimized 2"
     },
     {
       "id": "p_dlc07_stone_wall_optimized_03",
-      "zh": "DLC7 石墙 optimized 3",
+      "zh": "DLC07 石墙优化 3",
       "en": "dlc07 stone wall optimized 3"
     },
     {
@@ -13544,7 +13609,7 @@
     },
     {
       "id": "p_dlc07_tableandchairs_01",
-      "zh": "DLC7 tableandchairs 1",
+      "zh": "DLC07 桌椅 1",
       "en": "dlc07 tableandchairs 1"
     },
     {
@@ -13584,12 +13649,12 @@
     },
     {
       "id": "p_dlc07_wall_left_angle_03",
-      "zh": "DLC7 墙 left 角 3",
+      "zh": "DLC07 墙左角 3",
       "en": "dlc07 wall left angle 3"
     },
     {
       "id": "p_dlc07_wall_left_angle_03_inside",
-      "zh": "DLC7 墙 left 角 3 内侧",
+      "zh": "DLC07 墙左角 3 内侧",
       "en": "dlc07 wall left angle 3 inside"
     },
     {
@@ -13639,7 +13704,7 @@
     },
     {
       "id": "p_dlc07_wall_window_01_glass",
-      "zh": "DLC7 墙窗 1 glass",
+      "zh": "DLC07 墙窗 1 玻璃",
       "en": "dlc07 wall window 1 glass"
     },
     {
@@ -13654,7 +13719,7 @@
     },
     {
       "id": "p_dlc07_wall_window_02_glass",
-      "zh": "DLC7 墙窗 2 glass",
+      "zh": "DLC07 墙窗 2 玻璃",
       "en": "dlc07 wall window 2 glass"
     },
     {
@@ -13664,7 +13729,7 @@
     },
     {
       "id": "p_dlc07_wallwindow",
-      "zh": "DLC7 wallwindow",
+      "zh": "DLC07 墙窗",
       "en": "dlc07 wallwindow"
     },
     {
@@ -13674,7 +13739,7 @@
     },
     {
       "id": "p_dlc07_weapon_stand_01",
-      "zh": "DLC7 weapon stand 1",
+      "zh": "DLC07 武器架 1",
       "en": "dlc07 weapon stand 1"
     },
     {
@@ -13724,47 +13789,47 @@
     },
     {
       "id": "p_dlc08_balloon_butterfly_01",
-      "zh": "DLC8 气球 butterfly 1",
+      "zh": "DLC08 气球蝴蝶 1",
       "en": "dlc08 balloon butterfly 1"
     },
     {
       "id": "p_dlc08_balloon_butterfly_02",
-      "zh": "DLC8 气球 butterfly 2",
+      "zh": "DLC08 气球蝴蝶 2",
       "en": "dlc08 balloon butterfly 2"
     },
     {
       "id": "p_dlc08_balloon_dog_01",
-      "zh": "DLC8 气球 dog 1",
+      "zh": "DLC08 气球狗 1",
       "en": "dlc08 balloon dog 1"
     },
     {
       "id": "p_dlc08_balloon_dog_02",
-      "zh": "DLC8 气球 dog 2",
+      "zh": "DLC08 气球狗 2",
       "en": "dlc08 balloon dog 2"
     },
     {
       "id": "p_dlc08_balloon_elephant_01",
-      "zh": "DLC8 气球 elephant 1",
+      "zh": "DLC08 气球大象 1",
       "en": "dlc08 balloon elephant 1"
     },
     {
       "id": "p_dlc08_balloon_elephant_02",
-      "zh": "DLC8 气球 elephant 2",
+      "zh": "DLC08 气球大象 2",
       "en": "dlc08 balloon elephant 2"
     },
     {
       "id": "p_dlc08_balloon_giraffe_01",
-      "zh": "DLC8 气球 giraffe 1",
+      "zh": "DLC08 气球长颈鹿 1",
       "en": "dlc08 balloon giraffe 1"
     },
     {
       "id": "p_dlc08_balloon_giraffe_02",
-      "zh": "DLC8 气球 giraffe 2",
+      "zh": "DLC08 气球长颈鹿 2",
       "en": "dlc08 balloon giraffe 2"
     },
     {
       "id": "p_dlc08_balloon_string_01",
-      "zh": "DLC8 气球 string 1",
+      "zh": "DLC08 气球灯串 1",
       "en": "dlc08 balloon string 1"
     },
     {
@@ -13904,22 +13969,22 @@
     },
     {
       "id": "p_dlc08_circus_ball_01",
-      "zh": "DLC8 马戏团 ball 1",
+      "zh": "DLC08 马戏团球 1",
       "en": "dlc08 circus ball 1"
     },
     {
       "id": "p_dlc08_circus_ball_02",
-      "zh": "DLC8 马戏团 ball 2",
+      "zh": "DLC08 马戏团球 2",
       "en": "dlc08 circus ball 2"
     },
     {
       "id": "p_dlc08_circus_ball_03",
-      "zh": "DLC8 马戏团 ball 3",
+      "zh": "DLC08 马戏团球 3",
       "en": "dlc08 circus ball 3"
     },
     {
       "id": "p_dlc08_circus_ball_04",
-      "zh": "DLC8 马戏团 ball 4",
+      "zh": "DLC08 马戏团球 4",
       "en": "dlc08 circus ball 4"
     },
     {
@@ -13954,12 +14019,12 @@
     },
     {
       "id": "p_dlc08_cloud_clump",
-      "zh": "DLC8 云朵",
+      "zh": "DLC8 云团",
       "en": "dlc08 cloud clump"
     },
     {
       "id": "p_dlc08_clown_chef_balloon_mallet_01",
-      "zh": "DLC8 clown chef 气球 mallet 1",
+      "zh": "DLC08 小丑厨师气球木槌 1",
       "en": "dlc08 clown chef balloon mallet 1"
     },
     {
@@ -14019,12 +14084,12 @@
     },
     {
       "id": "p_dlc08_hay_pile_01",
-      "zh": "DLC8 hay 堆 1",
+      "zh": "DLC08 干草堆 1",
       "en": "dlc08 hay pile 1"
     },
     {
       "id": "p_dlc08_hay_pile_02",
-      "zh": "DLC8 hay 堆 2",
+      "zh": "DLC08 干草堆 2",
       "en": "dlc08 hay pile 2"
     },
     {
@@ -14084,17 +14149,17 @@
     },
     {
       "id": "p_dlc08_map_balloon_dog_01",
-      "zh": "DLC08 地图气球 dog 1",
+      "zh": "DLC08 地图气球狗 1",
       "en": "dlc08 map balloon dog 1"
     },
     {
       "id": "p_dlc08_map_balloon_elephant_01",
-      "zh": "DLC08 地图气球 elephant 1",
+      "zh": "DLC08 地图气球大象 1",
       "en": "dlc08 map balloon elephant 1"
     },
     {
       "id": "p_dlc08_map_balloon_giraffe_01",
-      "zh": "DLC08 地图气球 giraffe 1",
+      "zh": "DLC08 地图气球长颈鹿 1",
       "en": "dlc08 map balloon giraffe 1"
     },
     {
@@ -14164,22 +14229,22 @@
     },
     {
       "id": "p_dlc08_map_circus_ball_01",
-      "zh": "DLC08 地图马戏团 ball 1",
+      "zh": "DLC08 地图马戏团球 1",
       "en": "dlc08 map circus ball 1"
     },
     {
       "id": "p_dlc08_map_circus_ball_02",
-      "zh": "DLC08 地图马戏团 ball 2",
+      "zh": "DLC08 地图马戏团球 2",
       "en": "dlc08 map circus ball 2"
     },
     {
       "id": "p_dlc08_map_circus_ball_03",
-      "zh": "DLC08 地图马戏团 ball 3",
+      "zh": "DLC08 地图马戏团球 3",
       "en": "dlc08 map circus ball 3"
     },
     {
       "id": "p_dlc08_map_circus_ball_04",
-      "zh": "DLC08 地图马戏团 ball 4",
+      "zh": "DLC08 地图马戏团球 4",
       "en": "dlc08 map circus ball 4"
     },
     {
@@ -14224,17 +14289,17 @@
     },
     {
       "id": "p_dlc08_map_hay_pile_01",
-      "zh": "DLC08 地图 hay 堆 1",
+      "zh": "DLC08 地图干草堆 1",
       "en": "dlc08 map hay pile 1"
     },
     {
       "id": "p_dlc08_map_hay_pile_02",
-      "zh": "DLC08 地图 hay 堆 2",
+      "zh": "DLC08 地图干草堆 2",
       "en": "dlc08 map hay pile 2"
     },
     {
       "id": "p_dlc08_map_hay_pile_03",
-      "zh": "DLC08 地图 hay 堆 3",
+      "zh": "DLC08 地图干草堆 3",
       "en": "dlc08 map hay pile 3"
     },
     {
@@ -14349,7 +14414,7 @@
     },
     {
       "id": "p_dlc08_map_standing_sign_01",
-      "zh": "DLC08 地图 standing 招牌 1",
+      "zh": "DLC08 地图立式招牌 1",
       "en": "dlc08 map standing sign 1"
     },
     {
@@ -14419,17 +14484,17 @@
     },
     {
       "id": "p_dlc08_map_worldtext_standard_levels_01",
-      "zh": "DLC08 地图 worldtext 标准 levels 1",
+      "zh": "DLC8 地图世界文字（标准关卡）",
       "en": "dlc08 map worldtext standard levels 1"
     },
     {
       "id": "p_dlc08_pillar_entrance_01",
-      "zh": "DLC8 立柱 entrance 1",
+      "zh": "DLC08 立柱入口 1",
       "en": "dlc08 pillar entrance 1"
     },
     {
       "id": "p_dlc08_pillar_trapeze_01",
-      "zh": "DLC8 立柱 trapeze 1",
+      "zh": "DLC08 立柱空中飞人 1",
       "en": "dlc08 pillar trapeze 1"
     },
     {
@@ -14494,7 +14559,7 @@
     },
     {
       "id": "p_dlc08_step_wedge_01",
-      "zh": "DLC8 台阶 wedge 1",
+      "zh": "DLC08 台阶楔形 1",
       "en": "dlc08 step wedge 1"
     },
     {
@@ -14519,7 +14584,7 @@
     },
     {
       "id": "p_dlc08_string_lights_04 1",
-      "zh": "DLC8 string 灯串 4 1",
+      "zh": "DLC08 灯串灯串 4 1",
       "en": "dlc08 string lights 4 1"
     },
     {
@@ -14549,17 +14614,17 @@
     },
     {
       "id": "p_dlc08_tent_wall_patch_01",
-      "zh": "DLC8 帐篷墙 patch 1",
+      "zh": "DLC08 帐篷墙补丁 1",
       "en": "dlc08 tent wall patch 1"
     },
     {
       "id": "p_dlc08_tent_wall_patch_02",
-      "zh": "DLC8 帐篷墙 patch 2",
+      "zh": "DLC08 帐篷墙补丁 2",
       "en": "dlc08 tent wall patch 2"
     },
     {
       "id": "p_dlc08_tent_wall_patch_03",
-      "zh": "DLC8 帐篷墙 patch 3",
+      "zh": "DLC08 帐篷墙补丁 3",
       "en": "dlc08 tent wall patch 3"
     },
     {
@@ -14574,7 +14639,7 @@
     },
     {
       "id": "p_dlc08_wagon_01 1",
-      "zh": "DLC8 wagon 1 1",
+      "zh": "DLC08 大篷车 1 1",
       "en": "dlc08 wagon 1 1"
     },
     {
@@ -14589,7 +14654,7 @@
     },
     {
       "id": "p_dlc08_wagon_music_front_01",
-      "zh": "DLC8 wagon music 前端 1",
+      "zh": "DLC08 大篷车音乐前端 1",
       "en": "dlc08 wagon music front 1"
     },
     {
@@ -14599,32 +14664,32 @@
     },
     {
       "id": "p_dlc08_wagon_small_01",
-      "zh": "DLC8 wagon 小 1",
+      "zh": "DLC08 大篷车小 1",
       "en": "dlc08 wagon small 1"
     },
     {
       "id": "p_dlc08_wagon_ticket_01",
-      "zh": "DLC8 wagon 票据 1",
+      "zh": "DLC08 大篷车票 1",
       "en": "dlc08 wagon ticket 1"
     },
     {
       "id": "p_dlc08_wagon_ticket_day_01",
-      "zh": "DLC8 wagon 票据白天 1",
+      "zh": "DLC08 大篷车票白天 1",
       "en": "dlc08 wagon ticket day 1"
     },
     {
       "id": "p_dlc09_accordion_01",
-      "zh": "DLC9 accordion 1",
+      "zh": "DLC09 手风琴 1",
       "en": "dlc09 accordion 1"
     },
     {
       "id": "p_dlc09_accordion_02",
-      "zh": "DLC9 accordion 2",
+      "zh": "DLC09 手风琴 2",
       "en": "dlc09 accordion 2"
     },
     {
       "id": "p_dlc09_accordion_03",
-      "zh": "DLC9 accordion 3",
+      "zh": "DLC09 手风琴 3",
       "en": "dlc09 accordion 3"
     },
     {
@@ -14649,42 +14714,42 @@
     },
     {
       "id": "p_dlc09_balloon_butterfly_01",
-      "zh": "DLC9 气球 butterfly 1",
+      "zh": "DLC09 气球蝴蝶 1",
       "en": "dlc09 balloon butterfly 1"
     },
     {
       "id": "p_dlc09_balloon_butterfly_02",
-      "zh": "DLC9 气球 butterfly 2",
+      "zh": "DLC09 气球蝴蝶 2",
       "en": "dlc09 balloon butterfly 2"
     },
     {
       "id": "p_dlc09_balloon_dog_01",
-      "zh": "DLC9 气球 dog 1",
+      "zh": "DLC09 气球狗 1",
       "en": "dlc09 balloon dog 1"
     },
     {
       "id": "p_dlc09_balloon_dog_02",
-      "zh": "DLC9 气球 dog 2",
+      "zh": "DLC09 气球狗 2",
       "en": "dlc09 balloon dog 2"
     },
     {
       "id": "p_dlc09_balloon_elephant_01",
-      "zh": "DLC9 气球 elephant 1",
+      "zh": "DLC09 气球大象 1",
       "en": "dlc09 balloon elephant 1"
     },
     {
       "id": "p_dlc09_balloon_elephant_02",
-      "zh": "DLC9 气球 elephant 2",
+      "zh": "DLC09 气球大象 2",
       "en": "dlc09 balloon elephant 2"
     },
     {
       "id": "p_dlc09_balloon_giraffe_01",
-      "zh": "DLC9 气球 giraffe 1",
+      "zh": "DLC09 气球长颈鹿 1",
       "en": "dlc09 balloon giraffe 1"
     },
     {
       "id": "p_dlc09_balloon_giraffe_02",
-      "zh": "DLC9 气球 giraffe 2",
+      "zh": "DLC09 气球长颈鹿 2",
       "en": "dlc09 balloon giraffe 2"
     },
     {
@@ -14709,177 +14774,177 @@
     },
     {
       "id": "p_dlc09_battlements_arch_02",
-      "zh": "DLC9 battlements 拱门 2",
+      "zh": "DLC09 城垛拱门 2",
       "en": "dlc09 battlements arch 2"
     },
     {
       "id": "p_dlc09_battlements_battlement_wall_03",
-      "zh": "DLC9 battlements battlement 墙 3",
+      "zh": "DLC09 城垛城垛墙 3",
       "en": "dlc09 battlements battlement wall 3"
     },
     {
       "id": "p_dlc09_battlements_grotesque_02",
-      "zh": "DLC9 battlements grotesque 2",
+      "zh": "DLC09 城垛石像鬼 2",
       "en": "dlc09 battlements grotesque 2"
     },
     {
       "id": "p_dlc09_battlements_pillar_05",
-      "zh": "DLC9 battlements 立柱 5",
+      "zh": "DLC09 城垛立柱 5",
       "en": "dlc09 battlements pillar 5"
     },
     {
       "id": "p_dlc09_battlements_pillar_06",
-      "zh": "DLC9 battlements 立柱 6",
+      "zh": "DLC09 城垛立柱 6",
       "en": "dlc09 battlements pillar 6"
     },
     {
       "id": "p_dlc09_battlements_pillar_07",
-      "zh": "DLC9 battlements 立柱 7",
+      "zh": "DLC09 城垛立柱 7",
       "en": "dlc09 battlements pillar 7"
     },
     {
       "id": "p_dlc09_battlements_pillar_08",
-      "zh": "DLC9 battlements 立柱 8",
+      "zh": "DLC09 城垛立柱 8",
       "en": "dlc09 battlements pillar 8"
     },
     {
       "id": "p_dlc09_battlements_pillar_tall_02",
-      "zh": "DLC9 battlements 立柱 tall 2",
+      "zh": "DLC09 城垛立柱高 2",
       "en": "dlc09 battlements pillar tall 2"
     },
     {
       "id": "p_dlc09_battlements_plank_07",
-      "zh": "DLC9 battlements 木板 7",
+      "zh": "DLC09 城垛木板 7",
       "en": "dlc09 battlements plank 7"
     },
     {
       "id": "p_dlc09_battlements_plank_08",
-      "zh": "DLC9 battlements 木板 8",
+      "zh": "DLC09 城垛木板 8",
       "en": "dlc09 battlements plank 8"
     },
     {
       "id": "p_dlc09_battlements_plank_09",
-      "zh": "DLC9 battlements 木板 9",
+      "zh": "DLC09 城垛木板 9",
       "en": "dlc09 battlements plank 9"
     },
     {
       "id": "p_dlc09_battlements_plank_10",
-      "zh": "DLC9 battlements 木板 10",
+      "zh": "DLC09 城垛木板 10",
       "en": "dlc09 battlements plank 10"
     },
     {
       "id": "p_dlc09_battlements_plank_11",
-      "zh": "DLC9 battlements 木板 11",
+      "zh": "DLC09 城垛木板 11",
       "en": "dlc09 battlements plank 11"
     },
     {
       "id": "p_dlc09_battlements_plank_12",
-      "zh": "DLC9 battlements 木板 12",
+      "zh": "DLC09 城垛木板 12",
       "en": "dlc09 battlements plank 12"
     },
     {
       "id": "p_dlc09_battlements_small_window_02",
-      "zh": "DLC9 battlements 小窗 2",
+      "zh": "DLC09 城垛小窗 2",
       "en": "dlc09 battlements small window 2"
     },
     {
       "id": "p_dlc09_battlements_stone_block_01_a",
-      "zh": "DLC09 battlements 石块 1 a",
+      "zh": "DLC09 城垛石块 1 a",
       "en": "dlc09 battlements stone block 1 a"
     },
     {
       "id": "p_dlc09_battlements_stone_block_01_b",
-      "zh": "DLC09 battlements 石块 1 b",
+      "zh": "DLC09 城垛石块 1 b",
       "en": "dlc09 battlements stone block 1 b"
     },
     {
       "id": "p_dlc09_battlements_stone_block_02_a",
-      "zh": "DLC09 battlements 石块 2 a",
+      "zh": "DLC09 城垛石块 2 a",
       "en": "dlc09 battlements stone block 2 a"
     },
     {
       "id": "p_dlc09_battlements_stone_block_03_c",
-      "zh": "DLC09 battlements 石块 3 c",
+      "zh": "DLC09 城垛石块 3 c",
       "en": "dlc09 battlements stone block 3 c"
     },
     {
       "id": "p_dlc09_battlements_stone_block_05_b",
-      "zh": "DLC09 battlements 石块 5 b",
+      "zh": "DLC09 城垛石块 5 b",
       "en": "dlc09 battlements stone block 5 b"
     },
     {
       "id": "p_dlc09_battlements_stone_block_06_b",
-      "zh": "DLC09 battlements 石块 6 b",
+      "zh": "DLC09 城垛石块 6 b",
       "en": "dlc09 battlements stone block 6 b"
     },
     {
       "id": "p_dlc09_battlements_stone_block_07_a",
-      "zh": "DLC09 battlements 石块 7 a",
+      "zh": "DLC09 城垛石块 7 a",
       "en": "dlc09 battlements stone block 7 a"
     },
     {
       "id": "p_dlc09_battlements_stone_block_trip_04",
-      "zh": "DLC09 battlements 石块 trip 4",
+      "zh": "DLC09 城垛石块绊脚 4",
       "en": "dlc09 battlements stone block trip 4"
     },
     {
       "id": "p_dlc09_battlements_stone_block_trip_05",
-      "zh": "DLC09 battlements 石块 trip 5",
+      "zh": "DLC09 城垛石块绊脚 5",
       "en": "dlc09 battlements stone block trip 5"
     },
     {
       "id": "p_dlc09_battlements_stone_block_trip_06",
-      "zh": "DLC09 battlements 石块 trip 6",
+      "zh": "DLC09 城垛石块绊脚 6",
       "en": "dlc09 battlements stone block trip 6"
     },
     {
       "id": "p_dlc09_battlements_stone_tall_block_01_a_1",
-      "zh": "DLC09 battlements 石 tall 块 1 a 1",
+      "zh": "DLC09 城垛石高块 1 a 1",
       "en": "dlc09 battlements stone tall block 1 a 1"
     },
     {
       "id": "p_dlc09_battlements_stone_wall_05",
-      "zh": "DLC9 battlements 石墙 5",
+      "zh": "DLC09 城垛石墙 5",
       "en": "dlc09 battlements stone wall 5"
     },
     {
       "id": "p_dlc09_battlements_stone_wall_06",
-      "zh": "DLC9 battlements 石墙 6",
+      "zh": "DLC09 城垛石墙 6",
       "en": "dlc09 battlements stone wall 6"
     },
     {
       "id": "p_dlc09_battlements_stone_wall_07",
-      "zh": "DLC9 battlements 石墙 7",
+      "zh": "DLC09 城垛石墙 7",
       "en": "dlc09 battlements stone wall 7"
     },
     {
       "id": "p_dlc09_battlements_stone_wall_optimized_04",
-      "zh": "DLC9 battlements 石墙 optimized 4",
+      "zh": "DLC09 城垛石墙优化 4",
       "en": "dlc09 battlements stone wall optimized 4"
     },
     {
       "id": "p_dlc09_battlements_stone_wall_optimized_05",
-      "zh": "DLC9 battlements 石墙 optimized 5",
+      "zh": "DLC09 城垛石墙优化 5",
       "en": "dlc09 battlements stone wall optimized 5"
     },
     {
       "id": "p_dlc09_battlements_stone_wall_optimized_06",
-      "zh": "DLC9 battlements 石墙 optimized 6",
+      "zh": "DLC09 城垛石墙优化 6",
       "en": "dlc09 battlements stone wall optimized 6"
     },
     {
       "id": "p_dlc09_battlements_wallsection_01",
-      "zh": "DLC9 battlements wallsection 1",
+      "zh": "DLC09 城垛墙段 1",
       "en": "dlc09 battlements wallsection 1"
     },
     {
       "id": "p_dlc09_battlements_wallsection_arch_01",
-      "zh": "DLC9 battlements wallsection 拱门 1",
+      "zh": "DLC09 城垛墙段拱门 1",
       "en": "dlc09 battlements wallsection arch 1"
     },
     {
       "id": "p_dlc09_battlements_wallsection_corner_01",
-      "zh": "DLC9 battlements wallsection 转角 1",
+      "zh": "DLC09 城垛墙段转角 1",
       "en": "dlc09 battlements wallsection corner 1"
     },
     {
@@ -14894,7 +14959,7 @@
     },
     {
       "id": "p_dlc09_bendy_mirror_01",
-      "zh": "DLC9 bendy mirror 1",
+      "zh": "DLC9 哈哈镜",
       "en": "dlc09 bendy mirror 1"
     },
     {
@@ -14904,17 +14969,17 @@
     },
     {
       "id": "p_dlc09_bleachers_01",
-      "zh": "DLC9 bleachers 1",
+      "zh": "DLC09 看台 1",
       "en": "dlc09 bleachers 1"
     },
     {
       "id": "p_dlc09_bleachers_02",
-      "zh": "DLC9 bleachers 2",
+      "zh": "DLC09 看台 2",
       "en": "dlc09 bleachers 2"
     },
     {
       "id": "p_dlc09_bleachers_crowd_01",
-      "zh": "DLC9 bleachers crowd 1",
+      "zh": "DLC9 观众看台",
       "en": "dlc09 bleachers crowd 1"
     },
     {
@@ -15009,27 +15074,27 @@
     },
     {
       "id": "p_dlc09_circus_ball_01",
-      "zh": "DLC9 马戏团 ball 1",
+      "zh": "DLC09 马戏团球 1",
       "en": "dlc09 circus ball 1"
     },
     {
       "id": "p_dlc09_circus_ball_02",
-      "zh": "DLC9 马戏团 ball 2",
+      "zh": "DLC09 马戏团球 2",
       "en": "dlc09 circus ball 2"
     },
     {
       "id": "p_dlc09_circus_ball_03",
-      "zh": "DLC9 马戏团 ball 3",
+      "zh": "DLC09 马戏团球 3",
       "en": "dlc09 circus ball 3"
     },
     {
       "id": "p_dlc09_circus_ball_04",
-      "zh": "DLC9 马戏团 ball 4",
+      "zh": "DLC09 马戏团球 4",
       "en": "dlc09 circus ball 4"
     },
     {
       "id": "p_dlc09_clown_chef_balloon_mallet_01",
-      "zh": "DLC9 clown chef 气球 mallet 1",
+      "zh": "DLC09 小丑厨师气球木槌 1",
       "en": "dlc09 clown chef balloon mallet 1"
     },
     {
@@ -15074,7 +15139,7 @@
     },
     {
       "id": "p_dlc09_drum_01",
-      "zh": "DLC9 drum 1",
+      "zh": "DLC09 鼓 1",
       "en": "dlc09 drum 1"
     },
     {
@@ -15164,47 +15229,47 @@
     },
     {
       "id": "p_dlc09_gobstopper_01",
-      "zh": "DLC9 gobstopper 1",
+      "zh": "DLC9 大糖球 1",
       "en": "dlc09 gobstopper 1"
     },
     {
       "id": "p_dlc09_gobstopper_02",
-      "zh": "DLC9 gobstopper 2",
+      "zh": "DLC9 大糖球 2",
       "en": "dlc09 gobstopper 2"
     },
     {
       "id": "p_dlc09_gobstopper_03",
-      "zh": "DLC9 gobstopper 3",
+      "zh": "DLC9 大糖球 3",
       "en": "dlc09 gobstopper 3"
     },
     {
       "id": "p_dlc09_gothic_trefoil_01",
-      "zh": "DLC9 gothic trefoil 1",
+      "zh": "DLC09 哥特三叶饰 1",
       "en": "dlc09 gothic trefoil 1"
     },
     {
       "id": "p_dlc09_grass_card_b_1",
-      "zh": "DLC9 草 card b 1",
+      "zh": "DLC09 草卡片 b 1",
       "en": "dlc09 grass card b 1"
     },
     {
       "id": "p_dlc09_grass_card_c_1",
-      "zh": "DLC9 草 card c 1",
+      "zh": "DLC09 草卡片 c 1",
       "en": "dlc09 grass card c 1"
     },
     {
       "id": "p_dlc09_hanging_masonjar",
-      "zh": "DLC9 hanging 玻璃罐",
+      "zh": "DLC09 悬挂玻璃罐",
       "en": "dlc09 hanging masonjar"
     },
     {
       "id": "p_dlc09_hanging_masonjar_02",
-      "zh": "DLC9 hanging 玻璃罐 2",
+      "zh": "DLC09 悬挂玻璃罐 2",
       "en": "dlc09 hanging masonjar 2"
     },
     {
       "id": "p_dlc09_hanging_masonjar_03",
-      "zh": "DLC9 hanging 玻璃罐 3",
+      "zh": "DLC09 悬挂玻璃罐 3",
       "en": "dlc09 hanging masonjar 3"
     },
     {
@@ -15214,47 +15279,47 @@
     },
     {
       "id": "p_dlc09_hay_01",
-      "zh": "DLC9 hay 1",
+      "zh": "DLC09 干草 1",
       "en": "dlc09 hay 1"
     },
     {
       "id": "p_dlc09_hay_02",
-      "zh": "DLC9 hay 2",
+      "zh": "DLC09 干草 2",
       "en": "dlc09 hay 2"
     },
     {
       "id": "p_dlc09_hay_03",
-      "zh": "DLC9 hay 3",
+      "zh": "DLC09 干草 3",
       "en": "dlc09 hay 3"
     },
     {
       "id": "p_dlc09_hay_bale_01",
-      "zh": "DLC9 hay bale 1",
+      "zh": "DLC9 干草垛 1",
       "en": "dlc09 hay bale 1"
     },
     {
       "id": "p_dlc09_hay_pile_01",
-      "zh": "DLC9 hay 堆 1",
+      "zh": "DLC09 干草堆 1",
       "en": "dlc09 hay pile 1"
     },
     {
       "id": "p_dlc09_hay_pile_02",
-      "zh": "DLC9 hay 堆 2",
+      "zh": "DLC09 干草堆 2",
       "en": "dlc09 hay pile 2"
     },
     {
       "id": "p_dlc09_hoop_01",
-      "zh": "DLC9 hoop 1",
+      "zh": "DLC09 圈 1",
       "en": "dlc09 hoop 1"
     },
     {
       "id": "p_dlc09_hoop_standing_01",
-      "zh": "DLC9 hoop standing 1",
+      "zh": "DLC09 圈立式 1",
       "en": "dlc09 hoop standing 1"
     },
     {
       "id": "p_dlc09_horn_01",
-      "zh": "DLC9 horn 1",
+      "zh": "DLC09 号角 1",
       "en": "dlc09 horn 1"
     },
     {
@@ -15294,7 +15359,7 @@
     },
     {
       "id": "p_dlc09_juggling_pin_01",
-      "zh": "DLC9 juggling pin 1",
+      "zh": "DLC9 杂耍瓶 1",
       "en": "dlc09 juggling pin 1"
     },
     {
@@ -15329,7 +15394,7 @@
     },
     {
       "id": "p_dlc09_kettlebell_01",
-      "zh": "DLC9 kettlebell 1",
+      "zh": "DLC09 壶铃 1",
       "en": "dlc09 kettlebell 1"
     },
     {
@@ -15339,7 +15404,7 @@
     },
     {
       "id": "p_dlc09_large_stall_dressed_01",
-      "zh": "DLC9 大摊位 dressed 1",
+      "zh": "DLC09 大摊位装扮 1",
       "en": "dlc09 large stall dressed 1"
     },
     {
@@ -15419,12 +15484,12 @@
     },
     {
       "id": "p_dlc09_mallet_01",
-      "zh": "DLC9 mallet 1",
+      "zh": "DLC09 木槌 1",
       "en": "dlc09 mallet 1"
     },
     {
       "id": "p_dlc09_medium_stall_dressed_01",
-      "zh": "DLC9 medium 摊位 dressed 1",
+      "zh": "DLC09 中摊位装扮 1",
       "en": "dlc09 medium stall dressed 1"
     },
     {
@@ -15464,12 +15529,12 @@
     },
     {
       "id": "p_dlc09_pillar_entrance_01",
-      "zh": "DLC9 立柱 entrance 1",
+      "zh": "DLC09 立柱入口 1",
       "en": "dlc09 pillar entrance 1"
     },
     {
       "id": "p_dlc09_pillar_trapeze_01",
-      "zh": "DLC9 立柱 trapeze 1",
+      "zh": "DLC09 立柱空中飞人 1",
       "en": "dlc09 pillar trapeze 1"
     },
     {
@@ -15484,47 +15549,47 @@
     },
     {
       "id": "p_dlc09_podium_01",
-      "zh": "DLC9 podium 1",
+      "zh": "DLC09 表演台 1",
       "en": "dlc09 podium 1"
     },
     {
       "id": "p_dlc09_popcorn_01",
-      "zh": "DLC9 popcorn 1",
+      "zh": "DLC09 爆米花 1",
       "en": "dlc09 popcorn 1"
     },
     {
       "id": "p_dlc09_popcorn_02",
-      "zh": "DLC9 popcorn 2",
+      "zh": "DLC09 爆米花 2",
       "en": "dlc09 popcorn 2"
     },
     {
       "id": "p_dlc09_popcorn_03",
-      "zh": "DLC9 popcorn 3",
+      "zh": "DLC09 爆米花 3",
       "en": "dlc09 popcorn 3"
     },
     {
       "id": "p_dlc09_popcorn_04",
-      "zh": "DLC9 popcorn 4",
+      "zh": "DLC09 爆米花 4",
       "en": "dlc09 popcorn 4"
     },
     {
       "id": "p_dlc09_popcorn_05",
-      "zh": "DLC9 popcorn 5",
+      "zh": "DLC09 爆米花 5",
       "en": "dlc09 popcorn 5"
     },
     {
       "id": "p_dlc09_popcorn_06",
-      "zh": "DLC9 popcorn 6",
+      "zh": "DLC09 爆米花 6",
       "en": "dlc09 popcorn 6"
     },
     {
       "id": "p_dlc09_portcullis_02",
-      "zh": "DLC9 portcullis 2",
+      "zh": "DLC09 吊闸 2",
       "en": "dlc09 portcullis 2"
     },
     {
       "id": "p_dlc09_portcullis_03",
-      "zh": "DLC9 portcullis 3",
+      "zh": "DLC09 吊闸 3",
       "en": "dlc09 portcullis 3"
     },
     {
@@ -15699,12 +15764,12 @@
     },
     {
       "id": "p_dlc09_scaffolding_01",
-      "zh": "DLC9 scaffolding 1",
+      "zh": "DLC09 脚手架 1",
       "en": "dlc09 scaffolding 1"
     },
     {
       "id": "p_dlc09_sconce_01",
-      "zh": "DLC9 sconce 1",
+      "zh": "DLC09 壁灯 1",
       "en": "dlc09 sconce 1"
     },
     {
@@ -15764,7 +15829,7 @@
     },
     {
       "id": "p_dlc09_small_stall_dressed_01",
-      "zh": "DLC9 小摊位 dressed 1",
+      "zh": "DLC09 小摊位装扮 1",
       "en": "dlc09 small stall dressed 1"
     },
     {
@@ -15819,17 +15884,17 @@
     },
     {
       "id": "p_dlc09_stage_entrance_01",
-      "zh": "DLC9 stage entrance 1",
+      "zh": "DLC9 舞台入口",
       "en": "dlc09 stage entrance 1"
     },
     {
       "id": "p_dlc09_stained_glass_01",
-      "zh": "DLC9 stained glass 1",
+      "zh": "DLC09 彩绘玻璃 1",
       "en": "dlc09 stained glass 1"
     },
     {
       "id": "p_dlc09_stained_glass_02",
-      "zh": "DLC9 stained glass 2",
+      "zh": "DLC09 彩绘玻璃 2",
       "en": "dlc09 stained glass 2"
     },
     {
@@ -15839,7 +15904,7 @@
     },
     {
       "id": "p_dlc09_standing_sign_01",
-      "zh": "DLC9 standing 招牌 1",
+      "zh": "DLC09 立式招牌 1",
       "en": "dlc09 standing sign 1"
     },
     {
@@ -15849,22 +15914,22 @@
     },
     {
       "id": "p_dlc09_string_lights_01",
-      "zh": "DLC09 string 灯串 1",
+      "zh": "DLC09 灯串灯串 1",
       "en": "dlc09 string lights 1"
     },
     {
       "id": "p_dlc09_string_lights_02",
-      "zh": "DLC09 string 灯串 2",
+      "zh": "DLC09 灯串灯串 2",
       "en": "dlc09 string lights 2"
     },
     {
       "id": "p_dlc09_string_lights_03",
-      "zh": "DLC09 string 灯串 3",
+      "zh": "DLC09 灯串灯串 3",
       "en": "dlc09 string lights 3"
     },
     {
       "id": "p_dlc09_string_lights_04",
-      "zh": "DLC09 string 灯串 4",
+      "zh": "DLC09 灯串灯串 4",
       "en": "dlc09 string lights 4"
     },
     {
@@ -15884,7 +15949,7 @@
     },
     {
       "id": "p_dlc09_tableandchairs_01",
-      "zh": "DLC9 tableandchairs 1",
+      "zh": "DLC09 桌椅 1",
       "en": "dlc09 tableandchairs 1"
     },
     {
@@ -15904,17 +15969,17 @@
     },
     {
       "id": "p_dlc09_tent_wall_patch_01",
-      "zh": "DLC9 帐篷墙 patch 1",
+      "zh": "DLC09 帐篷墙补丁 1",
       "en": "dlc09 tent wall patch 1"
     },
     {
       "id": "p_dlc09_tent_wall_patch_02",
-      "zh": "DLC9 帐篷墙 patch 2",
+      "zh": "DLC09 帐篷墙补丁 2",
       "en": "dlc09 tent wall patch 2"
     },
     {
       "id": "p_dlc09_tent_wall_patch_03",
-      "zh": "DLC9 帐篷墙 patch 3",
+      "zh": "DLC09 帐篷墙补丁 3",
       "en": "dlc09 tent wall patch 3"
     },
     {
@@ -15924,7 +15989,7 @@
     },
     {
       "id": "p_dlc09_ticketstub_01",
-      "zh": "DLC9 ticketstub 1",
+      "zh": "DLC09 票根 1",
       "en": "dlc09 ticketstub 1"
     },
     {
@@ -15934,7 +15999,7 @@
     },
     {
       "id": "p_dlc09_toy_letterblock_stack",
-      "zh": "DLC09 玩具字母积木 stack",
+      "zh": "DLC09 玩具字母积木堆",
       "en": "dlc09 toy letterblock stack"
     },
     {
@@ -16039,47 +16104,47 @@
     },
     {
       "id": "p_dlc09_wagon_01",
-      "zh": "DLC9 wagon 1",
+      "zh": "DLC09 大篷车 1",
       "en": "dlc09 wagon 1"
     },
     {
       "id": "p_dlc09_wagon_candy_01",
-      "zh": "DLC9 wagon candy 1",
+      "zh": "DLC9 糖果车 1",
       "en": "dlc09 wagon candy 1"
     },
     {
       "id": "p_dlc09_wagon_music_front_01",
-      "zh": "DLC9 wagon music 前端 1",
+      "zh": "DLC09 大篷车音乐前端 1",
       "en": "dlc09 wagon music front 1"
     },
     {
       "id": "p_dlc09_wagon_popcorn_01",
-      "zh": "DLC9 wagon popcorn 1",
+      "zh": "DLC9 爆米花车 1",
       "en": "dlc09 wagon popcorn 1"
     },
     {
       "id": "p_dlc09_wagon_small_01",
-      "zh": "DLC9 wagon 小 1",
+      "zh": "DLC09 大篷车小 1",
       "en": "dlc09 wagon small 1"
     },
     {
       "id": "p_dlc09_wagon_ticket_day_01",
-      "zh": "DLC9 wagon 票据白天 1",
+      "zh": "DLC09 大篷车票白天 1",
       "en": "dlc09 wagon ticket day 1"
     },
     {
       "id": "p_dlc09_wall_deco_support_01",
-      "zh": "DLC9 墙 deco 支撑 1",
+      "zh": "DLC09 墙装饰支撑 1",
       "en": "dlc09 wall deco support 1"
     },
     {
       "id": "p_dlc09_wall_deco_support_02",
-      "zh": "DLC9 墙 deco 支撑 2",
+      "zh": "DLC09 墙装饰支撑 2",
       "en": "dlc09 wall deco support 2"
     },
     {
       "id": "p_dlc09_wall_deco_support_03",
-      "zh": "DLC9 墙 deco 支撑 3",
+      "zh": "DLC09 墙装饰支撑 3",
       "en": "dlc09 wall deco support 3"
     },
     {
@@ -16089,7 +16154,7 @@
     },
     {
       "id": "p_dlc09_weapon_stand_01",
-      "zh": "DLC9 weapon stand 1",
+      "zh": "DLC09 武器架 1",
       "en": "dlc09 weapon stand 1"
     },
     {
@@ -16114,7 +16179,7 @@
     },
     {
       "id": "p_dlc09_woodensupport_01",
-      "zh": "DLC9 woodensupport 1",
+      "zh": "DLC9 木支架",
       "en": "dlc09 woodensupport 1"
     },
     {
@@ -16284,32 +16349,32 @@
     },
     {
       "id": "p_dlc10_grass_card_a",
-      "zh": "DLC10 草 card a",
+      "zh": "DLC10 草卡片 a",
       "en": "dlc10 grass card a"
     },
     {
       "id": "p_dlc10_grass_card_b",
-      "zh": "DLC10 草 card b",
+      "zh": "DLC10 草卡片 b",
       "en": "dlc10 grass card b"
     },
     {
       "id": "p_dlc10_grass_card_c",
-      "zh": "DLC10 草 card c",
+      "zh": "DLC10 草卡片 c",
       "en": "dlc10 grass card c"
     },
     {
       "id": "p_dlc10_ground_butterfly",
-      "zh": "DLC10 地面 butterfly",
+      "zh": "DLC10 地面蝴蝶",
       "en": "dlc10 ground butterfly"
     },
     {
       "id": "p_dlc10_hover_butterfly",
-      "zh": "DLC10 悬停 butterfly",
+      "zh": "DLC10 悬停蝴蝶",
       "en": "dlc10 hover butterfly"
     },
     {
       "id": "p_dlc10_incense_pot",
-      "zh": "DLC10 香炉 pot",
+      "zh": "DLC10 香炉",
       "en": "dlc10 incense pot"
     },
     {
@@ -16479,32 +16544,32 @@
     },
     {
       "id": "p_dlc10_squarestone_single_01",
-      "zh": "DLC10 方石 single 1",
+      "zh": "DLC10 方石单块 1",
       "en": "dlc10 squarestone single 1"
     },
     {
       "id": "p_dlc10_squarestone_single_02",
-      "zh": "DLC10 方石 single 2",
+      "zh": "DLC10 方石单块 2",
       "en": "dlc10 squarestone single 2"
     },
     {
       "id": "p_dlc10_squarestone_single_03",
-      "zh": "DLC10 方石 single 3",
+      "zh": "DLC10 方石单块 3",
       "en": "dlc10 squarestone single 3"
     },
     {
       "id": "p_dlc10_squarestone_single_04",
-      "zh": "DLC10 方石 single 4",
+      "zh": "DLC10 方石单块 4",
       "en": "dlc10 squarestone single 4"
     },
     {
       "id": "p_dlc10_squarestone_single_05",
-      "zh": "DLC10 方石 single 5",
+      "zh": "DLC10 方石单块 5",
       "en": "dlc10 squarestone single 5"
     },
     {
       "id": "p_dlc10_squarestone_single_06",
-      "zh": "DLC10 方石 single 6",
+      "zh": "DLC10 方石单块 6",
       "en": "dlc10 squarestone single 6"
     },
     {
@@ -16599,17 +16664,17 @@
     },
     {
       "id": "p_dlc13_bamboo_frame_01",
-      "zh": "DLC13 竹 frame 1",
+      "zh": "DLC13 竹框架 1",
       "en": "dlc13 bamboo frame 1"
     },
     {
       "id": "p_dlc13_box_lantern_01",
-      "zh": "DLC13 箱子灯笼 1",
+      "zh": "DLC13 盒灯 1",
       "en": "dlc13 box lantern 1"
     },
     {
       "id": "p_dlc13_box_lantern_02",
-      "zh": "DLC13 箱子灯笼 2",
+      "zh": "DLC13 盒灯 2",
       "en": "dlc13 box lantern 2"
     },
     {
@@ -16714,32 +16779,32 @@
     },
     {
       "id": "p_dlc13_grass_card_a_1",
-      "zh": "DLC13 草 card a 1",
+      "zh": "DLC13 草卡片 a 1",
       "en": "dlc13 grass card a 1"
     },
     {
       "id": "p_dlc13_grass_card_b_1",
-      "zh": "DLC13 草 card b 1",
+      "zh": "DLC13 草卡片 b 1",
       "en": "dlc13 grass card b 1"
     },
     {
       "id": "p_dlc13_grass_card_c_1",
-      "zh": "DLC13 草 card c 1",
+      "zh": "DLC13 草卡片 c 1",
       "en": "dlc13 grass card c 1"
     },
     {
       "id": "p_dlc13_ground_butterfly_1",
-      "zh": "DLC13 地面 butterfly 1",
+      "zh": "DLC13 地面蝴蝶 1",
       "en": "dlc13 ground butterfly 1"
     },
     {
       "id": "p_dlc13_hover_butterfly_1",
-      "zh": "DLC13 悬停 butterfly 1",
+      "zh": "DLC13 悬停蝴蝶 1",
       "en": "dlc13 hover butterfly 1"
     },
     {
       "id": "p_dlc13_incense_pot_1",
-      "zh": "DLC13 香炉 pot 1",
+      "zh": "DLC13 香炉 1",
       "en": "dlc13 incense pot 1"
     },
     {
@@ -16759,7 +16824,7 @@
     },
     {
       "id": "p_dlc13_lantern_stand_1",
-      "zh": "DLC13 灯笼 stand 1",
+      "zh": "DLC13 灯笼架 1",
       "en": "dlc13 lantern stand 1"
     },
     {
@@ -17029,7 +17094,7 @@
     },
     {
       "id": "p_dlc13_plant_pot_1",
-      "zh": "DLC13 植物 pot 1",
+      "zh": "DLC13 花盆 1",
       "en": "dlc13 plant pot 1"
     },
     {
@@ -17079,32 +17144,32 @@
     },
     {
       "id": "p_dlc13_squarestone_single_07",
-      "zh": "DLC13 方石 single 7",
+      "zh": "DLC13 方石单块 7",
       "en": "dlc13 squarestone single 7"
     },
     {
       "id": "p_dlc13_squarestone_single_08",
-      "zh": "DLC13 方石 single 8",
+      "zh": "DLC13 方石单块 8",
       "en": "dlc13 squarestone single 8"
     },
     {
       "id": "p_dlc13_squarestone_single_09",
-      "zh": "DLC13 方石 single 9",
+      "zh": "DLC13 方石单块 9",
       "en": "dlc13 squarestone single 9"
     },
     {
       "id": "p_dlc13_squarestone_single_10",
-      "zh": "DLC13 方石 single 10",
+      "zh": "DLC13 方石单块 10",
       "en": "dlc13 squarestone single 10"
     },
     {
       "id": "p_dlc13_squarestone_single_11",
-      "zh": "DLC13 方石 single 11",
+      "zh": "DLC13 方石单块 11",
       "en": "dlc13 squarestone single 11"
     },
     {
       "id": "p_dlc13_squarestone_single_12",
-      "zh": "DLC13 方石 single 12",
+      "zh": "DLC13 方石单块 12",
       "en": "dlc13 squarestone single 12"
     },
     {
@@ -17214,7 +17279,7 @@
     },
     {
       "id": "p_dlc4_bridge_nosides_middle_01",
-      "zh": "DLC4 桥 nosides 中段 1",
+      "zh": "DLC4 桥无侧边中段 1",
       "en": "dlc4 bridge nosides middle 1"
     },
     {
@@ -17284,22 +17349,22 @@
     },
     {
       "id": "p_dlc4_grass_card_a",
-      "zh": "DLC4 草 card a",
+      "zh": "DLC4 草卡片 a",
       "en": "dlc4 grass card a"
     },
     {
       "id": "p_dlc4_grass_card_b",
-      "zh": "DLC4 草 card b",
+      "zh": "DLC4 草卡片 b",
       "en": "dlc4 grass card b"
     },
     {
       "id": "p_dlc4_grass_card_c",
-      "zh": "DLC4 草 card c",
+      "zh": "DLC4 草卡片 c",
       "en": "dlc4 grass card c"
     },
     {
       "id": "p_dlc4_incense_pot",
-      "zh": "DLC4 香炉 pot",
+      "zh": "DLC4 香炉",
       "en": "dlc4 incense pot"
     },
     {
@@ -17309,7 +17374,7 @@
     },
     {
       "id": "p_dlc4_lantern_stand",
-      "zh": "DLC4 灯笼 stand",
+      "zh": "DLC4 灯笼架",
       "en": "dlc4 lantern stand"
     },
     {
@@ -17489,7 +17554,7 @@
     },
     {
       "id": "p_dlc4_plant_pot",
-      "zh": "DLC4 植物 pot",
+      "zh": "DLC4 花盆",
       "en": "dlc4 plant pot"
     },
     {
@@ -17524,32 +17589,32 @@
     },
     {
       "id": "p_dlc4_squarestone_single_01",
-      "zh": "DLC4 方石 single 1",
+      "zh": "DLC4 方石单块 1",
       "en": "dlc4 squarestone single 1"
     },
     {
       "id": "p_dlc4_squarestone_single_02",
-      "zh": "DLC4 方石 single 2",
+      "zh": "DLC4 方石单块 2",
       "en": "dlc4 squarestone single 2"
     },
     {
       "id": "p_dlc4_squarestone_single_03",
-      "zh": "DLC4 方石 single 3",
+      "zh": "DLC4 方石单块 3",
       "en": "dlc4 squarestone single 3"
     },
     {
       "id": "p_dlc4_squarestone_single_04",
-      "zh": "DLC4 方石 single 4",
+      "zh": "DLC4 方石单块 4",
       "en": "dlc4 squarestone single 4"
     },
     {
       "id": "p_dlc4_squarestone_single_05",
-      "zh": "DLC4 方石 single 5",
+      "zh": "DLC4 方石单块 5",
       "en": "dlc4 squarestone single 5"
     },
     {
       "id": "p_dlc4_squarestone_single_06",
-      "zh": "DLC4 方石 single 6",
+      "zh": "DLC4 方石单块 6",
       "en": "dlc4 squarestone single 6"
     },
     {
@@ -17684,7 +17749,7 @@
     },
     {
       "id": "p_dlc5_curtain_01",
-      "zh": "DLC5 curtain 1",
+      "zh": "DLC5 窗帘 1",
       "en": "dlc5 curtain 1"
     },
     {
@@ -17834,12 +17899,12 @@
     },
     {
       "id": "p_dlc5_man_hole_01",
-      "zh": "DLC5 man 孔 1",
+      "zh": "DLC5 人孔 1",
       "en": "dlc5 man hole 1"
     },
     {
       "id": "p_dlc5_man_hole_02",
-      "zh": "DLC5 man 孔 2",
+      "zh": "DLC5 人孔 2",
       "en": "dlc5 man hole 2"
     },
     {
@@ -17964,7 +18029,7 @@
     },
     {
       "id": "p_dlc5_moonshaft_dust",
-      "zh": "DLC5 月光井 dust",
+      "zh": "DLC5 月光井尘土",
       "en": "dlc5 moonshaft dust"
     },
     {
@@ -18014,12 +18079,12 @@
     },
     {
       "id": "p_dlc5_pavement_01",
-      "zh": "DLC5 pavement 1",
+      "zh": "DLC5 铺地 1",
       "en": "dlc5 pavement 1"
     },
     {
       "id": "p_dlc5_pavement_02",
-      "zh": "DLC5 pavement 2",
+      "zh": "DLC5 铺地 2",
       "en": "dlc5 pavement 2"
     },
     {
@@ -18064,7 +18129,7 @@
     },
     {
       "id": "p_dlc5_restaurantwall",
-      "zh": "DLC5 restaurantwall",
+      "zh": "DLC5 餐厅墙",
       "en": "dlc5 restaurantwall"
     },
     {
@@ -18074,7 +18139,7 @@
     },
     {
       "id": "p_dlc5_restaurantwindow",
-      "zh": "DLC5 restaurantwindow",
+      "zh": "DLC5 餐厅窗",
       "en": "dlc5 restaurantwindow"
     },
     {
@@ -18089,12 +18154,12 @@
     },
     {
       "id": "p_dlc5_road_centreline_01",
-      "zh": "DLC5 路 centreline 1",
+      "zh": "DLC5 路中心线 1",
       "en": "dlc5 road centreline 1"
     },
     {
       "id": "p_dlc5_road_white_line_01",
-      "zh": "DLC5 路 white line 1",
+      "zh": "DLC5 路白线 1",
       "en": "dlc5 road white line 1"
     },
     {
@@ -18459,17 +18524,17 @@
     },
     {
       "id": "p_dlc5_standardwall",
-      "zh": "DLC5 standardwall",
+      "zh": "DLC5 标准墙",
       "en": "dlc5 standardwall"
     },
     {
       "id": "p_dlc5_standardwallcorner",
-      "zh": "DLC5 standardwallcorner",
+      "zh": "DLC5 标准转角墙",
       "en": "dlc5 standardwallcorner"
     },
     {
       "id": "p_dlc5_stone_kerb_01",
-      "zh": "DLC5 石 kerb 1",
+      "zh": "DLC5 石路缘 1",
       "en": "dlc5 stone kerb 1"
     },
     {
@@ -18709,7 +18774,7 @@
     },
     {
       "id": "p_dlc5_wall_left_angle_04",
-      "zh": "DLC5 墙 left 角 4",
+      "zh": "DLC5 墙左角 4",
       "en": "dlc5 wall left angle 4"
     },
     {
@@ -18779,12 +18844,12 @@
     },
     {
       "id": "p_dlc5_wall_window_01_glass",
-      "zh": "DLC5 墙窗 1 glass",
+      "zh": "DLC5 墙窗 1 玻璃",
       "en": "dlc5 wall window 1 glass"
     },
     {
       "id": "p_dlc5_wall_window_01_glass 1",
-      "zh": "DLC5 墙窗 1 glass 1",
+      "zh": "DLC5 墙窗 1 玻璃 1",
       "en": "dlc5 wall window 1 glass 1"
     },
     {
@@ -18799,7 +18864,7 @@
     },
     {
       "id": "p_dlc5_wall_window_02_glass",
-      "zh": "DLC5 墙窗 2 glass",
+      "zh": "DLC5 墙窗 2 玻璃",
       "en": "dlc5 wall window 2 glass"
     },
     {
@@ -18819,12 +18884,12 @@
     },
     {
       "id": "p_dlc5_wallwindow",
-      "zh": "DLC5 wallwindow",
+      "zh": "DLC5 墙窗",
       "en": "dlc5 wallwindow"
     },
     {
       "id": "p_dlc5_widewall_01",
-      "zh": "DLC5 widewall 1",
+      "zh": "DLC5 宽墙 1",
       "en": "dlc5 widewall 1"
     },
     {
@@ -18894,42 +18959,42 @@
     },
     {
       "id": "p_dlc7_battlements_cobble_05",
-      "zh": "DLC7 battlements 卵石 5",
+      "zh": "DLC7 城垛卵石 5",
       "en": "dlc7 battlements cobble 5"
     },
     {
       "id": "p_dlc7_battlements_cobble_06",
-      "zh": "DLC7 battlements 卵石 6",
+      "zh": "DLC7 城垛卵石 6",
       "en": "dlc7 battlements cobble 6"
     },
     {
       "id": "p_dlc7_battlements_cobble_07",
-      "zh": "DLC7 battlements 卵石 7",
+      "zh": "DLC7 城垛卵石 7",
       "en": "dlc7 battlements cobble 7"
     },
     {
       "id": "p_dlc7_battlements_cobble_08",
-      "zh": "DLC7 battlements 卵石 8",
+      "zh": "DLC7 城垛卵石 8",
       "en": "dlc7 battlements cobble 8"
     },
     {
       "id": "p_dlc7_battlements_cobble_edge_05",
-      "zh": "DLC7 battlements 卵石边缘 5",
+      "zh": "DLC7 城垛卵石边缘 5",
       "en": "dlc7 battlements cobble edge 5"
     },
     {
       "id": "p_dlc7_battlements_cobble_edge_06",
-      "zh": "DLC7 battlements 卵石边缘 6",
+      "zh": "DLC7 城垛卵石边缘 6",
       "en": "dlc7 battlements cobble edge 6"
     },
     {
       "id": "p_dlc7_battlements_cobble_edge_07",
-      "zh": "DLC7 battlements 卵石边缘 7",
+      "zh": "DLC7 城垛卵石边缘 7",
       "en": "dlc7 battlements cobble edge 7"
     },
     {
       "id": "p_dlc7_battlements_cobble_edge_08",
-      "zh": "DLC7 battlements 卵石边缘 8",
+      "zh": "DLC7 城垛卵石边缘 8",
       "en": "dlc7 battlements cobble edge 8"
     },
     {
@@ -19099,7 +19164,7 @@
     },
     {
       "id": "p_dlc7_rain_01",
-      "zh": "DLC7 rain 1",
+      "zh": "DLC7 雨 1",
       "en": "dlc7 rain 1"
     },
     {
@@ -19389,7 +19454,7 @@
     },
     {
       "id": "PFX_ConfettiRain",
-      "zh": "彩纸屑 Rain",
+      "zh": "彩纸屑雨",
       "en": "Confetti Rain"
     },
     {
@@ -19409,7 +19474,7 @@
     },
     {
       "id": "pfx_falling_leaves",
-      "zh": "falling 树叶",
+      "zh": "飘落树叶",
       "en": "falling leaves"
     },
     {
@@ -19424,7 +19489,7 @@
     },
     {
       "id": "PFX_RaftWaterWake_001",
-      "zh": "木筏水尾流特效 1",
+      "zh": "木筏尾流特效 1",
       "en": "Raft Water Wake 1"
     },
     {
@@ -19439,12 +19504,12 @@
     },
     {
       "id": "PFX_sand_01",
-      "zh": "沙 1",
+      "zh": "沙粒特效 1",
       "en": "sand 1"
     },
     {
       "id": "pfx_wide_wind_left",
-      "zh": "宽风 left",
+      "zh": "宽风（左）",
       "en": "wide wind left"
     },
     {
@@ -19484,7 +19549,7 @@
     },
     {
       "id": "pineapple_plant_02NoFruit 1",
-      "zh": "菠萝植物 2 No Fruit 1",
+      "zh": "菠萝植物 2（无果）1",
       "en": "pineapple plant 2 No Fruit 1"
     },
     {
@@ -19669,12 +19734,12 @@
     },
     {
       "id": "planks_posts_dining",
-      "zh": "木板 posts dining",
+      "zh": "木板柱（用餐区）",
       "en": "planks posts dining"
     },
     {
       "id": "plant_pot_with_collision",
-      "zh": "植物 pot with 碰撞",
+      "zh": "植物花盆（带碰撞）",
       "en": "plant pot with collision"
     },
     {
@@ -19819,12 +19884,12 @@
     },
     {
       "id": "quad_tile_3x1_01",
-      "zh": "quad 瓦片 3x1 1",
+      "zh": "四格瓦片 3x1 1",
       "en": "quad tile 3x1 1"
     },
     {
       "id": "quad_tile2x2_01",
-      "zh": "quad 瓦片 2x 2 1",
+      "zh": "四格瓦片 2x 2 1",
       "en": "quad tile 2x 2 1"
     },
     {
@@ -19834,7 +19899,7 @@
     },
     {
       "id": "raft_barrier",
-      "zh": "raft 护栏",
+      "zh": "木筏护栏",
       "en": "raft barrier"
     },
     {
@@ -19849,7 +19914,7 @@
     },
     {
       "id": "raft_floats",
-      "zh": "raft 浮筒",
+      "zh": "木筏浮筒",
       "en": "raft floats"
     },
     {
@@ -20189,7 +20254,7 @@
     },
     {
       "id": "results_onionking_and_kevin",
-      "zh": "results 洋葱王 and 凯文",
+      "zh": "结算·洋葱王与凯文",
       "en": "results onionking and kevin"
     },
     {
@@ -20719,7 +20784,7 @@
     },
     {
       "id": "small_stall_dressed_01",
-      "zh": "小摊位 dressed 1",
+      "zh": "小摊位装扮 1",
       "en": "small stall dressed 1"
     },
     {
@@ -20974,22 +21039,22 @@
     },
     {
       "id": "Space_Door_Airlock_Bool_Close",
-      "zh": "太空门气闸·关闭（布尔）",
+      "zh": "太空气闸门（关闭·布尔）",
       "en": "Space Door Airlock Bool Close"
     },
     {
       "id": "Space_Door_Airlock_Bool_Open",
-      "zh": "太空气闸门",
+      "zh": "太空气闸门（打开·布尔）",
       "en": "Space Door Airlock Bool Open"
     },
     {
       "id": "Space_Door_Airlock_Close",
-      "zh": "太空门气闸·关闭",
+      "zh": "太空气闸门（关闭）",
       "en": "Space Door Airlock Close"
     },
     {
       "id": "Space_Door_Airlock_Open",
-      "zh": "太空门气闸打开",
+      "zh": "太空气闸门（打开）",
       "en": "Space Door Airlock Open"
     },
     {
@@ -21189,7 +21254,7 @@
     },
     {
       "id": "StoryOnionKing_Hawaiian",
-      "zh": "洋葱国王（夏威夷）",
+      "zh": "剧情洋葱王（夏威夷）",
       "en": "Story Onion King Hawaiian"
     },
     {
@@ -21559,7 +21624,7 @@
     },
     {
       "id": "throne room",
-      "zh": "王座 room",
+      "zh": "王座房间",
       "en": "throne room"
     },
     {
@@ -21579,7 +21644,7 @@
     },
     {
       "id": "throne_gamesconsole_01",
-      "zh": "王座 gamesconsole 1",
+      "zh": "王座游戏机 1",
       "en": "throne gamesconsole 1"
     },
     {
@@ -21604,7 +21669,7 @@
     },
     {
       "id": "throne_walltile_6x6",
-      "zh": "王座 walltile 6x6",
+      "zh": "王座墙砖 6x6",
       "en": "throne walltile 6x6"
     },
     {
@@ -21724,7 +21789,7 @@
     },
     {
       "id": "toy_letterblock_stack",
-      "zh": "玩具字母积木 stack",
+      "zh": "玩具字母积木堆",
       "en": "toy letterblock stack"
     },
     {
@@ -21749,7 +21814,7 @@
     },
     {
       "id": "traffic jam",
-      "zh": "交通 jam",
+      "zh": "交通拥堵",
       "en": "traffic jam"
     },
     {
@@ -21774,7 +21839,7 @@
     },
     {
       "id": "traffic_light_animated_01",
-      "zh": "交通灯动画 1",
+      "zh": "交通信号灯（动画）1",
       "en": "traffic light animated 1"
     },
     {
@@ -21884,7 +21949,7 @@
     },
     {
       "id": "underground crypt lights",
-      "zh": "underground crypt 灯串",
+      "zh": "地下地穴灯串",
       "en": "underground crypt lights"
     },
     {
@@ -22199,7 +22264,7 @@
     },
     {
       "id": "wall_left_angle_inside3_tall",
-      "zh": "墙 left 角内侧 3 tall",
+      "zh": "墙左角内侧 3 高",
       "en": "wall left angle inside 3 tall"
     },
     {
@@ -22219,7 +22284,7 @@
     },
     {
       "id": "wall_right_angle_tall",
-      "zh": "墙右角 tall",
+      "zh": "墙右角高",
       "en": "wall right angle tall"
     },
     {
@@ -22234,12 +22299,12 @@
     },
     {
       "id": "wall_straight_03_inside1_tall",
-      "zh": "墙直 3 内侧 1 tall",
+      "zh": "墙直 3 内侧 1 高",
       "en": "wall straight 3 inside 1 tall"
     },
     {
       "id": "wall_straight_tall",
-      "zh": "墙直 tall",
+      "zh": "墙直高",
       "en": "wall straight tall"
     },
     {
@@ -22329,7 +22394,7 @@
     },
     {
       "id": "WaterSplash_GooSplash_Particle_001",
-      "zh": "黏液水花特效 1",
+      "zh": "黏液水花粒子 1",
       "en": "Water Splash Goo Splash Particle 1"
     },
     {
@@ -22364,8 +22429,13 @@
     },
     {
       "id": "wavefloat_generic",
-      "zh": "波浪浮筒 generic",
+      "zh": "波浪浮筒通用",
       "en": "wavefloat generic"
+    },
+    {
+      "id": "web_backpack_storage_01",
+      "zh": "Web背包",
+      "en": "Web Storage Backpack"
     },
     {
       "id": "web_cooking_region_floorburner",
@@ -22381,6 +22451,11 @@
       "id": "web_dlc10_pushable_object",
       "zh": "可推动大火锅（Web·新年）",
       "en": "Pushable Hot Pot (Web, New Year)"
+    },
+    {
+      "id": "web_killer_ghost_01",
+      "zh": "致命鬼魂",
+      "en": "Killer Ghost (Web)"
     },
     {
       "id": "web_utensil_dlc10_large_pot_01",
@@ -22454,7 +22529,7 @@
     },
     {
       "id": "wizard_candelabra_01",
-      "zh": "魔法 candelabra 1",
+      "zh": "魔法烛台 1",
       "en": "wizard candelabra 1"
     },
     {
@@ -22584,17 +22659,17 @@
     },
     {
       "id": "wizard_walltile_15x15",
-      "zh": "魔法 walltile 15x15",
+      "zh": "魔法墙砖 15x15",
       "en": "wizard walltile 15x15"
     },
     {
       "id": "wizard_walltile_3_1",
-      "zh": "魔法 walltile 3 1",
+      "zh": "魔法墙砖 3 1",
       "en": "wizard walltile 3 1"
     },
     {
       "id": "wizard_walltile_3x2",
-      "zh": "魔法 walltile 3x2",
+      "zh": "魔法墙砖 3x2",
       "en": "wizard walltile 3x2"
     },
     {
@@ -22731,16 +22806,6 @@
       "id": "workstation_sink_mug_01_wood",
       "zh": "马克杯水槽（木制）",
       "en": "Mug Sink (Wooden)"
-    },
-    {
-      "id": "web_backpack_storage_01",
-      "zh": "Web背包",
-      "en": "Web Storage Backpack"
-    },
-    {
-      "id": "web_killer_ghost_01",
-      "zh": "致命鬼魂",
-      "en": "Killer Ghost (Web)"
     },
     {
       "id": "WorldMapAudioDirectory",
