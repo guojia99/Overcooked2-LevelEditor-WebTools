@@ -155,10 +155,11 @@ public static class LayoutEditorDecorThumbnailExporter
                     }
 
                     LayoutEditorThumbMaterialFix.DebugItemId = item.id == DebugItemId ? item.id : "";
-                    patchedMats = LayoutEditorThumbMaterialFix.FixRenderers(inst, FallbackColorFor(item));
+                    Color fallbackColor = FallbackColorFor(item);
+                    patchedMats = LayoutEditorThumbMaterialFix.FixRenderers(inst, fallbackColor);
                     if (item.id == DebugItemId)
                         LogHierarchy(inst);
-                    RenderItem(inst, cam, rt, pngPath, item.id);
+                    RenderItem(inst, cam, rt, pngPath, item.id, fallbackColor, item.typeKind != "food_model");
                     rendered++;
                 }
                 catch (Exception ex)
@@ -542,6 +543,56 @@ public static class LayoutEditorDecorThumbnailExporter
         if (idWords.IndexOf(" black ", StringComparison.Ordinal) >= 0)
             return new Color(0.24f, 0.24f, 0.27f);
 
+        if (idWords.IndexOf(" plank ", StringComparison.Ordinal) >= 0
+            || idWords.IndexOf(" wood ", StringComparison.Ordinal) >= 0
+            || idWords.IndexOf(" log ", StringComparison.Ordinal) >= 0
+            || idWords.IndexOf(" twig ", StringComparison.Ordinal) >= 0)
+            return new Color(0.55f, 0.40f, 0.28f);
+        if (idWords.IndexOf(" reed ", StringComparison.Ordinal) >= 0
+            || idWords.IndexOf(" grass ", StringComparison.Ordinal) >= 0
+            || idWords.IndexOf(" leaf ", StringComparison.Ordinal) >= 0
+            || idWords.IndexOf(" leaves ", StringComparison.Ordinal) >= 0
+            || idWords.IndexOf(" bush ", StringComparison.Ordinal) >= 0)
+            return new Color(0.38f, 0.64f, 0.36f);
+        if (idWords.IndexOf(" bedroll ", StringComparison.Ordinal) >= 0
+            || idWords.IndexOf(" tent ", StringComparison.Ordinal) >= 0
+            || idWords.IndexOf(" canvas ", StringComparison.Ordinal) >= 0)
+            return new Color(0.72f, 0.56f, 0.38f);
+        if (idWords.IndexOf(" nail ", StringComparison.Ordinal) >= 0
+            || idWords.IndexOf(" metal ", StringComparison.Ordinal) >= 0
+            || idWords.IndexOf(" iron ", StringComparison.Ordinal) >= 0)
+            return new Color(0.60f, 0.62f, 0.66f);
+
+        // typeKind 常为 other 的装饰：按 id 关键词补足常见类别。
+        if (HasAny(idWords, "kevin", "owl", "moth", "bird", "parrot", "pigeon", "raven",
+                "seagull", "walkingbread", "bread", "customer", "npc", "character",
+                "dog", "cat", "rat", "mouse", "fish", "shark", "crab", "turtle",
+                "dragon", "frog", "snail", "dolphin", "whale", "octopus", "squid"))
+            return new Color(0.80f, 0.62f, 0.48f);
+        if (HasAny(idWords, "cabin", "building", "house", "hut", "roof", "wall", "fence",
+                "gate", "arch", "pillar", "bridge", "tower", "stall", "platform",
+                "support", "truss", "scaffold", "countertop", "table", "chair", "bench",
+                "shelf", "crate", "barrel", "box", "lid", "chest", "sign", "picture",
+                "board", "book", "cart", "wagon", "sled", "plank", "wood", "log", "twig", "stump"))
+            return new Color(0.58f, 0.44f, 0.30f);
+        if (HasAny(idWords, "lantern", "lamp", "torch", "candle", "fire", "campfire",
+                "sconce", "firework"))
+            return new Color(0.95f, 0.76f, 0.36f);
+        if (HasAny(idWords, "bedroll", "tent", "canvas", "towel", "curtain", "banner",
+                "flag", "carpet", "rug", "cloth", "bunting", "rope"))
+            return new Color(0.78f, 0.48f, 0.38f);
+        if (HasAny(idWords, "popcorn", "hay", "wheat", "straw", "bale"))
+            return new Color(0.90f, 0.76f, 0.38f);
+        if (HasAny(idWords, "ball", "toy", "gift", "letterblock", "candy", "candycane",
+                "gobstopper", "pinata", "accordion", "hoop", "juggle"))
+            return new Color(0.82f, 0.36f, 0.38f);
+        if (HasAny(idWords, "ice", "icicle", "snow"))
+            return new Color(0.72f, 0.86f, 0.95f);
+        if (HasAny(idWords, "vortex", "torus", "slime", "ghost", "sparkle", "dust", "steam"))
+            return new Color(0.72f, 0.56f, 0.90f);
+        if (HasAny(idWords, "armor", "shield", "weapon", "cannon", "manhole", "nail"))
+            return new Color(0.60f, 0.62f, 0.66f);
+
         if (theme.IndexOf("beach", StringComparison.Ordinal) >= 0
             || all.IndexOf("sand", StringComparison.Ordinal) >= 0)
             return new Color(0.78f, 0.70f, 0.52f);
@@ -595,6 +646,16 @@ public static class LayoutEditorDecorThumbnailExporter
             || all.IndexOf("torch", StringComparison.Ordinal) >= 0)
             return new Color(0.95f, 0.76f, 0.36f);
         return new Color(0.56f, 0.62f, 0.72f);
+    }
+
+    private static bool HasAny(string words, params string[] needles)
+    {
+        for (int i = 0; i < needles.Length; i++)
+        {
+            if (words.IndexOf(" " + needles[i] + " ", StringComparison.Ordinal) >= 0)
+                return true;
+        }
+        return false;
     }
 
     // ------------------------------------------------------------------ rendering
@@ -742,7 +803,7 @@ public static class LayoutEditorDecorThumbnailExporter
         return true;
     }
 
-    private static void RenderItem(GameObject inst, Camera cam, RenderTexture rt, string pngPath, string itemId)
+    private static void RenderItem(GameObject inst, Camera cam, RenderTexture rt, string pngPath, string itemId, Color fallbackColor, bool tintGray)
     {
         Bounds b = CalcBounds(inst);
         float maxDim = Mathf.Max(b.size.x, b.size.y, b.size.z, 0.01f);
@@ -783,6 +844,12 @@ public static class LayoutEditorDecorThumbnailExporter
             }
             if (IsBlank(pixels))
                 throw new InvalidOperationException("渲染结果为空（无可见像素）");
+            if (tintGray && IsGrayOrDark(pixels))
+            {
+                ApplyTint(pixels, fallbackColor);
+                tex.SetPixels32(pixels);
+                tex.Apply();
+            }
             File.WriteAllBytes(pngPath, tex.EncodeToPNG());
         }
         finally
@@ -790,6 +857,49 @@ public static class LayoutEditorDecorThumbnailExporter
             cam.targetTexture = null;
             RenderTexture.active = null;
             UnityEngine.Object.DestroyImmediate(tex);
+        }
+    }
+
+    /** 灰度/过暗模型：按分类兜底色染色，避免资源图整片灰/黑。 */
+    private static bool IsGrayOrDark(Color32[] pixels)
+    {
+        int count = 0;
+        double satSum = 0;
+        double valSum = 0;
+        int step = Mathf.Max(1, pixels.Length / 4096);
+        for (int i = 0; i < pixels.Length; i += step)
+        {
+            Color32 p = pixels[i];
+            if (p.a <= 20)
+                continue;
+            float max = Mathf.Max(p.r, Mathf.Max(p.g, p.b)) / 255f;
+            float min = Mathf.Min(p.r, Mathf.Min(p.g, p.b)) / 255f;
+            satSum += max > 0.001f ? (max - min) / max : 0f;
+            valSum += max;
+            count++;
+        }
+        if (count == 0)
+            return false;
+        return satSum / count < 0.12 || valSum / count < 0.20;
+    }
+
+    private static void ApplyTint(Color32[] pixels, Color tint)
+    {
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            Color32 p = pixels[i];
+            if (p.a <= 20)
+                continue;
+            float lum = (p.r * 0.299f + p.g * 0.587f + p.b * 0.114f) / 255f;
+            float shape = 0.55f + 0.45f * Mathf.Sqrt(lum);
+            float mix = 0.80f;
+            float r = Mathf.Lerp(p.r / 255f, tint.r * shape, mix);
+            float g = Mathf.Lerp(p.g / 255f, tint.g * shape, mix);
+            float b = Mathf.Lerp(p.b / 255f, tint.b * shape, mix);
+            p.r = (byte)(Mathf.Clamp01(r) * 255f);
+            p.g = (byte)(Mathf.Clamp01(g) * 255f);
+            p.b = (byte)(Mathf.Clamp01(b) * 255f);
+            pixels[i] = p;
         }
     }
 

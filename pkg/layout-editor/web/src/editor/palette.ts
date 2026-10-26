@@ -103,6 +103,13 @@ function footprintLabelZh(it: { footprint?: { cellsX?: number; cellsZ?: number }
   return `${fmt(x)}×${fmt(z)} 格`;
 }
 
+/** 食材/成品菜优先用已有 2D 图标（彩色、比 3D 灰模可靠）。 */
+function foodPreviewIconSrc(it: CatalogItem): string {
+  if (it.ingredientDecor && it.icon) return `/icons/ingredients/${encodeURIComponent(it.id)}.png`;
+  if (it.recipeDecor && it.icon) return `/icons/recipes/${encodeURIComponent(it.id)}.png`;
+  return "";
+}
+
 /** 卡片副标题：英文名与 prefab id 相同（归一化后）时只显示 id，避免重复。 */
 function cardSubId(it: { nameEn?: string; id: string }): string {
   const en = it.nameEn ?? "";
@@ -305,10 +312,13 @@ export function buildPalette(catalog: Catalog, filter: string) {
         : it.recipeDecor
           ? foodIconImg("recipes", it.id, true)
           : "";
-      const previewUrl = decorPreviewOn ? decorPreviewUrl(it.guid) : null;
+      const foodPreviewSrc = decorPreviewOn ? foodPreviewIconSrc(it) : "";
+      const renderPreviewUrl = decorPreviewOn ? decorPreviewUrl(it.guid) : null;
+      const previewUrl = foodPreviewSrc || renderPreviewUrl;
+      const previewFallbackSrc = foodPreviewSrc && renderPreviewUrl ? renderPreviewUrl : "";
       const fallbackChar = escHtml((tidyCatalogNameZh(it.nameZh, it.id) || it.id).slice(0, 1));
       const thumb = previewUrl
-        ? `<div class="pc-thumb-wrap"><img class="pc-thumb" loading="lazy" decoding="async" src="${escHtml(previewUrl)}" alt="" data-preview-guid="${escHtml(it.guid)}" /><span class="pc-thumb-fallback">${fallbackChar}</span></div>`
+        ? `<div class="pc-thumb-wrap${foodPreviewSrc ? " pc-thumb-wrap-icon" : ""}"><img class="pc-thumb" loading="lazy" decoding="async" src="${escHtml(previewUrl)}" alt="" data-preview-guid="${escHtml(it.guid)}"${previewFallbackSrc ? ` data-fallback-src="${escHtml(previewFallbackSrc)}"` : ""} /><span class="pc-thumb-fallback">${fallbackChar}</span></div>`
         : decorPreviewOn && isDecorPreviewMissing(it.guid) && foodIcon
           ? foodIcon
           : decorPreviewOn
@@ -319,6 +329,11 @@ export function buildPalette(catalog: Catalog, filter: string) {
       const previewImg = row.querySelector<HTMLImageElement>("img.pc-thumb");
       if (previewImg) {
         previewImg.addEventListener("error", () => {
+          const fallbackSrc = previewImg.dataset.fallbackSrc;
+          if (fallbackSrc && previewImg.src !== fallbackSrc) {
+            previewImg.src = fallbackSrc;
+            return;
+          }
           markDecorPreviewFailed(it.guid);
           const wrap = previewImg.parentElement;
           previewImg.remove();

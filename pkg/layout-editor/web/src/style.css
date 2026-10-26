@@ -1779,6 +1779,11 @@ select.decor-preview-size.hidden {
   object-fit: contain;
   object-position: center;
 }
+
+.palette-card-preview .pc-thumb-wrap-icon .pc-thumb {
+  padding: 6px;
+  box-sizing: border-box;
+}
 .palette-card-preview .pc-thumb-fallback {
   display: none;
   width: 100%;
