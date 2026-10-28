@@ -61,7 +61,7 @@
 安装器会自动完成以下工作：
 
 - 拷贝反编译代码到 `Assets/Scripts/Assembly-CSharp`（安装器自带，**无需再用 AssetRipper 手动反编译**），并在存在 `Assembly-CSharp-Patch` 时自动打补丁
-- 将 `pkg` 中的 `LayoutEditor`、`layout-editor`、`commonW1/2/3`、`WebCustomStubRuntime` 及 `Plugins` 组件替换到工程对应位置（即方式二表格的全部内容）
+- 将 `pkg` 中的 `LayoutEditor`、`layout-editor`、全部 `commonW*`（自动识别，如 `commonW1` ~ `commonW4` 及后续新增）、`WebCustomStubRuntime` 及 `Plugins` 组件替换到工程对应位置（即方式二表格的全部内容）
 - 将游戏资源底包拷贝到 `Assets/StreamingAssets/Windows`
 
 > [!NOTE]
@@ -79,9 +79,7 @@
 | --- | --- |
 | `LayoutEditor` | `Overcooked2-LevelEditor/Assets/Editor` |
 | `layout-editor` | `Overcooked2-LevelEditor/` |
-| `commonW1` `commonW1.meta` | `Overcooked2-LevelEditor/Assets/` |
-| `commonW2` `commonW2.meta` | `Overcooked2-LevelEditor/Assets/` |
-| `commonW3` `commonW3.meta` | `Overcooked2-LevelEditor/Assets/` |
+| `commonW*` 及其 `.meta`（如 `commonW1` ~ `commonW4`，全部复制） | `Overcooked2-LevelEditor/Assets/` |
 | `WebCustomStubRuntime` `WebCustomStubRuntime.meta` | `Overcooked2-LevelEditor/Assets/` |
 | `Plugins` 中的所有组件 | `Overcooked2-LevelEditor/Assets/Plugins` |
 

@@ -22811,6 +22811,226 @@
       "id": "WorldMapAudioDirectory",
       "zh": "世界地图音效集",
       "en": "World Map Audio Directory"
+    },
+    {
+      "id": "AYCE_BagelBirthdayLevel",
+      "zh": "生日 DLC 关卡（BGM）",
+      "en": "Birthday Level"
+    },
+    {
+      "id": "AYCE_DLC101Biome1",
+      "zh": "生态区 1（BGM）",
+      "en": "Biome 1"
+    },
+    {
+      "id": "AYCE_DLC101Biome2",
+      "zh": "生态区 2（BGM）",
+      "en": "Biome 2"
+    },
+    {
+      "id": "AYCE_DLC101Biome3",
+      "zh": "生态区 3（BGM）",
+      "en": "Biome 3"
+    },
+    {
+      "id": "AYCE_GhostShipLevel",
+      "zh": "幽灵船关卡（BGM）",
+      "en": "Ghost Ship Level"
+    },
+    {
+      "id": "AYCE_Volcanic",
+      "zh": "火山（BGM）",
+      "en": "Volcanic"
+    },
+    {
+      "id": "CounterAnniversarySO",
+      "zh": "生日桌台",
+      "en": "Anniversary Counter"
+    },
+    {
+      "id": "CounterJungleSO",
+      "zh": "丛林桌台",
+      "en": "Jungle Counter"
+    },
+    {
+      "id": "OC1_8BitHero",
+      "zh": "8-Bit 英雄（BGM）",
+      "en": "8-Bit Hero"
+    },
+    {
+      "id": "OC1_AccordionMusic",
+      "zh": "手风琴旋律（BGM）",
+      "en": "Accordion Music"
+    },
+    {
+      "id": "OC1_AllTheTrimmings",
+      "zh": "节日盛宴（BGM）",
+      "en": "All the Trimmings"
+    },
+    {
+      "id": "OC1_Arctic",
+      "zh": "极地（BGM）",
+      "en": "Arctic"
+    },
+    {
+      "id": "OC1_Boat",
+      "zh": "船上航行（BGM）",
+      "en": "Boat"
+    },
+    {
+      "id": "OC1_CookingWithMama",
+      "zh": "和妈妈一起做饭（BGM）",
+      "en": "Cooking with Mama"
+    },
+    {
+      "id": "OC1_DLCJungleIsland",
+      "zh": "丛林岛（BGM）",
+      "en": "Jungle Island"
+    },
+    {
+      "id": "OC1_EndBoss",
+      "zh": "终局首领（BGM）",
+      "en": "End Boss"
+    },
+    {
+      "id": "OC1_FeelinGood",
+      "zh": "心情正好（BGM）",
+      "en": "Feelin' Good"
+    },
+    {
+      "id": "OC1_FoodTruck",
+      "zh": "餐车（BGM）",
+      "en": "Food Truck"
+    },
+    {
+      "id": "OC1_HauntedHouse",
+      "zh": "鬼屋（BGM）",
+      "en": "Haunted House"
+    },
+    {
+      "id": "OC1_Kitchen",
+      "zh": "厨房（BGM）",
+      "en": "Kitchen"
+    },
+    {
+      "id": "OC1_MusicLevelHell",
+      "zh": "地狱关卡（BGM）",
+      "en": "Hell Level"
+    },
+    {
+      "id": "OC1_MusicLevelHorror",
+      "zh": "恐怖关卡（BGM）",
+      "en": "Horror Level"
+    },
+    {
+      "id": "OC1_OKD1DLC01Level",
+      "zh": "DLC01 关卡（BGM）",
+      "en": "DLC01 Level"
+    },
+    {
+      "id": "OC1_OKD1DLC02Level",
+      "zh": "DLC02 关卡（BGM）",
+      "en": "DLC02 Level"
+    },
+    {
+      "id": "OC1_OKD1DLC02OnionHut",
+      "zh": "DLC02 洋葱小屋（BGM）",
+      "en": "DLC02 Onion Hut"
+    },
+    {
+      "id": "OC1_OnionHouse",
+      "zh": "洋葱屋（BGM）",
+      "en": "Onion House"
+    },
+    {
+      "id": "OC1_OnionHut",
+      "zh": "洋葱小屋（BGM）",
+      "en": "Onion Hut"
+    },
+    {
+      "id": "OC1_OutOfThisWorld",
+      "zh": "异星世界（BGM）",
+      "en": "Out of This World"
+    },
+    {
+      "id": "OC1_Peckoning",
+      "zh": "啄食时刻（BGM）",
+      "en": "Peckoning"
+    },
+    {
+      "id": "OC1_ShoreLeave",
+      "zh": "登岸假期（BGM）",
+      "en": "Shore Leave"
+    },
+    {
+      "id": "OC1_Space",
+      "zh": "太空（BGM）",
+      "en": "Space"
+    },
+    {
+      "id": "OC1_Tutorial",
+      "zh": "教程（BGM）",
+      "en": "Tutorial"
+    },
+    {
+      "id": "SpiceSO",
+      "zh": "辣椒",
+      "en": "Chili"
+    },
+    {
+      "id": "SpringOnionSO",
+      "zh": "葱",
+      "en": "Spring Onion"
+    },
+    {
+      "id": "TeaSO",
+      "zh": "茶叶",
+      "en": "Tea Leaves"
+    },
+    {
+      "id": "web_kettle_hotwater",
+      "zh": "热水器（烧水壶）",
+      "en": "Hot Water Kettle"
+    },
+    {
+      "id": "web_teacup",
+      "zh": "茶杯",
+      "en": "Teacup"
+    },
+    {
+      "id": "web_teacup_stack_clean",
+      "zh": "茶杯堆",
+      "en": "Teacup Stack"
+    },
+    {
+      "id": "web_teacup_dirty",
+      "zh": "脏茶杯",
+      "en": "Dirty Teacup"
+    },
+    {
+      "id": "web_teacup_stack_dirty",
+      "zh": "脏茶杯堆",
+      "en": "Dirty Teacup Stack"
+    },
+    {
+      "id": "web_sink_teacup",
+      "zh": "洗茶杯水槽",
+      "en": "Teacup Sink"
+    },
+    {
+      "id": "web_teacup_return",
+      "zh": "茶杯回收台",
+      "en": "Teacup Return"
+    },
+    {
+      "id": "HotWaterSO",
+      "zh": "热水",
+      "en": "Hot Water"
+    },
+    {
+      "id": "HotWater",
+      "zh": "热水",
+      "en": "Hot Water"
     }
   ]
 }

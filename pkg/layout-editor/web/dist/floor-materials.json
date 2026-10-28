@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-21T07:30:07.515Z",
+  "generatedAt": "2026-10-27T06:45:59.126Z",
   "schemaVersion": 10,
-  "itemCount": 435,
+  "itemCount": 440,
   "materials": [
     {
       "guid": "b731a7a89e8982119737afd17c70adad",
@@ -2084,6 +2084,15 @@
       "icon": true
     },
     {
+      "guid": "e1287ca2277e04340bce78442addcfe7",
+      "id": "DLC_OnionHouse_Floor_tiling18x10",
+      "assetPath": "Assets/LevelSets/jia_carnival/materials/DLC_OnionHouse_Floor_tiling18x10.mat",
+      "nameZh": "DLC_OnionHouse_Floor_tiling18",
+      "nameEn": "DLC_Onion House_Floor_tiling18x10",
+      "sizeTag": "",
+      "source": "jia_carnival"
+    },
+    {
       "guid": "3604b55287064d24faeda25e12726722",
       "id": "DLC_OnionHouse_Floor_tiling6x4",
       "assetPath": "Assets/LevelSets/tester_web/materials/DLC_OnionHouse_Floor_tiling6x4.mat",
@@ -2889,6 +2898,24 @@
       "sizeTag": "",
       "source": "tester_web",
       "icon": true
+    },
+    {
+      "guid": "e694c6084563cd74eb829c03baab4b01",
+      "id": "mat_city_path_02_tiling16x10",
+      "assetPath": "Assets/LevelSets/jia_carnival/materials/mat_city_path_02_tiling16x10.mat",
+      "nameZh": "mat_city_path_02_tiling16",
+      "nameEn": "mat_city_path_02_tiling16x10",
+      "sizeTag": "",
+      "source": "jia_carnival"
+    },
+    {
+      "guid": "15c67a89b96b0694ca8676380ca67da5",
+      "id": "mat_city_path_02_tiling16x12",
+      "assetPath": "Assets/LevelSets/jia_carnival/materials/mat_city_path_02_tiling16x12.mat",
+      "nameZh": "mat_city_path_02_tiling16",
+      "nameEn": "mat_city_path_02_tiling16x12",
+      "sizeTag": "",
+      "source": "jia_carnival"
     },
     {
       "guid": "42ee046c8b7190043b098155129a8747",
@@ -4243,6 +4270,15 @@
       "icon": true
     },
     {
+      "guid": "f01f0e15da5a6e246b04bc38470d07e2",
+      "id": "mat_dlc08_ground_1-1_tiling60x46",
+      "assetPath": "Assets/LevelSets/jia_carnival/materials/mat_dlc08_ground_1-1_tiling60x46.mat",
+      "nameZh": "mat_dlc08_ground_1-1_tiling60",
+      "nameEn": "mat_dlc08_ground_1-1_tiling60x46",
+      "sizeTag": "",
+      "source": "jia_carnival"
+    },
+    {
       "guid": "6ffe866a4e9572aa99745b1bc4b156d1",
       "id": "mat_dlc11_blg_inside_light_block",
       "assetPath": "Assets/commonW1/materials/oc2rebuild/mat_dlc11_blg_inside_light_block.mat",
@@ -4318,6 +4354,15 @@
       "nameEn": "mat_dlc7_city_dark_01",
       "sizeTag": "",
       "source": "commonW1"
+    },
+    {
+      "guid": "d37c1951db626dc43bff398cf8dc9408",
+      "id": "mat_old_tiles_tiling1x1",
+      "assetPath": "Assets/LevelSets/jia_carnival/materials/mat_old_tiles_tiling1x1.mat",
+      "nameZh": "mat_old_tiles_tiling1",
+      "nameEn": "mat_old_tiles_tiling1x1",
+      "sizeTag": "",
+      "source": "jia_carnival"
     },
     {
       "guid": "9985da644abdbe8b832a6105e91855c5",

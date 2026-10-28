@@ -493,6 +493,52 @@
       "ambiences": [],
       "bgm": [],
       "deathTheme": ""
+    },
+    {
+      "key": "oc1",
+      "directories": [],
+      "ambiences": [],
+      "bgm": [
+        "OC1_8BitHero",
+        "OC1_AccordionMusic",
+        "OC1_AllTheTrimmings",
+        "OC1_CookingWithMama",
+        "OC1_DLCJungleIsland",
+        "OC1_EndBoss",
+        "OC1_FeelinGood",
+        "OC1_MusicLevelHell",
+        "OC1_MusicLevelHorror",
+        "OC1_OnionHouse",
+        "OC1_OutOfThisWorld",
+        "OC1_ShoreLeave",
+        "OC1_OKD1DLC01Level",
+        "OC1_OKD1DLC02Level",
+        "OC1_OKD1DLC02OnionHut",
+        "OC1_Arctic",
+        "OC1_Boat",
+        "OC1_FoodTruck",
+        "OC1_HauntedHouse",
+        "OC1_Kitchen",
+        "OC1_OnionHut",
+        "OC1_Peckoning",
+        "OC1_Space",
+        "OC1_Tutorial"
+      ],
+      "deathTheme": ""
+    },
+    {
+      "key": "ayce",
+      "directories": [],
+      "ambiences": [],
+      "bgm": [
+        "AYCE_BagelBirthdayLevel",
+        "AYCE_DLC101Biome1",
+        "AYCE_DLC101Biome2",
+        "AYCE_DLC101Biome3",
+        "AYCE_GhostShipLevel",
+        "AYCE_Volcanic"
+      ],
+      "deathTheme": ""
     }
   ],
   "deathThemes": [

@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83fb008bcc8e793429b02c178c430815, type: 3}
+  m_Name: Web_MilkTea_HoneyTea
+  m_EditorClassIdentifier: 
+  type: 1
+  recipeName: Web_MilkTea_HoneyTea
+  uID: 58323010
+  score: 80
+  platingStepSO: {fileID: 11400000, guid: ecaf3c7db326ed3e46cc60d374d49160, type: 2}
+  modelSO: {fileID: 11400000, guid: 3a38b4db653ac2777827d29514ea37a8, type: 2}
+  model: {fileID: 0}
+  iconSO: {fileID: 0}
+  icon: {fileID: 21300000, guid: 47c0822e1ec118ee3d9da552b508dd36, type: 3}
+  compositionSOs:
+  - {fileID: 11400000, guid: a9e7537becb9fc29398dd293795dde0f, type: 2}
+  - {fileID: 11400000, guid: 122895ac50bba48499d9a8ad16e03582, type: 2}
+  - {fileID: 11400000, guid: 550026dedfe271ff327918c9443de8a7, type: 2}
+  optionalSOs: []
+  cookingStepSO: {fileID: 0}
+  cookingStepIconSO: {fileID: 0}
+  cookingStepIcon: {fileID: 0}
+  cookingProgress: 0
+  mixingIconSO: {fileID: 0}
+  mixingIcon: {fileID: 0}
+  mixingProgress: 0

@@ -684,6 +684,24 @@ namespace CustomStub
         // 唯一的隐藏点，没挂 = 开局就有汤）。
         public static readonly Type ClientCookableContainerType = Find("ClientCookableContainer");
         public static readonly Type ClientContentsCosmeticType = Find("ClientContentsCosmeticDecisions");
+        // 可移动锅烧糊视觉兜底（2026-10-26）：ClientCookingHandler 的
+        // IClientCookingNotifed 通知在装配锅上偶发未到达 ContentsCosmetic，
+        // HotPot 直接调用这两个公开回调（幂等；vanilla 正常时结果一致）。
+        public static readonly Type ClientCookingEffectsType = Find("ClientCookingEffectsCosmeticDecisions");
+        public static readonly MethodInfo ClientContentsCookingPropChangedMethod = Safe(delegate
+        {
+            return ClientContentsCosmeticType != null
+                ? ClientContentsCosmeticType.GetMethod("OnCookingPropChanged", BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { typeof(float) }, null)
+                : null;
+        });
+        public static readonly MethodInfo ClientCookingEffectsPropChangedMethod = Safe(delegate
+        {
+            return ClientCookingEffectsType != null
+                ? ClientCookingEffectsType.GetMethod("OnCookingPropChanged", BindingFlags.Public | BindingFlags.Instance,
+                    null, new[] { typeof(float) }, null)
+                : null;
+        });
         public static readonly MethodInfo GetContentsMethod = Safe(delegate
         {
             return ClientIngredientContainerType != null
@@ -719,6 +737,29 @@ namespace CustomStub
         public static readonly object ImCookedTag = Safe(delegate
         {
             return GameOneShotAudioTagType != null ? Enum.Parse(GameOneShotAudioTagType, "ImCooked") : null;
+        });
+        /// <summary>GameUtils.InstantiateUIController(GameObject, string)（热水器进度条用）。</summary>
+        public static readonly MethodInfo InstantiateUIControllerMethod = Safe(delegate
+        {
+            return GameUtilsType != null
+                ? GameUtilsType.GetMethod("InstantiateUIController", BindingFlags.Public | BindingFlags.Static,
+                    null, new[] { typeof(GameObject), typeof(string) }, null)
+                : null;
+        });
+        // ---- 脏茶杯合并（DirtyTeacupMergeWatcher 用；NetworkUtilsType 见前文） ----
+        public static readonly MethodInfo NetworkUtilsSpawnPrefabMethod = Safe(delegate
+        {
+            return NetworkUtilsType != null
+                ? NetworkUtilsType.GetMethod("ServerSpawnPrefab", BindingFlags.Public | BindingFlags.Static,
+                    null, new[] { typeof(GameObject), typeof(GameObject), typeof(Vector3), typeof(Quaternion) }, null)
+                : null;
+        });
+        public static readonly MethodInfo NetworkUtilsDestroyObjectMethod = Safe(delegate
+        {
+            return NetworkUtilsType != null
+                ? NetworkUtilsType.GetMethod("DestroyObject", BindingFlags.Public | BindingFlags.Static,
+                    null, new[] { typeof(GameObject) }, null)
+                : null;
         });
 
         // ---- 可移动火锅：载具 / 会话 / 网格 ----
@@ -941,6 +982,35 @@ namespace CustomStub
         public static readonly Type TriggerDisableType = Find("TriggerDisableScript");
         public static readonly FieldInfo DisableScriptField = Field(TriggerDisableType, "m_script");
         public static readonly FieldInfo DisableEnableTriggerField = Field(TriggerDisableType, "m_enableTrigger");
+        public static readonly FieldInfo DisableDisableTriggerField = Field(TriggerDisableType, "m_disableTrigger");
+
+        // ---- 热水器（Kettle；vanilla 类型，2026-10-26） ----
+        //  TriggerTimer.m_CookingUIPrefab：prefab 留空（无法直引 bundle 资产），
+        //  运行时由 Kettle 组件经 CookingUI 供给 SO（common04 _supplies）注入。
+        /// <summary>Harmony 目标：热水器接水门禁。ServerPlacementItemSpawner.
+        /// CanHandlePlacement（bool，参数含 ICarrier/PlacementContext 宿主类型，
+        /// 编译期不可引用，按名取方法）；前缀按 Kettle.AllowFill 拦截。</summary>
+        public static readonly MethodInfo ServerPlacementCanHandleMethod = Safe(delegate
+        {
+            var t = Find("ServerPlacementItemSpawner");
+            return t != null
+                ? t.GetMethod("CanHandlePlacement", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                : null;
+        });
+        public static readonly MethodInfo ServerPlacementHandleMethod = Safe(delegate
+        {
+            var t = Find("ServerPlacementItemSpawner");
+            return t != null
+                ? t.GetMethod("HandlePlacement", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                : null;
+        });
+        public static readonly MethodInfo ClientPlacementApplyEventMethod = Safe(delegate
+        {
+            var t = Find("ClientPlacementItemSpawner");
+            return t != null
+                ? t.GetMethod("ApplyServerEvent", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                : null;
+        });
 
         // ---- 自动步道定时反转（TravelatorReverser；vanilla 类型） ----
         public static readonly Type TravelatorType = Find("Travelator");
@@ -994,6 +1064,9 @@ namespace CustomStub
         public static readonly FieldInfo TriggerTimerStartTimingField = Field(TriggerTimerType, "m_startTiming");
         public static readonly FieldInfo TriggerTimerStartTriggerField = Field(TriggerTimerType, "m_startTrigger");
         public static readonly FieldInfo TriggerTimerAtStartField = Field(TriggerTimerType, "m_triggerAtStart");
+        /// <summary>TriggerTimer.m_CookingUIPrefab：热水器 prefab 留空（无法直引
+        /// bundle 资产），运行时由 CustomStub.Kettle 经供给 SO 注入 bundle47 CookingUI。</summary>
+        public static readonly FieldInfo TriggerTimerCookingUiField = Field(TriggerTimerType, "m_CookingUIPrefab");
 
         // ---- 传送门单向（TeleportalExitOnly；全部 vanilla 类型） ----
         //  Teleportal.m_exitPortal 是方向的唯一来源（public 字段）；

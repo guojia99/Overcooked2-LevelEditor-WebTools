@@ -1,6 +1,6 @@
 /** 共享菜谱库开发者模式（localStorage 开关 + 作用域类型）。 */
 
-export type SharedLibraryId = "commonW2" | "commonW3";
+export type SharedLibraryId = "commonW2" | "commonW3" | "commonW5";
 
 export type RecipeAdminScope =
   | { kind: "set"; setName: string }
@@ -26,6 +26,11 @@ export const SHARED_LIBRARIES: { id: SharedLibraryId; title: string; desc: strin
     id: "commonW3",
     title: "commonW3 · 沙拉 / 果汁 / 炒饭 / 汤粥 / 冰淇淋 / 布丁 / 牛奶冰沙",
     desc: "Web 扩展共享菜谱库（沙拉、果汁、炒饭、汤粥、冰淇淋、布丁、牛奶冰沙）。修改会影响所有引用该库的关卡集。",
+  },
+  {
+    id: "commonW5",
+    title: "commonW5 · 卷饼 / 奶茶",
+    desc: "Web 共享菜谱库（卷饼及中间备料、奶茶四件套与热水中间产物）。修改会影响所有引用该库的关卡集。",
   },
 ];
 

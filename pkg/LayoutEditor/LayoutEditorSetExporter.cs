@@ -123,7 +123,8 @@ public static class LayoutEditorSetExporter
     {
         "RandomCrate|", "WebBackpack|", "WebKillerGhost|", "TimedSwitch|", "PushablePot|", "SwitchReenable|", "WorldMapDressing|",
         "UtensilTiming|", "CameraOffset|", "TravelatorReverse|", "TeleportalExitOnly|", "RatHeist|",
-        "ConveyorDirectionSync|", "BLRelay|", "Coaxial|", "RandomTrigger|", "SpeedCtl|", "SpawnerBatch|",
+        "ConveyorDirectionSync|", "BLRelay|", "Coaxial|", "RandomTrigger|", "SpeedCtl|", "SpawnerBatch|", "Kettle|",
+        "DirtyTeacup|",
     };
 
     /// <summary>tag 前缀 → 清单特征（v3.5.0 stub_levels.txt 数据源之一）。
@@ -150,6 +151,8 @@ public static class LayoutEditorSetExporter
         { "RandomTrigger|", "randomtrigger" },
         { "SpeedCtl|", "speedctl" },
         { "SpawnerBatch|", "spawnerbatch" },
+        { "Kettle|", "kettle" },
+        { "DirtyTeacup|", "stub" },
     };
 
     /// <summary>CustomStub 命名空间组件名 → 清单特征（双通道兜底：tag 缺失/旧格式时
@@ -177,6 +180,14 @@ public static class LayoutEditorSetExporter
         { "AnimGridMemberSync", "animgrid" },
         { "SwitchStartVisual", "startvisual" },
         { "AnimPilotFloorMarker", "terminal" },
+        { "Kettle", "kettle" },
+        // 完整 prefab（common04 克隆）CleanPlateStack 的服务端补盘/编辑预览初始化。
+        // 不需要独立运行时特征；归入 stub 核心即可。
+        { "CleanPlateStackSeeder", "stub" },
+        // 茶杯洗涤链路：水槽茶杯化 / 单杯合并。归入 stub 核心（补丁与显隐校正
+        // 在 EntryPoint 安装时无条件挂载；特征只负责清单激活）。
+        { "TeacupSinkRebuilder", "stub" },
+        { "DirtyTeacupMergeWatcher", "stub" },
     };
 
     /// <summary>扫描当前打开的场景是否用到 CustomStub（= 逐场景特征收集的非空判定）。
@@ -937,6 +948,16 @@ public static class LayoutEditorSetExporter
                 EditorUtility.DisplayProgressBar("导出关卡集 " + joinedName,
                     "准备场景 " + i + "/" + totalScenes + "…", (float)i / (totalScenes + 1));
                 var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                // 一次性迁移兜底：旧关卡茶杯回收台仍带着旧默认 returnClean=true 时
+                // 在保存前改回 false（标记在 SaveScene 成功后落盘）。
+                var migratedTeacupReturns = LayoutEditorLayoutMigrations.ApplyToOpenScene(scene);
+                if (migratedTeacupReturns > 0)
+                    EditorSceneManager.MarkSceneDirty(scene);
+                // 派生运行时兜底（不依赖双 stub 预检）：旧场景有派生 stub 但没
+                // 运行时（茶杯回收台）时，导出前补齐并保存。
+                var promotedRuntimes = LayoutEditorStubIO.PromoteAllDerivedStubsInScene();
+                if (promotedRuntimes > 0)
+                    EditorSceneManager.MarkSceneDirty(scene);
                 // OpenScene 后 OnEnable 常 Init 挂上临时子物体；须在烘焙/落盘前强制 DeInit
                 //（与教程 Toggle ON 一致，且不因 prepareForBuilding 已为 true 而跳过）。
                 LayoutEditorPseudoReload.ForcePrepareForBuildingForExport();
@@ -974,6 +995,7 @@ public static class LayoutEditorSetExporter
                 }
                 else
                     Debug.Log("[SetExporter] 场景无磁盘变更，跳过 SaveScene：" + scenePath);
+                LayoutEditorLayoutMigrations.CommitPending();
                 foreach (var w in ValidateSceneForPlayerBuild(scenePath))
                     Debug.LogWarning("[SetExporter] Player 构建校验: " + w);
                 var commonW1Info = DescribeCommonW1PrefabRefs(scenePath);
@@ -1361,10 +1383,10 @@ public static class LayoutEditorSetExporter
         var fixedWNames = EnsureCommonWBundleNames();
         if (fixedWNames != null)
             Debug.Log("[SetExporter] 导出前已补回 commonW 根目录 bundle 名: " + fixedWNames);
-        SetPhase("clean", "清理 commonW1/commonW2/commonW3 旧产物…");
-        DeleteBundleProduct("commonw1");
-        DeleteBundleProduct("commonw2");
-        DeleteBundleProduct("commonw3");
+        SetPhase("clean", "清理 commonW1/commonW2/… 旧产物…");
+        // 按源目录自动发现（commonW1..N，含 commonW4/W5），避免新增库漏删旧产物。
+        foreach (var wIndex in CollectCommonWSourceIndices())
+            DeleteBundleProduct("commonw" + wIndex);
 
         // 重新构建 AssetBundle（增量：仅重建被删/变更的 commonW1/W2 与统一运行时）。
         SetPhase("build", "重新打包 commonW1 / commonW2 / 统一运行时…");

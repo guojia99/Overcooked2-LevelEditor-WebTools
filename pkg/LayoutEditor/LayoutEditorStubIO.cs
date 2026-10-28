@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using LevelEditor;
 using LevelEditorStub;
@@ -96,6 +96,18 @@ public static class LayoutEditorStubIO
 
         if (ExportWebKillerGhostIfPresent(go, item))
             return;
+
+        // 热水器（Kettle）：组件优先，tag/预制 id 兜底（镜像 RatHeist 模式）。
+        var kettlePrefabId = !string.IsNullOrEmpty(item.prefabAssetPath)
+            ? System.IO.Path.GetFileNameWithoutExtension(item.prefabAssetPath)
+            : "";
+        if (FindComp(go, "Kettle") != null || HasKettleTag(go) || kettlePrefabId == KettlePrefabId)
+        {
+            item.stubKind = "Kettle";
+            item.kettle = new LayoutKettleStubDto();
+            ExportKettle(go, item.kettle);
+            return;
+        }
 
         var dispenser = go.GetComponent<PseudoPrefabDispenserStub>();
         if (dispenser != null)
@@ -386,6 +398,24 @@ public static class LayoutEditorStubIO
 
             item.cleanPlateStack = pdto;
             return;
+        }
+
+        // 完整 prefab 堆（commonW5 茶杯堆/脏茶杯堆：无 wrapper stub，写回只挂
+        // CustomStub.CleanPlateStackSeeder）——按 seeder 反射回读数量，保证
+        // 场景 → web 的 plateCount 往返。
+        var seederType = FindCustomStubType(go, "CleanPlateStackSeeder");
+        if (seederType != null)
+        {
+            var seeder = go.GetComponent(seederType);
+            if (seeder != null)
+            {
+                var countField = seederType.GetField("plateCount");
+                int seeded = countField != null && countField.GetValue(seeder) is int
+                    ? (int)countField.GetValue(seeder) : 5;
+                item.stubKind = "CleanPlateStack";
+                item.cleanPlateStack = new LayoutCleanPlateStackStubDto { plateCount = seeded };
+                return;
+            }
         }
 
         var burner = go.GetComponent<PseudoPrefabBurnerStub>();
@@ -833,6 +863,12 @@ public static class LayoutEditorStubIO
             return;
         }
 
+        if (item.stubKind == "Kettle")
+        {
+            ApplyKettle(go, item.kettle);
+            return;
+        }
+
         if (item.stubKind == "Dispenser" && item.dispenser != null)
         {
             var pid = !string.IsNullOrEmpty(item.prefabAssetPath)
@@ -1266,7 +1302,13 @@ public static class LayoutEditorStubIO
             EnsurePlateReturnStackSOs(returnStation, go, item.stubKind == "GlassReturn");
 
             // 「双 stub」修复（2026-10-06）：同上，移除基础组件对 + 保证派生运行时存在。
+            // 存量场景里派生 stub 可能早已存在但 SO 为空、且基础对仍在，
+            // PromoteDerivedStub 会先继承 SO 再提升；只补 stub 不补运行时会继续
+            // 跑基类空 Setup（茶杯回收台会返回原版盘子堆且上菜后不回流）。
             PromoteDerivedStub(go);
+            if (go.GetComponent<PseudoPrefabPlateReturn>() == null)
+                WarnApply("[LayoutEditor] 回收台仍缺少 PseudoPrefabPlateReturn 运行时: "
+                    + go.name + "（检查派生 stub 的 pseudoPrefabSO 与基础组件对）");
 
             Undo.RecordObject(returnStation, "Layout Editor Plate Return");
             returnStation.returnClean = item.plateReturn.returnClean;
@@ -1275,7 +1317,7 @@ public static class LayoutEditorStubIO
 
         if (item.stubKind == "CleanPlateStack")
         {
-            // 容器堆变体（餐盘堆/马克杯堆/玻璃杯堆 wrapper）只带基础 PseudoPrefabStub +
+            // 容器堆变体（餐盘堆/茶杯堆/玻璃杯堆 wrapper）只带基础 PseudoPrefabStub +
             // 基类 PseudoPrefab：补齐核心堆同款的「派生 stub + 派生运行时组件」组合。
             // 堆类游戏 prefab 本身无网格（dump 实测无 .obj），可见的盘/杯完全由
             // PseudoPrefabCleanPlateStack.Setup() 逐个实例化——基类组件的 Setup() 是
@@ -1303,6 +1345,23 @@ public static class LayoutEditorStubIO
                 var so = DefaultPlateSOForStack(go);
                 if (so != null)
                     plateStack.platePseudoPrefabSO = so;
+            }
+
+            // 完整 prefab（common04 custom_content 克隆：SetupCustomUtensilStub +
+            // CleanPlateStack + Stack，无 PseudoPrefabStub 包装）不能用
+            // PseudoPrefabCleanPlateStack：基类 ResetChild 会 LoadAsset(null) → NRE。
+            // 改用 CustomStub.CleanPlateStackSeeder，直接以 prefab 的 m_platePrefab
+            // 做编辑预览/服务端补盘。
+            if (baseStub == null)
+            {
+                EnsureFullCleanPlateStackSeeder(go, plateStack);
+                // 完整 prefab 不需要 PseudoPrefabCleanPlateStackStub：它没有 wrapper 子对象，
+                // 留着只会让旧运行时 PseudoPrefabCleanPlateStack 在 Setup/同步初始化时踩
+                // childGameObject == null 或 LoadAsset(null)。容器本体由 seeder 负责，
+                // 因此把刚补的 stub 再摘掉，避免场景里累积这个“空 stub”。
+                if (plateStack != null)
+                    Undo.DestroyObjectImmediate(plateStack);
+                return;
             }
 
             // 防御：盘子 SO 缺失或真实 prefab 无 EditorGridSnap 时，宿主
@@ -1805,7 +1864,12 @@ public static class LayoutEditorStubIO
                 }
                 var stub = target.GetComponent<PseudoPrefabPlateReturnStub>();
                 if (stub != null)
+                {
                     EnsurePlateReturnStackSOs(stub, target);
+                    // 存量半损场景：派生 stub 在、派生运行时缺失。已有 stub 也必须
+                    // 提升，否则绑定后的 LateSetup 仍拿到无操作的基类运行时。
+                    PromoteDerivedStub(target);
+                }
                 if (stub == null)
                 {
                     // 回收台变体 wrapper 无专属 stub（首次写回未走过 ApplyStub 分支）：
@@ -1822,6 +1886,15 @@ public static class LayoutEditorStubIO
                     EnsurePlateReturnStackSOs(stub, target);
                     // 「双 stub」修复（2026-10-06）：补挂派生 stub 后清理基础组件对。
                     PromoteDerivedStub(target);
+                }
+                // 绑定只接受真正挂了 PseudoPrefabPlateReturn 的回收台：否则
+                // PseudoPrefabServingStation.LateSetup 会拿到错误/空 child 并抛 NRE，
+                // 整个 PseudoPrefabManager.Init 链中断。
+                if (target.GetComponent<PseudoPrefabPlateReturn>() == null)
+                {
+                    WarnApply("[LayoutEditor] 上菜台绑定丢弃：回收台缺少 PseudoPrefabPlateReturn 运行时 "
+                        + target.name + "（请先修复双 stub）");
+                    continue;
                 }
                 if (!resolved.Contains(stub))
                     resolved.Add(stub);
@@ -1994,6 +2067,7 @@ public static class LayoutEditorStubIO
             // （stub.button 为空 → Cannon.m_button 空 → ServerCannon.StartSynchronising
             // NRE，真机大炮整体失效）。编辑器 Play 另有 LayoutEditorSwitchLinkPatch
             // .PatchCannonLink 每帧兜底，此处烘焙随场景保存，游戏包内生效。
+            bool isKettleLink = false;
             bool isCannonLaunchButton = false;
             if (resolvedTrigger == "Launch")
             {
@@ -2012,6 +2086,27 @@ public static class LayoutEditorStubIO
                 }
             }
 
+            // 热水器目标：烘焙组件的开关反向引用（CustomStub.Kettle 轮询按压沿 +
+            // 冷却时补发复位触发）。多开关指向同一热水器时以首个为准（文档校验
+            // 会提示）。开关保持按下直到冷却 = 原版 DLC100 行为。
+            foreach (var tgt in perSwitch[switchId])
+            {
+                if (tgt == null)
+                    continue;
+                if (FindComp(tgt, "Kettle") == null && !HasKettleTag(tgt))
+                    continue;
+                var kType = FindCustomStubType(tgt, "Kettle");
+                if (kType != null)
+                {
+                    var kComp = tgt.GetComponent(kType);
+                    if (kComp == null)
+                        kComp = Undo.AddComponent(tgt, kType);
+                    Undo.RecordObject(kComp, "Layout Editor Kettle Switch Link");
+                    SetStubField(kComp, "m_switch", switchGo);
+                }
+                isKettleLink = true;
+            }
+
             // 按钮 0.35s 自动复位（customStub，关卡集程序集）：tag 载体 + 反射组件。
             // 接线主链路（按钮→机器）由上游 PseudoPrefabSwitchStub.triggerOnObject /
             // objectToTrigger 承载（宿主 Setup 与游戏模组各自消费），不再烘焙
@@ -2021,8 +2116,10 @@ public static class LayoutEditorStubIO
             // 重新点亮 → 空炮可发射 → ServerCannon.m_flying 永久 true（客户端
             // LaunchProjectile(null) NRE）→ 大炮从此拒入。其可用性由 CustomStub
             // CannonGuard 按「炮内是否有人」门控；重写回时摘除旧烘焙的组件/tag。
-            if (isCannonLaunchButton)
+            if (isCannonLaunchButton || isKettleLink)
             {
+                // 热水器：开关保持按下直到接水冷却（CustomStub.Kettle 复位）；
+                // 摘除旧烘焙的自动复位组件/tag（曾用普通联动的场景）。
                 var reType = FindCustomStubType(switchGo, "SwitchReenable");
                 var reComp = reType != null ? switchGo.GetComponent(reType) : null;
                 if (reComp != null)
@@ -2280,13 +2377,18 @@ public static class LayoutEditorStubIO
     private const string PlateReturnCleanStackGuid = "e1d53b09a4034b84e94433521c49fd06";
     private const string GlassReturnDirtyStackGuid = "7fb2a1c79d2727e42a5f7da9ccf979b0";
     private const string GlassReturnCleanStackGuid = "8105f74eeb9a9034f907302182e60bfc";
+    // 茶杯回收台（web_teacup_return）：堆 SO 在 commonW5，按 guid 直读
+    // （LoadStackPseudoPrefabSO 只搜 common03，且茶杯 SO 文件名≠prefab id）。
+    private const string TeacupReturnDirtyStackGuid = "e35d50e0fcd6428487999c1885bb2162";
+    private const string TeacupReturnCleanStackGuid = "df816765c7b86a787163110a4a80ef00";
 
     private enum PlateReturnStackFamily
     {
         Plate,
         Glass,
         Tray,
-        Mug
+        Mug,
+        Teacup
     }
 
     private struct PlateReturnStackSpec
@@ -2295,11 +2397,17 @@ public static class LayoutEditorStubIO
         public bool dlc09MugSkin;
     }
 
-    /// <summary>回收台 wrapper 的 prefabName（优先任一 PseudoPrefabStub.pseudoPrefabSO）。</summary>
+    /// <summary>回收台 wrapper 的 prefab 名（优先 prefab 资产根名）。
+    /// 注意不能优先 stub.pseudoPrefabSO.prefabName：茶杯回收台的包装 SO 指向
+    /// 原版子 prefab workstation_plate_return，按它判类型会把 web_teacup_return
+    /// 误判成普通盘子回收台，堆 SO 被写成盘子堆。</summary>
     private static string ResolvePlateReturnPrefabId(GameObject go)
     {
         if (go == null)
             return string.Empty;
+        var prefab = PrefabUtility.GetPrefabParent(go) as GameObject;
+        if (prefab != null && !string.IsNullOrEmpty(prefab.name))
+            return prefab.name.Replace("(Clone)", "").Trim();
         var stubs = go.GetComponents<PseudoPrefabStub>();
         for (int i = 0; i < stubs.Length; i++)
         {
@@ -2308,6 +2416,22 @@ public static class LayoutEditorStubIO
                 return s.pseudoPrefabSO.prefabName;
         }
         return go.name.Replace("(Clone)", "").Trim();
+    }
+
+    /// <summary>回收台 wrapper 的 PseudoPrefabSO 名（如 TeacupReturnSO）。
+    /// 只用于兜底识别茶杯族；堆模板仍按 prefab 资产名/场景名判定。</summary>
+    private static string ResolvePlateReturnStubSoName(GameObject go)
+    {
+        if (go == null)
+            return string.Empty;
+        var stubs = go.GetComponents<PseudoPrefabStub>();
+        for (int i = 0; i < stubs.Length; i++)
+        {
+            var s = stubs[i];
+            if (s != null && s.pseudoPrefabSO != null && !string.IsNullOrEmpty(s.pseudoPrefabSO.name))
+                return s.pseudoPrefabSO.name;
+        }
+        return string.Empty;
     }
 
     private static PlateReturnStackSpec ResolvePlateReturnStackSpec(GameObject go, bool glassReturn)
@@ -2321,8 +2445,22 @@ public static class LayoutEditorStubIO
             return spec;
         }
         var prefabId = ResolvePlateReturnPrefabId(go);
-        if (string.IsNullOrEmpty(prefabId) && go != null)
-            prefabId = go.name ?? "";
+        var goName = go != null ? (go.name ?? "") : "";
+        var stubSoName = ResolvePlateReturnStubSoName(go);
+        if (string.IsNullOrEmpty(prefabId))
+            prefabId = goName;
+        // 茶杯回收台必须最先判定：其包装 SO 指向原版 workstation_plate_return，
+        // 只看 prefabId 会被当成普通盘子回收台。
+        if (prefabId.IndexOf("teacup_return", StringComparison.OrdinalIgnoreCase) >= 0
+            || goName.IndexOf("teacup_return", StringComparison.OrdinalIgnoreCase) >= 0
+            || stubSoName.IndexOf("TeacupReturn", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            // 茶杯回收台（web_teacup_return）：独立于马克杯族——虽然二者共用同一
+            // PlatingStepData（Glass, uid 1740450），但回收台堆模板必须指向茶杯堆，
+            // 否则绑定后 ReturnPlate 生成马克杯。
+            spec.family = PlateReturnStackFamily.Teacup;
+            return spec;
+        }
         if (prefabId.IndexOf("tray_return", StringComparison.OrdinalIgnoreCase) >= 0
             || prefabId.Equals("dlc08_workstation_tray_return", StringComparison.OrdinalIgnoreCase))
         {
@@ -2360,6 +2498,8 @@ public static class LayoutEditorStubIO
                 return dirty ? "dirtymugstack" : "cleanmugstack";
             case PlateReturnStackFamily.Glass:
                 return dirty ? "dlc11_dirtyglassstack" : "dlc11_cleanglassstack";
+            case PlateReturnStackFamily.Teacup:
+                return dirty ? "web_teacup_stack_dirty" : "web_teacup_stack_clean";
             default:
                 return dirty ? "dirtyplatestack" : "cleanplatestack";
         }
@@ -2385,6 +2525,8 @@ public static class LayoutEditorStubIO
             return LoadPseudoPrefabSO(dirty ? PlateReturnDirtyStackGuid : PlateReturnCleanStackGuid);
         if (spec.family == PlateReturnStackFamily.Glass)
             return LoadPseudoPrefabSO(dirty ? GlassReturnDirtyStackGuid : GlassReturnCleanStackGuid);
+        if (spec.family == PlateReturnStackFamily.Teacup)
+            return LoadPseudoPrefabSO(dirty ? TeacupReturnDirtyStackGuid : TeacupReturnCleanStackGuid);
         return LoadStackPseudoPrefabSO(ExpectedStackPrefabId(spec, dirty));
     }
 
@@ -2482,6 +2624,88 @@ public static class LayoutEditorStubIO
         return null;
     }
 
+    /// <summary>完整 prefab 的堆初始化：移除误挂的 PseudoPrefab 运行时，补
+    /// CustomStub.CleanPlateStackSeeder（读 CleanPlateStack.m_platePrefab）。</summary>
+    private static void EnsureFullCleanPlateStackSeeder(GameObject go,
+        PseudoPrefabCleanPlateStackStub plateStack)
+    {
+        if (go == null)
+            return;
+        var badRuntime = go.GetComponent<LevelEditor.PseudoPrefabCleanPlateStack>();
+        if (badRuntime != null)
+            Undo.DestroyObjectImmediate(badRuntime);
+        var baseRuntime = FindExactBaseRuntime(go);
+        if (baseRuntime != null)
+            Undo.DestroyObjectImmediate(baseRuntime);
+
+        var seederType = FindCustomStubType(go, "CleanPlateStackSeeder");
+        if (seederType == null)
+        {
+            LayoutEditorLog.LogWarning("[LayoutEditor] CleanPlateStack 完整 prefab 需要 " +
+                "CustomStub.CleanPlateStackSeeder（WebCustomStubRuntime 未编译？）: " + go.name);
+            return;
+        }
+        var seeder = go.GetComponent(seederType);
+        if (seeder == null)
+            seeder = Undo.AddComponent(go, seederType);
+        if (plateStack != null)
+        {
+            SetStubField(seeder, "plateCount", plateStack.plateCount);
+            SetStubField(seeder, "platePseudoPrefabSO", plateStack.platePseudoPrefabSO);
+        }
+        seeder.SendMessage("Rebuild", SendMessageOptions.DontRequireReceiver);
+        LayoutEditorLog.Log("[LayoutEditor] CleanPlateStack 完整 prefab: " + go.name
+            + " 已改用 CleanPlateStackSeeder（plate=" + (plateStack != null ? plateStack.plateCount : 0) + "）");
+    }
+
+    /// <summary>场景打开/旧写回自愈：清理完整 prefab 上误挂的 PseudoPrefabCleanPlateStack
+    /// 并补 CleanPlateStackSeeder。返回处理对象数。</summary>
+    public static int RepairFullCleanPlateStackRuntimes()
+    {
+        var stubs = UnityEngine.Object.FindObjectsOfType<PseudoPrefabCleanPlateStackStub>();
+        int fixedCount = 0;
+        for (int i = 0; i < stubs.Length; i++)
+        {
+            var stub = stubs[i];
+            if (stub == null)
+                continue;
+            var go = stub.gameObject;
+            if (FindExactBaseStub(go) != null)
+                continue; // wrapper prefab 走原路径
+            EnsureFullCleanPlateStackSeeder(go, stub);
+            fixedCount++;
+        }
+        if (fixedCount > 0)
+            LayoutEditorLog.Log("[LayoutEditor] CleanPlateStack 完整 prefab 自愈: " + fixedCount);
+        return fixedCount;
+    }
+
+    [MenuItem("Layout Editor/诊断/修复 commonW5 茶杯堆（CleanPlateStack NRE）")]
+    public static void RepairFullCleanPlateStackMenu()
+    {
+        int fixedCount = RepairFullCleanPlateStackRuntimes();
+        Debug.Log("[LayoutEditor] CleanPlateStack 完整 prefab 自愈完成: " + fixedCount);
+    }
+
+    [MenuItem("Layout Editor/诊断/修复 commonW5 茶杯堆并保存当前场景")]
+    public static void RepairFullCleanPlateStackAndSaveMenu()
+    {
+        int fixedCount = RepairFullCleanPlateStackRuntimes();
+        var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+        if (scene.IsValid())
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+            LayoutEditorLog.Log("[LayoutEditor] CleanPlateStack 自愈 " + fixedCount
+                + "，已保存场景 " + scene.path);
+        }
+        else
+        {
+            LayoutEditorLog.LogWarning("[LayoutEditor] CleanPlateStack 自愈 " + fixedCount
+                + "，但当前没有可保存的场景");
+        }
+    }
+
     /// <summary>「双 stub」清理 + 派生晋升（2026-10-06 真机卡加载事故）：
     ///  物体上存在派生 stub 时，移除恰好为基类的基础 PseudoPrefabStub / 基础 PseudoPrefab
     ///  组件对，并保证派生 stub 对应的派生运行时组件存在。
@@ -2497,21 +2721,35 @@ public static class LayoutEditorStubIO
             return false;
         var baseStub = FindExactBaseStub(go);
         var baseRuntime = FindExactBaseRuntime(go);
+        var derivedStubs = GetDerivedStubs(go);
         if (baseStub == null && baseRuntime == null)
         {
+            if (derivedStubs.Length > 0)
+            {
+                // 派生 stub 已在、基础对已不存在（旧写回只补了 stub 没补运行时）：
+                // 继承 prefab 资产上的基础 SO 后补派生运行时。
+                bool fixedData = EnsureDerivedStubData(go, null);
+                bool fixedRuntime = EnsureDerivedRuntimeForStubs(go);
+                return fixedData || fixedRuntime;
+            }
             // 已写坏场景：饮料/酱料机只剩 PseudoPrefabDispenser 运行时，无基础对。
             string orphanPid;
             if (TryGetSpecialDispenserPrefabId(go, out orphanPid)
                 && go.GetComponent<PseudoPrefabDispenser>() != null)
             {
-                EnsureDerivedRuntimeForStubs(go);
-                return true;
+                return EnsureDerivedRuntimeForStubs(go);
             }
             return false; // 无基础对：正常派生成对或纯基础，不动
         }
-        // 移除基础对前先给派生 stub 补数据：分发器家族必须有生成食材
-        //（否则宿主/真机 PseudoPrefabDispenser.Setup 的 GetIngredientPrefabForOptional(null) NRE，
-        // 酱料机/饮料机的输出本就是 soArray 循环列表，回落首项）。
+        if (derivedStubs.Length == 0)
+            return false; // 纯基础 wrapper：绝不能拆基础组件对
+        // 移除基础对前先给派生 stub 补数据：基础 SO 不能丢（宿主 PseudoPrefab
+        // 的 ResetChild 只读派生 stub 的 pseudoPrefabSO，空值会 LoadAsset(null)
+        // NRE）；茶杯回收台还要先按真实 prefab 名补茶杯堆 SO。
+        EnsureDerivedStubData(go, baseStub);
+        // 分发器家族必须有生成食材（否则宿主/真机 PseudoPrefabDispenser.Setup 的
+        // GetIngredientPrefabForOptional(null) NRE，酱料机/饮料机的输出本就是
+        // soArray 循环列表，回落首项）。
         var dispenser = go.GetComponent<PseudoPrefabDispenserStub>();
         if (dispenser != null && dispenser.spawnerItemPrefabSO == null)
         {
@@ -2531,11 +2769,122 @@ public static class LayoutEditorStubIO
         return true;
     }
 
+    /// <summary>场景级批量修复：给所有带派生 stub 的伪预制件补/修派生运行时。
+    /// 幂等；写回重载、场景打开、导出 prepare 前调用（修复旧场景里
+    /// “只有派生 stub、没有派生运行时”的半损状态）。</summary>
+    public static int PromoteAllDerivedStubsInScene()
+    {
+        var stubs = UnityEngine.Object.FindObjectsOfType<PseudoPrefabStub>();
+        var seen = new HashSet<GameObject>();
+        int changed = 0;
+        for (int i = 0; i < stubs.Length; i++)
+        {
+            var stub = stubs[i];
+            if (stub == null)
+                continue;
+            var go = stub.gameObject;
+            if (!seen.Add(go))
+                continue;
+            if (PromoteDerivedStub(go))
+                changed++;
+        }
+        if (changed > 0)
+            LayoutEditorLog.Log("[LayoutEditor] 派生运行时自愈: " + changed
+                + " 个物体（reload/场景打开/导出前）");
+        return changed;
+    }
+
+    private static PseudoPrefabStub[] GetDerivedStubs(GameObject go)
+    {
+        var result = new List<PseudoPrefabStub>();
+        if (go == null)
+            return result.ToArray();
+        var stubs = go.GetComponents<PseudoPrefabStub>();
+        for (int i = 0; i < stubs.Length; i++)
+        {
+            var s = stubs[i];
+            if (s != null && s.GetType() != typeof(PseudoPrefabStub))
+                result.Add(s);
+        }
+        return result.ToArray();
+    }
+
+    /// <summary>把基础 stub 的 pseudoPrefabSO 继承给派生 stub，并按真实 prefab
+    /// 身份补齐回收台堆 SO。返回是否发生修改。</summary>
+    private static bool EnsureDerivedStubData(GameObject go, PseudoPrefabStub baseStub)
+    {
+        if (go == null)
+            return false;
+        bool changed = false;
+        var fallbackSo = baseStub != null && baseStub.pseudoPrefabSO != null
+            ? baseStub.pseudoPrefabSO
+            : ResolvePrefabBasePseudoPrefabSO(go);
+        var stubs = go.GetComponents<PseudoPrefabStub>();
+        for (int i = 0; i < stubs.Length; i++)
+        {
+            var stubComp = stubs[i];
+            if (stubComp == null || stubComp.GetType() == typeof(PseudoPrefabStub))
+                continue;
+            if (stubComp.pseudoPrefabSO == null && fallbackSo != null)
+            {
+                Undo.RecordObject(stubComp, "Layout Editor Derived Stub SO");
+                stubComp.pseudoPrefabSO = fallbackSo;
+                EditorUtility.SetDirty(stubComp);
+                changed = true;
+                LayoutEditorLog.Log("[LayoutEditor] 派生 stub 继承基础 SO: "
+                    + stubComp.GetType().Name + " -> " + go.name);
+            }
+            var returnStub = stubComp as PseudoPrefabPlateReturnStub;
+            if (returnStub != null)
+            {
+                var beforeDirty = returnStub.dirtyPlateStackSO;
+                var beforeClean = returnStub.cleanPlateStackSO;
+                EnsurePlateReturnStackSOs(returnStub, go);
+                if (beforeDirty != returnStub.dirtyPlateStackSO
+                    || beforeClean != returnStub.cleanPlateStackSO)
+                    changed = true;
+            }
+            if (stubComp.pseudoPrefabSO == null)
+                LayoutEditorLog.LogWarning("[LayoutEditor] 派生 stub 缺少 pseudoPrefabSO，"
+                    + "先修数据再补运行时: " + stubComp.GetType().Name + " -> " + go.name);
+        }
+        return changed;
+    }
+
+    /// <summary>prefab 资产上的基础 stub SO（实例基础 stub 已被移除时兜底）。</summary>
+    private static PseudoPrefabSO ResolvePrefabBasePseudoPrefabSO(GameObject go)
+    {
+        if (go == null)
+            return null;
+        var prefab = PrefabUtility.GetPrefabParent(go) as GameObject;
+        if (prefab == null)
+            return null;
+        var baseStub = FindExactBaseStub(prefab);
+        return baseStub != null ? baseStub.pseudoPrefabSO : null;
+    }
+
+    private static Type FindRuntimeType(string runtimeName)
+    {
+        var type = Type.GetType("LevelEditor." + runtimeName + ", Assembly-CSharp");
+        if (type != null)
+            return type;
+        var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+        for (int i = 0; i < assemblies.Length; i++)
+        {
+            type = assemblies[i].GetType("LevelEditor." + runtimeName);
+            if (type != null)
+                return type;
+        }
+        return null;
+    }
+
     /// <summary>保证物体上每个派生 stub（XxxStub）都有对应的派生运行时组件
     ///  （LevelEditor.Xxx）——基础 PseudoPrefab 的 Setup 是空操作，派生参数（食材/绑定/
-    ///  容量等）必须经派生运行时才生效。按类型名约定反射匹配，找不到对应运行时的跳过。</summary>
-    private static void EnsureDerivedRuntimeForStubs(GameObject go)
+    ///  容量等）必须经派生运行时才生效。按类型名约定反射匹配，找不到对应运行时的跳过。
+    ///  返回是否发生修改。</summary>
+    private static bool EnsureDerivedRuntimeForStubs(GameObject go)
     {
+        bool changed = false;
         string specialPid;
         bool isSpecialDispenser = TryGetSpecialDispenserPrefabId(go, out specialPid);
         foreach (var stubComp in go.GetComponents<PseudoPrefabStub>())
@@ -2549,12 +2898,23 @@ public static class LayoutEditorStubIO
             // 饮料/酱料机：保留 DispenserStub 数据，但不用宿主 PseudoPrefabDispenser.Setup（无箱盖组件会 NRE）。
             if (isSpecialDispenser && runtimeName == "PseudoPrefabDispenser")
                 continue;
-            var runtimeType = Type.GetType("LevelEditor." + runtimeName + ", Assembly-CSharp");
+            var runtimeType = FindRuntimeType(runtimeName);
             if (runtimeType == null)
+            {
+                LayoutEditorLog.LogWarning("[LayoutEditor] 找不到派生运行时类型 LevelEditor."
+                    + runtimeName + "（Assembly-CSharp 未加载？）: " + go.name);
                 continue;
+            }
             if (go.GetComponent(runtimeType) == null)
             {
+                if (stubComp.pseudoPrefabSO == null)
+                {
+                    LayoutEditorLog.LogWarning("[LayoutEditor] 跳过派生运行时（stub SO 为空，先修数据）: "
+                        + runtimeType.Name + " -> " + go.name);
+                    continue;
+                }
                 Undo.AddComponent(go, runtimeType);
+                changed = true;
                 LayoutEditorLog.LogWarning("[LayoutEditor] 双 stub 修复: 已补派生运行时组件 "
                     + runtimeType.Name + " -> " + go.name);
             }
@@ -2565,15 +2925,18 @@ public static class LayoutEditorStubIO
             if (badRuntime != null)
             {
                 Undo.DestroyObjectImmediate(badRuntime);
+                changed = true;
                 LayoutEditorLog.LogWarning("[LayoutEditor] 饮料/酱料机: 已移除 PseudoPrefabDispenser 运行时（改用基础 PseudoPrefab）: "
                     + go.name);
             }
             if (go.GetComponent<PseudoPrefab>() == null)
             {
                 Undo.AddComponent<PseudoPrefab>(go);
+                changed = true;
                 LayoutEditorLog.LogWarning("[LayoutEditor] 饮料/酱料机: 已补基础 PseudoPrefab 运行时: " + go.name);
             }
         }
+        return changed;
     }
 
     /// <summary>容器堆 id → 容器本体 SO id（均在 common03/pseudo_prefab_so/{dlc|core}/utensils 下）。
@@ -3595,6 +3958,77 @@ public static class LayoutEditorStubIO
     private const string RatHeistSkinBundle = "bundle355";
     private const string RatHeistCockroachBundle = "commonW3";
 
+    /// <summary>热水器预制 id（commonW5/prefabs/kettle/web_kettle_hotwater.prefab）。</summary>
+    private const string KettlePrefabId = "web_kettle_hotwater";
+
+    /// <summary>CookingUI 供给 SO（common04/_supplies/CookingUI.asset，bundle47
+    /// cookingui.prefab 的 PseudoPrefabSO 包装——TriggerTimer.m_CookingUIPrefab
+    /// 无法在 prefab 内直引 bundle 资产，由 CustomStub.Kettle 运行时注入）。</summary>
+    private const string KettleCookingUiSoGuid = "14d9cc6b6f1488a4b99909100e2618fd";
+
+    private static bool HasKettleTag(GameObject go)
+    {
+        var tag = go != null ? go.GetComponent<SpecificPseudoPrefabTag>() : null;
+        return tag != null && !string.IsNullOrEmpty(tag.prefabTag)
+            && tag.prefabTag.StartsWith("Kettle|", StringComparison.Ordinal);
+    }
+
+    /// <summary>应用：烘焙 CustomStub.Kettle（权威）+ tag 载体 "Kettle|"。
+    /// m_switch 由 ApplySwitchLinks 按文档联动反查烘焙；m_cookingUiSo 常驻注入。</summary>
+    private static void ApplyKettle(GameObject go, LayoutKettleStubDto dto)
+    {
+        var kType = FindCustomStubType(go, "Kettle");
+        if (kType == null)
+        {
+            LayoutEditorLog.LogWarning("[LayoutEditor] 关卡集缺 stub 程序集，热水器仅写入 tag 载体: " + go.name);
+            var setName = LevelSetOfScenePath(go.scene.path);
+            if (!string.IsNullOrEmpty(setName) && CustomStubCopyRequested != null)
+                CustomStubCopyRequested(setName);
+        }
+        else
+        {
+            var comp = go.GetComponent(kType);
+            if (comp == null)
+                comp = Undo.AddComponent(go, kType);
+            else
+                Undo.RecordObject(comp, "Layout Editor Kettle");
+            var heat = 5f;
+            if (dto != null && dto.heatSeconds > 0f)
+                heat = Mathf.Max(1f, dto.heatSeconds);
+            SetStubField(comp, "m_heatSeconds", heat);
+            // 进度条 UI 供给（幂等；LoadPseudoPrefabSO 失败保留现值）
+            var uiSo = LoadPseudoPrefabSO(KettleCookingUiSoGuid);
+            if (uiSo != null)
+                SetStubField(comp, "m_cookingUiSo", uiSo);
+            // 镜像 vanilla TriggerTimer.m_time（UI 计时与门禁秒数一致）
+            var timer = go.GetComponent("TriggerTimer");
+            if (timer != null)
+            {
+                var f = timer.GetType().GetField("m_time");
+                if (f != null)
+                {
+                    Undo.RecordObject(timer, "Layout Editor Kettle Timer");
+                    f.SetValue(timer, heat);
+                }
+            }
+        }
+        SetCustomStubTag(go, "Kettle|");
+    }
+
+    /// <summary>导出：读回烧水秒数与联动开关（u: 引用，仅展示；权威在 switchLinks）。</summary>
+    private static void ExportKettle(GameObject go, LayoutKettleStubDto dto)
+    {
+        if (dto == null)
+            return;
+        var comp = FindComp(go, "Kettle");
+        if (comp != null)
+        {
+            dto.heatSeconds = StubFloatOr(comp, "m_heatSeconds", 5f);
+            var sw = GetStubField(comp, "m_switch") as GameObject;
+            dto.switchInstanceId = sw != null ? "u:" + sw.GetInstanceID() : "";
+        }
+    }
+
     private static bool HasRatHeistTag(GameObject go)
     {
         var tag = go != null ? go.GetComponent<SpecificPseudoPrefabTag>() : null;
@@ -4311,6 +4745,11 @@ public static class LayoutEditorStubIO
                     SetCustomStubTag(go, "ConveyorDirectionSync|");
                     rewritten++;
                 }
+            }
+            else if (prefab.StartsWith("Kettle|", StringComparison.Ordinal))
+            {
+                // 无 payload；仅在与规范不一致时归一化（组件为权威，配置不进 tag）。
+                if (prefab != "Kettle|") { SetCustomStubTag(go, "Kettle|"); rewritten++; }
             }
             else if (prefab.StartsWith("RandomTrigger|", StringComparison.Ordinal))
             {

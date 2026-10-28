@@ -28,9 +28,22 @@ static class LayoutEditorSceneCleanup
 
 public static class LayoutEditorPseudoReload
 {
+    /// <summary>写回 SaveScene 前清掉 CleanPlateStackSeeder 的 DontSave 预览（防实例修改落盘）。</summary>
+    public static void ClearCleanPlateStackPreviews()
+    {
+        MonoBehaviour[] all = UnityEngine.Object.FindObjectsOfType<MonoBehaviour>();
+        for (int i = 0; i < all.Length; i++)
+        {
+            MonoBehaviour mb = all[i];
+            if (mb != null && mb.GetType().Name == "CleanPlateStackSeeder")
+                mb.SendMessage("ClearPreview", SendMessageOptions.DontRequireReceiver);
+        }
+    }
+
     /// <summary>Same as Tools → Toggle Prepare For Building when entering cleared state.</summary>
     public static void EnsurePrepareForBuilding()
     {
+        ClearCleanPlateStackPreviews();
         var manager = PseudoPrefabManager.Instance;
         if (manager == null)
             return;
@@ -54,6 +67,7 @@ public static class LayoutEditorPseudoReload
             return;
         }
         var wasAlready = manager.prepareForBuilding;
+        ClearCleanPlateStackPreviews();
         manager.prepareForBuilding = true;
         manager.DeInit();
         Debug.Log("[SetExporter] Prepare For Building：已 DeInit 清除临时物体（进入前 prepareForBuilding="
@@ -68,6 +82,8 @@ public static class LayoutEditorPseudoReload
             return;
 
         EnsureCustomBundleDependency(manager);
+        // 旧场景半损状态先提升派生运行时（缺运行时的回收台会让 Init/LateSetup NRE）。
+        LayoutEditorStubIO.PromoteAllDerivedStubsInScene();
 
         // 木纹·中秋等新结构食材箱：宿主图标逻辑查不到渲染器会打断 Init，
         // 先给已加载 bundle 里的真实 prefab 根补种子渲染器（见 LayoutEditorDispenserIconFix）。
@@ -92,6 +108,8 @@ public static class LayoutEditorPseudoReload
             }
             LayoutEditorDispenserIconFix.SyncSeededIcons();
             LayoutEditorGridSnapGuard.RelaxGridSnapOnScene();
+            LayoutEditorStubIO.RepairFullCleanPlateStackRuntimes();
+            RepairMissingPseudoMaterials();
             // 载具子树重建会连带销毁可移动火锅的编辑模式预览锅，重新布防补挂
             LayoutEditorPushablePotPreview.Arm();
             return;
@@ -99,6 +117,8 @@ public static class LayoutEditorPseudoReload
 
         // Fallback for unpatched environments: full reload.
         SafeReinit(manager);
+        LayoutEditorStubIO.RepairFullCleanPlateStackRuntimes();
+        RepairMissingPseudoMaterials();
         LayoutEditorPushablePotPreview.Arm();
     }
 
@@ -110,11 +130,156 @@ public static class LayoutEditorPseudoReload
             return;
 
         EnsureCustomBundleDependency(manager);
+        // 写回主路径：先把存量派生 stub 提升为派生运行时，再 DeInit/Init。
+        LayoutEditorStubIO.PromoteAllDerivedStubsInScene();
         LayoutEditorLog.Log("[dispenser-icon] ReloadPseudoAssetsFull: begin（写回主路径）");
         SafeReinit(manager);
+        // 完整 prefab 的 CleanPlateStack 误挂 PseudoPrefabCleanPlateStack 会 NRE；
+        // 必须在逐对象 ResetChild 之前清理/替换为 CustomStub.CleanPlateStackSeeder。
+        LayoutEditorStubIO.RepairFullCleanPlateStackRuntimes();
+        // 宿主 ResetAllPseudoPrefabs 一旦某个伪 prefab 抛异常，后续对象会被跳过
+        // （典型：核心 Switch child 保留旧 bundle 材质 → Scene 视图洋红）。这里
+        // 再做一遍逐对象 try/catch 重建，保证写回后所有 child 都拿到新 bundle 资产。
+        RepairPseudoPrefabChildren();
         // 写回主路径：载具由 DeInit/Init 整体重建，预览锅随旧载具销毁；域重载/开场景
         // /退 Play 三时机覆盖不到不触发编译的纯 HTTP 写回，须在此重新布防补挂。
         LayoutEditorPushablePotPreview.Arm();
+    }
+
+    /// <summary>
+    /// 逐个重建场景内 PseudoPrefab child。宿主 ResetAllPseudoPrefabs 无 try/catch，
+    /// 一个对象失败会中断后续对象；本方法隔离失败，专门保证 bundle 材质伪 prefab
+    /// （Switch / 压力开关 / 其他 common01 包装件）在 ReInit 后不残留已卸载材质。
+    /// </summary>
+    public static int RepairPseudoPrefabChildren()
+    {
+        // 先提升半损派生 stub，否则逐对象 ResetChild 仍会初始化基类空 Setup。
+        LayoutEditorStubIO.PromoteAllDerivedStubsInScene();
+        PseudoPrefab[] all = UnityEngine.Object.FindObjectsOfType<PseudoPrefab>();
+        int rebuilt = 0;
+        int failed = 0;
+        for (int i = 0; i < all.Length; i++)
+        {
+            PseudoPrefab pseudo = all[i];
+            if (pseudo == null)
+                continue;
+            try
+            {
+                pseudo.ResetChild();
+                rebuilt++;
+            }
+            catch (Exception ex)
+            {
+                failed++;
+                LayoutEditorLog.LogWarning("[pseudo-repair] ResetChild failed: "
+                    + pseudo.name + " — " + ex.Message);
+            }
+        }
+        LayoutEditorStubIO.ApplySwitchStartVisualsInActiveScene();
+        LayoutEditorGridSnapGuard.RelaxGridSnapOnScene();
+        if (rebuilt > 0 || failed > 0)
+            LayoutEditorLog.Log("[pseudo-repair] child 重建: ok=" + rebuilt + " failed=" + failed);
+        return rebuilt;
+    }
+
+    /// <summary>
+    /// 只重建材质/Shader 已丢失或不受支持的 child（启动/开场景后调用，开销小）。
+    /// 避免每次域重载把全部伪 prefab 都重建一遍。
+    /// </summary>
+    public static int RepairMissingPseudoMaterials()
+    {
+        PseudoPrefab[] all = UnityEngine.Object.FindObjectsOfType<PseudoPrefab>();
+        int rebuilt = 0;
+        int failed = 0;
+        for (int i = 0; i < all.Length; i++)
+        {
+            PseudoPrefab pseudo = all[i];
+            if (pseudo == null || pseudo.childGameObject == null)
+                continue;
+            if (!HasMissingPseudoMaterial(pseudo.childGameObject))
+                continue;
+            try
+            {
+                pseudo.ResetChild();
+                rebuilt++;
+            }
+            catch (Exception ex)
+            {
+                failed++;
+                LayoutEditorLog.LogWarning("[pseudo-repair] material ResetChild failed: "
+                    + pseudo.name + " — " + ex.Message);
+            }
+        }
+        if (rebuilt > 0)
+        {
+            LayoutEditorStubIO.ApplySwitchStartVisualsInActiveScene();
+            LayoutEditorGridSnapGuard.RelaxGridSnapOnScene();
+            LayoutEditorLog.Log("[pseudo-repair] 洋红/缺失材质 child 重建: " + rebuilt
+                + "（失败 " + failed + "）");
+        }
+        return rebuilt;
+    }
+
+    /// <summary>场景打开后若 Switch 包装件的 child 尚未生成（宿主 Init 抛异常/竞态），
+    /// 逐个 try/catch 重建；只针对 Switch，避免每次开场景重置全部伪 prefab。</summary>
+    public static int RepairMissingSwitchChildren()
+    {
+        PseudoPrefab[] all = UnityEngine.Object.FindObjectsOfType<PseudoPrefab>();
+        bool broken = false;
+        for (int i = 0; i < all.Length; i++)
+        {
+            PseudoPrefab pseudo = all[i];
+            if (pseudo == null)
+                continue;
+            PseudoPrefabSwitchStub stub = pseudo.GetComponent<PseudoPrefabSwitchStub>();
+            if (stub != null && pseudo.childGameObject == null)
+            {
+                broken = true;
+                break;
+            }
+        }
+        if (!broken)
+            return 0;
+        return RepairPseudoPrefabChildren();
+    }
+
+    private static bool HasMissingPseudoMaterial(GameObject child)
+    {
+        if (child == null)
+            return false;
+        Renderer[] renderers = child.GetComponentsInChildren<Renderer>(true);
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            Renderer r = renderers[i];
+            if (r == null)
+                continue;
+            Material[] mats = r.sharedMaterials;
+            if (mats == null || mats.Length == 0)
+                continue;
+            for (int j = 0; j < mats.Length; j++)
+            {
+                Material m = mats[j];
+                if (m == null)
+                    return true;
+                Shader sh = m.shader;
+                if (sh == null || !sh.isSupported)
+                {
+                    LayoutEditorLog.Log("[pseudo-repair] 材质异常: " + r.gameObject.name
+                        + " mat=" + (m != null ? m.name : "<null>")
+                        + " shader=" + (sh != null ? sh.name : "<null>")
+                        + " supported=" + (sh != null && sh.isSupported));
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    [MenuItem("Layout Editor/诊断/重建伪 prefab child（修复洋红开关）")]
+    public static void RepairPseudoPrefabChildrenMenu()
+    {
+        int rebuilt = RepairPseudoPrefabChildren();
+        Debug.Log("[pseudo-repair] 手动重建完成: " + rebuilt);
     }
 
     /// <summary>写回 Reload 前：饮料/酱料机不得保留 PseudoPrefabDispenser 运行时（宿主 Setup NRE）。</summary>
@@ -217,5 +382,42 @@ public static class LayoutEditorPseudoReload
         info.dependencies = deps.ToArray();
         EditorUtility.SetDirty(info);
         AssetDatabase.SaveAssets();
+    }
+}
+
+/// <summary>场景打开/域重载后的一次性自愈：仅当伪 prefab child 的材质/Shader
+/// 丢失时重建（核心 Switch 的 bundle 材质在 ReInit 竞态下会变洋红）。</summary>
+[InitializeOnLoad]
+static class LayoutEditorPseudoMaterialRepairHook
+{
+    static LayoutEditorPseudoMaterialRepairHook()
+    {
+        EditorSceneManager.sceneOpened += OnSceneOpened;
+        EditorApplication.delayCall += OnDelay;
+    }
+
+    static void OnSceneOpened(Scene scene, OpenSceneMode mode)
+    {
+        EditorApplication.delayCall += OnDelay;
+    }
+
+    static void OnDelay()
+    {
+        if (Application.isPlaying)
+            return;
+        var activeScene = SceneManager.GetActiveScene();
+        if (activeScene.IsValid())
+        {
+            // 无迁移基线的旧关卡：茶杯回收台 returnClean=true -> false。
+            // 新关卡在 CreateLevel 时已写基线，不受影响。标记在 Scene 保存/写回后落盘。
+            if (LayoutEditorLayoutMigrations.ApplyToOpenScene(activeScene) > 0)
+                EditorSceneManager.MarkSceneDirty(activeScene);
+        }
+        if (LayoutEditorStubIO.PromoteAllDerivedStubsInScene() > 0 && activeScene.IsValid())
+            EditorSceneManager.MarkSceneDirty(activeScene);
+        LayoutEditorStubIO.RepairFullCleanPlateStackRuntimes();
+        LayoutEditorPseudoReload.RepairMissingPseudoMaterials();
+        LayoutEditorPseudoReload.RepairMissingSwitchChildren();
+        LayoutEditorStubIO.ApplySwitchStartVisualsInActiveScene();
     }
 }

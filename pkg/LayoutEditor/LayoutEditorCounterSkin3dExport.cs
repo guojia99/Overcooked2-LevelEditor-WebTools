@@ -117,9 +117,14 @@ public static class LayoutEditorCounterSkin3dExport
         GameObject camGo = null;
         try
         {
-            AssetBundle bundle = LayoutEditorCounterSkinIconExport.EnsureBundleLoaded(so.bundleName, bundles, own, manifest);
-            if (bundle == null) { row["error"] = "bundle 加载失败: " + so.bundleName; return row; }
-            var prefab = bundle.LoadAsset<GameObject>(so.assetPath);
+            // commonW5 等本地直引皮肤（bundleName 为空）：直接用 SO.asset。
+            GameObject prefab = so.asset as GameObject;
+            if (prefab == null)
+            {
+                AssetBundle bundle = LayoutEditorCounterSkinIconExport.EnsureBundleLoaded(so.bundleName, bundles, own, manifest);
+                if (bundle == null) { row["error"] = "bundle 加载失败: " + so.bundleName; return row; }
+                prefab = bundle.LoadAsset<GameObject>(so.assetPath);
+            }
             if (prefab == null) { row["error"] = "prefab 加载失败: " + so.assetPath; return row; }
 
             Vector3 offset = new Vector3(-5000f, 0f, -5000f);

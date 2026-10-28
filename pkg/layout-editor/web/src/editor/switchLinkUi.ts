@@ -158,5 +158,5 @@ export function switchLinkTargetOptionsHtml(switchId: string, excludeSelfId: str
         `<option value="${escHtml(i.instanceId)}">${escHtml(itemLabelDisambiguated(i, ordMap))}</option>`
     )
     .join("");
-  return opts || '<option value="">— 无可联动目标（机器 / 步带·传送带控速 / 生成器批次） —</option>';
+  return opts || '<option value="">— 无可联动目标（机器 / 步带·传送带控速 / 生成器批次 / 热水器） —</option>';
 }

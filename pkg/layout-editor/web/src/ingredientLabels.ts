@@ -21,6 +21,8 @@ const FOOD_GROUP_ZH: Record<string, string> = {
   commonw2: "📚 扩展菜谱",
   // commonW3 Web 扩展菜谱（沙拉大全 + Web 果汁大全，Web 前缀命名）
   commonw3: "🥤 Web 扩展菜谱",
+  // commonW5 Web 食材库（卷饼菜谱 + 辣椒/茶叶/葱 Web 食材）
+  commonw5: "Web 食材库",
 };
 
 export function foodGroupLabel(group: FoodGroup | undefined): string {

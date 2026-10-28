@@ -114,6 +114,11 @@ export const MUG_CLEANUP: { dirty: string; sink: string; ret: string }[] = [
   // 马克杯套装（写回时后端自动补挂 stub，dlc09 皮肤可用）
   { dirty: "dirtymugstack", sink: "workstation_sink_mug_01_wood", ret: "workstation_mug_return" },
 ];
+export const TEACUP_CLEANUP: { dirty: string; sink: string; ret: string }[] = [
+  // 茶杯套装（commonW5 本地化 AYCE 资源）：洗茶杯水槽 + 茶杯回收台；
+  // 脏茶杯堆由回收台在游戏内生成，不纳入自动填充
+  { dirty: "web_teacup_stack_dirty", sink: "web_sink_teacup", ret: "web_teacup_return" },
+];
 export const TRAY_CLEANUP: { dirty: string; sink: string; ret: string }[] = [
   // 餐盘套装：普通水槽洗不了餐盘，必须洗餐盘水槽（dlc08 马戏团）+ 餐盘回收台
   { dirty: "dlc08_dirtytraystack", sink: "dlc08_workstation_01_tray_sink_circus", ret: "dlc08_workstation_tray_return" },
@@ -200,6 +205,14 @@ export function allDispenserPrefabIds(): string[] {
 export function recipeNeedsMug(r: RecipeEntry): boolean {
   // 官方热可可按类型；自定义菜谱按所选装盘容器（装盘容器下拉含马克杯）
   return (r.type ?? "") === "hotchocolate" || (r.platingStep ?? "") === "Mug";
+}
+
+/** 奶茶类（热水器烧水；热水由 HotWaterSO 节点产出，不是食材箱）。 */
+export function recipeNeedsKettle(r: RecipeEntry): boolean {
+  const type = (r.type ?? "").toLowerCase();
+  if (type === "milktea" || type === "milk_tea") return true;
+  if ((r.id ?? "").startsWith("Web_MilkTea_")) return true;
+  return (r.ingredients ?? []).includes("HotWaterSO");
 }
 
 /** 拼盘/套餐类（餐盘组装装盘）：水果拼盘 + 马戏团套餐。成品放餐盘（tray）
@@ -676,6 +689,7 @@ export function computeRequiredUtensils(ingredientIds: Set<string>, steps: Set<s
   const recs = recipes ?? [];
   const hasGlassPlating = platingSteps ? [...platingSteps].includes("Glass") : false;
   const needMug = recs.some(recipeNeedsMug);
+  const needKettle = recs.some(recipeNeedsKettle);
   const needGlass = recs.some(recipeNeedsGlass) || hasGlassPlating;
   const needTray = recs.some(recipeNeedsTray);
   const needPlate =
@@ -704,8 +718,22 @@ export function computeRequiredUtensils(ingredientIds: Set<string>, steps: Set<s
     }
   }
   if (needMug) {
-    set.add("cleanmugstack");
-    for (const c of MUG_CLEANUP) {
+    // 奶茶使用 commonW5 本地茶杯体系：茶杯堆 + 单只茶杯 + 洗茶杯水槽 + 茶杯回收台。
+    // 热可可等仍用核心 cleanmugstack + 原版马克杯水槽/回收台。
+    set.add(needKettle ? "web_teacup_stack_clean" : "cleanmugstack");
+    if (needKettle) set.add("web_teacup");
+    for (const c of needKettle ? TEACUP_CLEANUP : MUG_CLEANUP) {
+      set.add(c.sink);
+      set.add(c.ret);
+    }
+  }
+  if (needKettle) {
+    // 热水器本体；开关由 recipesDialogs 按 kettle_switch 组合/联动补齐。
+    set.add("web_kettle_hotwater");
+    set.add("web_teacup");
+    set.add("web_teacup_stack_clean");
+    // 即使 platingStep 缺失，奶茶也必须有洗茶杯水槽 + 茶杯回收台。
+    for (const c of TEACUP_CLEANUP) {
       set.add(c.sink);
       set.add(c.ret);
     }

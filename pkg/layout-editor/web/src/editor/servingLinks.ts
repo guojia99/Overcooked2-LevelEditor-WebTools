@@ -27,12 +27,18 @@ export function isMugReturnItem(item: EditorItem): boolean {
   return id === "workstation_mug_return" || id === "dlc09_workstation_mug_return_winter";
 }
 
+// 茶杯回收台（web_teacup_return）：独立族——虽然与马克杯共用同一 PlatingStepData
+// （Glass uid 1740450），但茶杯不是马克杯，绑定槽/堆模板必须分开。
+export function isTeacupReturnItem(item: EditorItem): boolean {
+  return prefabIdFromPath(item.prefabAssetPath) === "web_teacup_return";
+}
+
 export function isTrayReturnItem(item: EditorItem): boolean {
   return prefabIdFromPath(item.prefabAssetPath) === "dlc08_workstation_tray_return";
 }
 
 export function isReturnStationItem(item: EditorItem): boolean {
-  return isPlateReturnItem(item) || isGlassReturnItem(item) || isMugReturnItem(item) || isTrayReturnItem(item);
+  return isPlateReturnItem(item) || isGlassReturnItem(item) || isMugReturnItem(item) || isTrayReturnItem(item) || isTeacupReturnItem(item);
 }
 
 export function servingStations(): EditorItem[] {
@@ -55,6 +61,10 @@ export function mugReturns(): EditorItem[] {
   return S.items.filter(isMugReturnItem);
 }
 
+export function teacupReturns(): EditorItem[] {
+  return S.items.filter(isTeacupReturnItem);
+}
+
 export function trayReturns(): EditorItem[] {
   return S.items.filter(isTrayReturnItem);
 }
@@ -65,8 +75,10 @@ export function computeReturnLabels(): Map<string, string> {
   let g = 0;
   let m = 0;
   let t = 0;
+  let tc = 0;
   for (const r of returnStations()) {
-    if (isMugReturnItem(r)) label.set(r.instanceId, `脏马克杯台${++m}`);
+    if (isTeacupReturnItem(r)) label.set(r.instanceId, `茶杯回收台${++tc}`);
+    else if (isMugReturnItem(r)) label.set(r.instanceId, `脏马克杯台${++m}`);
     else if (isTrayReturnItem(r)) label.set(r.instanceId, `餐盘回收台${++t}`);
     else if (isGlassReturnItem(r)) label.set(r.instanceId, `脏杯台${++g}`);
     else label.set(r.instanceId, `脏盘台${++p}`);
@@ -111,6 +123,13 @@ export function servingMugReturn(s: EditorItem): string | undefined {
   });
 }
 
+export function servingTeacupReturn(s: EditorItem): string | undefined {
+  return servingBoundReturns(s).find((id) => {
+    const r = S.items.find((i) => i.instanceId === id);
+    return r && isTeacupReturnItem(r);
+  });
+}
+
 export function servingTrayReturn(s: EditorItem): string | undefined {
   return servingBoundReturns(s).find((id) => {
     const r = S.items.find((i) => i.instanceId === id);
@@ -118,7 +137,7 @@ export function servingTrayReturn(s: EditorItem): string | undefined {
   });
 }
 
-export type ServingReturnKind = "plate" | "glass" | "mug" | "tray";
+export type ServingReturnKind = "plate" | "glass" | "mug" | "tray" | "teacup";
 
 export function setServingReturnOfType(s: EditorItem, returnId: string | undefined, kind: ServingReturnKind): void {
   // 脏盘台（plate）与餐盘回收台（tray）互斥：二者共用同一 PlatingStepData
@@ -127,12 +146,18 @@ export function setServingReturnOfType(s: EditorItem, returnId: string | undefin
   // Plate 族回收台——同台并绑必然一个独占（先绑定者赢），套餐会错回到普通
   // 脏盘台生成普通盘子。绑定时后选的族自动清掉先绑的；混合普通菜+套餐的
   // 关卡请放两套上菜台各绑各的。
+  // 马克杯台（mug）与茶杯回收台（teacup）同理互斥：二者共用 Glass
+  // PlatingStepData（uid 1740450），同台并绑先绑定者独占 Glass 族回流。
   const excl: ServingReturnKind | null = returnId
     ? kind === "plate"
       ? "tray"
       : kind === "tray"
         ? "plate"
-        : null
+        : kind === "mug"
+          ? "teacup"
+          : kind === "teacup"
+            ? "mug"
+            : null
     : null;
   const keep = (kind2: ServingReturnKind): string | undefined => {
     if (kind === kind2) return returnId;
@@ -140,9 +165,10 @@ export function setServingReturnOfType(s: EditorItem, returnId: string | undefin
     if (kind2 === "plate") return servingPlateReturn(s);
     if (kind2 === "glass") return servingGlassReturn(s);
     if (kind2 === "mug") return servingMugReturn(s);
+    if (kind2 === "teacup") return servingTeacupReturn(s);
     return servingTrayReturn(s);
   };
-  const ids = [keep("plate"), keep("glass"), keep("mug"), keep("tray")].filter((x): x is string => !!x);
+  const ids = [keep("plate"), keep("glass"), keep("mug"), keep("tray"), keep("teacup")].filter((x): x is string => !!x);
   setServingReturns(s, ids);
 }
 

@@ -42,6 +42,9 @@ public static class LayoutEditorCustomIngredients
     /// <summary>Web 储物背包等机制增量（打包为 commonW4 bundle）。</summary>
     public const string CommonW4Root = "Assets/commonW4";
 
+    /// <summary>Web 增量库：OC1/AYCE BGM、桌台皮肤、食材、卷饼菜谱（打包为 commonW5 bundle）。</summary>
+    public const string CommonW5Root = "Assets/commonW5";
+
     /// <summary>上游通用素材库（自定义食材/锅具/工作台模板与 supplies，打包为 common04 bundle）。</summary>
     public const string Common04Root = "Assets/common04";
 
@@ -64,6 +67,9 @@ public static class LayoutEditorCustomIngredients
     public const string CommonW3BundleName = "commonW3";
 
     public const string CommonW4BundleName = "commonW4";
+
+    /// <summary>commonW5 bundle 名（folder meta assetBundleName）。</summary>
+    public const string CommonW5BundleName = "commonW5";
 
     /// <summary>common04 bundle 名（folder meta assetBundleName）。</summary>
     public const string Common04BundleName = "common04";
@@ -232,8 +238,92 @@ public static class LayoutEditorCustomIngredients
         return false;
     }
 
+    /// <summary>关卡是否引用了 commonW5 卷饼库 / 食材 / BGM / 桌台皮肤资产。</summary>
+    private static bool ReferencesCommonW5(LevelInfoSO info)
+    {
+        if (info == null)
+            return false;
+        // OC1/AYCE BGM：LevelInfo.inLevelMusicSO 指向 commonW5 音乐 SO。
+        if (info.inLevelMusicSO != null && IsCommonW5Asset(AssetDatabase.GetAssetPath(info.inLevelMusicSO)))
+            return true;
+        foreach (var r in info.recipes ?? new ScriptableObject[0])
+        {
+            if (ReferencesCommonW5Deep(r))
+                return true;
+        }
+        foreach (var r in info.allIngredients ?? new ScriptableObject[0])
+        {
+            if (r != null && IsCommonW5Asset(AssetDatabase.GetAssetPath(r)))
+                return true;
+        }
+        foreach (var r in info.optionalRecipeMatchListItems ?? new ScriptableObject[0])
+        {
+            if (ReferencesCommonW5Deep(r))
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>资产本身在 commonW5，或其组成/成品模型引用 commonW5 资产。</summary>
+    private static bool ReferencesCommonW5Deep(ScriptableObject so)
+    {
+        if (so == null)
+            return false;
+        if (IsCommonW5Asset(AssetDatabase.GetAssetPath(so)))
+            return true;
+        var recipe = so as CustomRecipeSO;
+        if (recipe == null)
+            return false;
+        foreach (var c in recipe.compositionSOs ?? new ScriptableObject[0])
+            if (IsCommonW5Asset(c != null ? AssetDatabase.GetAssetPath(c) : null))
+                return true;
+        foreach (var c in recipe.optionalSOs ?? new ScriptableObject[0])
+            if (IsCommonW5Asset(c != null ? AssetDatabase.GetAssetPath(c) : null))
+                return true;
+        if (recipe.modelSO != null && IsCommonW5Asset(AssetDatabase.GetAssetPath(recipe.modelSO)))
+            return true;
+        return false;
+    }
+
+    /// <summary>是否 commonW5 增量库内资产。</summary>
+    public static bool IsCommonW5Asset(string assetPath)
+    {
+        if (string.IsNullOrEmpty(assetPath))
+            return false;
+        return assetPath.StartsWith(CommonW5Root + "/", StringComparison.Ordinal);
+    }
+
+    /// <summary>本关卡集是否有任意关卡需要 commonW5 bundle（导出 zip 按需携带）。</summary>
+    public static bool SetNeedsCommonW5Bundle(string levelSet)
+    {
+        if (string.IsNullOrEmpty(levelSet))
+            return false;
+        var dataDir = "Assets/LevelSets/" + levelSet + "/data";
+        if (!AssetDatabase.IsValidFolder(dataDir))
+            return false;
+        foreach (var guid in AssetDatabase.FindAssets("t:LevelInfoSO", new[] { dataDir }))
+        {
+            var info = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(AssetDatabase.GUIDToAssetPath(guid));
+            if (info == null)
+                continue;
+            if (ReferencesCommonW5(info))
+                return true;
+            if (info.dependencies != null)
+            {
+                for (int i = 0; i < info.dependencies.Length; i++)
+                {
+                    var d = info.dependencies[i];
+                    if (!string.IsNullOrEmpty(d) &&
+                        string.Equals(d, CommonW5BundleName, StringComparison.OrdinalIgnoreCase))
+                        return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /// <summary>本关卡集是否有任意关卡需要 commonW2 bundle（导出 zip 按需携带）。
-    ///  扫描 data/ 下全部 LevelInfo（含子目录），按菜谱/组装定义实际引用判定，
+    ///  扫描 data/ 下全部 LevelInfo（含子目录），按菜谱实际引用判定，
     ///  并兼容 dependencies 已写入 commonW2 的历史数据。</summary>
     public static bool SetNeedsCommonW2Bundle(string levelSet)
     {
@@ -330,6 +420,8 @@ public static class LayoutEditorCustomIngredients
             }
             if (!string.IsNullOrEmpty(it.prefabAssetPath) && IsCommon04Asset(it.prefabAssetPath))
                 _pendingDocBundles.Add(Common04BundleName);
+            if (!string.IsNullOrEmpty(it.prefabAssetPath) && IsCommonW5Asset(it.prefabAssetPath))
+                _pendingDocBundles.Add(CommonW5BundleName);
         }
         return map;
     }
@@ -382,6 +474,13 @@ public static class LayoutEditorCustomIngredients
             _pendingDocBundles.Add(Common04BundleName);
             if (IsCustomContentAsset(path) && !string.IsNullOrEmpty(_docLevelSet))
                 _pendingDocBundles.Add(_docLevelSet + "/" + CustomContentDirName);
+            return;
+        }
+        // commonW5 本地直引资产（音乐 SO / 桌台皮肤 SO / 食材 SO / 菜谱）：
+        // 记录 commonW5 依赖（Loader 常驻加载，这里用于导出 zip 与 dependencies 一致性）。
+        if (IsCommonW5Asset(path))
+        {
+            _pendingDocBundles.Add(CommonW5BundleName);
             return;
         }
         // 依赖注册仅针对本地源库资产（common03 / common01 / common02）：
@@ -504,6 +603,9 @@ public static class LayoutEditorCustomIngredients
         // 沙拉大全：仅当关卡实际选用 commonW3 菜谱（或本地菜谱引用其素材）时注册。
         if (ReferencesCommonW3(info))
             AddDependency(deps, CommonW3BundleName);
+        // commonW5：卷饼库 / Web 食材 / OC1·AYCE BGM / 桌台皮肤被引用时注册。
+        if (ReferencesCommonW5(info) || _pendingDocBundles.Contains(CommonW5BundleName))
+            AddDependency(deps, CommonW5BundleName);
         if (_pendingDocBundles.Contains(CommonW4BundleName))
             AddDependency(deps, CommonW4BundleName);
         foreach (var b in _pendingDocBundles)

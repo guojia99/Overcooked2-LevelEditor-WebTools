@@ -1,0 +1,60 @@
+﻿{
+  "schemaVersion": 1,
+  "names": [
+    {
+      "id": "Web_Burrito_Meat_Chicken",
+      "zh": "Web 肉馅鸡肉卷饼",
+      "en": "Web Meat & Chicken Burrito"
+    },
+    {
+      "id": "Web_Burrito_Mushroom_Chicken",
+      "zh": "Web 蘑菇鸡肉卷饼",
+      "en": "Web Mushroom & Chicken Burrito"
+    },
+    {
+      "id": "Web_Burrito_RicePrep",
+      "zh": "Web 卷饼米饭（中间）",
+      "en": "Web Burrito Rice (Intermediate)"
+    },
+    {
+      "id": "Web_Burrito_MeatPrep",
+      "zh": "Web 卷饼肉馅（中间）",
+      "en": "Web Burrito Meat (Intermediate)"
+    },
+    {
+      "id": "Web_Burrito_ChickenPrep",
+      "zh": "Web 卷饼鸡肉（中间）",
+      "en": "Web Burrito Chicken (Intermediate)"
+    },
+    {
+      "id": "Web_Burrito_MushroomPrep",
+      "zh": "Web 卷饼蘑菇（中间）",
+      "en": "Web Burrito Mushroom (Intermediate)"
+    },
+    {
+      "id": "Web_MilkTea_HotWater",
+      "zh": "奶茶·热水（中间产物）",
+      "en": "Milk Tea Hot Water (Intermediate)"
+    },
+    {
+      "id": "Web_MilkTea_Tea",
+      "zh": "纯茶",
+      "en": "Plain Tea"
+    },
+    {
+      "id": "Web_MilkTea_MilkTea",
+      "zh": "奶茶",
+      "en": "Milk Tea"
+    },
+    {
+      "id": "Web_MilkTea_HoneyTea",
+      "zh": "蜂蜜茶",
+      "en": "Honey Tea"
+    },
+    {
+      "id": "Web_MilkTea_HoneyMilkTea",
+      "zh": "蜂蜜奶茶",
+      "en": "Honey Milk Tea"
+    }
+  ]
+}

@@ -23,12 +23,14 @@ import type {
   IngredientEntry,
   LevelAssignmentData,
   LevelDetail,
+  LevelResourceUsage,
   LevelSetInfo,
   LevelSummary,
   MusicEntry,
   PerPlayerConfig,
   RecipeEntry,
   SetExportStatus,
+  SetLibSummary,
   WriteBackHistoryDetail,
   WriteBackDiffEntry,
   WriteBackHistoryItem,
@@ -687,6 +689,7 @@ const DEPS_MANIFEST_FALLBACK: DepsManifestEntry[] = [
   { zipPath: "OC2DIYLevelRuntimeWLoader/commonW1", label: "commonW1", state: "ok", sizeBytes: 0, note: "编辑器增量素材（必备；导出时删旧重打，此处大小为当前产物仅供参考）" },
   { zipPath: "OC2DIYLevelRuntimeWLoader/commonW2", label: "commonW2", state: "ok", sizeBytes: 0, note: "汉堡菜谱素材（依赖包通用，无条件携带；导出时删旧重打）" },
   { zipPath: "OC2DIYLevelRuntimeWLoader/commonW3", label: "commonW3", state: "ok", sizeBytes: 0, note: "扩展素材包（源目录存在即导出时删旧重打并携带；导出前无产物故大小显示 —，可随时用 Unity 菜单「重新打包 commonW 素材包」单独重打）" },
+  { zipPath: "OC2DIYLevelRuntimeWLoader/commonW5", label: "commonW5", state: "ok", sizeBytes: 0, note: "Web 增量包：OC1/AYCE BGM + 桌台皮肤 + 食材 + 卷饼菜谱（源目录存在即导出时删旧重打并携带）" },
   { zipPath: "OC2DIYLevelRuntimeWLoader/package_version.txt", label: "package_version.txt", state: "ok", sizeBytes: 0, note: "导出时自动生成：打包版本/时间/环境 + 文件 MD5" },
 ];
 
@@ -961,13 +964,63 @@ function openEditSetModal(app: HTMLElement, s: LevelSetInfo): void {
 
 // ==================== Level list ====================
 
+/** 依赖统计来源库显示名（custom = 本集自定义内容，其余原样）。 */
+function depLibLabel(lib: string): string {
+  if (lib === "custom") return "自定义";
+  return lib;
+}
+
+/** 单关依赖徽标行（other 归入内置资源不展示；无统计或无依赖时为空）。 */
+function depBadgesHtml(usage: LevelResourceUsage | undefined): string {
+  if (!usage || !usage.libs) return "";
+  const shown = usage.libs.filter((l) => l.library !== "other");
+  if (shown.length === 0) return "";
+  return `
+        <div class="m-deps">
+          ${shown
+            .map(
+              (l) =>
+                `<span class="m-badge dep" title="${esc(depLibLabel(l.library))}：本关引用 ${l.distinctAssets} 个资源">${esc(depLibLabel(l.library))}×${l.distinctAssets}</span>`
+            )
+            .join(" ")}
+        </div>`;
+}
+
+/** 整集依赖汇总条（各库：使用关卡数 / 整集去重资产数）。 */
+function depSummaryHtml(summary: SetLibSummary[] | undefined): string {
+  if (!summary || summary.length === 0) return "";
+  const shown = summary.filter((s) => s.library !== "other");
+  if (shown.length === 0) return "";
+  return `
+    <div class="m-deps-summary">
+      <span class="muted">本集依赖：</span>
+      ${shown
+        .map(
+          (s) =>
+            `<span class="m-badge dep" title="${esc(depLibLabel(s.library))}：${s.levelCount} 个关卡使用，整集去重 ${s.distinctAssets} 个资源">${esc(depLibLabel(s.library))} ${s.levelCount}关/${s.distinctAssets}资源</span>`
+        )
+        .join(" ")}
+    </div>`;
+}
+
 async function renderLevelList(app: HTMLElement, setName: string): Promise<void> {
   syncManagePath(manageLevelListPath(setName));
   const content = shell(app, `关卡列表 · ${setName}`, "返回关卡集", () => void renderSetList(app));
   setBusy(`加载 ${setName} 的关卡…`);
   let levels: LevelSummary[] = [];
+  let statsByPath = new Map<string, LevelResourceUsage>();
+  let statsSummary: SetLibSummary[] | undefined;
   try {
-    levels = await api.fetchLevels(setName);
+    // 依赖统计失败不阻断关卡列表（降级为不显示徽标）
+    const [lv, stats] = await Promise.all([
+      api.fetchLevels(setName),
+      api.fetchResourceStats(setName).catch(() => null),
+    ]);
+    levels = lv;
+    if (stats) {
+      statsByPath = new Map((stats.levels ?? []).map((s) => [s.assetPath, s]));
+      statsSummary = stats.summary;
+    }
   } catch (e) {
     showError(e);
     return;
@@ -1003,6 +1056,7 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
           ${lv.hasScene ? '<span class="m-badge ok">场景</span>' : '<span class="m-badge warn">缺场景</span>'}
           <span class="muted">第 ${idx + 1} 关 · ${esc(lv.sceneName)} · ${esc(id)}</span>
         </div>
+${depBadgesHtml(statsByPath.get(lv.assetPath))}
         <div class="m-actions">
           ${mBtnHtml("编辑", "primary", { "data-edit": esc(lv.assetPath) })}
           ${mBtnHtml("📋 汇总", "default", { "data-summary": esc(lv.assetPath) })}
@@ -1022,6 +1076,7 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
       ${mBtnHtml("📦 依赖管理", "default", { id: "set-deps", title: "Bundle 依赖分析与 LevelInfoSO.dependencies 编辑" })}
       <span class="muted">当前关卡集：<b>${setDisplay}</b></span>
     </div>
+${depSummaryHtml(statsSummary)}
     <div class="m-section-title">关卡</div>
     <div class="m-grid m-level-grid">${cards || '<p class="muted">暂无关卡</p>'}</div>
   `;
@@ -3176,6 +3231,8 @@ async function wireAudioEditor(
       dlc07_horde: "部落 (DLC7)",
       dlc09_wonderland: "仙境 (DLC9)",
       graveyard: "墓地",
+      oc1: "OC1 主题",
+      ayce: "AYCE 主题",
     } as Record<string, string>)[k] || k;
 
   const ambLabelZh = new Map<string, string>(

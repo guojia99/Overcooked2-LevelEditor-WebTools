@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-21T07:30:07.266Z",
+  "generatedAt": "2026-10-27T06:45:58.799Z",
   "schemaVersion": 10,
-  "itemCount": 111,
+  "itemCount": 115,
   "ingredients": [
     {
       "guid": "ef868e413995bdf5ea3c0058f6dd5db0",
@@ -67,6 +67,15 @@
       "icon": true
     },
     {
+      "guid": "550026dedfe271ff327918c9443de8a7",
+      "id": "TeaSO",
+      "nameZh": "茶叶",
+      "nameEn": "Tea Leaves",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/food/TeaSO.asset",
+      "group": "commonw5",
+      "icon": true
+    },
+    {
       "guid": "1716cd7af6d91b44b902232a1a5aba52",
       "id": "orangesoda",
       "nameZh": "橙味汽水",
@@ -92,6 +101,15 @@
       "nameEn": "Orange (DLC4)",
       "assetPath": "Assets/common03/food/Ingredients/dlc04/DLC04_Orange.asset",
       "group": "dlc04",
+      "icon": true
+    },
+    {
+      "guid": "635fcbe7ca5e918d987577cd374905eb",
+      "id": "SpringOnionSO",
+      "nameZh": "葱",
+      "nameEn": "Spring Onion",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/food/SpringOnionSO.asset",
+      "group": "commonw5",
       "icon": true
     },
     {
@@ -423,6 +441,15 @@
       "icon": true
     },
     {
+      "guid": "c9b454374cf36f925a7cf25abf81c902",
+      "id": "SpiceSO",
+      "nameZh": "辣椒",
+      "nameEn": "Chili",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/food/SpiceSO.asset",
+      "group": "commonw5",
+      "icon": true
+    },
+    {
       "guid": "a192356a1fd01504eadf0d90ffa2de62",
       "id": "Blueberry",
       "nameZh": "蓝莓",
@@ -627,6 +654,15 @@
       "nameEn": "Hot Dog Bun",
       "assetPath": "Assets/common03/food/Ingredients/dlc08/DLC08_HotdogBun.asset",
       "group": "dlc08",
+      "icon": true
+    },
+    {
+      "guid": "a9e7537becb9fc29398dd293795dde0f",
+      "id": "HotWaterSO",
+      "nameZh": "热水",
+      "nameEn": "Hot Water",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/food/HotWaterSO.asset",
+      "group": "commonw5",
       "icon": true
     },
     {

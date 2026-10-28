@@ -1,0 +1,28 @@
+fileFormatVersion: 2
+guid: cae4d45c3612d8d03fb3da2610b72ce4
+ModelImporter:
+  serializedVersion: 22
+  fileIDToRecycleName:
+    100000: //RootNode
+    100002: m_sk_sink_DLC100_0
+    400000: //RootNode
+    400002: m_sk_sink_DLC100_0
+    2100000: m_sk_sink_DLC100_0Mat
+    2300000: m_sk_sink_DLC100_0
+    3300000: m_sk_sink_DLC100_0
+    4300000: m_sk_sink_DLC100_0
+  externalObjects: {}
+  materials:
+    importMaterials: 0
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  meshes:
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+  isReadable: 1
+  importAnimation: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

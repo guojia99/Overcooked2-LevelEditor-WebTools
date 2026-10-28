@@ -655,7 +655,7 @@ public class LayoutEditorHttpServer
 
                 // 写回强校验（web 侧同款规则的后端兜底，防绕过）：
                 // 普通食材箱（含背包）必须配 1 种食材；随机食材箱必须 ≥2 种候选。
-                var validationError = ValidateWebBackpackConfigs(doc) ?? ValidateDispenserConfigs(doc) ?? ValidateSpeedControlConfigs(doc);
+                var validationError = ValidateWebBackpackConfigs(doc) ?? ValidateDispenserConfigs(doc) ?? ValidateKettleConfigs(doc) ?? ValidateSpeedControlConfigs(doc);
                 if (validationError != null)
                 {
                     LayoutEditorLog.LogWarning("[随机箱链路] " + validationError);
@@ -826,6 +826,16 @@ public class LayoutEditorHttpServer
                 var rest = path.Substring("/api/sets/".Length);
                 var setName = Uri.UnescapeDataString(rest.Substring(0, rest.Length - "/levels".Length));
                 WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.ScanLevels(setName)));
+                return;
+            }
+
+            // 每关依赖资源统计：场景 guid 引用 + LevelInfoSO 菜谱/食材引用，按来源库
+            // （common01-04 / commonW1…N / custom）分组去重计数。纯只读，不开场景。
+            if (path.StartsWith("/api/sets/", StringComparison.Ordinal) && path.EndsWith("/resource-stats", StringComparison.Ordinal) && request.HttpMethod == "GET")
+            {
+                var rest = path.Substring("/api/sets/".Length);
+                var setName = Uri.UnescapeDataString(rest.Substring(0, rest.Length - "/resource-stats".Length));
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.ScanResourceUsage(setName)));
                 return;
             }
 
@@ -2083,11 +2093,13 @@ public class LayoutEditorHttpServer
         }
         if (name == "oc2_analyze_level_dependencies")
             return LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.AnalyzeBundles(args.assetPath));
+        if (name == "oc2_list_level_resource_usage")
+            return LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.ScanResourceUsage(args.setName));
         if (name == "oc2_validate_scene")
         {
             OpenSceneIfNeeded(args.assetPath);
             var document = SceneLayoutExporter.ExportActiveScene();
-            var error = ValidateWebBackpackConfigs(document) ?? ValidateDispenserConfigs(document) ?? ValidateTeleportalConfigs(document) ?? ValidateAirSlopeConfigs(document) ?? ValidateRandomTriggerConfigs(document) ?? ValidateSpeedControlConfigs(document);
+            var error = ValidateWebBackpackConfigs(document) ?? ValidateDispenserConfigs(document) ?? ValidateKettleConfigs(document) ?? ValidateTeleportalConfigs(document) ?? ValidateAirSlopeConfigs(document) ?? ValidateRandomTriggerConfigs(document) ?? ValidateSpeedControlConfigs(document);
             return "{\"valid\":" + (error == null ? "true" : "false") +
                 ",\"error\":" + (error == null ? "null" : JsonString(error)) + "}";
         }
@@ -2097,7 +2109,7 @@ public class LayoutEditorHttpServer
                 throw new InvalidOperationException("写回场景必须传 confirm=true");
             if (args.document == null)
                 throw new InvalidOperationException("缺少 document");
-            var validationError = ValidateWebBackpackConfigs(args.document) ?? ValidateDispenserConfigs(args.document) ?? ValidateTeleportalConfigs(args.document) ?? ValidateAirSlopeConfigs(args.document) ?? ValidateRandomTriggerConfigs(args.document) ?? ValidateSpeedControlConfigs(args.document);
+            var validationError = ValidateWebBackpackConfigs(args.document) ?? ValidateDispenserConfigs(args.document) ?? ValidateKettleConfigs(args.document) ?? ValidateTeleportalConfigs(args.document) ?? ValidateAirSlopeConfigs(args.document) ?? ValidateRandomTriggerConfigs(args.document) ?? ValidateSpeedControlConfigs(args.document);
             if (validationError != null)
                 throw new InvalidOperationException(validationError);
             OpenSceneIfNeeded(args.document.sceneAssetPath);
@@ -2448,6 +2460,35 @@ public class LayoutEditorHttpServer
 
     /// <summary>写回强校验：普通食材箱（含背包，不含饮料/酱料机）必须配 1 种食材；
     /// 随机食材箱（RandomDispenser 或携带随机配置）必须 ≥2 种候选。返回 null=通过。</summary>
+    /// <summary>热水器配置校验：每台热水器须有开关联动（switchLinks 目标为本机，
+    /// 触发名默认 Switch），否则无法烧水。多开关指向同一台仅提示。</summary>
+    private static string ValidateKettleConfigs(LayoutDocumentDto doc)
+    {
+        if (doc == null || doc.items == null)
+            return null;
+        var problems = new List<string>();
+        var linkedTargets = new HashSet<string>();
+        if (doc.switchLinks != null)
+        {
+            foreach (var l in doc.switchLinks)
+            {
+                if (l != null && !string.IsNullOrEmpty(l.targetId))
+                    linkedTargets.Add(l.targetId);
+            }
+        }
+        foreach (var it in doc.items)
+        {
+            if (it == null || it.stubKind != "Kettle")
+                continue;
+            var pid = System.IO.Path.GetFileNameWithoutExtension(it.prefabAssetPath ?? "");
+            // 场景实例 id 形如 u:<instanceID>；文档联动按同键匹配
+            var iid = it.instanceId ?? "";
+            if (!linkedTargets.Contains(iid))
+                problems.Add((it.displayName ?? pid) + "：热水器未联动开关（在物品上右键「触发源」或用开关拉线到热水器），无法烧水");
+        }
+        return problems.Count > 0 ? string.Join("；", problems.ToArray()) : null;
+    }
+
     private static string ValidateDispenserConfigs(LayoutDocumentDto doc)
     {
         if (doc == null || doc.items == null)
@@ -2911,18 +2952,83 @@ public class LayoutEditorHttpServer
     private static void ServeAudioExports(HttpListenerResponse response)
     {
         var manifestPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../audio-exports/audio-exports.json"));
-        if (!File.Exists(manifestPath))
+
+        AudioExportManifestDto manifest = null;
+        if (File.Exists(manifestPath))
         {
-            WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = "audio-exports.json 不存在，请先在 Unity Editor 中导出音频。" }));
-            return;
+            try { manifest = JsonUtility.FromJson<AudioExportManifestDto>(File.ReadAllText(manifestPath)); }
+            catch { manifest = null; }
         }
-        var bytes = File.ReadAllBytes(manifestPath);
+        if (manifest == null)
+            manifest = new AudioExportManifestDto();
+        if (manifest.bgm == null) manifest.bgm = new AudioExportBgmDto[0];
+        if (manifest.sfx == null) manifest.sfx = new AudioExportSfxDirDto[0];
+        if (manifest.ambiences == null) manifest.ambiences = new AudioExportAmbienceDto[0];
+
+        // commonW5 本地曲目（OC1/AYCE）：源 .ogg 直出，不依赖 Unity「导出音频」菜单。
+        // filename 使用 "project:Assets/commonW5/audio/..." 前缀，由 /api/audio/stream 解析。
+        var bgm = new List<AudioExportBgmDto>(manifest.bgm);
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        for (int i = 0; i < bgm.Count; i++)
+        {
+            var b = bgm[i];
+            if (b != null && !string.IsNullOrEmpty(b.guid))
+                seen.Add(b.guid);
+        }
+        var w5SoGuids = AssetDatabase.FindAssets("t:PseudoPrefabSO",
+            new[] { "Assets/commonW5/pseudo_prefab_so/audio/music" });
+        for (int i = 0; i < w5SoGuids.Length; i++)
+        {
+            var soGuid = w5SoGuids[i];
+            if (!seen.Add(soGuid))
+                continue;
+            var soPath = AssetDatabase.GUIDToAssetPath(soGuid);
+            var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(soPath);
+            var id = Path.GetFileNameWithoutExtension(soPath);
+            string clipPath = null;
+            if (so != null && so.asset != null)
+                clipPath = AssetDatabase.GetAssetPath(so.asset);
+            if (string.IsNullOrEmpty(clipPath))
+                clipPath = FindCommonW5MusicClip(id);
+            if (string.IsNullOrEmpty(clipPath) || !clipPath.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase))
+                continue;
+            string nameZh;
+            string nameEn;
+            LayoutEditorManualLookup.TryGet(id, out nameZh, out nameEn);
+            if (string.IsNullOrEmpty(nameZh))
+                nameZh = so != null ? so.prefabName : id;
+            bgm.Add(new AudioExportBgmDto
+            {
+                guid = soGuid,
+                id = id,
+                nameZh = nameZh,
+                filename = "project:" + clipPath
+            });
+        }
+        manifest.bgm = bgm.ToArray();
+
+        var bytes = Encoding.UTF8.GetBytes(JsonUtility.ToJson(manifest, true));
         _responseSent = true;
         response.ContentType = "application/json; charset=utf-8";
         response.StatusCode = 200;
         response.ContentLength64 = bytes.Length;
         response.OutputStream.Write(bytes, 0, bytes.Length);
         response.OutputStream.Close();
+    }
+
+    /// <summary>按 id 在 Assets/commonW5/audio 中查找同名 .ogg（so.asset 尚未补全时兜底）。</summary>
+    private static string FindCommonW5MusicClip(string id)
+    {
+        if (string.IsNullOrEmpty(id))
+            return null;
+        var guids = AssetDatabase.FindAssets(id + " t:AudioClip", new[] { "Assets/commonW5/audio" });
+        for (int i = 0; i < guids.Length; i++)
+        {
+            var p = AssetDatabase.GUIDToAssetPath(guids[i]);
+            if (string.Equals(Path.GetFileNameWithoutExtension(p), id, StringComparison.Ordinal))
+                return p;
+        }
+        return null;
     }
 
     /// <summary>桌台皮肤 3D 资产只读路由：/api/counter-skins/3d/&lt;name&gt;。
@@ -2984,6 +3090,27 @@ public class LayoutEditorHttpServer
         if (string.IsNullOrEmpty(rel))
         {
             WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = "缺少参数 path。" }));
+            return;
+        }
+
+        // commonW5 本地曲目："project:Assets/commonW5/audio/..."（源文件直出）。
+        if (rel.StartsWith("project:", StringComparison.Ordinal))
+        {
+            var projectRel = rel.Substring("project:".Length).Replace("\\", "/");
+            var w5AudioRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "../Assets/commonW5/audio"));
+            if (!projectRel.StartsWith("Assets/commonW5/audio/", StringComparison.Ordinal))
+            {
+                WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = "音频文件不存在。" }));
+                return;
+            }
+            var projAbs = Path.GetFullPath(Path.Combine(Path.Combine(Application.dataPath, ".."), projectRel));
+            if (!projAbs.StartsWith(w5AudioRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) ||
+                !File.Exists(projAbs))
+            {
+                WriteJson(response, 404, LayoutEditorJson.ToJson(new ApiErrorDto { error = "音频文件不存在。" }));
+                return;
+            }
+            ServeAudioFile(request, response, projAbs);
             return;
         }
 

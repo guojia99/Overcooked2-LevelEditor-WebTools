@@ -1,8 +1,74 @@
 {
   "schemaVersion": 10,
   "index": 17,
-  "itemCount": 95,
+  "itemCount": 102,
   "items": [
+    {
+      "id": "Pizza_Plain_SO",
+      "guid": "456a4e9d83750a966c9ae16cc1c650e3",
+      "assetPath": "Assets/commonW1/prefabs/core/decor/recipes/Pizza_Plain_SO.prefab",
+      "category": "decor/recipes",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "height": 0.137,
+      "baseY": -0.007,
+      "layoutTier": "decor",
+      "recipeDecor": true,
+      "recipeGuid": "fbd107281a4092b4f9f24f7bce2f75de",
+      "nameZh": "原味披萨",
+      "nameEn": "Plain Pizza",
+      "typeKind": "food_model",
+      "usage": "dressing",
+      "icon": true
+    },
+    {
+      "id": "Salad_Cucumber_SO",
+      "guid": "4f32c12074971a739d1065fc370cf09f",
+      "assetPath": "Assets/commonW1/prefabs/core/decor/recipes/Salad_Cucumber_SO.prefab",
+      "category": "decor/recipes",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "height": 0.304,
+      "baseY": -0.013,
+      "layoutTier": "decor",
+      "recipeDecor": true,
+      "recipeGuid": "46b74660183ee3924a2ebdc4848db469",
+      "nameZh": "黄瓜沙拉",
+      "nameEn": "Cucumber Salad",
+      "typeKind": "food_model",
+      "usage": "dressing",
+      "icon": true
+    },
+    {
+      "id": "salad_cucumber_tomato_onion",
+      "guid": "ab523e0d694dac4254ce7a920767092d",
+      "assetPath": "Assets/commonW1/prefabs/dlc11/decor/recipes/salad_cucumber_tomato_onion.prefab",
+      "category": "decor/recipes",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "height": 0.304,
+      "baseY": -0.013,
+      "layoutTier": "decor",
+      "recipeDecor": true,
+      "recipeGuid": "85f4adf3369b527b9b6b6a694905b74e",
+      "nameZh": "黄瓜番茄洋葱沙拉",
+      "nameEn": "Cucumber Tomato & Onion Salad",
+      "typeKind": "food_model",
+      "usage": "dressing",
+      "icon": true
+    },
     {
       "id": "Salad_Plain_SO",
       "guid": "f7ea79f31eae8b855506355f304059f0",
@@ -1751,6 +1817,86 @@
       },
       "nameZh": "盘子",
       "nameEn": "Plate",
+      "icon": false
+    },
+    {
+      "id": "web_teacup",
+      "guid": "d1909c74491f43393585dbc25f18c2a6",
+      "assetPath": "Assets/commonW5/prefabs/teacups/web_teacup.prefab",
+      "category": "utensils/plates",
+      "theme": null,
+      "defaultParent": "Design/Utensils",
+      "footprint": {
+        "cellsX": 0.9,
+        "cellsZ": 0.9
+      },
+      "layoutTier": "core",
+      "stack": {
+        "y": 0.5,
+        "hostRule": "counter_standard"
+      },
+      "nameZh": "茶杯",
+      "nameEn": "Teacup",
+      "icon": false
+    },
+    {
+      "id": "web_teacup_dirty",
+      "guid": "d7469c26df1fa0e152d1806a8ccd3e19",
+      "assetPath": "Assets/commonW5/prefabs/teacups/web_teacup_dirty.prefab",
+      "category": "utensils/plates",
+      "theme": null,
+      "defaultParent": "Design/Utensils",
+      "footprint": {
+        "cellsX": 0.9,
+        "cellsZ": 0.9
+      },
+      "layoutTier": "core",
+      "stack": {
+        "y": 0.5,
+        "hostRule": "counter_standard"
+      },
+      "nameZh": "脏茶杯",
+      "nameEn": "Dirty Teacup",
+      "icon": false
+    },
+    {
+      "id": "web_teacup_stack_clean",
+      "guid": "f3421c20e5e1eb1c4e90d5483bb631ba",
+      "assetPath": "Assets/commonW5/prefabs/teacups/web_teacup_stack_clean.prefab",
+      "category": "utensils/plates",
+      "theme": null,
+      "defaultParent": "Design/Utensils",
+      "footprint": {
+        "cellsX": 0.9,
+        "cellsZ": 0.9
+      },
+      "layoutTier": "core",
+      "stack": {
+        "y": 0.5,
+        "hostRule": "counter_standard"
+      },
+      "nameZh": "茶杯堆",
+      "nameEn": "Teacup Stack",
+      "icon": false
+    },
+    {
+      "id": "web_teacup_stack_dirty",
+      "guid": "44ca9b54383b3e7538d7c28a3c486b74",
+      "assetPath": "Assets/commonW5/prefabs/teacups/web_teacup_stack_dirty.prefab",
+      "category": "utensils/plates",
+      "theme": null,
+      "defaultParent": "Design/Utensils",
+      "footprint": {
+        "cellsX": 0.9,
+        "cellsZ": 0.9
+      },
+      "layoutTier": "core",
+      "stack": {
+        "y": 0.5,
+        "hostRule": "counter_standard"
+      },
+      "nameZh": "脏茶杯堆",
+      "nameEn": "Dirty Teacup Stack",
       "icon": false
     },
     {

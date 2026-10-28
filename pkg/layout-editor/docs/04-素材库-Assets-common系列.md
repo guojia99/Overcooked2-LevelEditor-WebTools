@@ -1,4 +1,4 @@
-# 04 · 素材库 Assets/common 系列
+﻿# 04 · 素材库 Assets/common 系列
 
 > 目录：`Assets/common`、`common01`、`common02`、`common03`、`commonW1`、`commonW2`
 > 一句话定位：编辑器的**游戏底层素材依赖层**——本地只放轻量"索引 SO + 空壳 wrapper prefab"，真实美术资源运行时从 7.6GB 原版游戏 bundle 加载；编辑器自制内容经 `Assets/AssetBundles/` 打包分发。
@@ -127,6 +127,7 @@ AssetBundle assetBundle = AssetBundle.LoadFromFile(path);
 | **commonW3** | Web 扩展菜谱共享库（沙拉 / 果汁 / 炒饭 / 汤粥 / 冰淇淋 / 布丁 / 冰沙） | `commonW3` | 67 道（39 已有 + batch1 28） |
 | **common04** | 上游自定义内容模板与 supplies（食材/工作台/锅具/托盘，含 UI/PFX/PlatingStepData） | `common04` | 上游 2026-10 新增；随依赖包分发 |
 | **commonW4** | Web 储物背包等机制增量 | `commonW4` | 本仓库增量层 |
+| **commonW5** | Web 增量库：OC1/AYCE 主题 BGM · 桌台皮肤（丛林/生日）· 食材（辣椒/茶叶/葱）· 卷饼菜谱（Web_Burrito_*） | `commonW5` | 本仓库增量层 |
 
 > 分工速记：**common01/02 = 原版一代代理**（category-first）；**common03 = 上游正式版镜像**；**commonW1 = 上游没有/已删的编辑器增量**（dlc-first）；**commonW2/W3 = 纯数据包**。"镜像 vs 增量"的分离让同步上游变成机械操作（`b499bd15e` + `a66d607b5` 两个提交完成一次全量对齐）。
 
@@ -147,6 +148,40 @@ AssetBundle assetBundle = AssetBundle.LoadFromFile(path);
 - batch1 模型纪律：**默认每道独立 FBX**；仅 manifest 审计确认同网格换贴图才可 `modelShareGroup` 共用（炒饭 2 组、鱼碗 1 组、冰沙杯 1 组）。
 - 生成：`node layout-editor/scripts/gen-commonw3-migration-batch1.mjs [--apply]`；清单见 `backup_rebuild/.../自定义菜谱/_audit_docs/00-迁移清单-commonW3-batch1.md`。
 - 烘焙：commonW3 模型已全部烘焙完成（原 `Bake commonW3 …` 菜单已下线）；如需重新烘焙走 web 菜谱管理流程 → Build AssetBundles（`commonW3`）。
+
+### 2.2 commonW5 —— Web 增量库（BGM / 桌台皮肤 / 食材 / 卷饼）
+
+| 目录 | 内容 | 说明 |
+|---|---|---|
+| `audio/music/{oc1,ayce}/` | 30 首 OC1/AYCE 主题 BGM（`.ogg`） | 源曲 150MB → oggenc Vorbis q6/44.1kHz 瘦身至约 104MB（Bagel Level 的 `_0.._3` 与主版本逐字节相同，已去重）；Unity 导入 Vorbis quality 75 + Streaming |
+| `pseudo_prefab_so/audio/music/` | `<id>.asset` | `PseudoPrefabSO.asset` 直引本地 AudioClip；`ScanMusic` 扫描此目录 → 关卡 BGM 下拉「OC1 主题 / AYCE 主题」两组 |
+| `counters/{jungle,anniversary}/` | obj + png + `mat_*.mat` + 全功能桌台 prefab | 克隆 `common04/custom_counter/custom_counter.prefab`（保留 SetupCustomCounterStub/AttachStation/Worktop/Block），Mesh 子物体替换为参考网格 |
+| `pseudo_prefab_so/counters/Counter{Jungle,Anniversary}SO.asset` | 皮肤 SO | `asset` 直引本地 prefab；`scanCounterAppearances` + `LayoutEditorCounterSkinIconExport` 已纳入 commonW5 |
+| `ingredients/{spice,tea,springonion}/` | raw/chopped obj + 贴图 + 图标 + 材质 + prefab + Node | prefab 由参考工程完整组件栈重建 guid（`m_nextPrefab`→本库 unworkable、`m_ingredientOrderNode`→本库 Node）；Node uID 固定 100000001–100000003 |
+| `pseudo_prefab_so/food/{SpiceSO,TeaSO,SpringOnionSO}.asset` | 食材 SO | `asset` 直引 workable prefab；`ScanIngredients`/`PseudoPrefabSearchFolders`/`build-catalog` 已纳入 |
+| `custom_recipes/burrito/` | 6 个 `Web_Burrito_*`（2 成品 + 4 中间产物）+ 模型包装 + 图标 + `names.json` + `CustomRecipeConfig.asset` | uidPrefix **58323**（uid 58323001–58323006，以 web uid 体系为准）；成品模型用官方 `plated_burrito_{meat,mushroom}_01` |
+| `kettle/` + `prefabs/{kettle,teacups,counters}/` + `teacup/` | 热水器视觉件（网格 obj/控制器+3 动画/材质/贴图/音频）+ `web_kettle_hotwater.prefab`（CustomStub.Kettle 轨道，原生 PlacementItemSpawner+TriggerTimer+IngredientProperties）+ `web_teacup`（茶杯）/ `web_teacup_stack_clean`（茶杯堆）（common04 模板克隆） | DLC100 原版素材 1:1（保 guid）；Mesh sv10→obj、YAML 头 2019→2017、Shader Forge 占位→自建 Custom/Web*；液体内容物 `custom_recipes/milk_tea/models/` ×5 |
+| `custom_recipes/milk_tea/` + `ingredients/hotwater/` | 奶茶四件套（纯茶40/奶茶60/蜂蜜茶80/蜂蜜奶茶100）+ 热水中间产物 + `Node_HotWater`（uID **100000004**，纯节点食材，仅热水器接出）| uID 续 58323 段（58323007–58323011）；`HotWaterSO` 直引 Node；plating=common03 Mug；组成=HotWater+茶(本库)+牛奶(DLC03)+蜂巢(common01) |
+
+**生成脚本**：`node layout-editor/scripts/gen-commonw5.mjs [--apply] [--skip-audio]`（确定性 guid：`md5("commonw5-<kind>:<id|rel>")`；不沿用参考工程 .meta）。
+**热水器/奶茶生成脚本**：`python3 layout-editor/scripts/gen-commonw5-kettle.py [--apply]`；已生成资产用 **`--repair`** 幂等修补（YAML `%TAG` 末尾冒号、OBJ `m_Mesh` 的 `type: 3`、OBJ/ prefab/mat/asset importer meta、**AnimationClip 2019 keyframe sv3/weighted → 2017 sv2、AnimatorController 子状态补 serializedVersion: 1、OBJ 面补 vn 引用**），**不重写 prefab 的粒子兼容段**。
+**完整 prefab 的 CleanPlateStack**：`web_teacup_stack_clean` 是 common04 完整 prefab（SetupCustomUtensilStub + CleanPlateStack + Stack，无 PseudoPrefabStub）；写回改挂 `CustomStub.CleanPlateStackSeeder`，用 prefab 的 `m_platePrefab` 做编辑预览、服务端同步后逐个补盘，**不要**再挂 `PseudoPrefabCleanPlateStack`（其基类 `ResetChild` 会 LoadAsset(null) → NRE）。
+**热水器进度条/动画步进**：宿主 OC2 TriggerTimer 无 `m_CookingUIPrefab`（AYCE 新增），注入无效 → Kettle 自建 CookingUI（bundle47，反射 CookingUIController）：烧水 Progressing+SetProgress 步进、煮好 Completed（打勾+ImCooked 音效）、冷却 Idle；加热动画定长 5s，OnPress 设 animator.speed=5/heatSeconds 慢放步进。**开关只读**：Kettle 只读 `TriggerDisableScript.m_script(Interactable).enabled` 做按压沿检测，绝不再向开关补发 `Reset`/`Disable` trigger——`ClientSwitchCosmeticDecisions.Update` 一看到 `Interactable.enabled` 变化就换 `m_buttonBit` 材质并放 SwitchOn/SwitchOff 音效，任何 0.25s 节流的补发都会让按钮在开/关之间闪。
+**脏茶杯合并**：单杯可拿（CarryableItem 全家桶）；单杯→脏杯堆走 Harmony 前缀（ServerDirtyPlateStack 接受单杯）；单杯+单杯由 DirtyTeacupMergeWatcher（服务端 0.5s 轮询贴近落定杯 → ServerSpawnPrefab 堆 + DestroyObject）合并。
+**杯堆编辑器 Play 兜底**：seeder 等 IsSynchronisationActive 在编辑器 Play 恒 false → 预览先顶上，服务端补杯成功后才销毁预览；真机保持 Server AddToStack。**关卡摆放判据**用“本场景第一个 seeder 的 Awake 时刻”做锚点（`s_anchorTime/s_anchorScene`），不能再用 `Time.timeSinceLevelLoad <= seedWindowSeconds`——关卡是 LoadingScreenFlow 单场景 + additive 加塞加载，关卡本体 Awake 时 timeSinceLevelLoad 已 1~4s，会把摆放的杯堆当运行时生成而跳过补杯，空堆随即被 `ServerAutoDestructEmptyPlateStack` 整堆删除。补杯前必须压住 `AutoDestructEmptyPlateStack.enabled`，补到第一只杯子才放行。
+**热水联动组（三壶一开关）**：默认烧水 5s（Kettle.m_heatSeconds / TriggerTimer.m_time / StubIO 默认 / web 面板四处镜像，0/负值运行时兜底 5s）；testhotwt 三壶为 5/10/12s 对照组；combo `kettle_group`（web combos.ts）一次摆三壶一开关，switchLinks 每壶一条；**组门禁已移除**（v3.12.0 后）：不再用 `RefreshGroupGate` 把开关置灰——原版开关自己维护“按下→灰→回弹”，Kettle 只做按压沿检测（`m_switchLastEnabled && !enabled` → OnPress），烧水期间再按无效由 `OnPress` 的 `state != Inactive` 早退保证，外观不做干预。壶的冷却只由各自接水完成驱动（服务端 `OnServerFilled`，客户端 `OnClientFillMessage`），不再用“开关回弹沿”推断（否则 Active 时误按会白丢一壶水）。
+**Mug 装盘步统一（重要）**：奶茶链路全部引用 **common04 本地 Mug 实体**（eb494a42）：web_teacup 的 Plate/AttachedOrderCosmeticDecisions + 菜谱 platingStepSO（经 commonW5 `pseudo_prefab_so/utensils/MugPlatingLocalSO`，guid ecaf3c7d）+ Node_HotWater。禁止改回 common03 bundle Mug SO（cd51517c）——bundle 实例与本地实体引用不等，GetOrderPlatingPrefab 匹配失败、杯中显示走兜底。Node_HotWater 必须带 m_platingStep(本地 Mug) + m_platingPrefab(Web_TeaContents_Water)，且 HotWaterSO 须入 allIngredients（AutoFillIngredients 已放行 asset 直引的纯节点食材）——否则接水无匹配。
+**奶茶自动填充**：选中 `Web_MilkTea_*` 菜谱时，`recipesDialogs` 自动补：热水器 + 开关（`kettle_switch` 组合/联动）、洗茶杯水槽（`web_sink_teacup`，2×1）、茶杯回收台（`web_teacup_return`，1×1）、茶杯堆（`web_teacup_stack_clean`）、茶杯（`web_teacup`）；`HotWaterSO` 由热水器产出，不建普通食材箱。热可可等非奶茶马克杯菜谱仍用原版 `workstation_sink_mug_01_wood` / `workstation_mug_return`。
+**茶杯洗涤链路（gen-commonw5-teacup.py）**：`web_teacup_dirty`（脏茶杯：茶杯网格 + DLC02 污渍层叠加）→ `web_teacup_stack_dirty`（脏茶杯堆：DirtyPlateStack plateType=本地 Mug、washedPrefab=web_teacup_stack_clean、heightOffset 0.32）→ `web_sink_teacup`（洗茶杯水槽：m_sk_sink_DLC100 拆 wood/top 双网格双材质 + 3 展示脏杯 + WebLiquid 水面 + SetupCustomSinkStub.cleanPlateStackSO→TeacupStackCleanSO）→ `web_teacup_return`（茶杯回收台：PseudoPrefab 包装原版 PlateReturnStation，运行时由 `PseudoPrefabPlateReturn` 把 m_stackPrefab 接到脏茶杯堆）。确定性 guid 命名空间 `commonw5-teacup:<kind>:<id>`；新网格/材质/prefab 全部本地，不走 bundle。脏/净茶杯堆数量在 web 可编辑（stubKind=CleanPlateStack → `CustomStub.CleanPlateStackSeeder`：编辑态按 `PlateStackBase.m_platePrefab` 出预览，真机经 `ServerPlateStackBase.AddToStack` 补盘，支持 ServerCleanPlateStack / ServerDirtyPlateStack）；水槽展示脏杯由 `TeacupSinkRebuilder` 把原版 3 个脏盘槽位换成茶杯视觉克隆（只留网格渲染），三个杯子按 `m_slotPitch`（默认 0.34m）沿槽位主方向重排成一行、`m_cupScale`（默认 0.8，叠在原槽位缩放 0.70 上）缩放、`m_cupLift` 抬高出水、`m_rowShift`（默认 x+0.18，水槽根局部 x/z）把整行贴到盆内一侧边缘（第 1 只杯子钉在靠边一头，其余朝中间延伸）；四个字段可在 Inspector 实时调，改完 `OnValidate` 会重排。显隐由 `CustomStub.SinkDirtyPlateVisibility` 按**服务端权威计数** setActive 前 min(待洗,槽位) 个（1 个显示 1、2 个显示 2、≥3 个显示 3），并在 `ServerWashingStation.AddPlates` 后缀 / `ClientWashingStation.ApplyServerEvent` 后置补丁里即时校正，30 帧轮询兜底；不再依赖原版 ClientWashingStation 那份会滞后的客户端计数。
+**脏茶杯禁止挂水槽台面**：`ServerAttachStation/ClientAttachStation` 前缀拦截茶杯水槽（洗涤台面/烘干位）上的本族脏茶杯（单杯或整堆），不再允许先挂到水槽上方；`ServerWashingStation` 前缀直接 `AddPlates(size)` 并销毁携带物，整堆一次全部进洗涤计数（单杯/堆字段异常时也有兜底识别）。**玩家放置动作直达**：`PlayerControlsHelper.PlaceHeldItem_Server` 前缀在玩家按放置时直接识别茶杯水槽，不依赖最终选中的放置处理器——手里脏茶杯（单杯/整堆）直接 `AddPlates(全部数量)` + `DestroyCarriedItem`，客户端经 `WashingStationMessage` 刷新水槽脏杯画面。
+**茶杯回收台默认值与迁移**：`web_teacup_return` 默认 `returnClean=false`（返回脏茶杯；干净杯由水槽烘干位供应），仍可在回收台右键勾选“直接返回干净茶杯”。旧关卡曾默认 `returnClean=true`，写回/导出 prepare 时由 `LayoutEditorLayoutMigrations` 一次性迁移为 false（标记 `data/<level>/layout_migrations~/layout_migrations.json`；新关卡在 CreateLevel 时写基线，用户之后手动勾选 true 不会被再次迁移）。派生 stub 必须同时存在派生运行时 `LevelEditor.PseudoPrefabPlateReturn`（缺失时会跑基类空 Setup → 回收台仍用原版盘子堆，上菜后不回流）；`PromoteDerivedStub`/`PromoteAllDerivedStubsInScene` 负责继承 `pseudoPrefabSO` 并补运行时，写回重载/场景打开/导出 prepare 均会自愈。
+**AYCE 本地化纪律**：热水器/奶茶/热水的模型、材质、shader、贴图、动画、音频、Node/SO 全部在 `Assets/commonW5` 本地，不走 AYCE bundle；仅核心 `CookingUI`（bundle47）与 common03 Mug（奶茶装盘）沿用原版 bundle。禁止为 AYCE 资产新增 `PseudoPrefabSO.bundleName`。
+**Unity 侧补全**：`LayoutEditorCommonW5Setup`（`[InitializeOnLoad]` + AssetPostprocessor，幂等）补 `PseudoPrefabSO.asset` 直引、Node 图标/crateLid，并校验 uID 冲突；菜单「Layout Editor/commonW5 校验并补全直引」可手动重跑。
+**诊断/修复菜单**：`Layout Editor/诊断/commonW5 热水器与开关审计`（输出 `logs/commonw5_kettle_switch_audit.txt`，含 OBJ 子资产 fileID、MeshFilter 空引用、Switch 材质 shader/isSupported、bundle38/88 加载状态）；`Layout Editor/诊断/重建伪 prefab child（修复洋红开关）`；`Layout Editor/诊断/修复 commonW5 茶杯堆（CleanPlateStack NRE）`；`Layout Editor/诊断/应用热水器粒子 2017 兼容修复`（一次性，不再随域重载自动改写 prefab）。
+**热水器粒子原版参数**：早期 2017 兼容模板曾把 PFX_Steam/PFX_Drip 重置为 Unity 默认值（寿命 5s/速度 5/大小 1，蒸汽窜 20+ 米）；现由菜单 `Layout Editor/诊断/热水器粒子原版参数还原`（DiagKettlePfxRestore，API 设值 + ReplacePrefab 固化，幂等）按 AYCE s_birthday_1_3 实测值还原：Steam 寿命 1~2s/速度 5~10/大小 1~1.5/锥形 15° 半径 0.25/发射 10/尺寸增长曲线/三段透明渐变/阻尼 0.25+阻力 1；Drip 寿命 1s/大小 0.08/发射 0.25~1.5/受力下坠曲线/四段渐变。完成提醒 = KettleHot 姿态帧（PFX 三件切换 + `material._EmissiveStrength`=5 橙色发光），控制器三态与 Kettle.cs 触发（StartHeating/Active/Cooldown）链路完好。注意：**禁止**用文本把 2019 原版 198 文档写回 prefab（2017 无法反序列化，组件会被移除）；prefab 内部 fileID 已锚定旧编号（场景 override/开关联动依赖）。
+**VM 重导入**：先关闭 VM 内 Unity → 在宿主执行 `--repair` → 重启 Unity；剩余 3 条 `Unexpected node type.` 来自 Kettle 控制器 3 个 child state 缺 `serializedVersion: 1`，`--repair` 已补；重导入 controller 后消失。打开场景后先执行 `Layout Editor/诊断/强制 Reimport commonW5 热水器资产`（或右键 commonW5 目录 Reimport）。若仍出现模型导入断言 `GetObject failed ... _0Mat/Avatar`，说明旧 Library 子资产还在：关闭 Unity，删除 5 个 OBJ GUID 对应的 `Library/metadata/<guid>` 与 `.info` 后重开（OBJ meta 已改为完整 `fileIDToRecycleName` + `importMaterials: 0` + `importAnimation: 0`，与 `m_space_rail_01.obj` 同款，不会再生成材质/Avatar 子资产）。若 Switch 仍洋红，跑 `commonW5 热水器与开关审计` 确认 shader 是否为 `<null>`/`isSupported=false`，再决定是否本地化 Switch 材质。
+**导出**：Loader 动态发现 `commonW*`；`LayoutEditorSetExporter` 清理/校验/携带 commonW3+（含 commonW5）；场景或 LevelInfo 引用 commonW5 资产时自动标记 `web` 特征并注入 `LevelInfoSO.dependencies`。
+**试听**：`/api/audio/exports` 会把 commonW5 音乐合成为 `project:Assets/commonW5/audio/...` 条目，`/api/audio/stream` 直出源 `.ogg`（Range 支持）——**无需先执行 Unity「导出音频」**；原版曲库仍依赖该导出。
 
 ---
 

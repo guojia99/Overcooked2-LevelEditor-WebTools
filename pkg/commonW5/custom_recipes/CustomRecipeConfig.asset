@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5edb07060a0c6c140aa72ffb8fd3f021, type: 3}
+  m_Name: CustomRecipeConfig
+  m_EditorClassIdentifier: 
+  uidPrefix: 58323
+  nextSequence: 12
+  categories:
+  - id: burrito
+    zh: "\u5377\u997C"
+    en: Burrito
+  - id: milk_tea
+    zh: "\u5976\u8336"
+    en: Milk Tea
+  subcategories: []
+  modelTransforms: []

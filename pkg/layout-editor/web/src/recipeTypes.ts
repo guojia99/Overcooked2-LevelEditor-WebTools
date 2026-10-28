@@ -4,6 +4,7 @@ export const RECIPE_TYPE_ZH: Record<string, string> = {
   burger: "汉堡",
   mealdeal: "套餐",
   burrito: "卷饼",
+  milktea: "奶茶",
   pizza: "披萨",
   pasta: "意面",
   fried_rice: "炒饭",
@@ -40,6 +41,7 @@ export const RECIPE_TYPE_ORDER = [
   "burger",
   "mealdeal",
   "burrito",
+  "milktea",
   "pizza",
   "pasta",
   "fried_rice",
@@ -80,7 +82,11 @@ export const CUSTOM_CATEGORY_ZH: Record<string, string> = {
   ice_cream: "冰淇淋",
   pudding: "布丁",
   milk_slush: "牛奶冰沙",
+  burrito: "卷饼",
+  milk_tea: "奶茶",
 };
+
+export const CUSTOM_CATEGORY_ORDER = Object.keys(CUSTOM_CATEGORY_ZH);
 
 export function customCategoryLabel(categoryId: string | undefined): string {
   const id = categoryId ?? "";

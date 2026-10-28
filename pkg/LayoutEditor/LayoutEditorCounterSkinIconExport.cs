@@ -110,6 +110,9 @@ public static class LayoutEditorCounterSkinIconExport
                 if (Directory.Exists(counters)) roots.Add("commonW1/pseudo_prefab_so/" + Path.GetFileName(dir) + "/counters");
             }
         }
+        // commonW5 桌台皮肤（丛林 / 生日）：固定 counters 目录。
+        if (Directory.Exists(Path.Combine(dataPath, "commonW5/pseudo_prefab_so/counters").Replace("\\", "/")))
+            roots.Add("commonW5/pseudo_prefab_so/counters");
         foreach (string rel in roots)
         {
             string abs = Path.Combine(dataPath, rel).Replace("\\", "/");
@@ -190,10 +193,15 @@ public static class LayoutEditorCounterSkinIconExport
 
         try
         {
-            AssetBundle bundle = EnsureBundleLoaded(so.bundleName, bundles, own, manifest);
-            if (bundle == null) { row["error"] = "bundle 加载失败(含依赖): " + so.bundleName; return row; }
+            // commonW5 等本地直引皮肤（bundleName 为空）：直接用 SO.asset。
+            GameObject prefab = so.asset as GameObject;
+            if (prefab == null)
+            {
+                AssetBundle bundle = EnsureBundleLoaded(so.bundleName, bundles, own, manifest);
+                if (bundle == null) { row["error"] = "bundle 加载失败(含依赖): " + so.bundleName; return row; }
 
-            var prefab = bundle.LoadAsset<GameObject>(so.assetPath);
+                prefab = bundle.LoadAsset<GameObject>(so.assetPath);
+            }
             if (prefab == null) { row["error"] = "prefab 加载失败: " + so.assetPath; return row; }
 
             Material mat;

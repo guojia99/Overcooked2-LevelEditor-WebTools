@@ -34,6 +34,7 @@ public static class SceneLayoutApplier
     public static string Apply(LayoutDocumentDto document, float snapStep, bool syncWalkable, string only)
     {
         LastNewIdRemap = null;
+        LayoutEditorLayoutMigrations.BeginApply();
         if (document == null || document.items == null)
             return "Empty layout document.";
 
@@ -73,6 +74,11 @@ public static class SceneLayoutApplier
         // 分 P：布局期确保 slot 根存在并归零（世界坐标 == 设计坐标）；
         // park/转场烘焙在收尾 PartTransitionBakery.Sync 统一处理。
         PartTransitionBakery.EnsureSlotRoots(document);
+
+        // 一次性迁移：旧关卡茶杯回收台 returnClean=true -> false（详见
+        // LayoutEditorLayoutMigrations；标记在 SaveScene 成功后落盘）。
+        if (only == null || only == "items")
+            LayoutEditorLayoutMigrations.ApplyBeforeWriteBack(document);
 
         var usedSceneObjectIds = new HashSet<int>();
         var createdObjects = new Dictionary<string, GameObject>();
@@ -470,7 +476,10 @@ public static class SceneLayoutApplier
 
         LayoutEditorPseudoReload.EnsurePrepareForBuilding();
         EditorSceneManager.MarkSceneDirty(scene);
-        EditorSceneManager.SaveScene(scene);
+        if (EditorSceneManager.SaveScene(scene))
+            LayoutEditorLayoutMigrations.CommitPending();
+        else
+            LayoutEditorLayoutMigrations.DiscardPending();
         // 写回历史：SaveScene 后、Reload 前（stripped 状态）取写回后语义快照；
         // killplane 随后的同款调用会覆盖为累计状态。
         LayoutEditorWriteBackHistory.SupplySemanticAfter(document.sceneAssetPath);
@@ -3122,6 +3131,8 @@ public static class SceneLayoutApplier
             return null;
         }
 
+        LayoutEditorLog.Log("[创建] " + (item.displayName ?? "?") + " id=" + (item.instanceId ?? "?")
+            + " prefab=" + assetPath);
         var instance = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
         if (instance == null)
         {
@@ -3129,6 +3140,7 @@ public static class SceneLayoutApplier
                 + assetPath + " (displayName: " + (item.displayName ?? "?") + ")");
             return null;
         }
+        LayoutEditorLog.Log("[创建完成] " + (item.displayName ?? "?") + " prefab=" + assetPath);
 
         Undo.RegisterCreatedObjectUndo(instance, "Layout Editor Create");
         instance.transform.SetParent(parent, false);

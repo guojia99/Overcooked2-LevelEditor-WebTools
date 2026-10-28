@@ -54,6 +54,11 @@ const toolDefinitions = [
     inputSchema: { type: "object", properties: { assetPath: { type: "string", minLength: 1 } }, required: ["assetPath"], additionalProperties: false },
   },
   {
+    name: "oc2_list_level_resource_usage",
+    description: "统计关卡集内每关引用的素材来源库（common01/commonW1/custom 等）及去重资源数，含整集汇总。只读。",
+    inputSchema: { type: "object", properties: { setName: { type: "string", minLength: 1 } }, required: ["setName"], additionalProperties: false },
+  },
+  {
     name: "oc2_validate_scene",
     description: "读取场景并执行 MCP 层安全校验，不写入 Unity。",
     inputSchema: { type: "object", properties: { assetPath: { type: "string", minLength: 1 } }, required: ["assetPath"], additionalProperties: false },
@@ -257,6 +262,10 @@ async function handle(name: string, input: JsonObject): Promise<ToolResult> {
   if (name === "oc2_analyze_level_dependencies") {
     const assetPath = stringArg(input, "assetPath");
     return result(name, await bridge.get(`/api/level/bundles?assetPath=${encodeURIComponent(assetPath)}`), "compute", "read", 10000, { sceneAssetPath: assetPath });
+  }
+  if (name === "oc2_list_level_resource_usage") {
+    const setName = stringArg(input, "setName");
+    return result(name, await bridge.get(`/api/sets/${encodeURIComponent(setName)}/resource-stats`), "compute", "read", 8000, { setName });
   }
   if (name === "oc2_validate_scene") {
     const assetPath = stringArg(input, "assetPath");

@@ -23,6 +23,7 @@ public static class LayoutEditorAudioExporter
         public string bundleName;
         public string assetPath; // in-bundle container path
         public string nameZh;
+        public string localClipPath; // commonW5 等本地直引 AudioClip 的工程路径
     }
 
     // bundle 环境（含跨 bundle PPtr 解析）
@@ -108,7 +109,19 @@ public static class LayoutEditorAudioExporter
                 string rel = "bgm/" + SanitizeFilename(a.id);
                 try
                 {
-                    string ext = ExportClipByContainer(a.bundleName, a.assetPath, exportRoot, rel);
+                    string ext;
+                    if (!string.IsNullOrEmpty(a.localClipPath))
+                    {
+                        // commonW5：本地直引 AudioClip —— 直接复制源文件（无需解析 bundle）。
+                        ext = Path.GetExtension(a.localClipPath);
+                        string dst = Path.Combine(exportRoot, rel + ext);
+                        Directory.CreateDirectory(Path.GetDirectoryName(dst));
+                        File.Copy(a.localClipPath, dst, true);
+                    }
+                    else
+                    {
+                        ext = ExportClipByContainer(a.bundleName, a.assetPath, exportRoot, rel);
+                    }
                     bgmList.Add(new AudioExportBgmDto
                         { guid = a.guid, id = a.id, nameZh = a.nameZh, filename = rel + ext });
                     okCount++;
@@ -552,7 +565,9 @@ public static class LayoutEditorAudioExporter
         var roots = new[]
         {
             "Assets/common01/pseudo_prefab_so/" + subFolder,
-            "Assets/common02/pseudo_prefab_so/" + subFolder
+            "Assets/common02/pseudo_prefab_so/" + subFolder,
+            // commonW5：OC1/AYCE 主题 BGM（SO.asset 直引本地 .ogg）。
+            "Assets/commonW5/pseudo_prefab_so/" + subFolder
         };
         var list = new List<AudioAssetInfo>();
         var seen = new HashSet<string>();
@@ -567,8 +582,22 @@ public static class LayoutEditorAudioExporter
                     continue;
                 var soPath = AssetDatabase.GUIDToAssetPath(guid);
                 var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(soPath);
-                if (so == null || string.IsNullOrEmpty(so.bundleName))
+                if (so == null)
                     continue;
+                string localClipPath = null;
+                if (!string.IsNullOrEmpty(so.bundleName))
+                {
+                    // 原版 bundle 曲目
+                }
+                else if (so.asset is AudioClip)
+                {
+                    // commonW5 本地直引曲目
+                    localClipPath = AssetDatabase.GetAssetPath(so.asset);
+                }
+                else
+                {
+                    continue;
+                }
 
                 var id = Path.GetFileNameWithoutExtension(soPath);
                 string nameZh;
@@ -583,7 +612,8 @@ public static class LayoutEditorAudioExporter
                     id = id,
                     bundleName = so.bundleName,
                     assetPath = so.assetPath,
-                    nameZh = nameZh
+                    nameZh = nameZh,
+                    localClipPath = localClipPath
                 });
             }
         }

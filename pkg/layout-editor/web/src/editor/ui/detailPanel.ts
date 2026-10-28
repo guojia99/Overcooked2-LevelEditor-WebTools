@@ -53,9 +53,11 @@ import {
 } from "../teleportalLinks";
 import {
   isGlassReturnItem,
+  isTeacupReturnItem,
   computeReturnLabels,
   servingPlateReturn,
   servingGlassReturn,
+  servingTeacupReturn,
   servingStationsForReturn
 } from "../servingLinks";
 import {
@@ -184,17 +186,18 @@ export function extraStubDetailHtml(item: EditorItem): string {
       const byInst = new Map(S.items.map((i) => [i.instanceId, i]));
       const nameOf = (id: string | undefined) =>
         id ? (byInst.get(id) ? `${labels.get(id) ?? "?"}（${itemLabel(byInst.get(id)!)}）` : "（回收台不在场景）") : "未绑定";
-      return `<dt>上菜口</dt><dd>脏盘台：${nameOf(servingPlateReturn(item))} · 脏杯台：${nameOf(servingGlassReturn(item))}（右键直接修改）</dd>`;
+      return `<dt>上菜口</dt><dd>脏盘台：${nameOf(servingPlateReturn(item))} · 脏杯台：${nameOf(servingGlassReturn(item))} · 茶杯台：${nameOf(servingTeacupReturn(item))}（右键直接修改）</dd>`;
     }
     case "PlateReturn":
     case "GlassReturn": {
       const isGlass = isGlassReturnItem(item);
-      const typeZh = isGlass ? "脏杯台" : "脏盘台";
+      const isTeacup = isTeacupReturnItem(item);
+      const typeZh = isTeacup ? "茶杯回收台" : isGlass ? "脏杯台" : "脏盘台";
       const bound = servingStationsForReturn(item.instanceId);
       const txt = bound.length
         ? `被 ${bound.length} 个上菜台共用：${bound.map((s) => `上菜台${S.paramLabels.get(s.instanceId) ?? "?"}`).join("、")}`
         : "未被任何上菜台绑定";
-      const cleanTxt = item.plateReturn?.returnClean ? ` · 直接返回干净${isGlass ? "杯子" : "盘子"}` : "";
+      const cleanTxt = item.plateReturn?.returnClean ? ` · 直接返回干净${isTeacup ? "茶杯" : isGlass ? "杯子" : "盘子"}` : "";
       return `<dt>${typeZh}</dt><dd>${txt}${cleanTxt}（右键直接修改，绑定在上菜台右键菜单里设置）</dd>`;
     }
     case "Switch":

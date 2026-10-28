@@ -36,15 +36,18 @@ import {
 import {
   isGlassReturnItem,
   isMugReturnItem,
+  isTeacupReturnItem,
   isTrayReturnItem,
   plateReturns,
   glassReturns,
   mugReturns,
+  teacupReturns,
   trayReturns,
   computeReturnLabels,
   servingPlateReturn,
   servingGlassReturn,
   servingMugReturn,
+  servingTeacupReturn,
   servingTrayReturn,
   setServingReturnOfType,
   servingStationsForReturn
@@ -108,6 +111,13 @@ export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   RandomDispenser: "Dispenser",
   web_backpack_storage_01: "WebBackpack",
   web_killer_ghost_01: "WebKillerGhost",
+  // 热水器（commonW5，CustomStub.Kettle 轨道）
+  web_kettle_hotwater: "Kettle",
+  // 茶杯堆：容器堆（同 cleanmugstack 家族）
+  web_teacup_stack_clean: "CleanPlateStack",
+  // 脏茶杯堆（commonW5 完整 prefab：真实 m_platePrefab=web_teacup_dirty，
+  // 走 CleanPlateStackSeeder 预览/补盘，数量可编辑）
+  web_teacup_stack_dirty: "CleanPlateStack",
   Backpack: "Dispenser",
   // 正式版 common03：煤炭箱（dlc07 熔炉燃料）
   dispenser_coal_01: "Dispenser",
@@ -178,6 +188,8 @@ export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   // 回收台/上菜台 DLC 变体（wrapper 无专属 stub，靠 stubKind 让后端补挂组件）
   workstation_mug_return: "PlateReturn",
   dlc09_workstation_mug_return_winter: "PlateReturn",
+  // 茶杯回收台（web）：独立族（非马克杯），stubKind 让后端补挂 PlateReturn stub
+  web_teacup_return: "PlateReturn",
   dlc13_workstation_plate_return: "PlateReturn",
   dlc08_workstation_tray_return: "PlateReturn",
   dlc11_workstation_glass_return_01: "GlassReturn",
@@ -346,7 +358,7 @@ export function isCannonTarget(item: EditorItem): boolean {
  *    （Pickup/PlacementItemSwitcher.m_switchTrigger）、大炮（Cannon.m_launchTrigger）；
  *  - stub 轮询通道（vanilla 触发投不进 stub 组件，按压由 CustomStub 组件轮询
  *    TriggerDisableScript 下降沿捕获，触发名无意义）：步带/传送带（按钮控速）、
- *    食材生成器（按钮批次送出）——需依赖包 ≥ 3.10.0。 */
+ *    食材生成器（按钮批次送出）、热水器（Kettle 烧水）——前两者需依赖包 ≥ 3.10.0。 */
 export function isSwitchLinkTarget(item: EditorItem): boolean {
   const id = prefabIdFromPath(item.prefabAssetPath);
   return id === "workstation_guillotine_01"
@@ -358,8 +370,9 @@ export function isSwitchLinkTarget(item: EditorItem): boolean {
     || isButtonPollingStubTarget(item);
 }
 
-/** stub 轮询通道目标：按钮控速（步带/传送带，需已启用 speedControl）或
- *  按钮批次（食材生成器，需已启用 startByButton）——未启用时轮询组件不存在，
+/** stub 轮询通道目标：按钮控速（步带/传送带，需已启用 speedControl）、
+ *  按钮批次（食材生成器，需已启用 startByButton）、热水器（Kettle 恒可联动，
+ *  m_switch 由 switchLinks 反查烘焙）——未启用时轮询组件不存在，
  *  直连无效，不出现在目标下拉。 */
 export function isButtonPollingStubTarget(item: EditorItem): boolean {
   const kind = stubKindOf(item);
@@ -367,6 +380,7 @@ export function isButtonPollingStubTarget(item: EditorItem): boolean {
   if (kind === "Travelator") return scOn(item.travelator?.speedControl);
   if (kind === "Conveyor") return scOn(item.conveyor?.speedControl);
   if (kind === "AttachingFoodSpawner") return item.foodSpawner?.startByButton === true;
+  if (kind === "Kettle") return true;
   return false;
 }
 
@@ -740,6 +754,19 @@ export function stubControlsHtml(item: EditorItem): string {
         <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">普通食材箱必须设置一种食材（写回校验）；需要随机产出请放置「随机食材箱」道具</div>
         </div>`;
     }
+    case "Kettle": {
+      const kt = item.kettle ?? {};
+      const heat = typeof kt.heatSeconds === "number" && kt.heatSeconds > 0 ? kt.heatSeconds : 5;
+      // 已联动判定：导入展示字段（写回产物）或当前文档 switchLinks 实时命中
+      // （新建/未写回时 switchInstanceId 恒空，须查文档否则警告误报）
+      const hasSwitch =
+        !!kt.switchInstanceId ||
+        (!!item.instanceId && S.switchLinks.some((l) => l.targetId === item.instanceId));
+      return `<div class="ctx-stub"><div class="ctx-stub-title">热水器</div>
+        <label class="ctx-stub-row">烧水时间 <input type="number" id="ctx-kettle-heat" class="ctx-input" step="0.5" min="1" max="60" value="${heat}"/> 秒</label>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a907a">玩法：开关按下 → 烧水（进度条+加热动画）→ 水开后用<span style="color:#c85a2a">茶杯接出一杯热水</span> → 自动冷却复位开关${hasSwitch ? "" : "<br/>⚠ 尚未联动开关（在物品「触发源」页或从开关拉线到热水器），无法烧水"}</div>
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a907a">茶谱：热水 + 茶叶 = 纯茶；+ 牛奶 = 奶茶；+ 蜂巢 = 蜂蜜茶；+ 牛奶 + 蜂巢 = 蜂蜜奶茶（奶茶分类）</div></div>`;
+    }
     case "WebKillerGhost": {
       const kg = item.webKillerGhost ?? {};
       const r = typeof kg.hitRadius === "number" ? kg.hitRadius : 0.45;
@@ -877,7 +904,11 @@ export function stubControlsHtml(item: EditorItem): string {
     }
     case "CleanPlateStack": {
       const ps = item.cleanPlateStack ?? {};
-      const title = prefabIdFromPath(item.prefabAssetPath) === "CleanGlassStack" ? "杯堆参数" : "盘子堆参数";
+      const stackPid = prefabIdFromPath(item.prefabAssetPath);
+      const title = stackPid === "web_teacup_stack_dirty" ? "脏茶杯堆参数"
+        : stackPid.indexOf("teacup") >= 0 ? "茶杯堆参数"
+        : (stackPid === "CleanGlassStack" ||
+        stackPid.indexOf("mug") >= 0) ? "杯堆参数" : "盘子堆参数";
       return `<div class="ctx-stub"><div class="ctx-stub-title">${title}</div>
         <label class="ctx-stub-row">数量 <input type="number" id="ctx-ps-count" class="ctx-input" min="0" step="1" value="${ps.plateCount ?? 5}"/></label></div>`;
     }
@@ -1037,6 +1068,7 @@ export function stubControlsHtml(item: EditorItem): string {
       const glassId = servingGlassReturn(item);
       const mugId = servingMugReturn(item);
       const trayId = servingTrayReturn(item);
+      const teacupId = servingTeacupReturn(item);
       const plateOpts = ['<option value="">— 未绑定 —</option>']
         .concat(
           plateReturns().map(
@@ -1069,12 +1101,21 @@ export function stubControlsHtml(item: EditorItem): string {
           )
         )
         .join("");
+      const teacupOpts = ['<option value="">— 未绑定 —</option>']
+        .concat(
+          teacupReturns().map(
+            (r) =>
+              `<option value="${r.instanceId}" ${teacupId === r.instanceId ? "selected" : ""}>${labels.get(r.instanceId) ?? "?"}（${escHtml(itemLabel(r))}）</option>`
+          )
+        )
+        .join("");
       return `<div class="ctx-stub"><div class="ctx-stub-title">上菜台${myNum} · 绑定回收台（各至多一个）</div>
         <label class="ctx-stub-row">脏盘台 <select id="ctx-ss-plate" class="ctx-input">${plateOpts}</select></label>
         <label class="ctx-stub-row">脏杯台 <select id="ctx-ss-glass" class="ctx-input">${glassOpts}</select></label>
         <label class="ctx-stub-row">脏马克杯台 <select id="ctx-ss-mug" class="ctx-input">${mugOpts}</select></label>
+        <label class="ctx-stub-row">茶杯回收台 <select id="ctx-ss-teacup" class="ctx-input">${teacupOpts}</select></label>
         <label class="ctx-stub-row">餐盘回收台 <select id="ctx-ss-tray" class="ctx-input">${trayOpts}</select></label>
-        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">脏盘台与餐盘回收台互斥（同族容器，绑一个会自动替换另一个）；普通菜与套餐混搭请用两套上菜台。脏杯/马克杯回收台可与之并存，一个回收台可被多个上菜台共用</div></div>`;
+        <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">脏盘台与餐盘回收台互斥（同族容器，绑一个会自动替换另一个）；马克杯台与茶杯回收台互斥（共用杯具回流槽）；普通菜与套餐混搭请用两套上菜台。脏杯回收台可与之并存，一个回收台可被多个上菜台共用</div></div>`;
     }
     case "PlateReturn":
     case "GlassReturn": {
@@ -1082,7 +1123,8 @@ export function stubControlsHtml(item: EditorItem): string {
       const isGlass = isGlassReturnItem(item);
       const isMug = isMugReturnItem(item);
       const isTray = isTrayReturnItem(item);
-      const typeZh = isTray ? "餐盘回收台" : isMug ? "脏马克杯台" : isGlass ? "脏杯台" : "脏盘台";
+      const isTeacup = isTeacupReturnItem(item);
+      const typeZh = isTray ? "餐盘回收台" : isTeacup ? "茶杯回收台" : isMug ? "脏马克杯台" : isGlass ? "脏杯台" : "脏盘台";
       const myNum = labels.get(item.instanceId) ?? "?";
       const bound = servingStationsForReturn(item.instanceId);
       const rows = bound
@@ -1091,7 +1133,7 @@ export function stubControlsHtml(item: EditorItem): string {
           return `<div class="ctx-stub-row">· 上菜台${sNum}（${escHtml(itemLabel(s))}）</div>`;
         })
         .join("");
-      const cleanLabel = isTray ? "餐盘" : isMug ? "马克杯" : isGlass ? "杯子" : "盘子";
+      const cleanLabel = isTray ? "餐盘" : isTeacup ? "茶杯" : isMug ? "马克杯" : isGlass ? "杯子" : "盘子";
       return `<div class="ctx-stub"><div class="ctx-stub-title">${typeZh}${myNum} · 被上菜台绑定（可一对多）</div>
         ${rows || '<div class="ctx-stub-row">未被任何上菜台绑定</div>'}
         <label class="ctx-stub-row"><input type="checkbox" id="ctx-pr-clean" ${item.plateReturn?.returnClean ? "checked" : ""}/> 直接返回干净${cleanLabel}（returnClean）</label>
@@ -1419,6 +1461,18 @@ export function wireStubControls(item: EditorItem) {
             );
           }
         );
+      });
+      break;
+    }
+    case "Kettle": {
+      document.getElementById("ctx-kettle-heat")?.addEventListener("change", (e) => {
+        const v = parseFloat((e.target as HTMLInputElement).value);
+        if (!isFinite(v) || v < 1) return;
+        pushHistory();
+        item.stubKind = "Kettle";
+        if (!item.kettle) item.kettle = {};
+        item.kettle.heatSeconds = Math.min(60, v);
+        draw();
       });
       break;
     }
@@ -1876,6 +1930,13 @@ export function wireStubControls(item: EditorItem) {
         draw();
         setStatus("已更新脏马克杯台绑定（写回后生效）");
       });
+      num("ctx-ss-teacup")?.addEventListener("change", (e) => {
+        const id = (e.target as HTMLSelectElement).value;
+        pushHistory();
+        setServingReturnOfType(item, id || undefined, "teacup");
+        draw();
+        setStatus("已更新茶杯回收台绑定（写回后生效）");
+      });
       num("ctx-ss-tray")?.addEventListener("change", (e) => {
         const id = (e.target as HTMLSelectElement).value;
         pushHistory();
@@ -1893,7 +1954,7 @@ export function wireStubControls(item: EditorItem) {
         if (!item.plateReturn) item.plateReturn = {};
         item.plateReturn.returnClean = (e.target as HTMLInputElement).checked;
         draw();
-        setStatus(`已${item.plateReturn.returnClean ? "开启" : "关闭"}直接返回干净${isGlassReturnItem(item) ? "杯子" : "盘子"}（写回后生效）`);
+        setStatus(`已${item.plateReturn.returnClean ? "开启" : "关闭"}直接返回干净${isTeacupReturnItem(item) ? "茶杯" : isGlassReturnItem(item) ? "杯子" : "盘子"}（写回后生效）`);
       });
       break;
     }

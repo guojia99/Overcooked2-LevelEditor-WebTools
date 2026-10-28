@@ -38,6 +38,12 @@ namespace OC2LevelRuntimeLoader
     /// 场景自愈（RandomCrate| 等 tag）统一收编于 CustomStub.EntryPoint（本 loader 不再
     /// 自行 HealScene），loader 只负责程序集/依赖加载 + 每次场景加载幂等补扫。
     ///
+    /// v4.0.0（2026-10-28 commonW5 版本门控断点）：**loader 逻辑零变更**，仅与
+    ///     CustomStub 运行时 SSOT（StubVersion 4.0.0）对齐——本版运行时主内容是
+    ///     commonW5 增量库（BGM/桌台皮肤/食材/卷饼/茶杯链路，详见 StubVersion.cs
+    ///     4.0.0 条目）。⚠ 兼容期截止：本版起不再为旧版导出集（有 requires.txt、
+    ///     无 stub_levels.txt）生成 "集|*|legacy" 兼容条目，此类老集需重新导出；
+    ///     全新导出集不受影响（3.5.0 起 stub_levels.txt 清单格式继续支持）。
     /// v3.10.0（2026-10-14 按钮控速 + 按钮生成器批次·版本对齐）：**loader 逻辑
     ///     零变更**（新特征 speedctl/spawnerbatch 经 stub_levels.txt 原样透传，
     ///     自愈在 CustomStub.EntryPoint 侧），仅与 StubVersion 3.10.0 对齐。
@@ -217,7 +223,7 @@ namespace OC2LevelRuntimeLoader
     {
         public const string PluginGuid = "oc2.oc2diylevelruntimewloader";
         public const string PluginName = "OC2DIYLevelRuntimeWLoader";
-        public const string PluginVersion = "3.11.0";
+        public const string PluginVersion = "4.0.0";
 
         /// <summary>统一运行时 bundle 文件名（依赖包内，固定；不与关卡目录下的
         /// *_custom_runtime 混淆，也绝不叫裸 runtime）。</summary>

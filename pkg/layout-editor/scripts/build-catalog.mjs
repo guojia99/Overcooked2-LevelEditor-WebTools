@@ -112,6 +112,9 @@ const FOOTPRINT_OVERRIDES = {
   // 正式版 common03 新增：洗杯/洗托盘水槽 2×1；上游空载具 Pushable_Object 2×2
   SinkMug: { cellsX: 2, cellsZ: 1 },
   SinkTray: { cellsX: 2, cellsZ: 1 },
+  // 马克杯回收台：1×1 工作台
+  workstation_mug_return: { cellsX: 1, cellsZ: 1 },
+  dlc09_workstation_mug_return_winter: { cellsX: 1, cellsZ: 1 },
   // 上游 common04 自定义模板：工作台按 1×1，水槽/锅具按各自原生规则。
   custom_counter: { cellsX: 1, cellsZ: 1 },
   custom_counter_chopping: { cellsX: 1, cellsZ: 1 },
@@ -202,6 +205,11 @@ const FOOTPRINT_OVERRIDES = {
   dlc09_dirtymug: { cellsX: 0.9, cellsZ: 0.9 },
   dlc09_dirtymugstack: { cellsX: 0.9, cellsZ: 0.9 },
   equipment_mug_01: { cellsX: 0.9, cellsZ: 0.9 },
+  web_teacup: { cellsX: 0.9, cellsZ: 0.9 },
+  web_teacup_stack_clean: { cellsX: 0.9, cellsZ: 0.9 },
+  web_teacup_dirty: { cellsX: 0.9, cellsZ: 0.9 },
+  web_teacup_stack_dirty: { cellsX: 0.9, cellsZ: 0.9 },
+  web_sink_teacup: { cellsX: 2, cellsZ: 1 },
   dlc09_equipment_mug_01: { cellsX: 0.9, cellsZ: 0.9 },
   dlc08_cleantraystack: { cellsX: 0.9, cellsZ: 0.9 },
   dlc08_dirtytray: { cellsX: 0.9, cellsZ: 0.9 },
@@ -520,6 +528,10 @@ const UTENSIL_STACK = {
   dlc11_dirtyglass: { y: 0.5, hostRule: "counter_standard" },
   dlc11_dirtyglassstack: { y: 0.5, hostRule: "counter_standard" },
   equipment_mug_01: { y: 0.5, hostRule: "counter_standard" },
+  web_teacup: { y: 0.5, hostRule: "counter_standard" },
+  web_teacup_stack_clean: { y: 0.5, hostRule: "counter_standard" },
+  web_teacup_dirty: { y: 0.5, hostRule: "counter_standard" },
+  web_teacup_stack_dirty: { y: 0.5, hostRule: "counter_standard" },
   dlc09_equipment_mug_01: { y: 0.5, hostRule: "counter_standard" },
   dlc11_equipment_glass_01: { y: 0.5, hostRule: "counter_standard" },
   dlc08_equipment_tray: { y: 0.5, hostRule: "counter_standard" },
@@ -821,6 +833,7 @@ function recipeTypeOf(id) {
   if (has("pasta")) return "pasta";
   if (has("sushi")) return "sushi";
   if (has("burrito")) return "burrito";
+  if (has("milktea") || has("milk_tea")) return "milktea";
   if (has("smores") || has("roastedmarshmallow")) return "smores";
   if (has("breakfast")) return "breakfast";
   if (has("steamed")) return "steamed";
@@ -901,6 +914,18 @@ function categorize(assetPath) {
   // Web 火锅专区（commonW1/prefabs/web/hotpot/）：六件统一独占分组（与 common03 原版并存双轨）
   if (seg[0] === "web" && seg[1] === "hotpot") {
     return { category: "hotpot/web", theme: null };
+  }
+  // 热水器（commonW5/prefabs/kettle/）：站台类，入酱料机同组（counters/service）。
+  if (assetPath.includes("/commonW5/prefabs/kettle/")) {
+    return { category: "counters/service", theme: null };
+  }
+  // 茶杯 / 茶杯堆（commonW5/prefabs/teacups/）：盘杯器具组。
+  if (assetPath.includes("/commonW5/prefabs/teacups/")) {
+    return { category: "utensils/plates", theme: null };
+  }
+  // 洗茶杯水槽 / 茶杯回收台（commonW5/prefabs/counters/）。
+  if (assetPath.includes("/commonW5/prefabs/counters/")) {
+    return { category: id.includes("sink") ? "counters/sinks" : "counters/service", theme: null };
   }
   if (seg[0] === "backgrounds" && seg.length > 1) {
     return { category: "art", theme: ART_THEME_ALIAS[seg[1]] ?? seg[1] };
@@ -1383,6 +1408,8 @@ function lookupName(dictionary, idToRow, id) {
 /** "core" / "custom" / "dlcXX" / "levelset" from an asset path.
  *  common03 通用内容按 dlc 子目录归 dlcXX，无 dlc 目录则归 core（无 web 分组）。 */
 function foodGroupOf(assetPath) {
+  // commonW5 增量库（卷饼菜谱 / Web 食材）独立分组。
+  if (assetPath.includes("/commonW5/")) return "commonw5";
   if (assetPath.includes("/custom_recipes/")) return "levelset";
   // 旧 Web 拷贝目录（机制已废弃，仅兼容历史数据）：无 dlc 目录 → core。
   if (assetPath.includes("/custom_ingredients/")) return "levelset";
@@ -1432,6 +1459,8 @@ function scanIngredients(dictionary, idToRow) {
     // dlc09_whippedcream 等，位于 pseudo_prefab_so/<dlc>/food/）
     "Assets/commonW1/pseudo_prefab_so/dlc11/food",
     "Assets/commonW1/pseudo_prefab_so/dlc09/food",
+    // commonW5：辣椒 / 茶叶 / 葱（本地 prefab 直引）。
+    "Assets/commonW5/pseudo_prefab_so/food",
   ];
   const list = [];
   const seen = new Set();
@@ -2077,6 +2106,8 @@ function scanAudioCatalog(dictionary, idToRow) {
   const musicRoots = [
     "Assets/common01/pseudo_prefab_so/audio/music",
     "Assets/common02/pseudo_prefab_so/audio/music",
+    // commonW5：OC1 / AYCE 主题 BGM。
+    "Assets/commonW5/pseudo_prefab_so/audio/music",
   ];
   const dirRoots = [
     "Assets/common01/pseudo_prefab_so/audio/AudioDirectories",
@@ -2193,6 +2224,9 @@ const THEME_NAMES_ZH = {
   Unlit: "无光照",
   Christmas: "圣诞",
   Firewood: "木柴",
+  // commonW5 桌台皮肤
+  Jungle: "丛林",
+  Anniversary: "生日",
 };
 
 const COUNTER_TYPE_NAMES_ZH = {
@@ -2241,6 +2275,9 @@ function scanCounterAppearances(dictionary, idToRow) {
       if (fs.existsSync(path.join(repoRoot, counters))) roots.push(counters);
     }
   }
+  // commonW5 桌台皮肤（丛林 / 生日）：固定 counters 目录。
+  if (fs.existsSync(path.join(repoRoot, "Assets/commonW5/pseudo_prefab_so/counters")))
+    roots.push("Assets/commonW5/pseudo_prefab_so/counters");
   const byType = {};
   const seen = new Set();
 
@@ -2434,6 +2471,11 @@ function main() {
   walkPrefabs(common03PrefabRoot, "Assets/common03/prefabs", items, measuredFootprints);
   const commonW1PrefabRoot = path.join(repoRoot, "Assets/commonW1/prefabs");
   walkPrefabs(commonW1PrefabRoot, "Assets/commonW1/prefabs", items, measuredFootprints);
+  // commonW5 热水器 / 茶杯 / 茶杯堆（完整本地功能 prefab）。
+  for (const sub of ["kettle", "teacups", "counters"]) {
+    const dir = path.join(repoRoot, "Assets/commonW5/prefabs", sub);
+    if (fs.existsSync(dir)) walkPrefabs(dir, `Assets/commonW5/prefabs/${sub}`, items, measuredFootprints);
+  }
   // 上游 common04：自定义工作台 / 锅具模板（custom_ingredient 不进入摆放面板，
   // 由“自定义管理”页作为食材模板管理）。
   const common04Root = path.join(repoRoot, "Assets/common04");

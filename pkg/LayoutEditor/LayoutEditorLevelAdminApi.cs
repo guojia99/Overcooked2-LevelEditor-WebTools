@@ -21,7 +21,13 @@ public static class LayoutEditorLevelAdminApi
     public static MusicCatalogDto ScanMusic()
     {
         var list = new List<MusicEntryDto>();
-        var folders = new[] { "Assets/common01/pseudo_prefab_so/audio/music", "Assets/common02/pseudo_prefab_so/audio/music" };
+        var folders = new[]
+        {
+            "Assets/common01/pseudo_prefab_so/audio/music",
+            "Assets/common02/pseudo_prefab_so/audio/music",
+            // commonW5：OC1 / AYCE 主题 BGM（PseudoPrefabSO.asset 直引本地 AudioClip）。
+            "Assets/commonW5/pseudo_prefab_so/audio/music"
+        };
         list.AddRange(ScanPseudoPrefabs(folders));
         var dto = new MusicCatalogDto { music = list.ToArray() };
         return dto;
@@ -795,6 +801,234 @@ public static class LayoutEditorLevelAdminApi
         return result.ToArray();
     }
 
+    // ==================== Resource usage stats（关卡列表依赖统计） ====================
+    // 每关两路收集资产路径（全部去重）：
+    //   ① 场景 .unity 文本里的全部 guid 引用（同 CollectSceneBundleNames 的免开场景文本扫描，
+    //      但不过滤 .asset —— 摆放的 prefab/SO/材质等直接引用全算）；
+    //   ② LevelInfoSO 菜谱/食材/烹饪步骤/匹配表 SO 引用闭包（同 AnalyzeBundles 口径，
+    //      CustomRecipeSO 递归下钻嵌套 SO）。
+    // 按资产路径前缀归入来源库（common01-04 / common / commonW<N> / custom / other）；
+    // 本集自身资产（Assets/LevelSets/<set>/ 非 custom_content）不算依赖。纯只读，无场景副作用。
+
+    public static SetResourceStatsDto ScanResourceUsage(string setName)
+    {
+        if (string.IsNullOrEmpty(setName)
+            || !AssetDatabase.IsValidFolder(LevelSetsRoot + "/" + setName))
+            return new SetResourceStatsDto { levels = new LevelResourceUsageDto[0], summary = new SetLibSummaryDto[0] };
+
+        var summaries = ScanLevels(setName); // 复用关卡枚举与排序
+        var list = new List<LevelResourceUsageDto>();
+        var libCache = new Dictionary<string, string>(); // 资产路径 → 来源库（跨关共享）
+        var setLibPaths = new Dictionary<string, HashSet<string>>(); // 整集按库并集
+        var setLibLevelCount = new Dictionary<string, int>();
+
+        foreach (var sum in summaries.levels)
+        {
+            var paths = new HashSet<string>(StringComparer.Ordinal);
+
+            // ① 场景 guid 引用（全部资产类型）
+            if (!string.IsNullOrEmpty(sum.sceneAssetPath) && File.Exists(AbsPath(sum.sceneAssetPath)))
+                CollectSceneAssetPaths(sum.sceneAssetPath, paths);
+
+            // ② LevelInfoSO 引用（菜谱/食材/烹饪步骤/匹配表；CustomRecipeSO 递归下钻）
+            var so = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(sum.assetPath);
+            if (so != null)
+            {
+                CollectUsagePaths(so.recipes, paths);
+                CollectUsagePaths(so.allIngredients, paths);
+                CollectUsagePaths(so.allCookingSteps, paths);
+                CollectUsagePaths(so.includeRecipeMatchLists, paths);
+                CollectUsagePaths(so.optionalRecipeMatchListItems, paths);
+            }
+
+            var libPaths = new Dictionary<string, HashSet<string>>();
+            foreach (var p in paths)
+            {
+                string lib;
+                if (!libCache.TryGetValue(p, out lib))
+                {
+                    lib = LibraryFromAssetPath(p, setName);
+                    libCache[p] = lib;
+                }
+                if (lib == null)
+                    continue; // 本集自身资产：不算依赖
+                HashSet<string> bucket;
+                if (!libPaths.TryGetValue(lib, out bucket))
+                {
+                    bucket = new HashSet<string>(StringComparer.Ordinal);
+                    libPaths[lib] = bucket;
+                }
+                bucket.Add(p);
+            }
+
+            var libs = new List<LevelLibUsageDto>();
+            foreach (var kv in libPaths)
+            {
+                libs.Add(new LevelLibUsageDto { library = kv.Key, distinctAssets = kv.Value.Count });
+
+                HashSet<string> setBucket;
+                if (!setLibPaths.TryGetValue(kv.Key, out setBucket))
+                {
+                    setBucket = new HashSet<string>(StringComparer.Ordinal);
+                    setLibPaths[kv.Key] = setBucket;
+                }
+                foreach (var p in kv.Value)
+                    setBucket.Add(p);
+                int used;
+                setLibLevelCount[kv.Key] = setLibLevelCount.TryGetValue(kv.Key, out used) ? used + 1 : 1;
+            }
+            libs.Sort((a, b) =>
+            {
+                var oa = LibraryOrder(a.library);
+                var ob = LibraryOrder(b.library);
+                if (oa != ob) return oa.CompareTo(ob);
+                return string.Compare(a.library, b.library, StringComparison.Ordinal);
+            });
+
+            list.Add(new LevelResourceUsageDto
+            {
+                assetPath = sum.assetPath,
+                sceneName = sum.sceneName,
+                levelName = sum.levelName,
+                levelNameZH = sum.levelNameZH,
+                libs = libs.ToArray()
+            });
+        }
+
+        var summary = new List<SetLibSummaryDto>();
+        foreach (var kv in setLibPaths)
+            summary.Add(new SetLibSummaryDto
+            {
+                library = kv.Key,
+                distinctAssets = kv.Value.Count,
+                levelCount = setLibLevelCount.ContainsKey(kv.Key) ? setLibLevelCount[kv.Key] : 0
+            });
+        summary.Sort((a, b) =>
+        {
+            var oa = LibraryOrder(a.library);
+            var ob = LibraryOrder(b.library);
+            if (oa != ob) return oa.CompareTo(ob);
+            return string.Compare(a.library, b.library, StringComparison.Ordinal);
+        });
+
+        return new SetResourceStatsDto { levels = list.ToArray(), summary = summary.ToArray() };
+    }
+
+    /// <summary>读场景 .unity 文本，抓全部 32 位 guid → AssetDatabase.GUIDToAssetPath，
+    /// 收集去重资产路径（不过滤扩展名：prefab / .asset SO / 材质等直接引用都算）。</summary>
+    private static void CollectSceneAssetPaths(string sceneAssetPath, HashSet<string> paths)
+    {
+        string text;
+        try { text = File.ReadAllText(AbsPath(sceneAssetPath)); }
+        catch { return; }
+        if (string.IsNullOrEmpty(text))
+            return;
+
+        var guids = new HashSet<string>(StringComparer.Ordinal);
+        foreach (Match m in Regex.Matches(text, @"guid:\s*([a-f0-9]{32})"))
+            guids.Add(m.Groups[1].Value);
+
+        foreach (var g in guids)
+        {
+            var p = AssetDatabase.GUIDToAssetPath(g);
+            if (!string.IsNullOrEmpty(p))
+                paths.Add(p);
+        }
+    }
+
+    /// <summary>收集 LevelInfoSO 引用数组的资产路径闭包（镜像 CollectBundleNamesDeep：
+    /// PseudoPrefabSO 为叶子计自身；CustomRecipeSO 继续下钻嵌套 SO 引用）。</summary>
+    private static void CollectUsagePaths(System.Collections.IList refs, HashSet<string> paths)
+    {
+        if (refs == null)
+            return;
+        var visited = new HashSet<UnityEngine.Object>();
+        foreach (var obj in refs)
+            CollectUsagePathsDeep(obj as UnityEngine.Object, paths, visited);
+    }
+
+    private static void CollectUsagePathsDeep(UnityEngine.Object obj, HashSet<string> paths, HashSet<UnityEngine.Object> visited)
+    {
+        if (obj == null || !visited.Add(obj))
+            return;
+        var p = AssetDatabase.GetAssetPath(obj);
+        if (!string.IsNullOrEmpty(p))
+            paths.Add(p);
+        if (!(obj is CustomRecipeSO))
+            return;
+        var fields = obj.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance);
+        for (int i = 0; i < fields.Length; i++)
+        {
+            var ft = fields[i].FieldType;
+            if (typeof(ScriptableObject).IsAssignableFrom(ft))
+            {
+                CollectUsagePathsDeep(fields[i].GetValue(obj) as UnityEngine.Object, paths, visited);
+            }
+            else if (ft.IsArray && typeof(ScriptableObject).IsAssignableFrom(ft.GetElementType()))
+            {
+                var arr = fields[i].GetValue(obj) as UnityEngine.Object[];
+                if (arr == null)
+                    continue;
+                for (int j = 0; j < arr.Length; j++)
+                    CollectUsagePathsDeep(arr[j], paths, visited);
+            }
+        }
+    }
+
+    /// <summary>资产路径 → 来源库标识。commonW&lt;N&gt; 归一化为 commonW&lt;N&gt;；common01…04 /
+    /// common 等原样；本集 custom_content → custom；本集其余 → null（不算依赖）；
+    /// Packages/ 内置与其他 → other。</summary>
+    private static string LibraryFromAssetPath(string assetPath, string setName)
+    {
+        if (string.IsNullOrEmpty(assetPath) || !assetPath.StartsWith("Assets/", StringComparison.Ordinal))
+            return "other";
+        var seg = assetPath.Substring("Assets/".Length);
+        var slash = seg.IndexOf('/');
+        var first = slash < 0 ? seg : seg.Substring(0, slash);
+        if (first == "LevelSets")
+        {
+            var rest = slash < 0 ? "" : seg.Substring(slash + 1);
+            var slash2 = rest.IndexOf('/');
+            var owner = slash2 < 0 ? rest : rest.Substring(0, slash2);
+            if (owner != setName)
+                return "other"; // 其他关卡集资产按外部引用处理
+            var rest2 = slash2 < 0 ? "" : rest.Substring(slash2 + 1);
+            return rest2.StartsWith("custom_content", StringComparison.Ordinal) ? "custom" : null;
+        }
+        if (first.StartsWith("commonW", StringComparison.OrdinalIgnoreCase))
+        {
+            var suffix = first.Substring("commonW".Length);
+            int n;
+            if (suffix.Length > 0 && int.TryParse(suffix, out n) && n > 0)
+                return "commonW" + n;
+        }
+        if (first.StartsWith("common", StringComparison.Ordinal))
+            return first; // common01/common02/common03/common04/common…
+        return "other";
+    }
+
+    /// <summary>来源库展示顺序：common01-04（数字升序）→ common → commonW1…N（数字升序）→ custom → 其他。</summary>
+    private static int LibraryOrder(string lib)
+    {
+        if (lib == "custom")
+            return 900;
+        if (lib == "other")
+            return 990;
+        if (lib != null && lib.StartsWith("commonW", StringComparison.Ordinal))
+        {
+            int n;
+            return int.TryParse(lib.Substring("commonW".Length), out n) && n > 0 ? 500 + n : 800;
+        }
+        if (lib != null && lib.StartsWith("common0", StringComparison.Ordinal))
+        {
+            int n;
+            return int.TryParse(lib.Substring("common0".Length), out n) ? 10 + n : 100;
+        }
+        if (lib == "common")
+            return 200;
+        return 950; // 未识别的库按未知档，Sort 二级键按名称字典序
+    }
+
     // ==================== Levels (create / update / delete) ====================
 
     public static string CreateLevel(LevelCreateDto dto)
@@ -874,6 +1108,8 @@ public static class LayoutEditorLevelAdminApi
                 EditorSceneManager.OpenScene(prevActive);
             SetAssetBundleName(scenePath, setName + "/" + sceneName);
         }
+        // 新关卡迁移基线：新放置的茶杯回收台默认脏杯；用户手动勾选干净杯要保留。
+        LayoutEditorLayoutMigrations.MarkLevelCreated(scenePath);
 
         var setInfoFresh = FindSetInfo(setName);
         var infoFresh = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(infoPath);
@@ -1077,6 +1313,11 @@ public static class LayoutEditorLevelAdminApi
         // 旧关卡的 LevelInfoSO 可能缺少音频字段，全部做空值防御。
         if (info.inLevelMusicSO != null && !string.IsNullOrEmpty(info.inLevelMusicSO.bundleName))
             referenced.Add(info.inLevelMusicSO.bundleName);
+        // commonW5 本地直引 BGM（OC1/AYCE）：bundleName 为空，但仍需注册 commonW5 依赖
+        // （导出 zip 携带 / dependencies 历史一致；真机由 Loader 常驻加载）。
+        if (info.inLevelMusicSO != null &&
+            LayoutEditorCustomIngredients.IsCommonW5Asset(AssetDatabase.GetAssetPath(info.inLevelMusicSO)))
+            referenced.Add(LayoutEditorCustomIngredients.CommonW5BundleName);
         if (info.onDeathEffectSO != null && !string.IsNullOrEmpty(info.onDeathEffectSO.bundleName))
             referenced.Add(info.onDeathEffectSO.bundleName);
         if (info.audioDirectorySOs != null)
@@ -2679,6 +2920,9 @@ public static class LayoutEditorLevelAdminApi
     ///  DLC11 沙拉全排列 + Web 果汁（Web 前缀命名），
     ///  在所有关卡集的菜谱管理页以「commonw3」分类并入，关卡选用后注入 commonW3 bundle 依赖。</summary>
     public const string CommonW3RecipesDir = "Assets/commonW3/custom_recipes";
+    /// <summary>卷饼菜谱共享库（Assets/commonW5，打包为 commonW5 bundle；burrito/）：
+    ///  Web_Burrito_*（2 成品 + 4 中间产物），在所有关卡集的菜谱管理页以「commonw5」分类并入。</summary>
+    public const string CommonW5RecipesDir = "Assets/commonW5/custom_recipes";
     /// <summary>Burger大全分类 id（commonW2 内菜谱的固定 category）。</summary>
     public const string BurgerCategoryId = "burger";
     private const int ProjectUidPrefix = 1000000;
@@ -2690,17 +2934,20 @@ public static class LayoutEditorLevelAdminApi
             return CommonW2RecipesDir;
         if (string.Equals(libraryId, "commonW3", StringComparison.OrdinalIgnoreCase))
             return CommonW3RecipesDir;
+        if (string.Equals(libraryId, "commonW5", StringComparison.OrdinalIgnoreCase))
+            return CommonW5RecipesDir;
         return null;
     }
 
-    /// <summary>资产是否在 commonW2/commonW3 共享 custom_recipes 树下。</summary>
+    /// <summary>资产是否在 commonW2/commonW3/commonW5 共享 custom_recipes 树下。</summary>
     public static bool IsSharedLibraryRecipePath(string assetPath)
     {
         if (string.IsNullOrEmpty(assetPath))
             return false;
         var n = assetPath.Replace('\\', '/');
         return n.IndexOf("/commonW2/custom_recipes/", StringComparison.Ordinal) >= 0
-            || n.IndexOf("/commonW3/custom_recipes/", StringComparison.Ordinal) >= 0;
+            || n.IndexOf("/commonW3/custom_recipes/", StringComparison.Ordinal) >= 0
+            || n.IndexOf("/commonW5/custom_recipes/", StringComparison.Ordinal) >= 0;
     }
 
     /// <summary>资产是否属于指定共享库 custom_recipes 目录。</summary>
@@ -2961,7 +3208,7 @@ public static class LayoutEditorLevelAdminApi
         return false;
     }
 
-    /// <summary>开发者模式：只扫描指定共享库（commonW2 / commonW3）下的全部菜谱。</summary>
+    /// <summary>开发者模式：只扫描指定共享库（commonW2 / commonW3 / commonW5）下的全部菜谱。</summary>
     public static CustomRecipeSummaryDto[] ScanLibraryCustomRecipes(string libraryId)
     {
         var recipesDir = LibraryRecipesDir(libraryId);
@@ -5286,6 +5533,11 @@ public static class LayoutEditorLevelAdminApi
             assets.AddRange(ScanCustomRecipeAssets(CommonCustomRecipesDir));
         if (AssetFolderExists(CommonW2RecipesDir))
             assets.AddRange(ScanCustomRecipeAssets(CommonW2RecipesDir));
+        // 共享库 uid 全域冲突检查（此前遗漏 commonW3；commonW5 新增后同段检查）。
+        if (AssetFolderExists(CommonW3RecipesDir))
+            assets.AddRange(ScanCustomRecipeAssets(CommonW3RecipesDir));
+        if (AssetFolderExists(CommonW5RecipesDir))
+            assets.AddRange(ScanCustomRecipeAssets(CommonW5RecipesDir));
         foreach (var asset in assets)
         {
             var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(asset.assetPath);
@@ -5327,6 +5579,9 @@ public static class LayoutEditorLevelAdminApi
                 return _pseudoPrefabSearchFolders;
             var list = new List<string>(PseudoPrefabSearchFoldersCore);
             list.AddRange(CommonW1FoodFolders());
+            // commonW5 Web 食材增量库（辣椒/茶叶/葱）。
+            if (AssetFolderExists("Assets/commonW5/pseudo_prefab_so/food"))
+                list.Add("Assets/commonW5/pseudo_prefab_so/food");
             // 各关卡集 custom_content/ingredients（自定义食材 SO 直接引用）。
             list.AddRange(LevelSetCustomIngredientFolders());
             _pseudoPrefabSearchFolders = list.ToArray();

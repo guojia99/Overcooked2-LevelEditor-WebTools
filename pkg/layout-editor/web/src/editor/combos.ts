@@ -74,6 +74,25 @@ function linkCannonSwitch(items: EditorItem[]): void {
   S.switchLinks.push({ switchId: sw.instanceId, targetId: cannon.instanceId, trigger: "Launch" });
 }
 
+/** 热水器 + 开关（默认联动组，1:1）：按下开关 → 烧水（进度条 + 加热动画）→
+ *  水开后用茶杯接出一杯热水 → 自动冷却（原版 DLC100 水壶玩法）。
+ *  stub 轮询通道：按压由 CustomStub.Kettle 轮询 TriggerDisableScript 下降沿捕获，
+ *  触发名无意义置空；**Kettle 只读开关、从不补发 Disable/Reset**——原版
+ *  ClientSwitchCosmeticDecisions 一看到 Interactable.enabled 变化就换材质 + 放
+ *  SwitchOn/SwitchOff，补发会让按钮开/关闪烁，故 StubIO 烘焙不挂 SwitchReenable，
+ *  m_switch 由 switchLinks 反查烘焙。 */
+function linkKettleSwitch(items: EditorItem[]): void {
+  // 末位是开关，其余全是热水器（支持 1:1 单壶组与 3:1 联动组）：
+  // 按下开关 → 所有没烧的壶同时开烧（一次可煮多杯）；开关外观由原版自己维护
+  // （按下置灰、动画结束回绿），Kettle 不再干预，避免材质/音效反复闪。
+  const sw = items[items.length - 1];
+  sw.stubKind = "Switch";
+  if (!sw.switchStub) sw.switchStub = {};
+  sw.switchStub.startEnabled = true;
+  for (let i = 0; i < items.length - 1; i++)
+    S.switchLinks.push({ switchId: sw.instanceId, targetId: items[i].instanceId, trigger: "" });
+}
+
 /** 大炮 + 摇杆 + 大炮开关：摇杆绑定大炮（瞄准权归摇杆玩家，
  *  炮内玩家不再控角度），发射按钮联动大炮（trigger: Launch，1:1）。 */
 function linkCannonTerminal(items: EditorItem[]): void {
@@ -661,6 +680,28 @@ export const COMBOS: ComboDef[] = [
       { id: "p_dlc08_button_cannon", dx: 3, dz: 0 },
     ],
     link: linkCannonSwitch,
+  },
+  {
+    id: "kettle_switch",
+    nameZh: "热水器 + 开关",
+    hint: "自动联动：按下开关 → 烧水（进度条+加热动画）→ 水开后用茶杯接热水 → 自动冷却复位开关",
+    parts: [
+      { id: "web_kettle_hotwater", dx: 0, dz: 0 },
+      { id: "Switch", dx: 2, dz: 0 },
+    ],
+    link: linkKettleSwitch,
+  },
+  {
+    id: "kettle_group",
+    nameZh: "热水联动组（三热水器 + 开关）",
+    hint: "一按同烧三只（一次煮三杯）；有壶正在烧或全部烧好时开关置灰，有没烧的即可再按",
+    parts: [
+      { id: "web_kettle_hotwater", dx: 0, dz: 0 },
+      { id: "web_kettle_hotwater", dx: 2, dz: 0 },
+      { id: "web_kettle_hotwater", dx: 4, dz: 0 },
+      { id: "Switch", dx: 6, dz: 0 },
+    ],
+    link: linkKettleSwitch,
   },
   {
     id: "cannon_terminal_switch",

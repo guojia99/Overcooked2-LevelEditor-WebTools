@@ -13,6 +13,7 @@ import {
   recipeNeedsSodaMachine,
   recipeNeedsDrinkMachine,
   recipeNeedsCondimentMachine,
+  recipeNeedsKettle,
   condimentMachineForIngredient,
   SODA_MACHINE_INGREDIENT_IDS,
   DRINK_MACHINE_INGREDIENT_IDS,
@@ -660,8 +661,11 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     const fromCreamSpray = (i: string) => CREAM_INGREDIENT_IDS.includes(i);
     // 番茄酱/芥末酱由酱料机产出（node 型，机器区覆盖），不进食材箱清单
     const fromCondimentMachine = (i: string) => CONDIMENT_MACHINE_INGREDIENT_IDS.includes(i);
+    // 热水由热水器（HotWaterSO 节点）产出，不建食材箱。
+    const fromKettle = (i: string) => i === "HotWaterSO" || i === "Web_MilkTea_HotWater";
     const fromTool = (i: string) =>
-      fromSodaMachine(i) || fromDrinkMachine(i) || fromCreamSpray(i) || fromCondimentMachine(i);
+      fromSodaMachine(i) || fromDrinkMachine(i) || fromCreamSpray(i) ||
+      fromCondimentMachine(i) || fromKettle(i);
     const missingIngs = [...reqIngs].filter(
       (i) => !fromTool(i) && !haveDisp.has(i) && !haveDisp.has(crateIngId(i))
     );
@@ -763,7 +767,8 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
         SODA_MACHINE_INGREDIENT_IDS.includes(ing) ||
         DRINK_MACHINE_INGREDIENT_IDS.includes(ing) ||
         CREAM_INGREDIENT_IDS.includes(ing) ||
-        CONDIMENT_MACHINE_INGREDIENT_IDS.includes(ing)
+        CONDIMENT_MACHINE_INGREDIENT_IDS.includes(ing) ||
+        ing === "HotWaterSO" || ing === "Web_MilkTea_HotWater"
       )
         continue;
       // node 型匹配节点 → 食材箱生成其整食材（如沙拉洋葱节点 → 整个沙拉洋葱）。
@@ -855,6 +860,44 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
         continue;
       }
       if (placeAtFreeCell(u, cursor, fillRowZ)) placedItemIds.push(u);
+    }
+
+    // 热水器 + 联动开关（奶茶：热水从热水器接出，HotWaterSO 不建食材箱）。
+    // 无热水器 → 放置「热水器 + 开关」组合（自动联动）；已有热水器但缺开关
+    // → 只补开关 + switchLink（与汽水机/饮料机同款）。
+    {
+      const kettleRecs = recs.filter(recipeNeedsKettle);
+      if (kettleRecs.length > 0) {
+        const kettleOf = () =>
+          S.items.find((it) => prefabIdFromPath(it.prefabAssetPath ?? "") === "web_kettle_hotwater");
+        let kettle = kettleOf();
+        if (!kettle) {
+          const def = comboById("kettle_switch");
+          if (def) {
+            addCombo(def, cursor.x, base.z - 3 * CELL);
+            cursor.x += 4 * CELL;
+            kettle = kettleOf();
+          }
+        }
+        if (kettle) {
+          const linked = S.switchLinks.some((l) => l.targetId === kettle.instanceId);
+          if (!linked) {
+            const swCat = catalogItemById("Switch");
+            const sw = swCat
+              ? addFromCatalog(swCat, (kettle._wx ?? 0) + 2 * CELL, kettle._wz ?? 0)
+              : null;
+            if (sw) {
+              S.switchLinks.push({
+                switchId: sw.instanceId,
+                targetId: kettle.instanceId,
+                trigger: "",
+              });
+            }
+          }
+        } else {
+          setStatus("⚠️ 选中奶茶菜谱需要热水器（web_kettle_hotwater），但未能放置", false);
+        }
+      }
     }
 
     // 奶油喷罐：发泡奶油由喷罐喷出（不建食材箱）。缺失时自动放置一个并绑定奶油食材。

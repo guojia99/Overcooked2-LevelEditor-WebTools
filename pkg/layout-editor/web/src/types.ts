@@ -363,6 +363,12 @@ export interface LayoutTimedSwitchStub {
   startOn?: boolean;
 }
 
+/** 热水器（web_kettle_hotwater）：烧水秒数与联动开关（展示；权威在 switchLinks）。 */
+export interface LayoutKettleStub {
+  heatSeconds?: number;
+  switchInstanceId?: string;
+}
+
 export interface LayoutItem {
   instanceId: string;
   hierarchyPath: string;
@@ -418,6 +424,8 @@ export interface LayoutItem {
   soArray?: LayoutSOArrayStub;
   /** 火锅灶台定时开关（cooking_region_floorburner / dlc10 变体）。 */
   timedSwitch?: LayoutTimedSwitchStub;
+  /** 热水器（web_kettle_hotwater；CustomStub.Kettle）。 */
+  kettle?: LayoutKettleStub;
   /** @deprecated 旧版食材装饰字段；载入时迁移为 commonW1 decor/food prefab。 */
   ingredientDecor?: LayoutIngredientDecorStub;
   /** 分 P：物件所属阶段 id。"base" = 基础层（全程常驻），"p1".."pN" = 对应阶段
@@ -1434,6 +1442,33 @@ export interface LevelSummary {
 
 export interface LevelList {
   levels: LevelSummary[];
+}
+
+/** 每关依赖统计：来源库 + 去重资产数（common01…commonW4 / custom / other）。 */
+export interface LevelLibUsage {
+  library: string;
+  distinctAssets: number;
+}
+
+/** 单关依赖统计（场景 guid 引用 + LevelInfoSO 菜谱/食材引用，按来源库去重计数）。 */
+export interface LevelResourceUsage {
+  assetPath: string;
+  sceneName: string;
+  levelName: string;
+  levelNameZH: string;
+  libs: LevelLibUsage[];
+}
+
+/** 整集依赖汇总：各库整集去重资产数（并集）与使用关卡数。 */
+export interface SetLibSummary {
+  library: string;
+  distinctAssets: number;
+  levelCount: number;
+}
+
+export interface SetResourceStats {
+  levels: LevelResourceUsage[];
+  summary: SetLibSummary[];
 }
 
 export interface PerPlayerConfig {

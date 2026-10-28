@@ -145,6 +145,15 @@ public static class LayoutEditorAllIngredientsFill
                 filtered.Add(pseudo);
                 continue;
             }
+            // 纯节点食材（asset 直引非 prefab 的 SO，如 commonW5 HotWaterSO → Node_HotWater）：
+            // 机器产出、无实体 prefab，但必须在匹配表中登记（否则马克杯内容物显示
+            //  GetOrderPlatingPrefab 找不到 Mug 装盘节点 → 兜底模型）。
+            if (pseudo.asset != null && string.IsNullOrEmpty(pseudo.bundleName) &&
+                string.IsNullOrEmpty(pseudo.assetPath))
+            {
+                filtered.Add(pseudo);
+                continue;
+            }
             var bundlePath = pseudo.assetPath;
             if (string.IsNullOrEmpty(bundlePath))
                 continue;
@@ -211,6 +220,13 @@ public static class LayoutEditorAllIngredientsFill
             // 汽水/饮料/酱料等机器产出食材：显式黑名单（assetPath 为 .prefab 的饮料会穿透后缀过滤）
             if (IsMachineOnlyIngredient(pseudo))
             {
+                continue;
+            }
+            // 本地直引（custom_content / commonW5）：asset 非空即放行——prefab 与
+            // 纯节点食材（如 HotWaterSO→Node_HotWater）都必须进匹配表。
+            if (pseudo.asset != null)
+            {
+                filtered.Add(pseudo);
                 continue;
             }
             var bundlePath = pseudo.assetPath;

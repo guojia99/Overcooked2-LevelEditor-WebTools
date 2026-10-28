@@ -83,6 +83,14 @@
       "safeToRetry": true
     },
     {
+      "name": "oc2_list_level_resource_usage",
+      "category": "dependencies",
+      "sideEffect": "compute",
+      "estimatedMs": 8000,
+      "deadlineMs": 60000,
+      "safeToRetry": true
+    },
+    {
       "name": "oc2_validate_scene",
       "category": "scene",
       "sideEffect": "compute",

@@ -71,6 +71,9 @@ namespace CustomStub
         private static readonly List<Collider> s_potColliders = new List<Collider>();
         private static readonly List<Component> s_clientCookHandlers = new List<Component>();
         private static readonly List<Collider> s_clientCookColliders = new List<Collider>();
+        // 与 s_clientCookHandlers 同下标的锅炉内视觉通知组件（ClientContentsCosmetic /
+        // ClientCookingEffects；2026-10-26 烧糊视觉兜底用）。
+        private static readonly List<Component[]> s_clientCookVisuals = new List<Component[]>();
         private static readonly List<Component> s_woks = new List<Component>();
         private static readonly List<Collider> s_wokColliders = new List<Collider>();
         private static readonly List<Component> s_ccds = new List<Component>();
@@ -86,6 +89,13 @@ namespace CustomStub
         /// 见 CookPotsOverBurner 的让位逻辑。</summary>
         private static readonly Dictionary<UnityEngine.Object, float> s_drivenProgress =
             new Dictionary<UnityEngine.Object, float>();
+
+        /// <summary>烧糊视觉兜底：每口可移动锅上一次已应用的视觉进度（1×=熟，2×=糊）。
+        /// 避免每 0.5s 重复写同一个颜色；场景切换清空。</summary>
+        private static readonly Dictionary<UnityEngine.Object, float> s_visualAppliedProgress =
+            new Dictionary<UnityEngine.Object, float>();
+        private static bool s_loggedVisualFallback;
+        private static bool s_visualFallbackFailLogged;
 
         /// <summary>判定「进度自行增长过」的阈值。宿主 ServerCookingRegion 每 FixedUpdate
         /// 推进一个 deltaTime（≥1/60s），远大于本值；而 Cook 内部是精确浮点加法，
@@ -109,11 +119,13 @@ namespace CustomStub
             s_potColliders.Clear();
             s_clientCookHandlers.Clear();
             s_clientCookColliders.Clear();
+            s_clientCookVisuals.Clear();
             s_woks.Clear();
             s_wokColliders.Clear();
             s_ccds.Clear();
             s_wokCosmetics.Clear();
             s_drivenProgress.Clear();
+            s_visualAppliedProgress.Clear();
             s_nextSliceAt = -1f;
             s_cacheSlice = 0;
             s_hasPots = false;
@@ -243,6 +255,46 @@ namespace CustomStub
             }
         }
 
+        /// <summary>按 ClientCookingHandler 缓存锅炉内视觉通知组件（与
+        /// s_clientCookHandlers 同下标）。只收 IClientCookingNotifed 的两个实现：
+        /// ClientContentsCosmetic（汤面/食材染色）与 ClientCookingEffects（黑烟/蒸汽）。
+        /// 2026-10-26：可移动锅偶发烧糊时客户端进度正常、但汤面不收到通知，由此兜底。</summary>
+        private static void RebuildClientCookVisuals()
+        {
+            s_clientCookVisuals.Clear();
+            for (int i = 0; i < s_clientCookHandlers.Count; i++)
+            {
+                var handler = s_clientCookHandlers[i];
+                if (handler == null)
+                {
+                    s_clientCookVisuals.Add(EmptyComponents);
+                    continue;
+                }
+                var list = new List<Component>();
+                if (GameApi.ClientContentsCosmeticType != null)
+                {
+                    var arr = handler.GetComponentsInChildren(GameApi.ClientContentsCosmeticType, true);
+                    for (int j = 0; j < arr.Length; j++)
+                    {
+                        var c = arr[j] as Component;
+                        if (c != null)
+                            list.Add(c);
+                    }
+                }
+                if (GameApi.ClientCookingEffectsType != null)
+                {
+                    var arr = handler.GetComponentsInChildren(GameApi.ClientCookingEffectsType, true);
+                    for (int j = 0; j < arr.Length; j++)
+                    {
+                        var c = arr[j] as Component;
+                        if (c != null)
+                            list.Add(c);
+                    }
+                }
+                s_clientCookVisuals.Add(list.Count > 0 ? list.ToArray() : EmptyComponents);
+            }
+        }
+
         /// <summary>缓存维护的分帧轮转（全部 tick 的唯一 FindAll 汇聚点，v12）。
         /// 8 个 slot × CacheSliceSeconds ≈ 1.2s 一整轮，与 v5 的刷新周期同量级，
         /// 但每次只做 1 次全场景扫描，消除周期性尖峰。
@@ -271,6 +323,7 @@ namespace CustomStub
                     // 客户端烹饪同步器：驱动「锅在灶台上」标志用（主机/客机都有；
                     // 联机客机上没有 Server* 同步器，缺了它客机侧看不到烧糊预警）。
                     RebuildLargePotCache(GameApi.ClientCookingHandlerType, s_clientCookHandlers, s_clientCookColliders);
+                    RebuildClientCookVisuals();
                     break;
                 case 4:
                     RebuildLargePotCache(GameApi.WokCosmeticType, s_wokCosmetics, null);
@@ -390,6 +443,7 @@ namespace CustomStub
             EnsurePotCaches();
             FixSoupLevel();
             AlertWhenCooked();
+            ApplyClientVisualFallback();
             ClearStalePotVisuals();
         }
 
@@ -754,6 +808,133 @@ namespace CustomStub
                 WarnOnce(ref s_visualClearFailLogged, "[HotPot] 读取锅内容数失败: " + ex.Message);
                 return false;
             }
+        }
+
+        /// <summary>可移动锅烧糊视觉兜底（2026-10-26）。
+        ///
+        /// 现象：可移动锅服务端进度正常（能到 2×），静态锅汤面会变黑，可移动锅的
+        /// 汤面始终不黑。ClientContentsCosmeticDecisions 组件存在（实体自检
+        /// CliContents=T），但 vanilla 的 IClientCookingNotifed 回调在装配锅上
+        /// 没有稳定到达。这里在 ~0.5s 维护 tick 里按客户端同步进度直接调用
+        /// ClientContentsCosmetic / ClientCookingEffects 的 OnCookingPropChanged；
+        /// 与 vanilla 回调幂等（同进度同颜色），vanilla 正常时只是重复一次。
+        ///
+        /// 只处理 pushable：静态锅走原版链路正常，保持零触碰。
+        /// 视觉进度用 vanilla 同款 `progress / cookingtime`（熟=1×，糊=2×），
+        /// 因此与正常工作的 vanilla 回调完全幂等，不会在两套阈值间来回覆盖。</summary>
+        private static void ApplyClientVisualFallback()
+        {
+            if (s_clientCookHandlers.Count == 0 || s_clientCookVisuals.Count == 0)
+                return;
+            if (GameApi.ClientGetCookingProgressMethod == null
+                || GameApi.CookingHandlerType == null || GameApi.CookingTimeField == null)
+                return;
+            for (int i = 0; i < s_clientCookHandlers.Count; i++)
+            {
+                var handler = s_clientCookHandlers[i];
+                if (handler == null)
+                    continue;
+                var visuals = i < s_clientCookVisuals.Count ? s_clientCookVisuals[i] : null;
+                if (visuals == null || visuals.Length == 0)
+                    continue;
+                if (!IsPushablePot(handler.transform))
+                    continue;
+                var cookingHandler = GameApi.GetComponent(handler.gameObject, GameApi.CookingHandlerType);
+                if (cookingHandler == null)
+                    continue;
+                float cook;
+                try { cook = (float)GameApi.CookingTimeField.GetValue(cookingHandler); }
+                catch (System.Exception ex)
+                {
+                    WarnOnce(ref s_visualFallbackFailLogged,
+                        "[HotPot] 烧糊视觉兜底读取 cookingtime 失败: " + ex.Message);
+                    continue;
+                }
+                if (cook <= 0.0001f)
+                    continue;
+                float clientProgress = InvokeFloat(handler, GameApi.ClientGetCookingProgressMethod);
+                float progress = clientProgress;
+                // 主机/单机：客户端同步若完全没数据（0），用同锅的服务端权威进度兜底；
+                // 有客户端数据时一律以客户端为准，避免与 vanilla 回调来回覆盖。
+                // 纯客机没有 ServerCookingHandler，自然跳过。
+                if (progress <= 0.0001f && GameApi.ServerCookingHandlerType != null)
+                {
+                    var server = handler.GetComponent(GameApi.ServerCookingHandlerType);
+                    if (server != null && GameApi.ServerGetCookingProgressMethod != null)
+                    {
+                        float serverProgress = InvokeFloat(server, GameApi.ServerGetCookingProgressMethod);
+                        if (serverProgress > progress)
+                            progress = serverProgress;
+                    }
+                }
+                if (float.IsNaN(progress) || float.IsInfinity(progress) || progress <= cook)
+                {
+                    // 换了一锅新食材（进度回到 0/未熟）：清掉记录，下一轮重新从 1× 染黑。
+                    s_visualAppliedProgress.Remove(handler);
+                    continue;
+                }
+                float visual = Mathf.Clamp(progress / cook, 1f, 2f);
+                float last;
+                // 只允许单向变黑：服务端进度兜底后客户端追上来时不能把颜色调浅。
+                if (s_visualAppliedProgress.TryGetValue(handler, out last)
+                    && visual <= last + 0.005f)
+                    continue;
+                s_visualAppliedProgress[handler] = visual;
+                for (int j = 0; j < visuals.Length; j++)
+                {
+                    var visualComp = visuals[j];
+                    if (visualComp == null)
+                        continue;
+                    var method = GameApi.ClientContentsCosmeticType != null
+                        && GameApi.ClientContentsCosmeticType.IsAssignableFrom(visualComp.GetType())
+                        ? GameApi.ClientContentsCookingPropChangedMethod
+                        : GameApi.ClientCookingEffectsPropChangedMethod;
+                    if (method == null)
+                        continue;
+                    try { method.Invoke(visualComp, new object[] { visual }); }
+                    catch (System.Exception ex)
+                    {
+                        WarnOnce(ref s_visualFallbackFailLogged,
+                            "[HotPot] 烧糊视觉兜底回调失败 " + visualComp.GetType().Name + ": " + ex.Message);
+                    }
+                }
+                if (!s_loggedVisualFallback)
+                {
+                    s_loggedVisualFallback = true;
+                    StubLog.Log("[HotPot] 可移动锅烧糊视觉兜底已启用: " + handler.name
+                        + " client=" + clientProgress.ToString("0.##")
+                        + " progress=" + progress.ToString("0.##")
+                        + " cook=" + cook.ToString("0.##")
+                        + " visual=" + visual.ToString("0.##"));
+                }
+            }
+            if (s_visualAppliedProgress.Count > 64)
+                PruneVisualProgress();
+        }
+
+        private static void PruneVisualProgress()
+        {
+            var dead = new List<UnityEngine.Object>();
+            foreach (var pair in s_visualAppliedProgress)
+            {
+                if (pair.Key == null)
+                    dead.Add(pair.Key);
+            }
+            for (int i = 0; i < dead.Count; i++)
+                s_visualAppliedProgress.Remove(dead[i]);
+        }
+
+        /// <summary>可移动锅（含载具/包装器）判定：祖先链名字含 pushable。
+        /// 静态锅（web_utensil_large_pot_01 / common03 大锅）不命中，保持原版链路。</summary>
+        private static bool IsPushablePot(Transform t)
+        {
+            while (t != null)
+            {
+                if (t.name.IndexOf("pushable", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    return true;
+                t = t.parent;
+            }
+            return false;
         }
 
         /// <summary>监听大锅 ServerCookingHandler.IsCooked() 翻转，补发 ImCooked 提示音。</summary>

@@ -212,6 +212,1086 @@ namespace CustomStub
             }
         }
 
+        // ============ 热水器接水门禁（Kettle，2026-10-26） ============
+        //
+        // 复刻原版 DLC100 ToggleablePlacementItemSpawner 的 Active 门禁 + 单杯冷却：
+        //  - 前缀 ServerPlacementItemSpawner.CanHandlePlacement：热水器非 Active
+        //    （未烧开水）时拒绝接水（__result=false 跳过原方法）；非热水器/无
+        //    热水器场景快速放行，原版酱料机零影响。
+        //  - 后缀 ServerPlacementItemSpawner.HandlePlacement：接出一杯 → 冷却
+        //    （Kettle.OnServerFilled：动画 Cooldown + 倒水音效 + 复位开关）。
+        //  - 后缀 ClientPlacementItemSpawner.ApplyServerEvent：客户端收到接水
+        //    消息 → 本地倒水表现（服务端权威，客户端只做表现同步）。
+        //  补丁随 "kettle" 特征按需安装（EntryPoint.EnsureKettlePatches）。
+
+        /// <summary>前缀：热水器非 Active 拒绝接水。</summary>
+        private static bool ServerPlacementCanHandlePrefix(object __instance, ref bool __result)
+        {
+            if (!Kettle.HasAny)
+                return true;
+            try
+            {
+                var k = Kettle.FindBySpawner(__instance as Component);
+                if (k == null)
+                    return true;
+                if (!k.AllowFill)
+                {
+                    __result = false;
+                    return false;
+                }
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("kettleGate", "[CustomStub.Harmony] 热水器接水门禁前缀异常（放行原方法）: " + ex.Message);
+                return true;
+            }
+        }
+
+        /// <summary>后缀：服务端接出一杯 → 冷却复位。</summary>
+        private static void ServerPlacementHandlePostfix(object __instance)
+        {
+            if (!Kettle.HasAny)
+                return;
+            try
+            {
+                var k = Kettle.FindBySpawner(__instance as Component);
+                if (k != null)
+                    k.OnServerFilled();
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("kettleFill", "[CustomStub.Harmony] 热水器接水后缀异常（忽略）: " + ex.Message);
+            }
+        }
+
+        /// <summary>后缀：客户端接水消息 → 倒水表现。</summary>
+        private static void ClientPlacementApplyEventPostfix(object __instance)
+        {
+            if (!Kettle.HasAny)
+                return;
+            try
+            {
+                var k = Kettle.FindBySpawner(__instance as Component);
+                if (k != null)
+                    k.OnClientFillMessage();
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("kettleFillCli", "[CustomStub.Harmony] 热水器客户端接水后缀异常（忽略）: " + ex.Message);
+            }
+        }
+
+        /// <summary>供 EntryPoint 手工绑定用的前缀/后缀 MethodInfo（本程序集内部）。</summary>
+        internal static System.Reflection.MethodInfo ServerPlacementCanHandlePrefixMethod
+        {
+            get
+            {
+                return typeof(HarmonyPatches).GetMethod("ServerPlacementCanHandlePrefix",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            }
+        }
+
+        internal static System.Reflection.MethodInfo ServerPlacementHandlePostfixMethod
+        {
+            get
+            {
+                return typeof(HarmonyPatches).GetMethod("ServerPlacementHandlePostfix",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            }
+        }
+
+        internal static System.Reflection.MethodInfo ClientPlacementApplyEventPostfixMethod
+        {
+            get
+            {
+                return typeof(HarmonyPatches).GetMethod("ClientPlacementApplyEventPostfix",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            }
+        }
+
+        // ============ 脏茶杯合并（DirtyTeacup，2026-10-27） ============
+        //
+        // 单个脏茶杯（web_teacup_dirty，tag DirtyTeacup|）放上脏茶杯堆：
+        // 原版 ServerDirtyPlateStack.CanHandlePlacement 只接受携带 DirtyPlateStack
+        // 的堆（单杯返回 false），HandlePlacement 对单杯会 RequireComponent
+        // <ServerStack> NRE。补丁随 DirtyTeacup| tag 按需安装
+        // （EntryPoint.EnsureDirtyTeacupPatches）。
+        //  - 前缀 CanHandlePlacement：携带物是本族单杯 → __result=true 跳过原方法；
+        //  - 前缀 HandlePlacement：单杯 → 目标堆 AddToStack + DestroyCarriedItem，
+        //    跳过原方法。
+
+        /// <summary>前缀：单杯可被脏茶杯堆接收。</summary>
+        private static bool DirtyStackCanHandlePrefix(object __instance, object _carrier, ref bool __result)
+        {
+            try
+            {
+                if (DirtyTeacupMergeWatcher.MatchSingleCup(__instance as Component, _carrier) == null)
+                    return true;
+                __result = true;
+                return false;
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("dirtyCupCanHandle", "[CustomStub.Harmony] 脏茶杯接收前缀异常（放行原方法）: " + ex.Message);
+                return true;
+            }
+        }
+
+        /// <summary>前缀：单杯合并入堆（AddToStack + 销毁携带物），跳过原方法。</summary>
+        private static bool DirtyStackHandlePrefix(object __instance, object _carrier)
+        {
+            try
+            {
+                var cup = DirtyTeacupMergeWatcher.MatchSingleCup(__instance as Component, _carrier);
+                if (cup == null)
+                    return true;
+                var add = __instance.GetType().GetMethod("AddToStack",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (add == null)
+                    return true;
+                add.Invoke(__instance, null);
+                var destroy = _carrier.GetType().GetMethod("DestroyCarriedItem",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (destroy != null)
+                    destroy.Invoke(_carrier, null);
+                StubLog.Dbg("[CustomStub.Harmony] 脏茶杯合并入堆: " + cup.name);
+                return false;
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("dirtyCupHandle", "[CustomStub.Harmony] 脏茶杯合并前缀异常（放行原方法）: " + ex.Message);
+                return true;
+            }
+        }
+
+        internal static System.Reflection.MethodInfo DirtyStackCanHandlePrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("DirtyStackCanHandlePrefix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo DirtyStackHandlePrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("DirtyStackHandlePrefix", BF); }
+        }
+
+        // ============ 单只脏茶杯直接洗（DirtyTeacup，2026-10-27） ============
+        //
+        // 原版 WashingStation.CanHandlePlacement 只认「携带 DirtyPlateStack 整堆」：
+        // 单只脏茶杯（web_teacup_dirty 是普通可携带物，没有 DirtyPlateStack 组件）
+        // 永远放不进洗杯水槽——客户端不亮高亮、服务端直接拒绝（用户反馈
+        // 「洗杯台无法使用/脏杯子放不进去」）。
+        //  - 前缀 CanHandlePlacement（Server + Client）：携带物是本族单杯且本槽是
+        //    茶杯水槽 → __result=true 跳过原方法；
+        //  - 前缀 HandlePlacement（Server）：单杯 → DestroyCarriedItem + AddPlates(1)，
+        //    跳过原方法（原方法对单杯没有 ServerStack，会走到挂载分支）。
+        // 2026-10-28 追加【整堆】分支：原版 HandlePlacement 对整堆先试烘干 attach 站，
+        // 烘干位空时整堆被挂到烘干台上卡住（OnItemAdded 消耗逻辑不触发，用户反馈
+        // 「放一堆脏茶杯只有一个进去，其他卡在水槽上面」）——整堆在本前缀直接
+        // AddPlates(堆大小)+DestroyCarriedItem 消耗，跳过原方法。
+        // 只对「烘干位模板是 web_teacup_stack_clean」的水槽生效，不影响其它 sink。
+
+        private static bool WashingCanHandlePrefix(object __instance, object _carrier, ref bool __result)
+        {
+            try
+            {
+                var inst = __instance as Component;
+                var single = DirtyTeacupMergeWatcher.MatchSingleCupForSink(inst, _carrier);
+                var stack = DirtyTeacupMergeWatcher.MatchTeacupStackForSink(inst, _carrier);
+                if (single == null && stack == null)
+                {
+                    // 兜底：只要目标确实是茶杯水槽、携带物确实是本族脏茶杯（单杯
+                    // 或整堆），就允许直接洗涤，不依赖堆 prefab 的 washed/plate 字段。
+                    var carried = DirtyTeacupMergeWatcher.InspectCarried(_carrier);
+                    if (DirtyTeacupMergeWatcher.IsTeacupSink(inst) &&
+                        DirtyTeacupMergeWatcher.IsDirtyTeacupItem(carried))
+                    {
+                        __result = true;
+                        return false;
+                    }
+                    // 匹配失败时输出具体原因（5s 节流）——定位「脏茶杯放不进水槽」
+                    DirtyTeacupMergeWatcher.LogSinkMatchFailure(inst, _carrier);
+                    return true;
+                }
+                __result = true;
+                return false;
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("teacupSinkCan", "[CustomStub.Harmony] 洗杯台单杯接受前缀异常（放行原方法）: " + ex.Message);
+                return true;
+            }
+        }
+
+        private static bool WashingHandlePrefix(object __instance, object _carrier)
+        {
+            try
+            {
+                var inst = __instance as Component;
+                if (inst == null)
+                    return true;
+                var addPlates = inst.GetType().GetMethod("AddPlates",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public
+                    | System.Reflection.BindingFlags.Instance);
+
+                // 单杯路径：+1 待洗
+                var cup = DirtyTeacupMergeWatcher.MatchSingleCupForSink(inst, _carrier);
+                if (cup != null)
+                {
+                    if (addPlates != null)
+                        addPlates.Invoke(inst, new object[] { 1 });
+                    DestroyCarrierItem(_carrier);
+                    StubLog.Log("[CustomStub.Harmony] 单只脏茶杯放入洗杯水槽（+1 待洗）");
+                    return false;
+                }
+
+                // 整堆路径：+堆大小 待洗（不走原版烘干 attach 分支）
+                var stackGo = DirtyTeacupMergeWatcher.MatchTeacupStackForSink(inst, _carrier);
+                if (stackGo != null)
+                {
+                    int size = DirtyTeacupMergeWatcher.GetCarriedStackSize(stackGo);
+                    if (size <= 0)
+                        size = 1;
+                    if (addPlates != null)
+                        addPlates.Invoke(inst, new object[] { size });
+                    DestroyCarrierItem(_carrier);
+                    StubLog.Log("[CustomStub.Harmony] 整堆脏茶杯放入洗杯水槽（+" + size + " 待洗）");
+                    return false;
+                }
+
+                // 最终兜底：茶杯水槽 + 本族脏茶杯（单杯/堆）直接洗涤计数，
+                // 不依赖堆 prefab 的 washed/plate 字段，避免退回“挂水槽台面”。
+                var carried = DirtyTeacupMergeWatcher.InspectCarried(_carrier);
+                if (DirtyTeacupMergeWatcher.IsTeacupSink(inst) &&
+                    DirtyTeacupMergeWatcher.IsDirtyTeacupItem(carried))
+                {
+                    int size = DirtyTeacupMergeWatcher.GetCarriedStackSize(carried);
+                    if (size <= 0)
+                        size = 1;
+                    if (addPlates != null)
+                        addPlates.Invoke(inst, new object[] { size });
+                    DestroyCarrierItem(_carrier);
+                    StubLog.Log("[CustomStub.Harmony] 脏茶杯放入洗杯水槽（兜底 +" + size + " 待洗）");
+                    return false;
+                }
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("teacupSinkHandle", "[CustomStub.Harmony] 洗杯台放置前缀异常（放行原方法）: " + ex.Message);
+                return true;
+            }
+        }
+
+        private static void DestroyCarrierItem(object carrier)
+        {
+            var destroy = carrier.GetType().GetMethod("DestroyCarriedItem",
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            if (destroy != null)
+                destroy.Invoke(carrier, null);
+        }
+
+        internal static System.Reflection.MethodInfo WashingCanHandlePrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("WashingCanHandlePrefix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo WashingHandlePrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("WashingHandlePrefix", BF); }
+        }
+
+        // ============ 禁止脏茶杯放到茶杯水槽台面（DirtyTeacup，2026-10-28） ============
+        //
+        // 洗杯台台面本身是 AttachStation：原版/部分皮肤路径会让整堆脏茶杯先挂到
+        // 水槽上方的 AttachStation，玩家再拿单杯逐个送洗。产品要求脏茶杯不能放到
+        // 台面，必须整堆直接进洗涤计数。这里拦 AttachStation 的 CanHandle/Handle，
+        // 只针对「茶杯水槽的洗涤台面/烘干位 + 本族脏茶杯」，放行干净杯/其它物品。
+
+        private static bool TeacupAttachCanHandlePrefix(object __instance, object _iCarrier, ref bool __result)
+        {
+            try
+            {
+                var station = __instance as Component;
+                if (station == null || !DirtyTeacupMergeWatcher.IsTeacupSinkAttachStation(station))
+                    return true;
+                var carried = DirtyTeacupMergeWatcher.InspectCarried(_iCarrier);
+                if (!DirtyTeacupMergeWatcher.IsDirtyTeacupItem(carried))
+                    return true;
+                __result = false;
+                StubLog.Log("[CustomStub.Harmony] 阻止脏茶杯放到茶杯水槽台面（改走洗涤计数）: "
+                    + (carried != null ? carried.name : "?"));
+                return false;
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("teacupAttachCan", "[CustomStub.Harmony] 茶杯水槽台面拦截前缀异常（放行原方法）: " + ex.Message);
+                return true;
+            }
+        }
+
+        private static bool TeacupAttachHandlePrefix(object __instance, object _iCarrier)
+        {
+            try
+            {
+                var station = __instance as Component;
+                if (station == null || !DirtyTeacupMergeWatcher.IsTeacupSinkAttachStation(station))
+                    return true;
+                var carried = DirtyTeacupMergeWatcher.InspectCarried(_iCarrier);
+                if (!DirtyTeacupMergeWatcher.IsDirtyTeacupItem(carried))
+                    return true;
+                return false; // 不挂台面；交给 WashingStation 计数（若未匹配则留手上）
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("teacupAttachHandle", "[CustomStub.Harmony] 茶杯水槽台面放置前缀异常（放行原方法）: " + ex.Message);
+                return true;
+            }
+        }
+
+        internal static System.Reflection.MethodInfo TeacupAttachCanHandlePrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("TeacupAttachCanHandlePrefix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo TeacupAttachHandlePrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("TeacupAttachHandlePrefix", BF); }
+        }
+
+        // ============ 玩家放置动作直达茶杯水槽（DirtyTeacup，2026-10-28） ============
+        //
+        // 不依赖放置目标最终选中 AttachStation 还是 WashingStation：玩家按放置时
+        // 只要目标属于茶杯水槽且手里是本族脏茶杯（单杯/整堆），服务端直接
+        // AddPlates(全部数量) + DestroyCarriedItem；AddPlates 会广播
+        // WashingStationMessage（客户端刷新 m_plateCount/脏杯模型），手里整堆消失。
+
+        private static bool PlaceHeldItemServerPrefix(object _control, object _target)
+        {
+            try
+            {
+                var targetGo = _target as GameObject;
+                var controlComp = _control as Component;
+                if (targetGo == null || controlComp == null)
+                    return true;
+                var washingType = GameApi.Find("WashingStation");
+                var serverWashingType = GameApi.Find("ServerWashingStation");
+                if (washingType == null || serverWashingType == null)
+                    return true;
+                Component washing = targetGo.GetComponentInParent(washingType);
+                if (washing == null)
+                    washing = targetGo.GetComponentInChildren(washingType);
+                if (washing == null)
+                {
+                    var sinkRoot = FindTeacupSinkRoot(targetGo.transform);
+                    if (sinkRoot != null)
+                        washing = sinkRoot.GetComponentInChildren(washingType);
+                }
+                if (washing == null || !DirtyTeacupMergeWatcher.IsTeacupSink(washing))
+                    return true;
+                var serverWashing = washing.GetComponent(serverWashingType);
+                if (serverWashing == null)
+                    return true;
+                // 载体解析：与原生 PlaceHeldItem_Server 保持一致
+                // （_control.gameObject.RequireInterface<ICarrier>() == GetComponent(ICarrier)）。
+                // 若挑到「另一侧」的载体，客户端 DestroyCarriedItem 只做本地 Object.Destroy，
+                // 服务端实体仍在注册表里，世界里的杯堆会残留（用户反馈现象）。
+                string carrierInfo = "";
+                Component carrier = null;
+                var icarrierType = GameApi.Find("ICarrier");
+                if (icarrierType != null)
+                {
+                    carrier = controlComp.gameObject.GetComponent(icarrierType);
+                    if (carrier != null)
+                        carrierInfo = carrier.GetType().Name + "(原生接口)";
+                }
+                if (carrier == null)
+                {
+                    var serverCarrierType = GameApi.Find("ServerPlayerAttachmentCarrier");
+                    if (serverCarrierType != null)
+                    {
+                        carrier = controlComp.gameObject.GetComponent(serverCarrierType);
+                        if (carrier != null)
+                            carrierInfo = carrier.GetType().Name + "(服务端指定)";
+                    }
+                }
+                if (carrier == null && icarrierType != null)
+                {
+                    carrier = controlComp.gameObject.GetComponentInChildren(icarrierType);
+                    if (carrier != null)
+                        carrierInfo = carrier.GetType().Name + "(子物体)";
+                }
+                if (carrier == null)
+                {
+                    var clientCarrierType = GameApi.Find("ClientPlayerAttachmentCarrier");
+                    if (clientCarrierType != null)
+                    {
+                        carrier = controlComp.gameObject.GetComponent(clientCarrierType);
+                        if (carrier != null)
+                            carrierInfo = carrier.GetType().Name + "(客户端兜底)";
+                    }
+                }
+                if (carrier == null)
+                    return true;
+                var carried = DirtyTeacupMergeWatcher.InspectCarried(carrier);
+                if (!DirtyTeacupMergeWatcher.IsDirtyTeacupItem(carried))
+                    return true;
+                var addPlates = serverWashing.GetType().GetMethod("AddPlates",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public
+                    | System.Reflection.BindingFlags.Instance);
+                if (addPlates == null)
+                    return true;
+                int size = DirtyTeacupMergeWatcher.GetCarriedStackSize(carried);
+                if (size <= 0)
+                    size = 1;
+                addPlates.Invoke(serverWashing, new object[] { size });
+                var destroyFlags = System.Reflection.BindingFlags.Public
+                    | System.Reflection.BindingFlags.Instance;
+                var destroy = carrier.GetType().GetMethod("DestroyCarriedItem", destroyFlags);
+                if (destroy != null)
+                    destroy.Invoke(carrier, null);
+                string leftover = "";
+                // 编辑器 Play/主机单机：客户端载体只在本地做预测，服务端 DestroyCarriedItem
+                // 清的是服务端侧；客户端手里若还挂着同一件，模型会留在世界里
+                //（用户反馈「整堆放下去了，其他杯子还在」）。
+                try
+                {
+                    var clientCarrierType = GameApi.Find("ClientPlayerAttachmentCarrier");
+                    if (clientCarrierType != null)
+                    {
+                        var clientCarrier = controlComp.gameObject.GetComponent(clientCarrierType);
+                        if (clientCarrier != null && clientCarrier != carrier)
+                        {
+                            var clientCarried = DirtyTeacupMergeWatcher.InspectCarried(clientCarrier);
+                            if (clientCarried != null && clientCarried == carried)
+                            {
+                                var clientDestroy = clientCarrier.GetType().GetMethod("DestroyCarriedItem", destroyFlags);
+                                if (clientDestroy != null)
+                                {
+                                    clientDestroy.Invoke(clientCarrier, null);
+                                    leftover += " 客户端载体已清";
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (System.Exception exClient)
+                {
+                    WarnOnce("teacupPlaceClientCarrier",
+                        "[CustomStub.Harmony] 客户端载体清理异常: " + exClient.Message);
+                }
+                // 销毁后复核：手里还留着东西 = 载体选错或客户端预测未清，
+                // 会表现成「整堆进去了，世界里还留一堆」。
+                try
+                {
+                    var stillCarried = DirtyTeacupMergeWatcher.InspectCarried(carrier);
+                    if (stillCarried != null)
+                        leftover += " ⚠服务端载体销毁后仍在手上: " + stillCarried.name
+                            + "(active=" + stillCarried.activeSelf + ")";
+                }
+                catch (System.Exception exLeft)
+                {
+                    leftover += " ⚠复核异常: " + exLeft.Message;
+                }
+                // 兜底：本地 Object.Destroy ≠ 网络销毁。若销毁后实体仍然存活
+                //（客户端载体路径的典型表现），改走 NetworkUtils.DestroyObject
+                // 广播 DestroyEntity，世界里的杯堆不会残留。
+                try
+                {
+                    if (carried != null && carried.activeInHierarchy)
+                    {
+                        var netUtils = GameApi.Find("NetworkUtils");
+                        var destroyObject = netUtils != null
+                            ? netUtils.GetMethod("DestroyObject",
+                                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+                            : null;
+                        if (destroyObject != null)
+                        {
+                            destroyObject.Invoke(null, new object[] { carried });
+                            leftover += " 已走 DestroyObject 兜底";
+                        }
+                    }
+                }
+                catch (System.Exception exFallback)
+                {
+                    leftover += " ⚠DestroyObject 兜底异常: " + exFallback.Message;
+                }
+                StubLog.Log("[CustomStub.Harmony] 玩家放置动作：脏茶杯直接进洗杯水槽（+"
+                    + size + " 待洗） 载体=" + carrierInfo + leftover
+                    + " → " + SinkDirtyPlateVisibility.Describe(washing));
+                return false; // 跳过原 PlaceHeldItem_Server（不再走 AttachStation）
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("teacupPlaceDirect", "[CustomStub.Harmony] 脏茶杯直达洗杯水槽前缀异常（放行原方法）: " + ex.Message);
+                return true;
+            }
+        }
+
+        private static GameObject FindTeacupSinkRoot(Transform t)
+        {
+            while (t != null)
+            {
+                if (t.GetComponent("TeacupSinkRebuilder") != null)
+                    return t.gameObject;
+                if (!string.IsNullOrEmpty(t.name) &&
+                    t.name.StartsWith("web_sink_teacup", System.StringComparison.Ordinal))
+                    return t.gameObject;
+                t = t.parent;
+            }
+            return null;
+        }
+
+        internal static System.Reflection.MethodInfo PlaceHeldItemServerPrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("PlaceHeldItemServerPrefix", BF); }
+        }
+
+        // ============ 脏茶杯同步诊断（2026-10-28） ============
+        //
+        // 背景：服务端 AddPlates(+5) 日志已确认，但编辑器 Play 里水槽只显示 1 个脏杯
+        // （用户反馈）。两侧同时打点即可区分两种病因：
+        //   · 服务端 AddPlates 后计数没涨   → 打到了错的 WashingStation 实例；
+        //   · 服务端涨了、客户端 ApplyServerEvent 没收到 AddPlates → 同步/镜像问题；
+        //   · 两侧都是 5、已显示=3         → 纯显示层（TeacupSinkRebuilder 槽位）问题。
+        // 只在茶杯水槽上打点，且 InteractionState（每帧刷新的进度消息）不记，避免刷屏。
+
+        private static System.Reflection.FieldInfo s_wsMsgTypeField;
+        private static System.Reflection.FieldInfo s_wsMsgCountField;
+
+        /// <summary>ServerWashingStation.AddPlates(int) 之后：打印权威计数并即时刷新脏杯显隐。</summary>
+        private static void AddPlatesTracePostfix(object __instance, int plateCount)
+        {
+            try
+            {
+                var washing = ResolveWashingStation(__instance as Component);
+                if (washing == null || !DirtyTeacupMergeWatcher.IsTeacupSink(washing))
+                    return;
+                // 1 -> 1 个、2 -> 2 个、>=3 -> 3 个：服务端权威计数落地后立刻显示，
+                // 不等客户端消息（单机 Play 里服务端计数就是最终事实）。
+                SinkDirtyPlateVisibility.ApplyNow(washing);
+                StubLog.Log("[CustomStub.Harmony] 服务端 AddPlates(+" + plateCount + ") 后 → "
+                    + SinkDirtyPlateVisibility.Describe(washing));
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("teacupAddPlatesTrace", "[CustomStub.Harmony] AddPlates 诊断异常: " + ex.Message);
+            }
+        }
+
+        /// <summary>ClientWashingStation.ApplyServerEvent 之后：客户端按消息落地再校正一次。</summary>
+        private static void ClientWashingEventPostfix(object __instance, object serialisable)
+        {
+            try
+            {
+                var washing = ResolveWashingStation(__instance as Component);
+                if (washing == null || !DirtyTeacupMergeWatcher.IsTeacupSink(washing))
+                    return;
+                SinkDirtyPlateVisibility.ApplyNow(washing);
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("teacupClientMsgPost", "[CustomStub.Harmony] 客户端洗杯消息后校正异常: " + ex.Message);
+            }
+        }
+
+        /// <summary>ClientWashingStation.ApplyServerEvent：确认 AddPlates/CleanedPlate 是否送达客户端。</summary>
+        private static void ClientWashingEventPrefix(object __instance, object serialisable)
+        {
+            try
+            {
+                if (serialisable == null)
+                    return;
+                var msgType = serialisable.GetType();
+                if (msgType.Name != "WashingStationMessage")
+                    return;
+                if (s_wsMsgTypeField == null || s_wsMsgCountField == null)
+                {
+                    s_wsMsgTypeField = msgType.GetField("m_msgType",
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic
+                        | System.Reflection.BindingFlags.Instance);
+                    s_wsMsgCountField = msgType.GetField("m_plateCount",
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic
+                        | System.Reflection.BindingFlags.Instance);
+                    if (s_wsMsgTypeField == null || s_wsMsgCountField == null)
+                        return;
+                }
+                // InteractionState = 0（交互进度，每帧都发）；只记 AddPlates=1 / CleanedPlate=2。
+                int type = System.Convert.ToInt32(s_wsMsgTypeField.GetValue(serialisable),
+                    System.Globalization.CultureInfo.InvariantCulture);
+                if (type == 0)
+                    return;
+                var washing = ResolveWashingStation(__instance as Component);
+                if (washing == null || !DirtyTeacupMergeWatcher.IsTeacupSink(washing))
+                    return;
+                int count = System.Convert.ToInt32(s_wsMsgCountField.GetValue(serialisable),
+                    System.Globalization.CultureInfo.InvariantCulture);
+                StubLog.Log("[CustomStub.Harmony] 客户端收到洗杯消息 "
+                    + (type == 1 ? "AddPlates" : "CleanedPlate") + "(计数=" + count + ") → "
+                    + SinkDirtyPlateVisibility.Describe(washing));
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("teacupClientMsgTrace", "[CustomStub.Harmony] 客户端洗杯消息诊断异常: " + ex.Message);
+            }
+        }
+
+        /// <summary>把 Server/ClientWashingStation 组件解析成同物体的 WashingStation。</summary>
+        private static Component ResolveWashingStation(Component comp)
+        {
+            if (comp == null)
+                return null;
+            var washingType = GameApi.Find("WashingStation");
+            if (washingType == null)
+                return null;
+            return comp.gameObject.GetComponent(washingType) as Component;
+        }
+
+        internal static System.Reflection.MethodInfo AddPlatesTracePostfixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("AddPlatesTracePostfix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo ClientWashingEventPrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ClientWashingEventPrefix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo ClientWashingEventPostfixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ClientWashingEventPostfix", BF); }
+        }
+
+        // ============ 堆完整性守卫（2026-10-27 茶杯堆拾取/脏堆渲染崩溃事故） ============
+        //
+        // 背景：编辑器 Play 下 CleanPlateStackSeeder 的预览杯会被宿主
+        // ServerStack.StartSynchronising 按 tag 收进私有 m_stackItems；预览随后被
+        // 销毁（seeder 补杯成功后 DestroyPreviews / 物理清理），列表留下失效引用——
+        // 宿主 RemoveFromStack 对失效项 RequestInterface<IAttachment>() 直接抛
+        // MissingReferenceException（拾取即崩）。DirtyPlateStackCosmetics 在
+        // Start/PlateChanged 里缓存子物体 Renderer，预览销毁不走 OnPlateRemoved
+        // 回调，Update 里 SetPropertyBlock 打到失效 Renderer 同样崩。
+        // Assets/Scripts 不可改，此处用前缀在宿主入口先剔除失效项：
+        //   · ServerStack.GetSize/InspectTopOfStack/AddToStack/RemoveFromStack
+        //     四入口统一剔除（下游 ServerPlateStackBase/ServerCleanPlateStack 全部
+        //     经由 m_stack 这些方法取数，自动受益）；
+        //   · ServerCleanPlateStack.HandlePickup：剔除后为空则跳过原方法（否则
+        //     override RemoveFromStack 对 null 调 RequestComponent + CarryItem(null)）；
+        //   · DirtyPlateStackCosmetics.Update：m_renderers 含失效项先重建缓存。
+        // 反射目标缺失/异常 = WarnOnce 后放行原方法（原版行为兜底）。
+
+        private static System.Reflection.FieldInfo s_stackItemsField;
+        private static System.Reflection.FieldInfo s_cosRenderersField;
+        private static System.Reflection.MethodInfo s_cosUpdateRenderersMethod;
+
+        /// <summary>剔除 ServerStack.m_stackItems 里的失效项并返回剔除后数量；
+        /// -1 = 探测/清理失败（调用方放行原方法兜底）。</summary>
+        private static int PurgeAndCountStackItems(object serverStack)
+        {
+            try
+            {
+                if (s_stackItemsField == null)
+                {
+                    s_stackItemsField = serverStack.GetType().GetField("m_stackItems",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (s_stackItemsField == null)
+                        WarnOnce("stackItemsField", "[CustomStub.Harmony] ServerStack.m_stackItems 反射缺失，堆失效项剔除不可用");
+                }
+                if (s_stackItemsField == null)
+                    return -1;
+                var list = s_stackItemsField.GetValue(serverStack)
+                    as System.Collections.Generic.List<GameObject>;
+                if (list == null)
+                    return -1;
+                for (int i = list.Count - 1; i >= 0; i--)
+                {
+                    if (list[i] == null)
+                        list.RemoveAt(i);
+                }
+                return list.Count;
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("stackPurgeEx", "[CustomStub.Harmony] 堆失效项剔除异常（放行原方法）: " + ex.Message);
+                return -1;
+            }
+        }
+
+        /// <summary>ServerStack 四入口统一前缀：先剔除失效堆内项。</summary>
+        private static void ServerStackPurgePrefix(object __instance)
+        {
+            PurgeAndCountStackItems(__instance);
+        }
+
+        /// <summary>ServerCleanPlateStack.HandlePickup 前缀：剔除失效项后堆空则
+        /// 跳过原方法（宿主 override RemoveFromStack 会对 null 调 RequestComponent，
+        /// 且 CarryItem(null) 无防护）。</summary>
+        private static bool CleanStackHandlePickupGuardPrefix(object __instance)
+        {
+            var comp = __instance as Component;
+            if (comp == null)
+                return true;
+            var stack = comp.GetComponent("ServerStack");
+            if (stack == null)
+                return true;
+            int count = PurgeAndCountStackItems(stack);
+            if (count != 0)
+                return true;    // 有货放行；-1 = 探测失败同样放行兜底
+            WarnOnce("cleanPickupEmpty", "[CustomStub.Harmony] 拦截空净杯堆拾取：失效堆内项已剔除，本次拾取忽略");
+            return false;
+        }
+
+        /// <summary>DirtyPlateStackCosmetics.Update 前缀：渲染缓存含失效项时先调
+        /// 私有 UpdateRenderers() 重建再放行（宿主仅 OnPlateAdded/Removed 刷新缓存，
+        /// seeder 预览销毁不走该回调）。</summary>
+        private static void DirtyCosmeticsPurgeRenderersPrefix(object __instance)
+        {
+            try
+            {
+                if (s_cosRenderersField == null)
+                {
+                    var t = __instance.GetType();
+                    s_cosRenderersField = t.GetField("m_renderers",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    s_cosUpdateRenderersMethod = t.GetMethod("UpdateRenderers",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (s_cosRenderersField == null || s_cosUpdateRenderersMethod == null)
+                        WarnOnce("cosFields", "[CustomStub.Harmony] DirtyPlateStackCosmetics 反射缺失，渲染缓存自愈不可用");
+                }
+                if (s_cosRenderersField == null || s_cosUpdateRenderersMethod == null)
+                    return;
+                var renderers = s_cosRenderersField.GetValue(__instance) as Renderer[];
+                if (renderers == null)
+                    return;
+                bool dead = false;
+                for (int i = 0; i < renderers.Length; i++)
+                {
+                    if (renderers[i] == null)
+                    {
+                        dead = true;
+                        break;
+                    }
+                }
+                if (dead)
+                    s_cosUpdateRenderersMethod.Invoke(__instance, null);
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("cosPurgeEx", "[CustomStub.Harmony] 脏杯堆渲染缓存自愈异常（放行原方法）: " + ex.Message);
+            }
+        }
+
+        internal static System.Reflection.MethodInfo ServerStackPurgePrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ServerStackPurgePrefix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo CleanStackHandlePickupGuardPrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("CleanStackHandlePickupGuardPrefix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo DirtyCosmeticsPurgeRenderersPrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("DirtyCosmeticsPurgeRenderersPrefix", BF); }
+        }
+
+        // ============ 附着站悬空引用守卫（2026-10-27 放置即崩事故） ============
+        //
+        // 背景：ServerAttachStation.m_item 指向的物品被销毁（脏杯合并/丢弃/服务端
+        // 销毁）后引用残留，CanHandlePlacement 等入口 `m_item.AccessGameObject()`
+        // 抛 MissingReferenceException（21:55 事故栈，ServerAttachStation.cs:149）。
+        // 宿主侧上一届用源码补丁 HasLiveItem() 解决；Assets/Scripts 禁改后移植为
+        // 此前缀：所有读 m_item 的公共入口 + 每帧 UpdateSynchronising 先做假 null
+        // 检查，失效则清空引用（与上届补丁语义一致）。ClientAttachStation 同理。
+
+        private static System.Reflection.FieldInfo s_attachItemField;
+        private static System.Type s_attachItemFieldType;
+
+        /// <summary>附着站 m_item（IAttachment/IClientAttachment，实现均为 Component）
+        /// 假 null 检查，失效则置 null。</summary>
+        private static void PurgeAttachStationItem(object station)
+        {
+            try
+            {
+                var t = station.GetType();
+                if (s_attachItemField == null || s_attachItemFieldType != t)
+                {
+                    s_attachItemField = t.GetField("m_item",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    s_attachItemFieldType = t;
+                    if (s_attachItemField == null)
+                        WarnOnce("attachItemField:" + t.Name, "[CustomStub.Harmony] " + t.Name + ".m_item 反射缺失，附着站悬空引用清理不可用");
+                }
+                if (s_attachItemField == null)
+                    return;
+                var uo = s_attachItemField.GetValue(station) as UnityEngine.Object;
+                if (!ReferenceEquals(uo, null) && uo == null)
+                {
+                    s_attachItemField.SetValue(station, null);
+                    WarnOnce("attachItemPurged:" + t.Name, "[CustomStub.Harmony] " + t.Name + " 引用物品已销毁，悬空引用已清空（防放置/拾取 MissingReferenceException）");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("attachPurgeEx", "[CustomStub.Harmony] 附着站悬空引用清理异常（放行原方法）: " + ex.Message);
+            }
+        }
+
+        /// <summary>Server/ClientAttachStation 各入口统一前缀：先清悬空 m_item。</summary>
+        private static void AttachStationPurgePrefix(object __instance)
+        {
+            PurgeAttachStationItem(__instance);
+        }
+
+        internal static System.Reflection.MethodInfo AttachStationPurgePrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("AttachStationPurgePrefix", BF); }
+        }
+
+        // ============ 高亮失效引用守卫（2026-10-27 靠近工作台卡死事故） ============
+        //
+        // 背景：ClientAnticipateInteractionHighlight.m_children / m_renderers 缓存
+        // 子物体（堆上杯盘）引用，子物体被销毁（合并/洗杯/服务端销毁）后残留——
+        // IncrementHighlight 递归进已销毁子物体 / Highlight 遍历失效 Renderer 即抛
+        // MissingReferenceException，并让 PlayerControls.Update 每帧中断（21:39/
+        // 21:41 事故栈：FindRenderers←RebuildHighlightMaterials←Highlight←
+        // IncrementHighlight 递归）。上届源码补丁逐方法加守卫；禁改后移植为前缀：
+        //   · Increment/DecrementHighlight：先剔除 m_children 失效项；
+        //   · Highlight/Unhighlight/RebuildHighlightMaterials：平行剔除
+        //     m_renderers + m_startingBrightness 失效索引；m_highlight 假 null 时
+        //     Highlight/Rebuild 跳过（Unhighlight 不读 m_highlight，剔除后放行）；
+        //   · OnItemAttachmentAdded/Removed：attachment 假 null 跳过。
+        // OnDestroy 自摘除不移植——后果已被「用时剔除」覆盖。
+
+        private static System.Reflection.FieldInfo s_hlChildrenField;
+        private static System.Reflection.FieldInfo s_hlRenderersField;
+        private static System.Reflection.FieldInfo s_hlBrightnessField;
+        private static System.Reflection.FieldInfo s_hlHighlightField;
+        private static System.Reflection.MethodInfo s_hlSaveBrightness;
+        private static bool s_hlFieldsMissing;
+
+        private static bool EnsureHighlightFields(object inst)
+        {
+            if (s_hlFieldsMissing)
+                return false;
+            if (s_hlChildrenField != null)
+                return true;
+            var t = inst.GetType();
+            System.Reflection.BindingFlags f = System.Reflection.BindingFlags.NonPublic
+                | System.Reflection.BindingFlags.Instance;
+            s_hlChildrenField = t.GetField("m_children", f);
+            s_hlRenderersField = t.GetField("m_renderers", f);
+            s_hlBrightnessField = t.GetField("m_startingBrightness", f);
+            s_hlHighlightField = t.GetField("m_highlight", f);
+            s_hlSaveBrightness = t.GetMethod("SaveRenderersStartingBrightness", f);
+            if (s_hlChildrenField == null || s_hlRenderersField == null
+                || s_hlBrightnessField == null || s_hlHighlightField == null)
+            {
+                WarnOnce("hlFields", "[CustomStub.Harmony] 高亮组件字段反射缺失，失效引用剔除不可用");
+                s_hlFieldsMissing = true;
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>Increment/DecrementHighlight 前缀：剔除 m_children 失效项
+        /// （宿主正序遍历+递归，失效项会让递归目标即崩）。</summary>
+        private static void AntHighlightChildPurgePrefix(object __instance)
+        {
+            try
+            {
+                if (!EnsureHighlightFields(__instance))
+                    return;
+                var children = s_hlChildrenField.GetValue(__instance) as System.Collections.IList;
+                if (children == null)
+                    return;
+                for (int i = children.Count - 1; i >= 0; i--)
+                {
+                    var uo = children[i] as UnityEngine.Object;
+                    if (!ReferenceEquals(uo, null) && uo == null)
+                        children.RemoveAt(i);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("hlChildPurgeEx", "[CustomStub.Harmony] 高亮子列表剔除异常（放行原方法）: " + ex.Message);
+            }
+        }
+
+        /// <summary>Highlight/Unhighlight/RebuildHighlightMaterials 前缀：平行剔除
+        /// m_renderers 与 m_startingBrightness 的失效索引（两结构按下标一一对应，
+        /// 必须同步剔除）；亮度数组错位时调私有 SaveRenderersStartingBrightness 重建。
+        /// m_highlight 假 null 时 Highlight/Rebuild 跳过（宿主会 deref 它）。</summary>
+        private static bool AntHighlightRenderersPurgePrefix(object __instance,
+            System.Reflection.MethodBase __originalMethod)
+        {
+            try
+            {
+                if (!EnsureHighlightFields(__instance))
+                    return true;
+                var hl = s_hlHighlightField.GetValue(__instance) as UnityEngine.Object;
+                bool hlDead = !ReferenceEquals(hl, null) && hl == null;
+                if (hlDead && __originalMethod != null
+                    && (__originalMethod.Name == "Highlight" || __originalMethod.Name == "RebuildHighlightMaterials"))
+                    return false;
+                var renderers = s_hlRenderersField.GetValue(__instance)
+                    as System.Collections.Generic.List<Renderer>;
+                if (renderers == null || renderers.Count == 0)
+                    return true;
+                var brightness = s_hlBrightnessField.GetValue(__instance) as float[][];
+                bool aligned = brightness != null && brightness.Length == renderers.Count;
+                var keptRenderers = new System.Collections.Generic.List<Renderer>(renderers.Count);
+                var keptBrightness = aligned ? new System.Collections.Generic.List<float[]>(brightness.Length) : null;
+                for (int i = 0; i < renderers.Count; i++)
+                {
+                    if (renderers[i] == null)
+                        continue;
+                    keptRenderers.Add(renderers[i]);
+                    if (keptBrightness != null)
+                        keptBrightness.Add(brightness[i]);
+                }
+                if (keptRenderers.Count == renderers.Count)
+                    return true;    // 无失效项，零开销放行
+                renderers.Clear();
+                renderers.AddRange(keptRenderers);
+                if (keptBrightness != null)
+                    s_hlBrightnessField.SetValue(__instance, keptBrightness.ToArray());
+                else if (s_hlSaveBrightness != null)
+                    s_hlSaveBrightness.Invoke(__instance, null);    // 错位兜底：重新采样
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("hlRendererPurgeEx", "[CustomStub.Harmony] 高亮渲染缓存剔除异常（放行原方法）: " + ex.Message);
+                return true;
+            }
+        }
+
+        /// <summary>OnItemAttachmentAdded/Removed 前缀：attachment 假 null 跳过
+        /// （宿主会 attachment.AccessGameObject() 直接崩）。参数名须与宿主一致。</summary>
+        private static bool AntHighlightAttachmentGuardPrefix(object attachment)
+        {
+            var uo = attachment as UnityEngine.Object;
+            if (!ReferenceEquals(uo, null) && uo == null)
+                return false;
+            return true;
+        }
+
+        internal static System.Reflection.MethodInfo AntHighlightChildPurgePrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("AntHighlightChildPurgePrefix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo AntHighlightRenderersPurgePrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("AntHighlightRenderersPurgePrefix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo AntHighlightAttachmentGuardPrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("AntHighlightAttachmentGuardPrefix", BF); }
+        }
+
+        // ============ 杯盘半成品回落（2026-10-27，移植自被禁改的 Plate/GameUtils 补丁） ============
+        //
+        // 原版 Plate.CanPlaceOnPlate 只在「放进去后恰好等于某个配方」时放行，
+        // 空杯放牛奶/蜂蜜、热水+牛奶 等半成品组合被弹回。补丁版在配方匹配失败时
+        // 回落 GameUtils.CanStillFormOrder（同 step 配方真子集 → 放行）。
+        // 移植难点：原方法早退路径（无 TransferBehaviour/不可转移/订单修改特例）
+        // 同样返回 false，回落只该在「已转移但配方不匹配」时触发——用前后缀
+        // __state 快照内容数：内容数变化 = 走过了 TransferToContainer。
+
+        private static System.Reflection.MethodInfo s_plateGetContents;
+        private static System.Type s_plateGetContentsType;
+        private static System.Reflection.MethodInfo s_plateGetComposition;
+        private static System.Reflection.FieldInfo s_plateStepField;
+
+        /// <summary>IIngredientContents.GetContents() 反射取数，失败 -1。</summary>
+        private static int SnapshotContentsCount(object adapter)
+        {
+            if (adapter == null)
+                return -1;
+            var t = adapter.GetType();
+            if (s_plateGetContents == null || s_plateGetContentsType != t)
+            {
+                s_plateGetContents = t.GetMethod("GetContents",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                s_plateGetContentsType = t;
+                if (s_plateGetContents == null)
+                    WarnOnce("plateGetContents", "[CustomStub.Harmony] IIngredientContents.GetContents 反射缺失，半成品回落不可用");
+            }
+            if (s_plateGetContents == null)
+                return -1;
+            var arr = s_plateGetContents.Invoke(adapter, null) as System.Array;
+            return arr != null ? arr.Length : -1;
+        }
+
+        /// <summary>Plate.CanPlaceOnPlate 前缀：快照盘内内容数（__state 传给后缀）。</summary>
+        private static void CanPlaceOnPlateFallbackPrefix(object _ingredientContentsAdapter, out int __state)
+        {
+            __state = -1;
+            try
+            {
+                __state = SnapshotContentsCount(_ingredientContentsAdapter);
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("plateSnapEx", "[CustomStub.Harmony] 半成品回落快照异常: " + ex.Message);
+            }
+        }
+
+        /// <summary>Plate.CanPlaceOnPlate 后缀：原判 false 且内容数变化（=已转移、
+        /// 仅配方匹配失败）时，用 PlatePartialOrderFallback 复刻补丁回落逻辑。</summary>
+        private static void CanPlaceOnPlateFallbackPostfix(object __instance,
+            object _ingredientContentsAdapter, int __state, ref bool __result)
+        {
+            if (__result || __state < 0)
+                return;
+            try
+            {
+                int now = SnapshotContentsCount(_ingredientContentsAdapter);
+                if (now < 0 || now == __state)
+                    return;    // 早退路径（未发生转移）——保持原版拒绝
+                var comp = __instance as Component;
+                if (comp == null)
+                    return;
+                if (s_plateGetComposition == null)
+                    s_plateGetComposition = comp.GetType().GetMethod("GetOrderComposition",
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (s_plateStepField == null)
+                    s_plateStepField = comp.GetType().GetField("m_platingStep",
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (s_plateGetComposition == null || s_plateStepField == null)
+                {
+                    WarnOnce("plateMembers", "[CustomStub.Harmony] Plate.GetOrderComposition/m_platingStep 反射缺失，半成品回落不可用");
+                    return;
+                }
+                var contents = s_plateGetContents.Invoke(_ingredientContentsAdapter, null);
+                var composition = s_plateGetComposition.Invoke(comp, new object[] { contents });
+                var step = s_plateStepField.GetValue(comp);
+                if (PlatePartialOrderFallback.CanStillFormOrder(composition, step))
+                {
+                    __result = true;
+                    StubLog.Dbg("[CustomStub.Harmony] 半成品组合按回落判定放行入杯/盘");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("plateFallbackEx", "[CustomStub.Harmony] 半成品回落后缀异常（保持原判）: " + ex.Message);
+            }
+        }
+
+        internal static System.Reflection.MethodInfo CanPlaceOnPlateFallbackPrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("CanPlaceOnPlateFallbackPrefix", BF); }
+        }
+
+        internal static System.Reflection.MethodInfo CanPlaceOnPlateFallbackPostfixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("CanPlaceOnPlateFallbackPostfix", BF); }
+        }
+
         // ============ 空炮发射拦截（CannonGuard，2026-09-19 真机事故） ============
         //
         // 目标：ServerCannon.OnTrigger(string)。空炮发射（m_loadedObject 为 null
@@ -962,6 +2042,19 @@ namespace CustomStub
                 var arr = go.GetComponent<LevelEditorStub.PseudoPrefabSOArray>();
                 if (arr != null && arr.pseudoPrefabSOs != null && arr.pseudoPrefabSOs.Length > 0)
                     dispenser.spawnerItemPrefabSO = arr.pseudoPrefabSOs[0];
+            }
+            // 派生 stub 的 pseudoPrefabSO 为空时先继承基础 SO：旧包（只补了派生
+            // stub 没补运行时）在真机由 OC2DIYLevel 按派生分类挂运行时后，Setup
+            // 会读空 SO → LoadAsset(null) NRE（茶杯回收台不回流/卡加载）。
+            if (baseStub.pseudoPrefabSO != null)
+            {
+                foreach (var s in go.GetComponents<LevelEditorStub.PseudoPrefabStub>())
+                {
+                    if (s == null || s == baseStub)
+                        continue;
+                    if (s.pseudoPrefabSO == null)
+                        s.pseudoPrefabSO = baseStub.pseudoPrefabSO;
+                }
             }
             UnityEngine.Object.DestroyImmediate(baseStub);
             StubLog.Log("[CustomStub] 双 stub 自愈: " + go.name

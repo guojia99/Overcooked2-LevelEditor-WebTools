@@ -438,6 +438,30 @@ namespace CustomStub
         ///    RespawnCollider Hit 触碰击杀；动画组负责位移；stub_levels webkillerghost。
         /// 3.10.2（2026-10-15 致命鬼魂多样式）：
         ///  - Web 右键切换 npc_ghost / npc_keep / ghost_chef（commonW4 视觉代理 SO）。
-        public const string Value = "3.11.0";
+        /// 3.12.0（2026-10-26 热水器 + 奶茶体系）：
+        ///  - Kettle + web_kettle_hotwater（commonW5）：按开关烧水 5s（vanilla
+        ///    TriggerTimer 同步 UI + 三态动画）→ Active 才可接一杯热水（CanHandlePlacement
+        ///    前缀门禁）→ 冷却复位开关；接水食材 = 本库 Node_HotWater（uID 100000004）。
+        ///    特征 kettle；Harmony 组 .kettle（门禁/接水/客户端表现三补丁，按需装）。
+        /// 4.0.0（2026-10-28 commonW5 版本门控断点）：
+        ///  - 本版运行时主内容 = commonW5 增量库：OC1/AYCE 主题 BGM 30 首
+        ///    （audio/music，PseudoPrefabSO 直引）、桌台皮肤 丛林/生日
+        ///    （counters + CounterJungleSO/CounterAnniversarySO）、自定义食材
+        ///    辣椒/茶叶/葱（uID 100000001–100000003）、卷饼共享菜谱 6 个
+        ///    （custom_recipes/burrito，uidPrefix 58323）、茶杯全链路
+        ///    （web_teacup / web_teacup_dirty / web_teacup_stack_clean /
+        ///    web_teacup_stack_dirty / web_sink_teacup / web_teacup_return）：
+        ///    CleanPlateStackSeeder 叠杯预览、TeacupSinkRebuilder 水槽脏杯视觉、
+        ///    SinkDirtyPlateVisibility 服务端计数权威、DirtyTeacupMergeWatcher
+        ///    合并单杯；脏茶杯禁止挂水槽台面，放置直达洗涤 AddPlates。
+        ///  - 热水器 + 奶茶体系（Kettle，3.12.0 起）属 commonW5，见上一条。
+        ///  - 版本门控断点：Loader 兼容期（3.5.0 ≤ v &lt; 4.0.0）到此结束——本版起
+        ///    不再为「有 requires.txt、无 stub_levels.txt」的旧导出集生成
+        ///    "集|*|legacy" 兼容条目（旧集需用 v0.11.0 编辑器重新导出一次）；
+        ///    3.5.0 的 stub_levels.txt 逐关卡清单格式继续支持，不允许砍上一版格式。
+        ///  - Loader PluginVersion 同步 4.0.0（requires.txt 门控与依赖包版本对齐）。
+        ///  - ⚠ 改 StubVersion 后须 Unity 重编译并重新 staging
+        ///    RuntimeDll/WebCustomStubRuntime.dll.bytes（导出新鲜度守卫会拦过期包）。
+        public const string Value = "4.0.0";
     }
 }

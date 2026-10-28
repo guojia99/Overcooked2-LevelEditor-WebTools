@@ -7,7 +7,7 @@ public static class LayoutEditorCatalogLookup
     private static readonly Dictionary<string, LayoutFootprint> Footprints = new Dictionary<string, LayoutFootprint>
     {
         { "ServingStation", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
-        // 所有水槽 2×1（含马克杯水槽 / 洗杯槽 / 各 DLC 水槽）
+        // 所有水槽 2×1（含洗茶杯水槽 / 洗杯槽 / 各 DLC 水槽）
         { "Sink", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
         { "SinkMug", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
         { "SinkTray", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
@@ -18,6 +18,12 @@ public static class LayoutEditorCatalogLookup
         { "custom_utensil_plate", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
         { "custom_utensil_tray", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
         { "custom_utensil_clean_plate_stack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "web_teacup", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "web_teacup_stack_clean", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "web_teacup_dirty", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        { "web_teacup_stack_dirty", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
+        // 洗茶杯水槽 2×1（commonW5/prefabs/counters/）；茶杯回收台 1×1 默认
+        { "web_sink_teacup", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
         { "custom_utensil_dirty_plate", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
         { "custom_utensil_dirty_plate_stack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
         { "custom_utensil_clean_tray_stack", new LayoutFootprint { cellsX = 0.9f, cellsZ = 0.9f } },
@@ -28,6 +34,9 @@ public static class LayoutEditorCatalogLookup
         { "SinkGlass", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
         { "workstation_sink_mug_01_wood", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
         { "dlc09_workstation_sink_mug_01_wood", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
+        // 脏茶杯台（茶杯回收台）：1×1 工作台
+        { "workstation_mug_return", new LayoutFootprint { cellsX = 1, cellsZ = 1 } },
+        { "dlc09_workstation_mug_return_winter", new LayoutFootprint { cellsX = 1, cellsZ = 1 } },
         { "dlc13_workstation_sink_01_wood", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
         { "workstation_sink_01_summer", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
         // 洗餐盘水槽（DLC8 马戏团，3 款皮肤同占地）
@@ -165,6 +174,12 @@ public static class LayoutEditorCatalogLookup
         // Web 火锅专区（commonW1/prefabs/web/hotpot/）
         if (assetPath.Contains("/prefabs/web/hotpot/"))
             return "Design/Counters";
+        // 热水器（commonW5/prefabs/kettle/）：站台类，归 Design/Counters
+        if (assetPath.Contains("/commonW5/prefabs/kettle/"))
+            return "Design/Counters";
+        // 茶杯 / 茶杯堆（commonW5/prefabs/teacups/）：餐具类
+        if (assetPath.Contains("/commonW5/prefabs/teacups/"))
+            return "Design/Utensils";
         // 上游 common04 自定义模板 / 模块分料机
         if (assetPath.Contains("/common04/custom_counter/")
             || assetPath.Contains("/Modules/IngredientSplitter/"))

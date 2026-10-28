@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-26T02:28:28.679Z",
+  "generatedAt": "2026-10-27T06:45:58.771Z",
   "schemaVersion": 10,
   "gridCellSize": 1.2,
-  "itemCount": 3495,
+  "itemCount": 3502,
   "itemChunks": [
     "catalog/items.0.json",
     "catalog/items.1.json",
@@ -43,21 +43,21 @@
       "labelZh": "核心 · 水槽 / 清洁",
       "labelEn": "Sinks & cleaning",
       "layoutTier": "core",
-      "itemCount": 13
+      "itemCount": 14
     },
     {
       "key": "counters/service",
       "labelZh": "核心 · 出餐 / 加工",
       "labelEn": "Serving & processing",
       "layoutTier": "core",
-      "itemCount": 11
+      "itemCount": 13
     },
     {
       "key": "utensils/plates",
       "labelZh": "核心 · 盘杯器具",
       "labelEn": "Plates & glassware",
       "layoutTier": "core",
-      "itemCount": 8
+      "itemCount": 12
     },
     {
       "key": "utensils/cooking",

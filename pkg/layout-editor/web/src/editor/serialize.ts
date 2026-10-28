@@ -67,6 +67,12 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
     const mapId = cat?.id ?? "";
     if (mapId && STUB_KIND_BY_PREFAB_ID[mapId]) rest.stubKind = STUB_KIND_BY_PREFAB_ID[mapId];
   }
+  // 茶杯回收台默认返回脏茶杯（干净杯由水槽烘干位供应；后端导入路径要求
+  // plateReturn 非空才补挂 stub，缺省补齐避免"刚摆下的茶杯回收台不写回配置"）。
+  // 旧关卡曾默认 returnClean=true，由后端 LayoutEditorLayoutMigrations 一次性迁移。
+  if (rest.stubKind === "PlateReturn" && prefabIdFromPath(rest.prefabAssetPath) === "web_teacup_return" && !rest.plateReturn) {
+    rest.plateReturn = { returnClean: false };
+  }
   // 喷雾喷罐不是锅具容器：历史/误配的 CookingUtensil stubKind 一律清除，
   // 防止后端 ApplyStub 补挂 PseudoPrefabCookingUtensil（宿主 Setup 对无容器的
   // child 抛 NRE）。
@@ -96,6 +102,13 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
       onSeconds: rest.timedSwitch.onSeconds ?? 30,
       offSeconds: rest.timedSwitch.offSeconds ?? 30,
       startOn: rest.timedSwitch.startOn !== false,
+    };
+  }
+  // 热水器：秒数钳制 1~60（后端写回同款）；联动开关引用由后端按 switchLinks 反查权威化。
+  if (rest.kettle) {
+    rest.kettle = {
+      heatSeconds: Math.min(60, Math.max(1, rest.kettle.heatSeconds ?? 5)),
+      switchInstanceId: rest.kettle.switchInstanceId ?? "",
     };
   }
   // 步道定时反转：非 Travelator 物品上的一律丢弃（防污染，对齐后端守卫）；

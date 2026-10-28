@@ -112,6 +112,61 @@ public static class LayoutEditorHotPotDiagnostics
                             // 锅刚实例化/未同步完成时 GetOrderComposition 可能 NRE，跳过本次。
                         }
                     }
+                    // 2026-10-26：烧糊汤面只对可移动锅失效时，用这段判断断点：
+                    // 客户端进度是否到 1×/2×、ClientContentsCosmetic 是否在
+                    // ClientCookingHandler.m_ICookingNotified 里、汤面当前颜色。
+                    try
+                    {
+                        var clientCook = col.gameObject.GetComponent<ClientCookingHandler>();
+                        if (clientCook != null)
+                        {
+                            float cliProgress = clientCook.GetCookingProgress();
+                            var cookingHandler = col.gameObject.GetComponent<CookingHandler>();
+                            float cookTime = cookingHandler != null ? cookingHandler.m_cookingtime : 0f;
+                            sb.Append(" cliProg=").Append(cliProgress.ToString("F2"));
+                            if (cookTime > 0f)
+                                sb.Append("(").Append((cliProgress / cookTime).ToString("F2")).Append("x)");
+                            sb.Append(" burning=").Append(clientCook.IsBurning());
+                            var notifiedField = typeof(ClientCookingHandler).GetField(
+                                "m_ICookingNotified",
+                                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                            var notified = notifiedField != null
+                                ? notifiedField.GetValue(clientCook) as IClientCookingNotifed[]
+                                : null;
+                            bool notifiedContents = false;
+                            if (notified != null)
+                            {
+                                for (int n = 0; n < notified.Length; n++)
+                                {
+                                    if (notified[n] is ClientContentsCosmeticDecisions)
+                                    {
+                                        notifiedContents = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            sb.Append(" notifiedContents=").Append(notifiedContents)
+                              .Append("/").Append(notified != null ? notified.Length : 0);
+                            var clientContents = col.gameObject
+                                .GetComponentsInChildren<ClientContentsCosmeticDecisions>(true);
+                            sb.Append(" cliContents=").Append(clientContents.Length);
+                            for (int c = 0; c < clientContents.Length; c++)
+                            {
+                                var data = clientContents[c].GetComponent<ContentsCosmeticDecisions>();
+                                if (data == null || data.m_contentsObject == null)
+                                    continue;
+                                sb.Append(" soup=").Append(data.m_contentsObject.activeInHierarchy);
+                                var rend = data.m_contentsObject.GetComponentInChildren<Renderer>();
+                                if (rend != null && rend.material != null
+                                    && rend.material.HasProperty("_MaskColor"))
+                                    sb.Append(" mask=").Append(rend.material.GetColor("_MaskColor").ToString("F2"));
+                            }
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        sb.Append(" cliDiag=ERR:").Append(ex.GetType().Name);
+                    }
                 }
             }
         }

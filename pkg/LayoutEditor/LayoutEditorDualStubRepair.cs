@@ -178,8 +178,11 @@ public static class LayoutEditorDualStubRepair
         return "[DualStubRepair] " + summary;
     }
 
-    /// <summary>场景 YAML 粗筛：同一文件出现基础 PseudoPrefabStub 与派生 stub 两种脚本 guid。
-    ///  误报无害（打开后按组件实况处置），漏报由修复幂等性兜底。</summary>
+    /// <summary>场景 YAML 粗筛：出现任一派生 stub 脚本 guid 即候选。
+    /// 不能要求同时出现基础 PseudoPrefabStub guid：wrapper 的基础 stub 通常是
+    /// prefab 资产继承的，场景文本里只有场景补挂的派生 stub（茶杯回收台
+    /// web_teacup_return 正是这种形态，旧预检因此漏修）。误报无害（打开后按
+    /// 组件实况处置），漏报由修复幂等性兜底。</summary>
     private static bool SceneMightHaveDualStub(string scenePath)
     {
         try
@@ -188,11 +191,6 @@ public static class LayoutEditorDualStubRepair
             if (!File.Exists(abs))
                 return false;
             var text = File.ReadAllText(abs);
-            if (string.IsNullOrEmpty(_baseStubGuid))
-                _baseStubGuid = AssetDatabase.AssetPathToGUID(BaseStubScriptPath);
-            if (string.IsNullOrEmpty(_baseStubGuid) || text.IndexOf(_baseStubGuid, StringComparison.Ordinal) < 0)
-                return false;
-            // 任一派生 stub 脚本 guid 出现即候选
             foreach (var pair in DerivedStubScriptPaths())
             {
                 if (text.IndexOf(pair.Key, StringComparison.Ordinal) >= 0)
@@ -205,9 +203,6 @@ public static class LayoutEditorDualStubRepair
             return false;
         }
     }
-
-    private const string BaseStubScriptPath = "Assets/Scripts/LevelEditorStub/PseudoPrefabStub.cs";
-    private static string _baseStubGuid;
 
     /// <summary>派生 stub 脚本 guid 前置表（场景粗筛用；新增 stub 类型时按需补充，
     ///  漏项只影响粗筛效率——PromoteDerivedStub 按类型实况处置，不依赖本表）。</summary>

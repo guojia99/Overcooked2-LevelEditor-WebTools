@@ -578,6 +578,19 @@ public class LayoutTimedSwitchDto
     public bool startOn = true;
 }
 
+/// <summary>热水器（web_kettle_hotwater，CustomStub.Kettle）：按开关烧水 heatSeconds
+/// 秒（vanilla TriggerTimer 同步进度 UI + 三态动画 Cold/Heating/Hot）→ 才能接一杯
+/// 热水（Node_HotWater，uID 100000004）→ 冷却复位开关。权威 = 组件，
+/// 载体 = tag "Kettle|"；联动开关 = 文档 switchLinks（目标为本热水器，触发名 Switch）。</summary>
+[Serializable]
+public class LayoutKettleStubDto
+{
+    /** 烧水秒数（≥1，默认 5）。 */
+    public float heatSeconds = 5f;
+    /** 联动开关实例引用（u:&lt;instanceID&gt;，导出展示；权威在 switchLinks）。 */
+    public string switchInstanceId;
+}
+
 [Serializable]
 public class LayoutItemDto
 {
@@ -632,6 +645,8 @@ public class LayoutItemDto
     public LayoutSOArrayStubDto soArray;
     /** 火锅灶台定时开关（cooking_region_floorburner / dlc10 变体）。 */
     public LayoutTimedSwitchDto timedSwitch;
+    /** 热水器（web_kettle_hotwater；CustomStub.Kettle 门禁 + 三态动画）。 */
+    public LayoutKettleStubDto kettle;
     /** 空气斜坡（可行走斜坡）：v9。场景应用为 Ground 层隐形阶梯（根节点
      *  Col_AirSlope + Step 子级，每级 ≤0.3m 且挂游戏原生 Steppable 上步组件），
      *  玩家可沿坡在不同高度地板间行走。 */
@@ -1767,6 +1782,45 @@ public class LevelSummaryDto
 public class LevelListDto
 {
     public LevelSummaryDto[] levels;
+}
+
+// ---------- Resource usage stats（关卡列表依赖统计：按素材来源库分组去重计数） ----------
+
+[Serializable]
+public class LevelLibUsageDto
+{
+    /** 来源库标识：common01…common04 / common / commonW1…commonW4 / custom（本集 custom_content）/ other（内置或非依赖资产）。 */
+    public string library;
+    /** 该库被本关直接引用的去重资产数（场景 guid 引用 + LevelInfoSO 菜谱/食材 SO 引用闭包）。 */
+    public int distinctAssets;
+}
+
+[Serializable]
+public class LevelResourceUsageDto
+{
+    public string assetPath;
+    public string sceneName;
+    public string levelName;
+    public string levelNameZH;
+    public LevelLibUsageDto[] libs;
+}
+
+[Serializable]
+public class SetLibSummaryDto
+{
+    public string library;
+    /** 整集去重资产数（各关并集，跨关共享素材只计一次）。 */
+    public int distinctAssets;
+    /** 引用了该库的关卡数。 */
+    public int levelCount;
+}
+
+[Serializable]
+public class SetResourceStatsDto
+{
+    public LevelResourceUsageDto[] levels;
+    /** 整集汇总（按库排序）。 */
+    public SetLibSummaryDto[] summary;
 }
 
 [Serializable]

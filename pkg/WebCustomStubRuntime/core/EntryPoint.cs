@@ -169,6 +169,13 @@ namespace CustomStub
         private const int CannonGuardDiscoverPhase = 41;
         private const int CannonGuardRefreshIntervalFrames = 30;
         private const int CannonGuardRefreshPhase = 23;
+        // 杯盘容量/Glass 碰撞体调校（移植自被禁改的 Plate.Awake 补丁）：容量被
+        // Server/ClientIngredientContainer 实时读取，30 帧扫描延迟语义等价。
+        private const int PlateCupTuningIntervalFrames = 30;
+        private const int PlateCupTuningPhase = 13;
+        // 茶杯水槽脏杯模型显隐校正（SinkDirtyPlateVisibility）：30 帧一扫。
+        private const int SinkVisibilityIntervalFrames = 30;
+        private const int SinkVisibilityPhase = 27;
 
         private static bool s_installedThisAssembly;
         private static GameObject s_host;
@@ -498,6 +505,20 @@ namespace CustomStub
                 // 场景加载之前安装（PseudoPrefabManagerStub.Awake 在场景加载窗口内跑）。
                 // 目标方法只在 OC2DIYLevel 加载 web 关卡时被调用，官方图零介入。
                 EnsureDualStubHealPatches();
+                // 脏茶杯合并 + 单只脏杯直接入洗杯水槽：无条件安装（此前只在场景扫到
+                // DirtyTeacup| tag 时才装，没放单杯的关卡洗杯台会退回"只手堆叠"的行为）。
+                EnsureDirtyTeacupPatches();
+                // 堆完整性守卫（2026-10-27 茶杯堆拾取/脏堆渲染崩溃）：无条件安装——
+                // 宿主 ServerStack/DirtyPlateStackCosmetics 对失效引用无防护，web 关卡
+                // 预览杯的销毁时序必然触发；补丁=宿主入口先剔除失效项，无特征依赖。
+                EnsureStackIntegrityPatches();
+                // 2026-10-27 同日事故组（移植自被禁改的 Assembly-CSharp-Patch 源码补丁）：
+                // 附着站悬空 m_item 清理（21:55 放置即崩）、高亮失效子项/渲染缓存剔除
+                // （21:39/21:41 靠近工作台卡死）、杯盘半成品回落（空杯放牛奶/蜂蜜弹回）。
+                // 均为宿主级缺陷/玩法修正，无条件安装，失败各自退回原版行为。
+                EnsureAttachStationIntegrityPatches();
+                EnsureHighlightIntegrityPatches();
+                EnsurePlatePortionPatches();
                 EnsurePseudoPrefabDispenserSetupPatches();
                 RecipeWidgetTileFollowInstaller.Install();
                 InstallRuntimeModules();
@@ -1010,6 +1031,461 @@ namespace CustomStub
             }
         }
 
+        /// <summary>热水器接水门禁（ServerPlacementItemSpawner.CanHandlePlacement 前缀 +
+        /// HandlePlacement 后缀 + ClientPlacementItemSpawner.ApplyServerEvent 后缀，
+        /// 见 HarmonyPatches「热水器接水门禁」节）：目标均为交互触发才走的冷方法，
+        /// 无热路径开销。按需安装（HealScene 扫到 Kettle| tag / Kettle 组件时触发），
+        /// 幂等；失败仅损失门禁（原版行为 = 随时可接水），独立 Harmony id。</summary>
+        private static bool s_kettlePatched;
+        private static bool s_kettlePatchFailed;
+
+        internal static void EnsureKettlePatches()
+        {
+            if (s_kettlePatched || s_kettlePatchFailed)
+                return;
+            try
+            {
+                var canHandle = GameApi.ServerPlacementCanHandleMethod;
+                var handle = GameApi.ServerPlacementHandleMethod;
+                var applyEvent = GameApi.ClientPlacementApplyEventMethod;
+                var canPrefix = HarmonyPatches.ServerPlacementCanHandlePrefixMethod;
+                var handlePostfix = HarmonyPatches.ServerPlacementHandlePostfixMethod;
+                var applyPostfix = HarmonyPatches.ClientPlacementApplyEventPostfixMethod;
+                if (canHandle == null || handle == null || applyEvent == null
+                    || canPrefix == null || handlePostfix == null || applyPostfix == null)
+                {
+                    s_kettlePatchFailed = true;
+                    StubLog.LogWarn("[CustomStub] PlacementItemSpawner 反射/补丁缺失，热水器门禁未装"
+                        + "（can=" + (canHandle != null) + " handle=" + (handle != null)
+                        + " apply=" + (applyEvent != null) + "）——退化为随时可接水");
+                    return;
+                }
+                var harmony = new Harmony(HarmonyId + ".kettle");
+                harmony.Patch(canHandle, new HarmonyMethod(canPrefix));
+                harmony.Patch(handle, null, new HarmonyMethod(handlePostfix));
+                harmony.Patch(applyEvent, null, new HarmonyMethod(applyPostfix));
+                s_kettlePatched = true;
+                StubLog.Dbg("[CustomStub] 热水器门禁补丁已装（按需）: " + canHandle.DeclaringType.Name
+                    + ".CanHandlePlacement/HandlePlacement + Client.ApplyServerEvent");
+            }
+            catch (Exception ex)
+            {
+                s_kettlePatchFailed = true;
+                StubLog.LogWarn("[CustomStub] 热水器门禁补丁安装失败（退化为随时可接水）: " + ex);
+            }
+        }
+
+        /// <summary>脏茶杯合并补丁（ServerDirtyPlateStack.CanHandlePlacement /
+        /// HandlePlacement 前缀，见 HarmonyPatches「脏茶杯合并」节）：单个脏茶杯
+        /// 放上脏茶杯堆时合并入堆。按需安装（DirtyTeacup| tag），幂等；失败仅损失
+        /// 单杯入堆（原版行为 = 单杯放不上堆）。</summary>
+        private static bool s_dirtyTeacupPatched;
+        private static bool s_dirtyTeacupWarned;
+        private static float s_nextDirtyTeacupPatchTry;
+        private const float DirtyTeacupPatchRetrySeconds = 5f;
+
+        internal static void EnsureDirtyTeacupPatches()
+        {
+            if (s_dirtyTeacupPatched)
+                return;
+            // 安装早期若游戏类型尚未就绪（反射未命中），不要永久放弃：茶杯 sink
+            // ticker/HealScene 会周期性再调本方法，5s 一次重试直到成功。
+            if (Time.realtimeSinceStartup < s_nextDirtyTeacupPatchTry)
+                return;
+            s_nextDirtyTeacupPatchTry = Time.realtimeSinceStartup + DirtyTeacupPatchRetrySeconds;
+            try
+            {
+                var t = GameApi.Find("ServerDirtyPlateStack");
+                var canHandle = t != null ? t.GetMethod("CanHandlePlacement",
+                    BindingFlags.Public | BindingFlags.Instance) : null;
+                var handle = t != null ? t.GetMethod("HandlePlacement",
+                    BindingFlags.Public | BindingFlags.Instance) : null;
+                var canPrefix = HarmonyPatches.DirtyStackCanHandlePrefixMethod;
+                var handlePrefix = HarmonyPatches.DirtyStackHandlePrefixMethod;
+                if (canHandle == null || handle == null || canPrefix == null || handlePrefix == null)
+                {
+                    if (!s_dirtyTeacupWarned)
+                    {
+                        s_dirtyTeacupWarned = true;
+                        StubLog.LogWarn("[CustomStub] ServerDirtyPlateStack 反射/补丁缺失，脏茶杯合并未装（5s 后重试）");
+                    }
+                    return;
+                }
+                var harmony = new Harmony(HarmonyId + ".dirtyteacup");
+                harmony.Patch(canHandle, new HarmonyMethod(canPrefix));
+                harmony.Patch(handle, new HarmonyMethod(handlePrefix));
+                // 单只脏茶杯直接放入洗杯水槽（CanHandle/Handle 前缀，见
+                // HarmonyPatches「单只脏茶杯直接洗」节）。取不到类型时静默跳过。
+                var sinkCanPrefix = HarmonyPatches.WashingCanHandlePrefixMethod;
+                var sinkHandlePrefix = HarmonyPatches.WashingHandlePrefixMethod;
+                var serverWashing = GameApi.Find("ServerWashingStation");
+                var clientWashing = GameApi.Find("ClientWashingStation");
+                var sinkCan = serverWashing != null ? serverWashing.GetMethod("CanHandlePlacement",
+                    BindingFlags.Public | BindingFlags.Instance) : null;
+                var sinkHandle = serverWashing != null ? serverWashing.GetMethod("HandlePlacement",
+                    BindingFlags.Public | BindingFlags.Instance) : null;
+                var clientSinkCan = clientWashing != null ? clientWashing.GetMethod("CanHandlePlacement",
+                    BindingFlags.Public | BindingFlags.Instance) : null;
+                if (sinkCanPrefix != null && sinkHandlePrefix != null)
+                {
+                    if (sinkCan != null)
+                        harmony.Patch(sinkCan, new HarmonyMethod(sinkCanPrefix));
+                    if (sinkHandle != null)
+                        harmony.Patch(sinkHandle, new HarmonyMethod(sinkHandlePrefix));
+                    if (clientSinkCan != null)
+                        harmony.Patch(clientSinkCan, new HarmonyMethod(sinkCanPrefix));
+                }
+                // 禁止脏茶杯先挂到茶杯水槽台面（AttachStation）：必须整堆进洗涤计数。
+                var attachCanPrefix = HarmonyPatches.TeacupAttachCanHandlePrefixMethod;
+                var attachHandlePrefix = HarmonyPatches.TeacupAttachHandlePrefixMethod;
+                var serverAttach = GameApi.Find("ServerAttachStation");
+                var clientAttach = GameApi.Find("ClientAttachStation");
+                var attachCan = serverAttach != null ? serverAttach.GetMethod("CanHandlePlacement",
+                    BindingFlags.Public | BindingFlags.Instance) : null;
+                var attachHandle = serverAttach != null ? serverAttach.GetMethod("HandlePlacement",
+                    BindingFlags.Public | BindingFlags.Instance) : null;
+                var clientAttachCan = clientAttach != null ? clientAttach.GetMethod("CanHandlePlacement",
+                    BindingFlags.Public | BindingFlags.Instance) : null;
+                if (attachCanPrefix != null && attachHandlePrefix != null)
+                {
+                    if (attachCan != null)
+                        harmony.Patch(attachCan, new HarmonyMethod(attachCanPrefix));
+                    if (clientAttachCan != null)
+                        harmony.Patch(clientAttachCan, new HarmonyMethod(attachCanPrefix));
+                    if (attachHandle != null)
+                        harmony.Patch(attachHandle, new HarmonyMethod(attachHandlePrefix));
+                }
+                // 玩家放置动作直达茶杯水槽：不依赖目标最终选中哪个放置处理器。
+                var controlsHelper = GameApi.Find("PlayerControlsHelper");
+                var placePrefix = HarmonyPatches.PlaceHeldItemServerPrefixMethod;
+                System.Reflection.MethodInfo placeMethod = null;
+                if (controlsHelper != null)
+                {
+                    var placeMethods = controlsHelper.GetMethods(BindingFlags.Public | BindingFlags.Static);
+                    for (int i = 0; i < placeMethods.Length; i++)
+                    {
+                        if (placeMethods[i].Name == "PlaceHeldItem_Server"
+                            && placeMethods[i].GetParameters().Length == 2)
+                        {
+                            placeMethod = placeMethods[i];
+                            break;
+                        }
+                    }
+                }
+                if (placeMethod != null && placePrefix != null)
+                    harmony.Patch(placeMethod, new HarmonyMethod(placePrefix));
+                // 诊断补丁：AddPlates 后打权威计数；客户端 ApplyServerEvent 确认消息送达。
+                // 只对茶杯水槽打点（InteractionState 进度消息不记），失败不影响主链路。
+                var addPlatesTrace = HarmonyPatches.AddPlatesTracePostfixMethod;
+                System.Reflection.MethodInfo addPlatesMethod = null;
+                if (serverWashing != null)
+                {
+                    var srvMethods = serverWashing.GetMethods(BindingFlags.Public | BindingFlags.NonPublic
+                        | BindingFlags.Instance);
+                    for (int i = 0; i < srvMethods.Length; i++)
+                    {
+                        if (srvMethods[i].Name == "AddPlates" && srvMethods[i].GetParameters().Length == 1)
+                        {
+                            addPlatesMethod = srvMethods[i];
+                            break;
+                        }
+                    }
+                }
+                if (addPlatesMethod != null && addPlatesTrace != null)
+                    harmony.Patch(addPlatesMethod, null, new HarmonyMethod(addPlatesTrace));
+                var clientEventPrefix = HarmonyPatches.ClientWashingEventPrefixMethod;
+                System.Reflection.MethodInfo clientEventMethod = null;
+                if (clientWashing != null)
+                {
+                    var cliMethods = clientWashing.GetMethods(BindingFlags.Public | BindingFlags.NonPublic
+                        | BindingFlags.Instance);
+                    for (int i = 0; i < cliMethods.Length; i++)
+                    {
+                        if (cliMethods[i].Name == "ApplyServerEvent"
+                            && cliMethods[i].GetParameters().Length == 1)
+                        {
+                            clientEventMethod = cliMethods[i];
+                            break;
+                        }
+                    }
+                }
+                if (clientEventMethod != null && clientEventPrefix != null)
+                    harmony.Patch(clientEventMethod, new HarmonyMethod(clientEventPrefix));
+                var clientEventPostfix = HarmonyPatches.ClientWashingEventPostfixMethod;
+                if (clientEventMethod != null && clientEventPostfix != null)
+                    harmony.Patch(clientEventMethod, null, new HarmonyMethod(clientEventPostfix));
+                s_dirtyTeacupPatched = true;
+                StubLog.Dbg("[CustomStub] 脏茶杯合并 + 单杯入洗杯台补丁已装（按需）");
+            }
+            catch (Exception ex)
+            {
+                if (!s_dirtyTeacupWarned)
+                {
+                    s_dirtyTeacupWarned = true;
+                    StubLog.LogWarn("[CustomStub] 脏茶杯合并补丁安装失败（5s 后重试）: " + ex);
+                }
+            }
+        }
+
+        /// <summary>堆完整性守卫（ServerStack.GetSize/InspectTopOfStack/AddToStack/
+        /// RemoveFromStack 剔除前缀 + ServerCleanPlateStack.HandlePickup 空堆门禁 +
+        /// DirtyPlateStackCosmetics.Update 渲染缓存自愈前缀，见 HarmonyPatches「堆
+        /// 完整性守卫」节）：修 2026-10-27 编辑器 Play 拾取杯堆 MissingReferenceException
+        /// 与脏堆 SetPropertyBlock 崩溃。无条件安装（宿主缺陷，web 关卡预览杯时序
+        /// 必然触发），幂等；失败仅损失守卫（退回原版行为）。</summary>
+        private static bool s_stackIntegrityPatched;
+        private static bool s_stackIntegrityPatchFailed;
+
+        internal static void EnsureStackIntegrityPatches()
+        {
+            if (s_stackIntegrityPatched || s_stackIntegrityPatchFailed)
+                return;
+            try
+            {
+                var tStack = GameApi.Find("ServerStack");
+                var tClean = GameApi.Find("ServerCleanPlateStack");
+                var tCos = GameApi.Find("DirtyPlateStackCosmetics");
+                var purgePrefix = HarmonyPatches.ServerStackPurgePrefixMethod;
+                var pickupGuard = HarmonyPatches.CleanStackHandlePickupGuardPrefixMethod;
+                var cosPrefix = HarmonyPatches.DirtyCosmeticsPurgeRenderersPrefixMethod;
+                if (tStack == null || tClean == null || purgePrefix == null || pickupGuard == null)
+                {
+                    s_stackIntegrityPatchFailed = true;
+                    StubLog.LogWarn("[CustomStub] ServerStack/ServerCleanPlateStack 反射/补丁缺失，堆完整性守卫未装");
+                    return;
+                }
+                const BindingFlags F = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+                var getSize = tStack.GetMethod("GetSize", F);
+                var inspectTop = tStack.GetMethod("InspectTopOfStack", F);
+                var addTo = tStack.GetMethod("AddToStack", F);
+                var removeFrom = tStack.GetMethod("RemoveFromStack", F);
+                var handlePickup = tClean.GetMethod("HandlePickup", F);
+                if (getSize == null || inspectTop == null || addTo == null || removeFrom == null || handlePickup == null)
+                {
+                    s_stackIntegrityPatchFailed = true;
+                    StubLog.LogWarn("[CustomStub] ServerStack/ServerCleanPlateStack 目标方法反射缺失，堆完整性守卫未装");
+                    return;
+                }
+                var harmony = new Harmony(HarmonyId + ".stackintegrity");
+                harmony.Patch(getSize, new HarmonyMethod(purgePrefix));
+                harmony.Patch(inspectTop, new HarmonyMethod(purgePrefix));
+                harmony.Patch(addTo, new HarmonyMethod(purgePrefix));
+                harmony.Patch(removeFrom, new HarmonyMethod(purgePrefix));
+                harmony.Patch(handlePickup, new HarmonyMethod(pickupGuard));
+                // 脏堆渲染缓存自愈：类型缺失时静默跳过（仅影响脏堆洗进度渐变）。
+                if (tCos != null && cosPrefix != null)
+                {
+                    var cosUpdate = tCos.GetMethod("Update", F);
+                    if (cosUpdate != null)
+                        harmony.Patch(cosUpdate, new HarmonyMethod(cosPrefix));
+                }
+                s_stackIntegrityPatched = true;
+                StubLog.Dbg("[CustomStub] 堆完整性守卫补丁已装（ServerStack 剔除 + 空堆拾取门禁 + 脏堆渲染自愈）");
+            }
+            catch (Exception ex)
+            {
+                s_stackIntegrityPatchFailed = true;
+                StubLog.LogWarn("[CustomStub] 堆完整性守卫补丁安装失败（退回原版行为）: " + ex);
+            }
+        }
+
+        /// <summary>附着站悬空引用守卫（Server/ClientAttachStation 读 m_item 的公共
+        /// 入口 + Server 每帧 UpdateSynchronising 统一前缀清理失效引用，见
+        /// HarmonyPatches「附着站悬空引用守卫」节）：修 2026-10-27 21:55 放置时
+        /// ServerAttachStation.CanHandlePlacement MissingReferenceException
+        /// （移植自被禁改的 ServerAttachStation/ClientAttachStation HasLiveItem
+        /// 源码补丁）。无条件安装，幂等；失败仅损失守卫（退回原版行为）。</summary>
+        private static bool s_attachIntegrityPatched;
+        private static bool s_attachIntegrityPatchFailed;
+
+        internal static void EnsureAttachStationIntegrityPatches()
+        {
+            if (s_attachIntegrityPatched || s_attachIntegrityPatchFailed)
+                return;
+            try
+            {
+                var tServer = GameApi.Find("ServerAttachStation");
+                var tClient = GameApi.Find("ClientAttachStation");
+                var prefix = HarmonyPatches.AttachStationPurgePrefixMethod;
+                if (tServer == null || prefix == null)
+                {
+                    s_attachIntegrityPatchFailed = true;
+                    StubLog.LogWarn("[CustomStub] ServerAttachStation 反射/补丁缺失，附着站守卫未装");
+                    return;
+                }
+                const BindingFlags F = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+                var harmony = new Harmony(HarmonyId + ".attachintegrity");
+                // 服务端：每帧兜底清扫 + 全部读 m_item 的公共入口
+                string[] serverTargets = new string[]
+                {
+                    "UpdateSynchronising",
+                    "CanHandlePickup", "HandlePickup",
+                    "CanHandlePlacement", "HandlePlacement",
+                    "TakeItem", "InspectItem", "HasItem",
+                    "CanHandleCatch", "HandleCatch",
+                };
+                int patchedCount = 0;
+                for (int i = 0; i < serverTargets.Length; i++)
+                {
+                    var m = tServer.GetMethod(serverTargets[i], F);
+                    if (m != null)
+                    {
+                        harmony.Patch(m, new HarmonyMethod(prefix));
+                        patchedCount++;
+                    }
+                }
+                if (patchedCount == 0)
+                {
+                    s_attachIntegrityPatchFailed = true;
+                    StubLog.LogWarn("[CustomStub] ServerAttachStation 目标方法全部缺失，附着站守卫未装");
+                    return;
+                }
+                if (tClient != null)
+                {
+                    string[] clientTargets = new string[]
+                    {
+                        "ApplyServerEvent", "CanHandlePickup", "CanHandlePlacement",
+                        "HasItem", "InspectItem",
+                    };
+                    for (int i = 0; i < clientTargets.Length; i++)
+                    {
+                        var m = tClient.GetMethod(clientTargets[i], F);
+                        if (m != null)
+                        {
+                            harmony.Patch(m, new HarmonyMethod(prefix));
+                            patchedCount++;
+                        }
+                    }
+                }
+                s_attachIntegrityPatched = true;
+                StubLog.Dbg("[CustomStub] 附着站悬空引用守卫补丁已装（" + patchedCount + " 个入口）");
+            }
+            catch (Exception ex)
+            {
+                s_attachIntegrityPatchFailed = true;
+                StubLog.LogWarn("[CustomStub] 附着站守卫补丁安装失败（退回原版行为）: " + ex);
+            }
+        }
+
+        /// <summary>高亮失效引用守卫（ClientAnticipateInteractionHighlight 的
+        /// m_children/m_renderers 失效项「用时剔除」+ m_highlight 假 null 跳过 +
+        /// attachment 假 null 拦截，见 HarmonyPatches「高亮失效引用守卫」节）：
+        /// 修 2026-10-27 21:39/21:41 靠近工作台 IncrementHighlight 递归进已销毁
+        /// 子物体 MissingReferenceException（移植自被禁改的
+        /// ClientAnticipateInteractionHighlight 源码补丁）。无条件安装，幂等；
+        /// 失败仅损失守卫。</summary>
+        private static bool s_highlightIntegrityPatched;
+        private static bool s_highlightIntegrityPatchFailed;
+
+        internal static void EnsureHighlightIntegrityPatches()
+        {
+            if (s_highlightIntegrityPatched || s_highlightIntegrityPatchFailed)
+                return;
+            try
+            {
+                var t = GameApi.Find("ClientAnticipateInteractionHighlight");
+                var childPurge = HarmonyPatches.AntHighlightChildPurgePrefixMethod;
+                var rendererPurge = HarmonyPatches.AntHighlightRenderersPurgePrefixMethod;
+                var attachGuard = HarmonyPatches.AntHighlightAttachmentGuardPrefixMethod;
+                if (t == null || childPurge == null || rendererPurge == null || attachGuard == null)
+                {
+                    s_highlightIntegrityPatchFailed = true;
+                    StubLog.LogWarn("[CustomStub] ClientAnticipateInteractionHighlight 反射/补丁缺失，高亮守卫未装");
+                    return;
+                }
+                const BindingFlags F = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+                var harmony = new Harmony(HarmonyId + ".highlightintegrity");
+                int patchedCount = 0;
+                string[] childTargets = new string[] { "IncrementHighlight", "DecrementHighlight" };
+                for (int i = 0; i < childTargets.Length; i++)
+                {
+                    var m = t.GetMethod(childTargets[i], F);
+                    if (m != null)
+                    {
+                        harmony.Patch(m, new HarmonyMethod(childPurge));
+                        patchedCount++;
+                    }
+                }
+                string[] rendererTargets = new string[] { "Highlight", "Unhighlight", "RebuildHighlightMaterials" };
+                for (int i = 0; i < rendererTargets.Length; i++)
+                {
+                    var m = t.GetMethod(rendererTargets[i], F);
+                    if (m != null)
+                    {
+                        harmony.Patch(m, new HarmonyMethod(rendererPurge));
+                        patchedCount++;
+                    }
+                }
+                string[] attachTargets = new string[] { "OnItemAttachmentAdded", "OnItemAttachmentRemoved" };
+                for (int i = 0; i < attachTargets.Length; i++)
+                {
+                    var m = t.GetMethod(attachTargets[i], F);
+                    if (m != null)
+                    {
+                        harmony.Patch(m, new HarmonyMethod(attachGuard));
+                        patchedCount++;
+                    }
+                }
+                if (patchedCount == 0)
+                {
+                    s_highlightIntegrityPatchFailed = true;
+                    StubLog.LogWarn("[CustomStub] 高亮目标方法全部缺失，高亮守卫未装");
+                    return;
+                }
+                s_highlightIntegrityPatched = true;
+                StubLog.Dbg("[CustomStub] 高亮失效引用守卫补丁已装（" + patchedCount + " 个入口）");
+            }
+            catch (Exception ex)
+            {
+                s_highlightIntegrityPatchFailed = true;
+                StubLog.LogWarn("[CustomStub] 高亮守卫补丁安装失败（退回原版行为）: " + ex);
+            }
+        }
+
+        /// <summary>杯盘半成品回落（Plate.CanPlaceOnPlate 前后缀：配方精确匹配失败
+        /// 且已发生内容转移时，回落「同 step 配方真子集」判定，见 HarmonyPatches
+        /// 「杯盘半成品回落」节与 PlatePartialOrderFallback）：移植自被禁改的
+        /// Plate/GameUtils 源码补丁，修「空杯放牛奶/蜂蜜被弹回」。容量=100 与
+        /// Glass 碰撞体调校走 PlateCupTuning 周期扫描（StubTicker），不在此处。
+        /// 无条件安装，幂等；失败仅损失回落（退回原版严格匹配）。</summary>
+        private static bool s_platePortionPatched;
+        private static bool s_platePortionPatchFailed;
+
+        internal static void EnsurePlatePortionPatches()
+        {
+            if (s_platePortionPatched || s_platePortionPatchFailed)
+                return;
+            try
+            {
+                var t = GameApi.Find("Plate");
+                var pre = HarmonyPatches.CanPlaceOnPlateFallbackPrefixMethod;
+                var post = HarmonyPatches.CanPlaceOnPlateFallbackPostfixMethod;
+                if (t == null || pre == null || post == null)
+                {
+                    s_platePortionPatchFailed = true;
+                    StubLog.LogWarn("[CustomStub] Plate 反射/补丁缺失，半成品回落未装");
+                    return;
+                }
+                const BindingFlags F = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+                var canPlace = t.GetMethod("CanPlaceOnPlate", F);
+                if (canPlace == null)
+                {
+                    s_platePortionPatchFailed = true;
+                    StubLog.LogWarn("[CustomStub] Plate.CanPlaceOnPlate 反射缺失，半成品回落未装");
+                    return;
+                }
+                var harmony = new Harmony(HarmonyId + ".plateportion");
+                harmony.Patch(canPlace, new HarmonyMethod(pre), new HarmonyMethod(post));
+                s_platePortionPatched = true;
+                StubLog.Dbg("[CustomStub] 杯盘半成品回落补丁已装（CanPlaceOnPlate 前后缀）");
+            }
+            catch (Exception ex)
+            {
+                s_platePortionPatchFailed = true;
+                StubLog.LogWarn("[CustomStub] 半成品回落补丁安装失败（退回原版行为）: " + ex);
+            }
+        }
+
         /// <summary>大炮空炮发射拦截（ServerCannon.OnTrigger 前缀，v15，见
         /// HarmonyPatches.ServerCannonOnTriggerPrefix / CannonGuard.AllowLaunch）：
         /// 目标是按钮按压/联动触发才走的冷方法，无热路径开销。按需安装
@@ -1389,10 +1865,11 @@ namespace CustomStub
                  || prefabTag.StartsWith("BLRelay|", StringComparison.Ordinal)
                  || prefabTag.StartsWith(CoaxialButtonGroup.TagPrefix, StringComparison.Ordinal)
                  || prefabTag.StartsWith(RandomTrigger.TagPrefix, StringComparison.Ordinal)
-                 || prefabTag.StartsWith(ButtonSpeedControl.TagPrefix, StringComparison.Ordinal)
-                 || prefabTag.StartsWith(ButtonSpawnerBatch.TagPrefix, StringComparison.Ordinal)
-                 || prefabTag.StartsWith(WebBackpackStorage.TagPrefix, StringComparison.Ordinal)
-                 || prefabTag.StartsWith(WebKillerGhost.TagPrefix, StringComparison.Ordinal);
+                || prefabTag.StartsWith(ButtonSpeedControl.TagPrefix, StringComparison.Ordinal)
+                || prefabTag.StartsWith(ButtonSpawnerBatch.TagPrefix, StringComparison.Ordinal)
+                || prefabTag.StartsWith(WebBackpackStorage.TagPrefix, StringComparison.Ordinal)
+                || prefabTag.StartsWith(WebKillerGhost.TagPrefix, StringComparison.Ordinal)
+                || prefabTag.StartsWith(Kettle.TagPrefix, StringComparison.Ordinal);
         }
 
         /// <summary>统计对象上 CustomStub 命名空间组件数（自愈前后对比用）。</summary>
@@ -1567,6 +2044,27 @@ namespace CustomStub
                 if (HasStubComponentNamed(go, "ButtonSpawnerBatch"))
                     return; // 同上：编辑器烘活组件在场则跳过，真机 Missing Script 补挂。
                 HealButtonSpawnerBatch(go, prefabTag);
+            }
+            else if (prefabTag.StartsWith(Kettle.TagPrefix, StringComparison.Ordinal))
+            {
+                // Kettle|（无 payload；配置权威在组件字段，prefab 默认值即自愈值）。
+                // 门禁补丁随首个热水器按需安装。
+                EnsureKettlePatches();
+                if (HasStubComponentNamed(go, "Kettle"))
+                    return;
+                go.AddComponent<Kettle>();
+                StubLog.Dbg("[CustomStub] 自愈 Kettle: " + go.name + " v" + Kettle.Version);
+            }
+            else if (prefabTag.StartsWith(DirtyTeacupMergeWatcher.TagPrefix, StringComparison.Ordinal))
+            {
+                // DirtyTeacup|（无 payload）：合并补丁按需安装；watcher 组件
+                // prefab 已内嵌（编辑器），真机 Missing Script 时补挂。
+                EnsureDirtyTeacupPatches();
+                if (HasStubComponentNamed(go, "DirtyTeacupMergeWatcher"))
+                    return;
+                go.AddComponent<DirtyTeacupMergeWatcher>();
+                StubLog.Dbg("[CustomStub] 自愈 DirtyTeacupMergeWatcher: " + go.name
+                    + "（缺序列化 m_stackPrefab，单杯+单杯合并不可用；单杯入堆不受影响）");
             }
             else if (prefabTag.StartsWith(CameraAuthoredOffset.TagPrefix, StringComparison.Ordinal))
             {
@@ -2454,6 +2952,14 @@ namespace CustomStub
                         if ((frame + CannonGuardRefreshPhase) % CannonGuardRefreshIntervalFrames == 0)
                             CannonGuard.TickRefresh();
                     }
+                    // 杯盘调校（Plate.Awake 补丁的移植：容量=100 + Glass 碰撞体放大）：
+                    // 任意关卡都可能有 Plate，无特征闸；30 帧一扫，无盘关卡成本≈
+                    // 每 30 帧一次 FindObjectsOfType（未找到 Plate 类型时更早退）。
+                    if ((frame + PlateCupTuningPhase) % PlateCupTuningIntervalFrames == 0)
+                        PlateCupTuning.Tick();
+                    // 茶杯水槽脏杯模型按待洗数量显隐（对齐原版水槽 UpdateCosmetics）
+                    if ((frame + SinkVisibilityPhase) % SinkVisibilityIntervalFrames == 0)
+                        SinkDirtyPlateVisibility.Tick();
                     if (s_fTerminal || s_animPilotPatched)
                         AnimPilotFloorDrive.TickPositionLocks();
                 }

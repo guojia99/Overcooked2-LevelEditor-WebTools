@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-21T07:30:07.547Z",
+  "generatedAt": "2026-10-27T06:45:59.141Z",
   "schemaVersion": 10,
   "typeNames": {
     "Counter": "普通桌台",
@@ -61,7 +61,9 @@
     "RedSlim": "红色·窄式",
     "Unlit": "无光照",
     "Christmas": "圣诞",
-    "Firewood": "木柴"
+    "Firewood": "木柴",
+    "Jungle": "丛林",
+    "Anniversary": "生日"
   },
   "byType": {
     "Bin": [
@@ -362,6 +364,16 @@
     ],
     "Counter": [
       {
+        "guid": "f003394d7dffb22700efedd141e3da21",
+        "id": "CounterJungleSO",
+        "assetPath": "Assets/commonW5/pseudo_prefab_so/counters/CounterJungleSO.asset",
+        "nameZh": "丛林桌台（Jungle Counter）",
+        "nameEn": "Jungle Counter",
+        "theme": "Jungle",
+        "themeName": "丛林",
+        "bundleName": ""
+      },
+      {
         "guid": "ed1a45aa0a655484fb5d8c08b112bb7e",
         "id": "Counter02SO",
         "assetPath": "Assets/common03/pseudo_prefab_so/counters/Counter02SO.asset",
@@ -624,6 +636,16 @@
         "bundleName": "bundle359",
         "color": "#5c281b",
         "icon": "Counter_Circus03"
+      },
+      {
+        "guid": "4ca6af2a458abb1dcdd951edbc609001",
+        "id": "CounterAnniversarySO",
+        "assetPath": "Assets/commonW5/pseudo_prefab_so/counters/CounterAnniversarySO.asset",
+        "nameZh": "生日桌台（Anniversary Counter）",
+        "nameEn": "Anniversary Counter",
+        "theme": "Anniversary",
+        "themeName": "生日",
+        "bundleName": ""
       }
     ],
     "CounterCorner": [

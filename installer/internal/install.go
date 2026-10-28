@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
 )
 
 // Logger receives human-readable progress lines.
@@ -52,14 +55,64 @@ func locateSibling(name string) (string, error) {
 	return "", fmt.Errorf("未找到 %s 目录，请确保 installer.exe 与 %s 目录在同一位置", name, name)
 }
 
+// FindCommonW returns the names of all commonW* directories inside pkg, sorted
+// naturally (commonW1, commonW2, ..., commonW10). Every directory must also
+// ship a matching .meta file. This lets new commonW* bundles ship in pkg
+// without any installer changes.
+func FindCommonW(pkg string) ([]string, error) {
+	matches, err := filepath.Glob(filepath.Join(pkg, "commonW*"))
+	if err != nil {
+		return nil, fmt.Errorf("扫描 commonW* 失败: %w", err)
+	}
+	var names []string
+	for _, m := range matches {
+		if IsDir(m) {
+			names = append(names, filepath.Base(m))
+		}
+	}
+	if len(names) == 0 {
+		return nil, fmt.Errorf("pkg 中未找到任何 commonW* 目录")
+	}
+	sort.Slice(names, func(i, j int) bool {
+		ni, oki := commonWNum(names[i])
+		nj, okj := commonWNum(names[j])
+		switch {
+		case oki && okj:
+			return ni < nj
+		case oki:
+			return false
+		case okj:
+			return true
+		default:
+			return names[i] < names[j]
+		}
+	})
+	for _, n := range names {
+		if !PathExists(filepath.Join(pkg, n+".meta")) {
+			return nil, fmt.Errorf("pkg 缺少必要项: %s.meta", n)
+		}
+	}
+	return names, nil
+}
+
+// commonWNum extracts the numeric suffix of a commonW* name ("commonW10" -> 10).
+func commonWNum(name string) (int, bool) {
+	s := strings.TrimPrefix(name, "commonW")
+	if s == "" {
+		return 0, false
+	}
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, false
+	}
+	return n, true
+}
+
 // VerifyPkg ensures the source pkg has all required items before touching target.
 func VerifyPkg(pkg string) error {
 	required := []string{
 		"LayoutEditor",
 		"layout-editor",
-		"commonW1", "commonW1.meta",
-		"commonW2", "commonW2.meta",
-		"commonW3", "commonW3.meta",
 		"WebCustomStubRuntime", "WebCustomStubRuntime.meta",
 		"Plugins",
 	}
@@ -67,6 +120,9 @@ func VerifyPkg(pkg string) error {
 		if !PathExists(filepath.Join(pkg, r)) {
 			return fmt.Errorf("pkg 缺少必要项: %s", r)
 		}
+	}
+	if _, err := FindCommonW(pkg); err != nil {
+		return err
 	}
 	for _, f := range pluginFiles {
 		if !PathExists(filepath.Join(pkg, "Plugins", f)) {
@@ -89,9 +145,21 @@ func Install(target, pkg, asmSrc string, log Logger) error {
 
 	assets := filepath.Join(target, "Assets")
 
+	// Auto-discover all commonW* bundles (commonW1, commonW2, ... commonW10+).
+	commonDirs, err := FindCommonW(pkg)
+	if err != nil {
+		return err
+	}
+	totalSteps := 5 + len(commonDirs)
+	step := 0
+	next := func() string {
+		step++
+		return fmt.Sprintf("[%d/%d] ", step, totalSteps)
+	}
+
 	// Step 0: pre-decompiled Assembly-CSharp -> Assets/Scripts/Assembly-CSharp
 	if asmSrc != "" {
-		log("[1/8] 拷贝反编译代码 Assets/Scripts/Assembly-CSharp ...")
+		log(next() + "拷贝反编译代码 Assets/Scripts/Assembly-CSharp ...")
 		asmDst := filepath.Join(assets, "Scripts", "Assembly-CSharp")
 		if err := ReplaceDir(asmSrc, asmDst); err != nil {
 			return err
@@ -110,11 +178,12 @@ func Install(target, pkg, asmSrc string, log Logger) error {
 			log("      警告：未找到 Assembly-CSharp-Patch，跳过补丁（可能导致编译报错）")
 		}
 	} else {
-		log("[1/8] 跳过 Assembly-CSharp（未提供源目录）")
+		step++
+		log(fmt.Sprintf("[%d/%d] 跳过 Assembly-CSharp（未提供源目录）", step, totalSteps))
 	}
 
 	// Step: LayoutEditor -> Assets/Editor/LayoutEditor
-	log("[2/8] 替换 Assets/Editor/LayoutEditor ...")
+	log(next() + "替换 Assets/Editor/LayoutEditor ...")
 	if err := ReplaceDir(
 		filepath.Join(pkg, "LayoutEditor"),
 		filepath.Join(assets, "Editor", "LayoutEditor"),
@@ -123,7 +192,7 @@ func Install(target, pkg, asmSrc string, log Logger) error {
 	}
 
 	// Step: layout-editor -> <project root>/layout-editor
-	log("[3/8] 替换 layout-editor (工程根目录) ...")
+	log(next() + "替换 layout-editor (工程根目录) ...")
 	if err := ReplaceDir(
 		filepath.Join(pkg, "layout-editor"),
 		filepath.Join(target, "layout-editor"),
@@ -131,35 +200,19 @@ func Install(target, pkg, asmSrc string, log Logger) error {
 		return err
 	}
 
-	// Step: commonW1 (+ meta) -> Assets/
-	log("[4/8] 替换 Assets/commonW1 ...")
-	if err := ReplaceDir(filepath.Join(pkg, "commonW1"), filepath.Join(assets, "commonW1")); err != nil {
-		return err
-	}
-	if err := ReplaceFile(filepath.Join(pkg, "commonW1.meta"), filepath.Join(assets, "commonW1.meta")); err != nil {
-		return err
-	}
-
-	// Step: commonW2 (+ meta) -> Assets/
-	log("[5/8] 替换 Assets/commonW2 ...")
-	if err := ReplaceDir(filepath.Join(pkg, "commonW2"), filepath.Join(assets, "commonW2")); err != nil {
-		return err
-	}
-	if err := ReplaceFile(filepath.Join(pkg, "commonW2.meta"), filepath.Join(assets, "commonW2.meta")); err != nil {
-		return err
-	}
-
-	// Step: commonW3 (+ meta) -> Assets/
-	log("[6/8] 替换 Assets/commonW3 ...")
-	if err := ReplaceDir(filepath.Join(pkg, "commonW3"), filepath.Join(assets, "commonW3")); err != nil {
-		return err
-	}
-	if err := ReplaceFile(filepath.Join(pkg, "commonW3.meta"), filepath.Join(assets, "commonW3.meta")); err != nil {
-		return err
+	// Step: every commonW* (+ meta) -> Assets/
+	for _, name := range commonDirs {
+		log(next() + fmt.Sprintf("替换 Assets/%s ...", name))
+		if err := ReplaceDir(filepath.Join(pkg, name), filepath.Join(assets, name)); err != nil {
+			return err
+		}
+		if err := ReplaceFile(filepath.Join(pkg, name+".meta"), filepath.Join(assets, name+".meta")); err != nil {
+			return err
+		}
 	}
 
 	// Step: WebCustomStubRuntime (+ meta) -> Assets/
-	log("[7/8] 替换 Assets/WebCustomStubRuntime ...")
+	log(next() + "替换 Assets/WebCustomStubRuntime ...")
 	if err := ReplaceDir(
 		filepath.Join(pkg, "WebCustomStubRuntime"),
 		filepath.Join(assets, "WebCustomStubRuntime"),
@@ -174,7 +227,7 @@ func Install(target, pkg, asmSrc string, log Logger) error {
 	}
 
 	// Step: Plugins files -> Assets/Plugins (overwrite only listed files)
-	log("[8/8] 覆盖 Assets/Plugins 中的组件 ...")
+	log(next() + "覆盖 Assets/Plugins 中的组件 ...")
 	pluginsDst := filepath.Join(assets, "Plugins")
 	if err := os.MkdirAll(pluginsDst, 0o755); err != nil {
 		return fmt.Errorf("创建 %s 失败: %w", pluginsDst, err)

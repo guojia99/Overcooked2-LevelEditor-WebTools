@@ -5578,6 +5578,33 @@ body.manage-bg {
   color: #ffe49a;
 }
 
+/* 关卡列表依赖统计：卡片徽标行 + 整集汇总条（GET /api/sets/{set}/resource-stats） */
+.m-deps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.m-deps-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 4px;
+  font-size: 12px;
+}
+
+.m-badge.dep {
+  background: #1d3a52;
+  border-color: #2c5a7a;
+  color: #a8d4f0;
+  margin-right: 0;
+  white-space: nowrap;
+  cursor: default;
+}
+
 .m-form {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

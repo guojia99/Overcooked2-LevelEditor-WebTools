@@ -45,6 +45,7 @@ import type {
   WorkloadResult,
   LevelDetail,
   LevelList,
+  SetResourceStats,
   LevelRecipes,
   LevelOptionalItem,
   LevelReadmeResult,
@@ -453,6 +454,13 @@ export async function fetchLevels(setName: string): Promise<LevelList["levels"]>
   const r = await fetch(`/api/sets/${set}/levels`);
   const data = await readApiJson<LevelList>(r);
   return data.levels ?? [];
+}
+
+/** 每关依赖资源统计（场景 guid 引用 + LevelInfoSO 菜谱/食材引用，按来源库去重计数；只读）。 */
+export async function fetchResourceStats(setName: string): Promise<SetResourceStats> {
+  const set = encodeURIComponent(setName);
+  const r = await fetch(`/api/sets/${set}/resource-stats`);
+  return readApiJson<SetResourceStats>(r);
 }
 
 export async function fetchLevelDetail(assetPath: string): Promise<LevelDetail> {

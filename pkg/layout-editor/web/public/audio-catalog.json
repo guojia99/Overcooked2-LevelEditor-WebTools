@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-21T07:30:07.434Z",
+  "generatedAt": "2026-10-27T06:45:59.104Z",
   "schemaVersion": 10,
-  "itemCount": 110,
+  "itemCount": 140,
   "music": [
     {
       "guid": "b1bf1c9b14051954a9fac45a46847775",
@@ -18,6 +18,54 @@
       "bundleName": "bundle19",
       "nameZh": "闪耀仙境（BGM）",
       "nameEn": "ASparkling Wonder"
+    },
+    {
+      "guid": "09c284f9390d42e45433e409d9024088",
+      "id": "AYCE_BagelBirthdayLevel",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/AYCE_BagelBirthdayLevel.asset",
+      "bundleName": "",
+      "nameZh": "生日 DLC 关卡（BGM）",
+      "nameEn": "Birthday Level"
+    },
+    {
+      "guid": "9c506121bd1e09b304bc6659b46b14ec",
+      "id": "AYCE_DLC101Biome1",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/AYCE_DLC101Biome1.asset",
+      "bundleName": "",
+      "nameZh": "生态区 1（BGM）",
+      "nameEn": "Biome 1"
+    },
+    {
+      "guid": "e3c640c48b8589b61b6287155ad12027",
+      "id": "AYCE_DLC101Biome2",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/AYCE_DLC101Biome2.asset",
+      "bundleName": "",
+      "nameZh": "生态区 2（BGM）",
+      "nameEn": "Biome 2"
+    },
+    {
+      "guid": "ddcf2e1475187eb85cbc508dff149e4a",
+      "id": "AYCE_DLC101Biome3",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/AYCE_DLC101Biome3.asset",
+      "bundleName": "",
+      "nameZh": "生态区 3（BGM）",
+      "nameEn": "Biome 3"
+    },
+    {
+      "guid": "07a21e1f31818e7231376d50fd7abd00",
+      "id": "AYCE_GhostShipLevel",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/AYCE_GhostShipLevel.asset",
+      "bundleName": "",
+      "nameZh": "幽灵船关卡（BGM）",
+      "nameEn": "Ghost Ship Level"
+    },
+    {
+      "guid": "4f98bf21f865c2fc40d304e1386b2ed1",
+      "id": "AYCE_Volcanic",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/AYCE_Volcanic.asset",
+      "bundleName": "",
+      "nameZh": "火山（BGM）",
+      "nameEn": "Volcanic"
     },
     {
       "guid": "ff4b2f759b9f30342b141d2baac5563a",
@@ -394,6 +442,198 @@
       "bundleName": "bundle21",
       "nameZh": "节日组曲（BGM）",
       "nameEn": "Festive-Medley"
+    },
+    {
+      "guid": "0a97928db00d21f8486e4e1884f1590e",
+      "id": "OC1_8BitHero",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_8BitHero.asset",
+      "bundleName": "",
+      "nameZh": "8-Bit 英雄（BGM）",
+      "nameEn": "8-Bit Hero"
+    },
+    {
+      "guid": "87324f968eda20caad401f1db63be533",
+      "id": "OC1_AccordionMusic",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_AccordionMusic.asset",
+      "bundleName": "",
+      "nameZh": "手风琴旋律（BGM）",
+      "nameEn": "Accordion Music"
+    },
+    {
+      "guid": "e6f83cd02f5aeeba9d1e2bfcca37884b",
+      "id": "OC1_AllTheTrimmings",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_AllTheTrimmings.asset",
+      "bundleName": "",
+      "nameZh": "节日盛宴（BGM）",
+      "nameEn": "All the Trimmings"
+    },
+    {
+      "guid": "637d746830a5172dea000fd69bfbaff6",
+      "id": "OC1_Arctic",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_Arctic.asset",
+      "bundleName": "",
+      "nameZh": "极地（BGM）",
+      "nameEn": "Arctic"
+    },
+    {
+      "guid": "db4c59833e8ffa2fd9b13a440d1cb31e",
+      "id": "OC1_Boat",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_Boat.asset",
+      "bundleName": "",
+      "nameZh": "船上航行（BGM）",
+      "nameEn": "Boat"
+    },
+    {
+      "guid": "c78f1be908543568f484ad895b6fe6d1",
+      "id": "OC1_CookingWithMama",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_CookingWithMama.asset",
+      "bundleName": "",
+      "nameZh": "和妈妈一起做饭（BGM）",
+      "nameEn": "Cooking with Mama"
+    },
+    {
+      "guid": "47bc65b099731b52aef172dc4fdaffbd",
+      "id": "OC1_DLCJungleIsland",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_DLCJungleIsland.asset",
+      "bundleName": "",
+      "nameZh": "丛林岛（BGM）",
+      "nameEn": "Jungle Island"
+    },
+    {
+      "guid": "7fd868be180ceb9a74053308cdd15fe4",
+      "id": "OC1_EndBoss",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_EndBoss.asset",
+      "bundleName": "",
+      "nameZh": "终局首领（BGM）",
+      "nameEn": "End Boss"
+    },
+    {
+      "guid": "a2b7ccb6699bff09188dd3d124e88f03",
+      "id": "OC1_FeelinGood",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_FeelinGood.asset",
+      "bundleName": "",
+      "nameZh": "心情正好（BGM）",
+      "nameEn": "Feelin' Good"
+    },
+    {
+      "guid": "32f9834be3ce4d2cb379f522bc62f7b7",
+      "id": "OC1_FoodTruck",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_FoodTruck.asset",
+      "bundleName": "",
+      "nameZh": "餐车（BGM）",
+      "nameEn": "Food Truck"
+    },
+    {
+      "guid": "9fab1ae0094fdf07929a3c5b051fac3d",
+      "id": "OC1_HauntedHouse",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_HauntedHouse.asset",
+      "bundleName": "",
+      "nameZh": "鬼屋（BGM）",
+      "nameEn": "Haunted House"
+    },
+    {
+      "guid": "97af8e2d7ff91ce3f15e7a62407f82a2",
+      "id": "OC1_Kitchen",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_Kitchen.asset",
+      "bundleName": "",
+      "nameZh": "厨房（BGM）",
+      "nameEn": "Kitchen"
+    },
+    {
+      "guid": "11ed20a53cff133b3ab10540f4e79489",
+      "id": "OC1_MusicLevelHell",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_MusicLevelHell.asset",
+      "bundleName": "",
+      "nameZh": "地狱关卡（BGM）",
+      "nameEn": "Hell Level"
+    },
+    {
+      "guid": "896783b8c18592ab8f6e32a5dca6f917",
+      "id": "OC1_MusicLevelHorror",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_MusicLevelHorror.asset",
+      "bundleName": "",
+      "nameZh": "恐怖关卡（BGM）",
+      "nameEn": "Horror Level"
+    },
+    {
+      "guid": "8e7e445a6003edcbeee7a092dadb9f99",
+      "id": "OC1_OKD1DLC01Level",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_OKD1DLC01Level.asset",
+      "bundleName": "",
+      "nameZh": "DLC01 关卡（BGM）",
+      "nameEn": "DLC01 Level"
+    },
+    {
+      "guid": "f20a1d2401a36d662f20336a98b885aa",
+      "id": "OC1_OKD1DLC02Level",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_OKD1DLC02Level.asset",
+      "bundleName": "",
+      "nameZh": "DLC02 关卡（BGM）",
+      "nameEn": "DLC02 Level"
+    },
+    {
+      "guid": "8f5ef4a2b2babc6a67038c0e02642a99",
+      "id": "OC1_OKD1DLC02OnionHut",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_OKD1DLC02OnionHut.asset",
+      "bundleName": "",
+      "nameZh": "DLC02 洋葱小屋（BGM）",
+      "nameEn": "DLC02 Onion Hut"
+    },
+    {
+      "guid": "de757d956112db31890cdcf9b537f63b",
+      "id": "OC1_OnionHouse",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_OnionHouse.asset",
+      "bundleName": "",
+      "nameZh": "洋葱屋（BGM）",
+      "nameEn": "Onion House"
+    },
+    {
+      "guid": "d56c56a0de7150a9afb62b74fc3d9f55",
+      "id": "OC1_OnionHut",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_OnionHut.asset",
+      "bundleName": "",
+      "nameZh": "洋葱小屋（BGM）",
+      "nameEn": "Onion Hut"
+    },
+    {
+      "guid": "523edc8b37b7776bf78e70c0df29e076",
+      "id": "OC1_OutOfThisWorld",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_OutOfThisWorld.asset",
+      "bundleName": "",
+      "nameZh": "异星世界（BGM）",
+      "nameEn": "Out of This World"
+    },
+    {
+      "guid": "389025b21698dacffb6a1a4dcbdaa6f2",
+      "id": "OC1_Peckoning",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_Peckoning.asset",
+      "bundleName": "",
+      "nameZh": "啄食时刻（BGM）",
+      "nameEn": "Peckoning"
+    },
+    {
+      "guid": "54e10b6e0359928f605ac605e1f0a6af",
+      "id": "OC1_ShoreLeave",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_ShoreLeave.asset",
+      "bundleName": "",
+      "nameZh": "登岸假期（BGM）",
+      "nameEn": "Shore Leave"
+    },
+    {
+      "guid": "ae213869ee29a26c0e52b1510e5e084e",
+      "id": "OC1_Space",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_Space.asset",
+      "bundleName": "",
+      "nameZh": "太空（BGM）",
+      "nameEn": "Space"
+    },
+    {
+      "guid": "2251fbb6ce791189be85c9b2f5b65908",
+      "id": "OC1_Tutorial",
+      "assetPath": "Assets/commonW5/pseudo_prefab_so/audio/music/OC1_Tutorial.asset",
+      "bundleName": "",
+      "nameZh": "教程（BGM）",
+      "nameEn": "Tutorial"
     },
     {
       "guid": "03297fdfa1d892d44a21907219fd5bd2",
@@ -1245,6 +1485,52 @@
       "directories": [],
       "ambiences": [],
       "bgm": [],
+      "deathTheme": ""
+    },
+    {
+      "key": "oc1",
+      "directories": [],
+      "ambiences": [],
+      "bgm": [
+        "OC1_8BitHero",
+        "OC1_AccordionMusic",
+        "OC1_AllTheTrimmings",
+        "OC1_CookingWithMama",
+        "OC1_DLCJungleIsland",
+        "OC1_EndBoss",
+        "OC1_FeelinGood",
+        "OC1_MusicLevelHell",
+        "OC1_MusicLevelHorror",
+        "OC1_OnionHouse",
+        "OC1_OutOfThisWorld",
+        "OC1_ShoreLeave",
+        "OC1_OKD1DLC01Level",
+        "OC1_OKD1DLC02Level",
+        "OC1_OKD1DLC02OnionHut",
+        "OC1_Arctic",
+        "OC1_Boat",
+        "OC1_FoodTruck",
+        "OC1_HauntedHouse",
+        "OC1_Kitchen",
+        "OC1_OnionHut",
+        "OC1_Peckoning",
+        "OC1_Space",
+        "OC1_Tutorial"
+      ],
+      "deathTheme": ""
+    },
+    {
+      "key": "ayce",
+      "directories": [],
+      "ambiences": [],
+      "bgm": [
+        "AYCE_BagelBirthdayLevel",
+        "AYCE_DLC101Biome1",
+        "AYCE_DLC101Biome2",
+        "AYCE_DLC101Biome3",
+        "AYCE_GhostShipLevel",
+        "AYCE_Volcanic"
+      ],
       "deathTheme": ""
     }
   ],

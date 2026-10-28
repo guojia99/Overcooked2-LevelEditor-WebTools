@@ -224,7 +224,7 @@ async function renderSetChooser(app: HTMLElement): Promise<void> {
     <p class="modal-hint">
       <label class="cr-dev-toggle">
         <input type="checkbox" id="cr-dev-mode" ${devOn ? "checked" : ""}>
-        开启开发者模式（直接修改 commonW2 / commonW3 已有菜谱；<b>影响全关卡集</b>，不支持新建/删除）
+        开启开发者模式（直接修改 commonW2 / commonW3 / commonW5 已有菜谱；<b>影响全关卡集</b>，不支持新建/删除）
       </label>
     </p>
     ${
@@ -241,7 +241,7 @@ async function renderSetChooser(app: HTMLElement): Promise<void> {
       </div>`
             )
             .join("")}</div>`
-        : '<p class="muted">开启后可编辑 commonW2（Burger大全等）与 commonW3（沙拉/果汁）共享库中的已有菜谱。</p>'
+        : '<p class="muted">开启后可编辑 commonW2（Burger大全等）、commonW3（沙拉/果汁）与 commonW5（卷饼）共享库中的已有菜谱。</p>'
     }
   `;
   content.insertAdjacentHTML("beforeend", devSection);
@@ -273,10 +273,10 @@ function crIconSrc(r: { assetPath: string }): string {
   return `/api/custom-recipes/icon?assetPath=${encodeURIComponent(r.assetPath)}`;
 }
 
-/** commonW2 Burger大全 / commonW3 Web 扩展菜谱共享库：不属于本关卡集自定义菜谱，列表页不展示。 */
+/** commonW2 Burger大全 / commonW3 Web 扩展菜谱 / commonW5 卷饼共享库：不属于本关卡集自定义菜谱，列表页不展示。 */
 function isSharedCompendiumRecipe(r: CustomRecipeSummary): boolean {
   const p = r.assetPath.replace(/\\/g, "/");
-  return p.includes("/commonW2/") || p.includes("/commonW3/");
+  return p.includes("/commonW2/") || p.includes("/commonW3/") || p.includes("/commonW5/");
 }
 
 function foodIconImg(kind: "ingredients" | "recipes", id: string | undefined): string {

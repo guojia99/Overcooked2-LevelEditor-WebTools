@@ -4,6 +4,71 @@
   "itemCount": 200,
   "items": [
     {
+      "id": "Banana",
+      "guid": "53ff675b72086844c8a1a657263d58d1",
+      "assetPath": "Assets/commonW1/prefabs/dlc02/decor/food/Banana.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "height": 0.322,
+      "baseY": 0.217,
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "b6f2aa157beed2140a12c5cc8a66f8c1",
+      "nameZh": "香蕉",
+      "nameEn": "Banana",
+      "typeKind": "food_model",
+      "usage": "dressing",
+      "icon": true
+    },
+    {
+      "id": "beef_roast",
+      "guid": "a98450faf47b424459323f12799ea9d3",
+      "assetPath": "Assets/commonW1/prefabs/dlc07/decor/food/beef_roast.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "height": 0.554,
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "e177ae873a0fd11ddb634f83169196d5",
+      "nameZh": "烤牛肉",
+      "nameEn": "Roast Beef",
+      "typeKind": "food_model",
+      "usage": "dressing",
+      "icon": true
+    },
+    {
+      "id": "blackberry",
+      "guid": "35709a77015123841a6234c4510cbcfd",
+      "assetPath": "Assets/commonW1/prefabs/dlc07/decor/food/blackberry.prefab",
+      "category": "decor/food",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "height": 0.731,
+      "baseY": 0.009,
+      "layoutTier": "decor",
+      "ingredientDecor": true,
+      "ingredientGuid": "1e87aab4d91d5e2b460a8de8fe55b737",
+      "nameZh": "黑莓",
+      "nameEn": "Blackberry",
+      "typeKind": "food_model",
+      "usage": "dressing",
+      "icon": true
+    },
+    {
       "id": "Blueberry",
       "guid": "be76b3a7a1b059346b6806465ff164e1",
       "assetPath": "Assets/commonW1/prefabs/dlc05/decor/food/Blueberry.prefab",
@@ -4276,72 +4341,6 @@
       "recipeGuid": "fbd107281a4092b4f9f24f7bce2f75de",
       "nameZh": "原味披萨（60 分）",
       "nameEn": "Plain Pizza 60",
-      "typeKind": "food_model",
-      "usage": "dressing",
-      "icon": true
-    },
-    {
-      "id": "Pizza_Plain_SO",
-      "guid": "456a4e9d83750a966c9ae16cc1c650e3",
-      "assetPath": "Assets/commonW1/prefabs/core/decor/recipes/Pizza_Plain_SO.prefab",
-      "category": "decor/recipes",
-      "theme": null,
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "height": 0.137,
-      "baseY": -0.007,
-      "layoutTier": "decor",
-      "recipeDecor": true,
-      "recipeGuid": "fbd107281a4092b4f9f24f7bce2f75de",
-      "nameZh": "原味披萨",
-      "nameEn": "Plain Pizza",
-      "typeKind": "food_model",
-      "usage": "dressing",
-      "icon": true
-    },
-    {
-      "id": "Salad_Cucumber_SO",
-      "guid": "4f32c12074971a739d1065fc370cf09f",
-      "assetPath": "Assets/commonW1/prefabs/core/decor/recipes/Salad_Cucumber_SO.prefab",
-      "category": "decor/recipes",
-      "theme": null,
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "height": 0.304,
-      "baseY": -0.013,
-      "layoutTier": "decor",
-      "recipeDecor": true,
-      "recipeGuid": "46b74660183ee3924a2ebdc4848db469",
-      "nameZh": "黄瓜沙拉",
-      "nameEn": "Cucumber Salad",
-      "typeKind": "food_model",
-      "usage": "dressing",
-      "icon": true
-    },
-    {
-      "id": "salad_cucumber_tomato_onion",
-      "guid": "ab523e0d694dac4254ce7a920767092d",
-      "assetPath": "Assets/commonW1/prefabs/dlc11/decor/recipes/salad_cucumber_tomato_onion.prefab",
-      "category": "decor/recipes",
-      "theme": null,
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "height": 0.304,
-      "baseY": -0.013,
-      "layoutTier": "decor",
-      "recipeDecor": true,
-      "recipeGuid": "85f4adf3369b527b9b6b6a694905b74e",
-      "nameZh": "黄瓜番茄洋葱沙拉",
-      "nameEn": "Cucumber Tomato & Onion Salad",
       "typeKind": "food_model",
       "usage": "dressing",
       "icon": true

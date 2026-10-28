@@ -205,7 +205,9 @@ function card(r: RecipeWithGroups): string {
             ? "📚"
             : r.group === "commonw3"
               ? commonW3RecipeBadge(r)
-              : undefined,
+              : r.group === "commonw5"
+                ? "🌯"
+                : undefined,
     iconSrc: recipeIconUrlOf,
   });
 }
@@ -586,7 +588,9 @@ function openRecipeDetail(r: RecipeWithGroups): void {
             ? "📚"
             : r.group === "commonw3"
               ? commonW3RecipeBadge(r)
-              : undefined,
+              : r.group === "commonw5"
+                ? "🌯"
+                : undefined,
     iconSrc: recipeIconUrlOf,
   });
 
@@ -624,7 +628,9 @@ async function downloadRecipeCard(r: RecipeWithGroups, btn: HTMLButtonElement): 
             ? "📚"
             : r.group === "commonw3"
               ? commonW3RecipeBadge(r)
-              : undefined,
+              : r.group === "commonw5"
+                ? "🌯"
+                : undefined,
       iconSrc: recipeIconUrlOf,
     });
     // 卡片宽度取页面 .rl-card 实际宽度（回退 300），+48 = .sum-page 内边距

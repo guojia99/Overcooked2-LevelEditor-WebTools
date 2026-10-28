@@ -3668,6 +3668,38 @@
       "icon": false
     },
     {
+      "id": "web_kettle_hotwater",
+      "guid": "bd80e33710fff81e8eb95e512e73c8e0",
+      "assetPath": "Assets/commonW5/prefabs/kettle/web_kettle_hotwater.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "热水器（烧水壶）",
+      "nameEn": "Hot Water Kettle",
+      "icon": false
+    },
+    {
+      "id": "web_teacup_return",
+      "guid": "e816af1c549425a5838d2ff6fde5d8f9",
+      "assetPath": "Assets/commonW5/prefabs/counters/web_teacup_return.prefab",
+      "category": "counters/service",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "茶杯回收台",
+      "nameEn": "Teacup Return",
+      "icon": false
+    },
+    {
       "id": "workstation_blender_01",
       "guid": "0501e9378607c3a649732cdb944af6cb",
       "assetPath": "Assets/commonW1/prefabs/core/counters/workstation_blender_01.prefab",
@@ -3878,6 +3910,22 @@
       "icon": false
     },
     {
+      "id": "web_sink_teacup",
+      "guid": "a3317be9863ceee026507136dfcce9e2",
+      "assetPath": "Assets/commonW5/prefabs/counters/web_sink_teacup.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "nameZh": "洗茶杯水槽",
+      "nameEn": "Teacup Sink",
+      "icon": false
+    },
+    {
       "id": "workstation_mug_return",
       "guid": "f88b1d0679b4473778fb38035edb4c8c",
       "assetPath": "Assets/commonW1/prefabs/dlc03/counters/workstation_mug_return.prefab",
@@ -3952,71 +4000,6 @@
       "ingredientGuid": "5e15cf0dda7163a48901aa33a88e993d",
       "nameZh": "培根",
       "nameEn": "Bacon",
-      "typeKind": "food_model",
-      "usage": "dressing",
-      "icon": true
-    },
-    {
-      "id": "Banana",
-      "guid": "53ff675b72086844c8a1a657263d58d1",
-      "assetPath": "Assets/commonW1/prefabs/dlc02/decor/food/Banana.prefab",
-      "category": "decor/food",
-      "theme": null,
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "height": 0.322,
-      "baseY": 0.217,
-      "layoutTier": "decor",
-      "ingredientDecor": true,
-      "ingredientGuid": "b6f2aa157beed2140a12c5cc8a66f8c1",
-      "nameZh": "香蕉",
-      "nameEn": "Banana",
-      "typeKind": "food_model",
-      "usage": "dressing",
-      "icon": true
-    },
-    {
-      "id": "beef_roast",
-      "guid": "a98450faf47b424459323f12799ea9d3",
-      "assetPath": "Assets/commonW1/prefabs/dlc07/decor/food/beef_roast.prefab",
-      "category": "decor/food",
-      "theme": null,
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "height": 0.554,
-      "layoutTier": "decor",
-      "ingredientDecor": true,
-      "ingredientGuid": "e177ae873a0fd11ddb634f83169196d5",
-      "nameZh": "烤牛肉",
-      "nameEn": "Roast Beef",
-      "typeKind": "food_model",
-      "usage": "dressing",
-      "icon": true
-    },
-    {
-      "id": "blackberry",
-      "guid": "35709a77015123841a6234c4510cbcfd",
-      "assetPath": "Assets/commonW1/prefabs/dlc07/decor/food/blackberry.prefab",
-      "category": "decor/food",
-      "theme": null,
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "height": 0.731,
-      "baseY": 0.009,
-      "layoutTier": "decor",
-      "ingredientDecor": true,
-      "ingredientGuid": "1e87aab4d91d5e2b460a8de8fe55b737",
-      "nameZh": "黑莓",
-      "nameEn": "Blackberry",
       "typeKind": "food_model",
       "usage": "dressing",
       "icon": true

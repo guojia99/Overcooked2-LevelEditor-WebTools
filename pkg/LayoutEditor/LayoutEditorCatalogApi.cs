@@ -16,6 +16,10 @@ public static class LayoutEditorCatalogApi
     ///  ⚠ 三处同步：本常量 ↔ 前端 ingredientLabels.ts 的 FOOD_GROUP_ZH ↔ recipeList.ts 徽标分支。</summary>
     internal const string CommonW3Group = "commonw3";
 
+    /// <summary>commonW5 卷饼菜谱共享库（Web_Burrito_*）的 food group id。
+    ///  ⚠ 三处同步：本常量 ↔ 前端 ingredientLabels.ts 的 FOOD_GROUP_ZH ↔ recipeList.ts 徽标分支。</summary>
+    internal const string CommonW5Group = "commonw5";
+
     /// <summary>meta 直读 guid 与 AssetDatabase 注册 guid 脱同步（插件直写 meta /
     ///  陈旧内存注册）时强制重导入修复，返回 AssetDatabase 认可的 guid。
     ///  保存菜谱时 GUIDToAssetPath 依赖 AssetDatabase 映射，此处必须保证一致。</summary>
@@ -45,7 +49,9 @@ public static class LayoutEditorCatalogApi
             // 编辑器增量库（Assets/commonW1）：dlc11_ketchup/mustard 等上游已删、按需保留的
             // 用户食材包装（与 build-catalog.mjs 静态目录同源；缺扫会让 dlc11 酱料机白名单
             // 在桥在线时整体失效 → auditDispenserWhitelists 误报、选择弹窗退化为全食材）。
-            "Assets/commonW1/pseudo_prefab_so/dlc11/food"
+            "Assets/commonW1/pseudo_prefab_so/dlc11/food",
+            // Web 食材增量库（Assets/commonW5）：辣椒 / 茶叶 / 葱（本地 prefab 直引）。
+            "Assets/commonW5/pseudo_prefab_so/food"
         };
         roots.AddRange(LayoutEditorLevelAdminApi.LevelSetCustomIngredientFolders(levelSet));
 
@@ -120,6 +126,9 @@ public static class LayoutEditorCatalogApi
         // commonW3 Web 扩展菜谱共享库：salad/ + smoothie/ 等同组（custom_recipes/*）。
         if (assetPath.IndexOf("/commonW3/", StringComparison.Ordinal) >= 0)
             return CommonW3Group;
+        // commonW5 卷饼菜谱共享库（custom_recipes/burrito/*）。
+        if (assetPath.IndexOf("/commonW5/", StringComparison.Ordinal) >= 0)
+            return CommonW5Group;
         if (assetPath.IndexOf("/custom_recipes/", StringComparison.Ordinal) >= 0)
             return "levelset";
         // 旧 Web 拷贝目录（机制已废弃，仅兼容历史数据）：按通用内容处理
@@ -240,6 +249,10 @@ public static class LayoutEditorCatalogApi
             return "sushi";
         if (lower.IndexOf("burrito", StringComparison.Ordinal) >= 0)
             return "burrito";
+        // 奶茶家族（commonW5 custom_recipes/milk_tea，Web_MilkTea_*）
+        if (lower.IndexOf("milktea", StringComparison.Ordinal) >= 0 ||
+            lower.IndexOf("milk_tea", StringComparison.Ordinal) >= 0)
+            return "milktea";
         if (lower.IndexOf("smores", StringComparison.Ordinal) >= 0 ||
             lower.IndexOf("roastedmarshmallow", StringComparison.Ordinal) >= 0)
             return "smores";
@@ -318,6 +331,10 @@ public static class LayoutEditorCatalogApi
         if (LayoutEditorLevelAdminApi.AssetFolderExists(LayoutEditorLevelAdminApi.CommonW3RecipesDir))
             folders.Add(LayoutEditorLevelAdminApi.CommonW3RecipesDir);
 
+        // 卷饼菜谱（commonW5 共享库）：同上，所有关卡集的关卡均可选用。
+        if (LayoutEditorLevelAdminApi.AssetFolderExists(LayoutEditorLevelAdminApi.CommonW5RecipesDir))
+            folders.Add(LayoutEditorLevelAdminApi.CommonW5RecipesDir);
+
         var seen = new HashSet<string>();
         for (int f = 0; f < folders.Count; f++)
         {
@@ -368,6 +385,15 @@ public static class LayoutEditorCatalogApi
                     var w3Names = LayoutEditorLevelAdminApi.LoadCustomRecipeZhMap(LayoutEditorLevelAdminApi.CommonW3RecipesDir);
                     var nameKey = custom != null && !string.IsNullOrEmpty(custom.recipeName) ? custom.recipeName : id;
                     if (!w3Names.TryGetValue(nameKey, out zh) || string.IsNullOrEmpty(zh))
+                        zh = id;
+                    en = nameKey;
+                }
+                else if (group == CommonW5Group)
+                {
+                    // commonW5 卷饼菜谱：查本库自己的 names.json。
+                    var w5Names = LayoutEditorLevelAdminApi.LoadCustomRecipeZhMap(LayoutEditorLevelAdminApi.CommonW5RecipesDir);
+                    var nameKey = custom != null && !string.IsNullOrEmpty(custom.recipeName) ? custom.recipeName : id;
+                    if (!w5Names.TryGetValue(nameKey, out zh) || string.IsNullOrEmpty(zh))
                         zh = id;
                     en = nameKey;
                 }
@@ -769,6 +795,13 @@ public static class LayoutEditorCatalogApi
         // 替换旧 auto-managed 汉堡条目（BurgerOptional/*Assembly/_filler），
         // 保留 hotdog/pizza/用户手动加入的成品汉堡等非汉堡条目。
         var burgerSyncNote = SyncBurgerOptionalsForSavedRecipes(update.levelInfoAssetPath, levelSet, recipes, info);
+
+        // 奶茶中间产物自动同步（必须在 EnsureWebDependencies 之前：optional 项的
+        // commonW5 依赖要一并算入）：所选含奶茶成品时确保「热水」中间产物在
+        // optionalRecipeMatchListItems——杯中只接热水时按其内容物模型显示清水，
+        // 否则 no-match 走 Sludge 表现。只增不删（汉堡同步的整体替换可能清掉
+        // score=0 条目，此处在其后补回）。
+        SyncMilkTeaIntermediate(info, recipes);
 
         // DLC 匹配表自动补全（必须在 EnsureWebDependencies 之前：后者靠读
         // includeRecipeMatchLists 注册 bundle 依赖，晚了就漏包）。
@@ -1269,6 +1302,46 @@ public static class LayoutEditorCatalogApi
     ///  与填充加入的中间产物（组成不含面包）。中间产物只能来自填充（手动候选不含它们），
     ///  整体替换可避免换菜谱后陈旧条目滞留。用户手动加入的成品（score&gt;0）与非
     ///  CustomRecipeSO 条目（hotdog/pizza 部件、DLC 菜谱等）不算。</summary>
+    /// <summary>奶茶中间产物同步：所选含 Web_MilkTea_* 成品（score&gt;0）时，
+    /// 把 Web_MilkTea_HotWater（热水，score=0）加进 optionalRecipeMatchListItems
+    /// （幂等：已在 recipes/optional 中则跳过）。中间产物节点带内容物模型
+    /// （Web_TeaContents_Water），杯中只热水时按其显示清水而非 Sludge。</summary>
+    private static void SyncMilkTeaIntermediate(LevelInfoSO info, System.Collections.Generic.List<ScriptableObject> recipes)
+    {
+        if (info == null || recipes == null)
+            return;
+        bool hasFinal = false;
+        bool explicitlySelected = false;
+        for (int i = 0; i < recipes.Count; i++)
+        {
+            var cr = recipes[i] as CustomRecipeSO;
+            if (cr == null || string.IsNullOrEmpty(cr.recipeName))
+                continue;
+            if (!cr.recipeName.StartsWith("Web_MilkTea_", System.StringComparison.Ordinal))
+                continue;
+            if (cr.recipeName == "Web_MilkTea_HotWater")
+                explicitlySelected = true;
+            else if (cr.score > 0)
+                hasFinal = true;
+        }
+        if (!hasFinal || explicitlySelected)
+            return;
+        var inter = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(
+            "Assets/commonW5/custom_recipes/milk_tea/Web_MilkTea_HotWater.asset");
+        if (inter == null)
+            return;
+        var old = info.optionalRecipeMatchListItems ?? new ScriptableObject[0];
+        for (int i = 0; i < old.Length; i++)
+        {
+            if (old[i] == inter)
+                return;
+        }
+        var merged = new System.Collections.Generic.List<ScriptableObject>(old);
+        merged.Add(inter);
+        info.optionalRecipeMatchListItems = merged.ToArray();
+        LayoutEditorLog.Log("[MilkTea] 已自动加入热水中间产物到 optionalRecipeMatchListItems（杯中清水显示）");
+    }
+
     internal static bool IsAutoManagedBurgerOptionalItem(ScriptableObject so)
     {
         var cr = so as CustomRecipeSO;
