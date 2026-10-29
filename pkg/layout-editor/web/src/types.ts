@@ -1726,7 +1726,7 @@ export interface CounterAppearanceOption {
   bundleName?: string;
   /** 材质球均色（Unity 提取工具生成，如 "#a86b3f"）；画布「桌台皮肤」开关着色用 */
   color?: string;
-  /** 缩略图文件名（不含扩展，位于 /icons/counter-skins/） */
+  /** 缩略图文件名（不含扩展；位于 exports/counter-skins/icons，经 /api/counter-skins/icon/ 读取） */
   icon?: string;
 }
 

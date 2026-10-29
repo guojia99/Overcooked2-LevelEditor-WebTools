@@ -4,6 +4,24 @@
   "itemCount": 200,
   "items": [
     {
+      "id": "1_2_Float_Eggplant_16b70cc5_722821b3",
+      "guid": "722821b327972a8cd61200e88891df78",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/1_2_Float_Eggplant_16b70cc5_722821b3.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·茄子浮筒",
+      "nameEn": "1 2 Float Eggplant",
+      "typeKind": "vegetation",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
       "id": "1_5_hazardspawner_01",
       "guid": "17009b1257d1c7bae0af89b5d0213fff",
       "assetPath": "Assets/commonW1/prefabs/dlc11/art/fireworksmechanical/1_5_hazardspawner_01.prefab",
@@ -21,6 +39,24 @@
       "nameZh": "1.5 危险生成器",
       "nameEn": "1 5 hazardspawner 1",
       "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "a_tent_roof_placeholder_9ae8f152_a1c9098a",
+      "guid": "a1c9098a7155a456e79b5e7e98506b1c",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/inside/a_tent_roof_placeholder_9ae8f152_a1c9098a.prefab",
+      "category": "art",
+      "theme": "inside",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "帐篷顶占位",
+      "nameEn": "a tent roof placeholder",
+      "typeKind": "building",
       "usage": "dressing",
       "icon": false
     },
@@ -2598,6 +2634,330 @@
       "icon": false
     },
     {
+      "id": "Building_01_rooftiles_642b45c1_543f56b6",
+      "guid": "543f56b6bd59aaf81e084f0f5111d118",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Building_01_rooftiles_642b45c1_543f56b6.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑01 屋顶瓦",
+      "nameEn": "Building 01 rooftiles",
+      "typeKind": "ground",
+      "usage": "landmark",
+      "icon": false
+    },
+    {
+      "id": "Building_01_walls_6d4c4bf5_f4479fd6",
+      "guid": "f4479fd6d7d8559f3c0376d004940660",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Building_01_walls_6d4c4bf5_f4479fd6.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑01 墙体",
+      "nameEn": "Building 01 walls",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "Building_02_roof_25d48e48_6f0ad3a4",
+      "guid": "6f0ad3a4f9868c73a828f8d6bf56d2fb",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Building_02_roof_25d48e48_6f0ad3a4.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑02 屋顶",
+      "nameEn": "Building 02 roof",
+      "typeKind": "building",
+      "usage": "landmark",
+      "icon": false
+    },
+    {
+      "id": "Building_02_walls_3c80a169_9c3f278d",
+      "guid": "9c3f278dd4cfc6d6f4cea38e5c06dfe6",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Building_02_walls_3c80a169_9c3f278d.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑02 墙体",
+      "nameEn": "Building 02 walls",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "Building_03_rooftiles_8e8b52b3_1afccae6",
+      "guid": "1afccae6f14ea73c0b35ac22837449b8",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Building_03_rooftiles_8e8b52b3_1afccae6.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑03 屋顶瓦",
+      "nameEn": "Building 03 rooftiles",
+      "typeKind": "ground",
+      "usage": "landmark",
+      "icon": false
+    },
+    {
+      "id": "Building_03_walls_45576b94_46cec46e",
+      "guid": "46cec46e3ba72e98f0f1e80d00d7c334",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Building_03_walls_45576b94_46cec46e.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑03 墙体",
+      "nameEn": "Building 03 walls",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "Building_04_walls_e7ef1aaa_d33d656e",
+      "guid": "d33d656e84d3298fdaac0a539ccdc7de",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Building_04_walls_e7ef1aaa_d33d656e.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑04 墙体",
+      "nameEn": "Building 04 walls",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "Building_05_walls_fc90b3f0_c25c41bf",
+      "guid": "c25c41bff4d8f276314f79f35cadbfb1",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Building_05_walls_fc90b3f0_c25c41bf.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑05 墙体",
+      "nameEn": "Building 05 walls",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "Building_07_roof_1351c657_907dd317",
+      "guid": "907dd3175d1b44c7c92765eb8e33ffd0",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Building_07_roof_1351c657_907dd317.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑07 屋顶",
+      "nameEn": "Building 07 roof",
+      "typeKind": "building",
+      "usage": "landmark",
+      "icon": false
+    },
+    {
+      "id": "Building_07_Walls_d19af510_d4a15520",
+      "guid": "d4a1552054b7623d7717405f0147225d",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Building_07_Walls_d19af510_d4a15520.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑07 墙体",
+      "nameEn": "Building 07 Walls",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "Building_08_rooftiles_a0426137_2588546c",
+      "guid": "2588546ce199537fda880070d003674c",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Building_08_rooftiles_a0426137_2588546c.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑08 屋顶瓦",
+      "nameEn": "Building 08 rooftiles",
+      "typeKind": "ground",
+      "usage": "landmark",
+      "icon": false
+    },
+    {
+      "id": "Building_08_walls_9aa112f5_fbde8719",
+      "guid": "fbde87196d6a53f39565dcf305bb6dc6",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Building_08_walls_9aa112f5_fbde8719.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑08 墙体",
+      "nameEn": "Building 08 walls",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "Building_09_roof_c7eb142d_52d70fd4",
+      "guid": "52d70fd42c05865866da34149b4c4b25",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Building_09_roof_c7eb142d_52d70fd4.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑09 屋顶",
+      "nameEn": "Building 09 roof",
+      "typeKind": "building",
+      "usage": "landmark",
+      "icon": false
+    },
+    {
+      "id": "Building_09_walls_078b6685_4eaa509d",
+      "guid": "4eaa509db5212ae5914963548664e9bb",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Building_09_walls_078b6685_4eaa509d.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑09 墙体",
+      "nameEn": "Building 09 walls",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "Building_11_roof_1aaa996b_bde9421f",
+      "guid": "bde9421f7934106cff7934f0f5350f8c",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Building_11_roof_1aaa996b_bde9421f.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑11 屋顶",
+      "nameEn": "Building 11 roof",
+      "typeKind": "building",
+      "usage": "landmark",
+      "icon": false
+    },
+    {
+      "id": "Building_11_walls_a0d1462c_e5e248a0",
+      "guid": "e5e248a01fc19f8171e439255b3a4af6",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Building_11_walls_a0d1462c_e5e248a0.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑11 墙体",
+      "nameEn": "Building 11 walls",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "Building_12_roof_dc150870_5b80bf86",
+      "guid": "5b80bf860a422697be5655575374da5c",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Building_12_roof_dc150870_5b80bf86.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑12 屋顶",
+      "nameEn": "Building 12 roof",
+      "typeKind": "building",
+      "usage": "landmark",
+      "icon": false
+    },
+    {
+      "id": "Building_12_walls_0cca0093_be8f7db7",
+      "guid": "be8f7db722922ce308a867c635fe8763",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Building_12_walls_0cca0093_be8f7db7.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑12 墙体",
+      "nameEn": "Building 12 walls",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
       "id": "building_roof",
       "guid": "edf1bbbf7e134df67fbbe91e73422528",
       "assetPath": "Assets/commonW1/prefabs/dlc11/art/s_summer_1_1/building_roof.prefab",
@@ -2637,6 +2997,24 @@
       "nameEn": "building walls",
       "typeKind": "building",
       "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "Buildint_05_Rooftiles_aa7911d7_b7b54eda",
+      "guid": "b7b54eda465d78c222d292fb163bdc5e",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Buildint_05_Rooftiles_aa7911d7_b7b54eda.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "夏日·建筑05 屋顶瓦",
+      "nameEn": "Buildint 05 Rooftiles",
+      "typeKind": "ground",
+      "usage": "flooring",
       "icon": false
     },
     {
@@ -2900,6 +3278,24 @@
       "layoutTier": "decor",
       "nameZh": "车位 3",
       "nameEn": "car position 3",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "Carrot_4ec80af2_e67c2d4d",
+      "guid": "e67c2d4d89cd3f7cf97988dd9c95e148",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Carrot_4ec80af2_e67c2d4d.prefab",
+      "category": "art",
+      "theme": "summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "胡萝卜装饰",
+      "nameEn": "Carrot",
       "typeKind": "other",
       "usage": "dressing",
       "icon": false
@@ -3684,454 +4080,6 @@
       "nameEn": "cobble tiled 1",
       "typeKind": "ground",
       "usage": "flooring",
-      "icon": false
-    },
-    {
-      "id": "conveyorstationprop",
-      "guid": "93e97decb40c9eb73d1f9922287ed434",
-      "assetPath": "Assets/commonW1/prefabs/core/art/city_sushi/conveyorstationprop.prefab",
-      "category": "art",
-      "theme": "city_sushi",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.5010152459144592
-      },
-      "height": 0.501,
-      "layoutTier": "decor",
-      "nameZh": "传送带站道具",
-      "nameEn": "conveyorstationprop",
-      "typeKind": "other",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "countertop_01_standard_corner_swamp",
-      "guid": "2945f36af22ebd2587a149c2f5d386d0",
-      "assetPath": "Assets/commonW1/prefabs/core/art/swamp/countertop_01_standard_corner_swamp.prefab",
-      "category": "art",
-      "theme": "swamp",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.5431906580924988
-      },
-      "height": 0.543,
-      "layoutTier": "decor",
-      "nameZh": "台面标准转角（沼泽）",
-      "nameEn": "countertop 1 standard corner swamp",
-      "typeKind": "other",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "countertop_02_standard_medieval_corner",
-      "guid": "35f866cde8e1836a7a533e77a05af607",
-      "assetPath": "Assets/commonW1/prefabs/dlc07/art/shared_kitchen/countertop_02_standard_medieval_corner.prefab",
-      "category": "art",
-      "theme": "shared_kitchen",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.6202110648155212
-      },
-      "height": 0.62,
-      "baseY": -0.048,
-      "layoutTier": "decor",
-      "nameZh": "台面 2 标准中世纪转角",
-      "nameEn": "countertop 2 standard medieval corner",
-      "typeKind": "other",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "crate_raft_01",
-      "guid": "2c3d6bb7ccd2d3542af1fc998652a7a4",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/crate_raft_01.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 0.7085577249526978
-      },
-      "height": 0.709,
-      "baseY": -0.416,
-      "layoutTier": "decor",
-      "nameZh": "木筏板条箱",
-      "nameEn": "crate raft 1",
-      "typeKind": "furniture",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "Crate_raft_x10_01",
-      "guid": "428ac7ef3f3ea0847b91801934b81c75",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/Crate_raft_x10_01.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 10,
-        "cellsZ": 1
-      },
-      "height": 0.724,
-      "baseY": -0.424,
-      "layoutTier": "decor",
-      "nameZh": "木筏板条箱（十格）",
-      "nameEn": "Crate raft x10 1",
-      "typeKind": "furniture",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "crate_raft_x2_01",
-      "guid": "51fd56f78f20a494e9af28cb59de09b6",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/crate_raft_x2_01.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1
-      },
-      "height": 0.709,
-      "baseY": -0.417,
-      "layoutTier": "decor",
-      "nameZh": "木筏板条箱（双格）",
-      "nameEn": "crate raft x2 1",
-      "typeKind": "furniture",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "Crate_raft_x3_01",
-      "guid": "953aeee694e8f074f9376377e7dd4f04",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/Crate_raft_x3_01.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 1
-      },
-      "height": 0.709,
-      "baseY": -0.417,
-      "layoutTier": "decor",
-      "nameZh": "木筏板条箱（三格）",
-      "nameEn": "Crate raft x3 1",
-      "typeKind": "furniture",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "customer_countertop_01_black",
-      "guid": "06e97ff0106f529f63cf5ac1b1893bd6",
-      "assetPath": "Assets/commonW1/prefabs/core/art/shared_kitchen/customer_countertop_01_black.prefab",
-      "category": "art",
-      "theme": "shared_kitchen",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.9298770427703857
-      },
-      "height": 1.93,
-      "layoutTier": "decor",
-      "nameZh": "顾客台面 1 黑",
-      "nameEn": "customer countertop 1 black",
-      "typeKind": "other",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "customer_countertop_01_black_corner_in",
-      "guid": "6fb523aaf7641f9de531059c4a5b3bba",
-      "assetPath": "Assets/commonW1/prefabs/core/art/shared_kitchen/customer_countertop_01_black_corner_in.prefab",
-      "category": "art",
-      "theme": "shared_kitchen",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.9298770427703857
-      },
-      "height": 1.93,
-      "layoutTier": "decor",
-      "nameZh": "顾客台面 1 黑转角内",
-      "nameEn": "customer countertop 1 black corner in",
-      "typeKind": "other",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "customer_countertop_01_black_corner_out",
-      "guid": "cf2f4ed566fdba7febae68e4c9c3f69c",
-      "assetPath": "Assets/commonW1/prefabs/core/art/shared_kitchen/customer_countertop_01_black_corner_out.prefab",
-      "category": "art",
-      "theme": "shared_kitchen",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.9298770427703857
-      },
-      "height": 1.93,
-      "layoutTier": "decor",
-      "nameZh": "顾客台面 1 黑转角外",
-      "nameEn": "customer countertop 1 black corner out",
-      "typeKind": "other",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "customer_countertop_01_black_light",
-      "guid": "57dec785b6b208058acc0a5655e5cfe1",
-      "assetPath": "Assets/commonW1/prefabs/core/art/shared_kitchen/customer_countertop_01_black_light.prefab",
-      "category": "art",
-      "theme": "shared_kitchen",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.9298770427703857
-      },
-      "height": 1.93,
-      "layoutTier": "decor",
-      "nameZh": "顾客台面 1 黑浅",
-      "nameEn": "customer countertop 1 black light",
-      "typeKind": "lighting",
-      "usage": "ambience",
-      "icon": false
-    },
-    {
-      "id": "customer_countertop_01_oranges",
-      "guid": "44754da8cb5af4704fc5fe6352976489",
-      "assetPath": "Assets/commonW1/prefabs/core/art/shared_kitchen/customer_countertop_01_oranges.prefab",
-      "category": "art",
-      "theme": "shared_kitchen",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.9298770427703857
-      },
-      "height": 1.93,
-      "layoutTier": "decor",
-      "nameZh": "顾客台面 1 橙子",
-      "nameEn": "customer countertop 1 oranges",
-      "typeKind": "other",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "customer_countertop_01_oranges_corner_in",
-      "guid": "ef6019245e76769726f96c2d5e1dcb6a",
-      "assetPath": "Assets/commonW1/prefabs/core/art/shared_kitchen/customer_countertop_01_oranges_corner_in.prefab",
-      "category": "art",
-      "theme": "shared_kitchen",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.9298770427703857
-      },
-      "height": 1.93,
-      "layoutTier": "decor",
-      "nameZh": "顾客台面 1 橙子转角内",
-      "nameEn": "customer countertop 1 oranges corner in",
-      "typeKind": "other",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "customer_countertop_01_oranges_corner_out",
-      "guid": "35f078fa2f0ca25886028d26eb9d570e",
-      "assetPath": "Assets/commonW1/prefabs/core/art/shared_kitchen/customer_countertop_01_oranges_corner_out.prefab",
-      "category": "art",
-      "theme": "shared_kitchen",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.9298770427703857
-      },
-      "height": 1.93,
-      "layoutTier": "decor",
-      "nameZh": "顾客台面 1 橙子转角外",
-      "nameEn": "customer countertop 1 oranges corner out",
-      "typeKind": "other",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "customer_countertop_01_oranges_corner_out_2",
-      "guid": "5138029edca899ce97d4872418f9b88c",
-      "assetPath": "Assets/commonW1/prefabs/core/art/shared_kitchen/customer_countertop_01_oranges_corner_out_2.prefab",
-      "category": "art",
-      "theme": "shared_kitchen",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.9298770427703857
-      },
-      "height": 1.93,
-      "layoutTier": "decor",
-      "nameZh": "顾客台面 1 橙子转角外 2",
-      "nameEn": "customer countertop 1 oranges corner out 2",
-      "typeKind": "other",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "customer_countertop_01_oranges_light",
-      "guid": "532e6c09015f171798454021e58714d5",
-      "assetPath": "Assets/commonW1/prefabs/core/art/shared_kitchen/customer_countertop_01_oranges_light.prefab",
-      "category": "art",
-      "theme": "shared_kitchen",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.9298770427703857
-      },
-      "height": 1.93,
-      "layoutTier": "decor",
-      "nameZh": "顾客台面 1 橙子浅",
-      "nameEn": "customer countertop 1 oranges light",
-      "typeKind": "lighting",
-      "usage": "ambience",
-      "icon": false
-    },
-    {
-      "id": "debris",
-      "guid": "4f7f8437c7f1510bfac94911ee7a483e",
-      "assetPath": "Assets/commonW1/prefabs/core/art/particles/debris.prefab",
-      "category": "art",
-      "theme": "particles",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 5,
-        "cellsZ": 4,
-        "sizeY": 1.311028242111206
-      },
-      "height": 1.44,
-      "baseY": -0.785,
-      "layoutTier": "decor",
-      "nameZh": "残骸",
-      "nameEn": "debris",
-      "typeKind": "furniture",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "debris_01",
-      "guid": "75cdad6d8922cb04a8467c7163f55bba",
-      "assetPath": "Assets/common01/prefabs/art/space/debris_01.prefab",
-      "category": "art",
-      "theme": "space",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 3,
-        "sizeY": 3.380126476287842
-      },
-      "height": 3.38,
-      "baseY": -1.69,
-      "layoutTier": "decor",
-      "nameZh": "残骸 1",
-      "nameEn": "debris 1",
-      "typeKind": "furniture",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "debris_02",
-      "guid": "9911c494c49b0eb49b343cabb7bd66cc",
-      "assetPath": "Assets/common01/prefabs/art/space/debris_02.prefab",
-      "category": "art",
-      "theme": "space",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.5477998852729797
-      },
-      "height": 0.548,
-      "baseY": -0.274,
-      "layoutTier": "decor",
-      "nameZh": "残骸 2",
-      "nameEn": "debris 2",
-      "typeKind": "furniture",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "debris_03",
-      "guid": "2033dffe6ba584b4fb65a7e8ad7e9a25",
-      "assetPath": "Assets/common01/prefabs/art/space/debris_03.prefab",
-      "category": "art",
-      "theme": "space",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.36381545662879944
-      },
-      "height": 0.364,
-      "baseY": -0.182,
-      "layoutTier": "decor",
-      "nameZh": "残骸 3",
-      "nameEn": "debris 3",
-      "typeKind": "furniture",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "debris_04",
-      "guid": "60396e974168f2942b8585082dfeb226",
-      "assetPath": "Assets/common01/prefabs/art/space/debris_04.prefab",
-      "category": "art",
-      "theme": "space",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 1.0543756484985352
-      },
-      "height": 1.054,
-      "baseY": -0.527,
-      "layoutTier": "decor",
-      "nameZh": "残骸 4",
-      "nameEn": "debris 4",
-      "typeKind": "furniture",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "debris_05",
-      "guid": "373d621205916d243980562016bd71c9",
-      "assetPath": "Assets/common01/prefabs/art/space/debris_05.prefab",
-      "category": "art",
-      "theme": "space",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 1.2415627241134644
-      },
-      "height": 1.242,
-      "baseY": -0.621,
-      "layoutTier": "decor",
-      "nameZh": "残骸 5",
-      "nameEn": "debris 5",
-      "typeKind": "furniture",
-      "usage": "dressing",
       "icon": false
     }
   ]

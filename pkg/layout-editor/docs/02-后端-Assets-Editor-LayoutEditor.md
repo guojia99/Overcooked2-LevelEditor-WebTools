@@ -26,7 +26,7 @@
 ├── CustomStubHttpApi.cs                  CustomStub web API 桥（钩子注册）
 ├── CustomStubOrphanRepair.cs             场景孤儿脚本引用修复（文本级 YAML 改写；[InitializeOnLoad] 订阅 OrphanCleanHook，导出前自动安全清理）
 ├── LayoutEditorAllIngredientsFill.cs     allIngredients / 音频目录自动填充
-├── LayoutEditorAudioExporter.cs          游戏音频提取导出（audio-exports/）
+├── LayoutEditorAudioExporter.cs          游戏音频提取导出（exports/audio/）
 ├── LayoutEditorBridgeWindow.cs           主 EditorWindow + 服务看门狗 ★入口
 ├── LayoutEditorBundleDumper.cs           StreamingAssets bundle 全量 dump → dump_bundle/
 ├── LayoutEditorBurgerApi.cs              汉堡组装工作台后端 (1062 行)
@@ -157,7 +157,7 @@ flowchart TD
 | 路由 | 说明 |
 |---|---|
 | `GET /api/health` | ok/port/static/schemaVersion(=5)/knowledgeLoaded/dictionaryLoaded |
-| `GET /api/env/status` | 静态前端、audio-exports、StreamingAssets/Windows 游戏包数量、dump_bundle/manifest.json 存在性 |
+| `GET /api/env/status` | 静态前端、exports/audio·decor·counter-skins、StreamingAssets/Windows 游戏包数量、dump_bundle/manifest.json 存在性 |
 
 **场景画布（核心读写）**
 | 路由 | 说明 |
@@ -204,7 +204,12 @@ flowchart TD
 | 路由 | 说明 |
 |---|---|
 | `GET /api/writeback/history \| /detail \| /doc?side=before\|after` | 写回历史查询/恢复 |
-| `GET /api/audio/exports`（manifest）、`GET /api/audio/stream?path=`（支持 HTTP Range） | 音频 |
+| `GET /api/audio/exports`（manifest）、`GET /api/audio/stream?path=`（支持 HTTP Range） | 音频（`exports/audio/`） |
+| `GET /api/web-assets/manifest` | Web 导出聚合清单（audio / counter-skins / decor 可用性与数量） |
+| `GET /api/web-assets/decor/manifest.json`、`GET /api/web-assets/decor/front\|back/<guid>.png`、`GET /api/web-assets/decor/detail/front\|back/<guid>.png`、`GET /api/web-assets/decor/models/<guid>/model.obj\|mtl` | 装饰正/背缩略图 + 高清详情图 + 3D 模型（`exports/decor/`，监听线程 fast-path） |
+| `GET /api/counter-skins/icon/<file>.png`、`GET /api/counter-skins/icons/manifest.json` | 桌台皮肤图标（`exports/counter-skins/icons/`） |
+| `GET /api/counter-skins/3d/<name>` | 桌台皮肤俯视图/OBJ/MTL（`exports/counter-skins/`，监听线程 fast-path） |
+| `POST /api/web-assets/export`、`GET /api/web-assets/export/status` | 一键导出 Web 资源（body：`{ force, categories }`；状态监听线程 fast-path） |
 | `GET /api/level/music/custom?set=`、`POST /api/level/music/custom/upload?set=&file=`（octet-stream，≤20MB）、`POST /api/level/music/custom/delete`、`GET /api/level/music/custom/stream?set=&file=`（Range） | 自定义 BGM：落盘 `Assets/LevelSets/<set>/data/bgm/*.ogg|.wav`，AudioImporter 配 Vorbis/Streaming，显式挂 `<set>/info_<set>` bundle，`LevelInfoSO.inLevelMusic` 直引（LevelAdminApi.ListCustomMusic/SaveCustomMusic/DeleteCustomMusic） |
 | `GET /api/icons/status`、`GET /api/web-recipes`、`POST /api/web-recipes/install\|uninstall`（废弃）、`POST /api/reload`、`POST /api/compile` | 杂项 |
 
@@ -328,7 +333,7 @@ flowchart TD
 | **CustomStubOrphanRepair.cs** | 老烘焙时代批量误挂组件的迁移损坏修复：按**字段签名**分类；合法载体 → guid 替换复活；僵尸/空脚本 → 文本级删除场景 YAML 组件块；先扫描报告、确认后执行；备份到 `writeback_history/orphan_repair/` |
 | **LayoutEditorBundleDumper.cs** | `Dump()`：遍历 `Assets/StreamingAssets/Windows` 全部 bundle 逐对象导出到 `<repo>/dump_bundle/`（Texture2D/Sprite→png、Cubemap→6 面 png、TextAsset→txt、Mesh→obj、AudioClip→wav、模型容器→合并 obj、Font/其他→json）；写 `manifest.json`。与 `layout-editor/scripts/dump-bundle-all.py` 互为镜像 |
 | **LayoutEditorImageExporter.cs** | 基于 dump_bundle/Assets 的图片二次分类导出到 `dump_images/` + manifest.json |
-| **LayoutEditorAudioExporter.cs** | `ExportAudioForWeb()`：扫 common01/02 BGM 与 AudioDirectory SO → 用 AudioFs/ 直读游戏 bundle → FSB5 提取（Vorbis→.ogg、ADPCM→.wav）→ `<repo>/audio-exports/` + `audio-exports.json`。不依赖 python/libvorbis |
+| **LayoutEditorAudioExporter.cs** | `ExportAudioForWeb()`：扫 common01/02 BGM 与 AudioDirectory SO → 用 AudioFs/ 直读游戏 bundle → FSB5 提取（Vorbis→.ogg、ADPCM→.wav）→ `<repo>/exports/audio/` + `audio-exports.json`；另有 `ExportAudioForWebSilent` 供一键 Web 资源导出。不依赖 python/libvorbis |
 | **AudioFs/ 五件套** | 命名空间 `LayoutEditor.AudioFs`（internal）纯 C# 只读解析库：`AudioFsBundle`（UnityFS 2017.4 v6、LZ4/LZ4HC）、`AudioFsLz4`（块解码）、`AudioFsSerializedFile`（typetree 动态读值、跨文件 PPtr）、`AudioFsFsb5`（FSB5 头/样本表、Vorbis 重组 ogg、IMA ADPCM 解码、RIFF wav）、`AudioFsTables`（`oc2-common-strings.txt` 与 `vorbis-setup-tables.txt` 数据文件） |
 | **LayoutEditorFootprintDump.cs / LayoutEditorFootprintMeasure.cs** | 前者批量测量 common01/02/03/W1 美术 prefab 占地/高度 → `layout-editor/scripts/data/measured-footprints.json`；后者单实例测量（撤销 Y 旋转四分之一转、除以实例缩放） |
 | **LayoutEditorDiag.cs** | 菜单诊断（诊断 → 诊断 AssetBundle 加载）：直接 LoadFromFile bundle47/bundle354 验证 assetPath 变体 |
@@ -424,7 +429,7 @@ LayoutEditor 不直接修改它，但其编译产物提供编辑器 Play 期运�
 
 - `layout-editor/web/dist`：前端静态资源（HttpServer 托管）；`web/public/OC2LevelRuntimeLoader.dll`：导出 zip 附带。
 - `layout-editor/scripts/data/*.json`：recipe-knowledge / names-dictionary / bundle-manifest / audio-knowledge / measured-footprints。
-- `audio-exports/`、`logs/`、`writeback_history/`、`Assets/AssetBundles/`（构建产物）、`LayoutEditorExports/`（zip 产物，Assets 外避免 .meta）。
+- `exports/`（audio / counter-skins / decor，git 忽略；经 `/api/web-assets/*`、`/api/audio/*`、`/api/counter-skins/*` 提供）、`logs/`、`writeback_history/`、`Assets/AssetBundles/`（构建产物）、`LayoutEditorExports/`（zip 产物，Assets 外避免 .meta）。
 
 ---
 

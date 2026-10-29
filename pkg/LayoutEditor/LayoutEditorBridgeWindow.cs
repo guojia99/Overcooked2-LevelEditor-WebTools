@@ -160,6 +160,14 @@ public class LayoutEditorBridgeWindow : EditorWindow
             LayoutEditorFootprintDump.DumpBounds();
         if (GUILayout.Button("导出音频依赖", GUILayout.Height(26)))
             LayoutEditorAudioExporter.ExportAudioForWeb();
+        if (GUILayout.Button("导出全部 Web 依赖（音频/桌台/装饰双视图）", GUILayout.Height(26)))
+        {
+            var err = LayoutEditorWebAssetExporter.StartExport(false, null);
+            if (!string.IsNullOrEmpty(err))
+                EditorUtility.DisplayDialog("Web 资源导出", err, "OK");
+            else
+                Debug.Log("[LayoutEditor] Web 资源导出已开始。进度请在 Web 关卡管理页查看。");
+        }
         if (GUILayout.Button("导出 Bundle 全部内容", GUILayout.Height(26)))
             LayoutEditorBundleDumper.Dump();
         if (GUILayout.Button("导出全部素材图", GUILayout.Height(26)))

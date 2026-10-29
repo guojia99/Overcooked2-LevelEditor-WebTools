@@ -1,4 +1,5 @@
 import { S } from "./state";
+import { syncDecorPreviewForSelection } from "./ui/decorContextPreview";
 
 export function isSelected(key: string): boolean {
   return S.selectedKeys.has(key);
@@ -11,11 +12,13 @@ export function selectionKeys(): string[] {
 export function setSelection(keys: string[], primary?: string): void {
   S.selectedKeys = new Set(keys);
   S.selectedKey = keys.length ? primary ?? keys[keys.length - 1] : null;
+  syncDecorPreviewForSelection();
 }
 
 export function clearSelection(): void {
   S.selectedKeys = new Set<string>();
   S.selectedKey = null;
+  syncDecorPreviewForSelection();
 }
 
 export function setFloorSelection(keys: string[], primary?: string): void {

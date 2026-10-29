@@ -24,7 +24,7 @@ import {
 } from "../modals";
 import { ingredientOptionLabel, visibleIngredients } from "../ingredientLabels";
 import { questionMarkLabel } from "./iconCaches";
-import { questionMarkIconUrl } from "../api";
+import { questionMarkIconUrl, counterSkinIconUrl } from "../api";
 import { openModelPreview } from "../modelPreview";
 import type { IngredientEntry, LayoutSpeedControl } from "../types";
 import {
@@ -520,7 +520,7 @@ export function counterAppearanceHtml(item: EditorItem): string {
   const curOpt = nameLookup.get(cur);
   const curName = curOpt?.nameZh ?? (cur ? "未知外观" : "默认外观");
   const curBadge = curOpt?.icon
-    ? `<img class="csm-thumb" src="/icons/counter-skins/${encodeURIComponent(curOpt.icon)}.png" alt="" onerror="this.remove()" />`
+    ? `<img class="csm-thumb" src="${escHtml(counterSkinIconUrl(curOpt.icon))}" alt="" onerror="this.remove()" />`
     : curOpt?.color
       ? `<span class="csm-dot" style="background:${escHtml(curOpt.color)}"></span>`
       : "";

@@ -8,7 +8,7 @@ import { openModal, closeModal } from "../../modals";
 import { cancelBtnHtml, modalBtnHtml, primaryBtnHtml, smallBtnHtml } from "../../ui/views/button";
 import { itemLabel } from "../labels";
 import { openModelPreview } from "../../modelPreview";
-import { fetchCounter3dManifest } from "../../api";
+import { fetchCounter3dManifest, counterSkinIconUrl } from "../../api";
 import type { Counter3dEntry, CounterAppearanceOption } from "../../types";
 
 /** 确保 3D 资产 manifest 已加载（开关打开 / 弹窗重试共用）：
@@ -73,12 +73,12 @@ function dotHtml(color?: string): string {
   return color ? `<span class="csm-dot" style="background:${escHtml(color)}"></span>` : "";
 }
 
-/** 皮肤缩略图：优先材质球裁切图（/icons/counter-skins/），回退均色色块，再回退空占位。
+/** 皮肤缩略图：优先材质球裁切图（/api/counter-skins/icon/），回退均色色块，再回退空占位。
  *  lg = 组行 128px 原图预览（随下拉选择切换）；默认 28px 行内小图。 */
 function thumbHtml(opt?: CounterAppearanceOption, lg = false): string {
   const cls = lg ? "csm-thumb csm-thumb-lg" : "csm-thumb";
   if (opt?.icon) {
-    return `<img class="${cls}" src="/icons/counter-skins/${encodeURIComponent(opt.icon)}.png" alt="" loading="lazy" onerror="this.remove()" />`;
+    return `<img class="${cls}" src="${escHtml(counterSkinIconUrl(opt.icon))}" alt="" loading="lazy" onerror="this.remove()" />`;
   }
   if (opt?.color) return `<span class="${cls}" style="background:${escHtml(opt.color)}"></span>`;
   return `<span class="${cls} csm-thumb-empty"></span>`;

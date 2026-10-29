@@ -178,7 +178,7 @@ public class LayoutEditorHttpServer
                 // 这些请求若排队将永远得不到响应（前端轮询会超时）。
                 if (TryServeExportFastPath(captured))
                     continue;
-                if (TryServeDecorPreviewFastPath(captured))
+                if (TryServeWebAssetsFastPath(captured))
                     continue;
                 EnqueueMain(delegate { HandleRequest(captured); });
             }
@@ -315,10 +315,10 @@ public class LayoutEditorHttpServer
         }
     }
 
-    /// <summary>装饰缩略图/清单在监听线程直接读文件并响应。3000+ 张小图若走主线程队列
-    /// （Unity EditorApplication.update 泵）会明显拖慢场景加载与写回；这里纯文件 I/O，
-    /// 与导出 fast-path 同口径。优先 dist，未构建时回退 web/public。</summary>
-    private static bool TryServeDecorPreviewFastPath(HttpListenerContext context)
+    /// <summary>Web 前端导出产物（exports/）与导出状态在监听线程直接读文件并响应。
+    ///  3000+ 装饰小图若走主线程队列会明显拖慢场景加载/写回；导出期间主线程泵也会被
+    ///  构建阻塞。这里纯文件 I/O + 只读状态快照，与 set 导出 fast-path 同口径。</summary>
+    private static bool TryServeWebAssetsFastPath(HttpListenerContext context)
     {
         try
         {
@@ -326,24 +326,37 @@ public class LayoutEditorHttpServer
             if (request.HttpMethod != "GET")
                 return false;
             var path = request.Url.AbsolutePath;
-            if (!path.StartsWith("/icons/decor-preview/", StringComparison.Ordinal))
-                return false;
 
-            string distRoot;
-            string publicRoot;
-            if (!LayoutEditorPaths.TryGetCachedRoots(out distRoot, out publicRoot))
-                return false;
-
-            string rel = path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-            string abs = Path.GetFullPath(Path.Combine(distRoot, rel));
-            if (!File.Exists(abs))
+            if (path == "/api/web-assets/export/status")
             {
-                string pub = Path.GetFullPath(Path.Combine(publicRoot, rel));
-                if (File.Exists(pub) && LayoutEditorPaths.IsPathUnderRoot(pub, publicRoot))
-                    abs = pub;
+                context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+                context.Response.Headers.Add("Cache-Control", "no-store");
+                WriteListenerJson(context.Response, 200,
+                    LayoutEditorJson.ToJson(LayoutEditorWebAssetExporter.GetStatus()));
+                return true;
             }
-            if (!LayoutEditorPaths.IsPathUnderRoot(abs, distRoot)
-                && !LayoutEditorPaths.IsPathUnderRoot(abs, publicRoot))
+
+            string exportsRoot;
+            if (!LayoutEditorPaths.TryGetCachedExportsRoot(out exportsRoot))
+                return false;
+
+            string rel = null;
+            if (path.StartsWith("/api/web-assets/decor/", StringComparison.Ordinal))
+                rel = "decor/" + path.Substring("/api/web-assets/decor/".Length);
+            else if (path.StartsWith("/api/counter-skins/icons/", StringComparison.Ordinal))
+                rel = "counter-skins/icons/" + path.Substring("/api/counter-skins/icons/".Length);
+            else if (path.StartsWith("/api/counter-skins/icon/", StringComparison.Ordinal))
+                rel = "counter-skins/icons/" + path.Substring("/api/counter-skins/icon/".Length);
+            else if (path.StartsWith("/api/counter-skins/3d/", StringComparison.Ordinal))
+                rel = "counter-skins/" + path.Substring("/api/counter-skins/3d/".Length);
+            if (rel == null || rel.Length == 0)
+                return false;
+
+            rel = Uri.UnescapeDataString(rel).Replace('\\', '/');
+
+            // 允许 ../_textures/... 这类相对路径：GetFullPath 归一化后必须仍落在 exports/ 内。
+            string abs = Path.GetFullPath(Path.Combine(exportsRoot, rel.Replace('/', Path.DirectorySeparatorChar)));
+            if (!LayoutEditorPaths.IsPathUnderRoot(abs, exportsRoot))
                 return false;
 
             var response = context.Response;
@@ -358,9 +371,14 @@ public class LayoutEditorHttpServer
 
             byte[] bytes = File.ReadAllBytes(abs);
             bool isJson = abs.EndsWith(".json", StringComparison.OrdinalIgnoreCase);
+            bool isPng = abs.EndsWith(".png", StringComparison.OrdinalIgnoreCase);
+            bool isObjOrMtl = abs.EndsWith(".obj", StringComparison.OrdinalIgnoreCase)
+                || abs.EndsWith(".mtl", StringComparison.OrdinalIgnoreCase);
+            bool isDecorModel = rel.StartsWith("decor/models/", StringComparison.OrdinalIgnoreCase);
             response.StatusCode = 200;
-            response.ContentType = isJson ? "application/json; charset=utf-8" : "image/png";
-            if (isJson)
+            response.ContentType = isJson ? "application/json; charset=utf-8"
+                : (isPng ? "image/png" : (isObjOrMtl ? "text/plain; charset=utf-8" : "application/octet-stream"));
+            if (isJson || isDecorModel)
                 response.Headers["Cache-Control"] = "no-cache";
             else
                 response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
@@ -371,7 +389,7 @@ public class LayoutEditorHttpServer
         }
         catch (Exception ex)
         {
-            Debug.LogWarning("[LayoutEditor] decor preview fast-path: " + ex.Message);
+            Debug.LogWarning("[LayoutEditor] web assets fast-path: " + ex.Message);
             try
             {
                 context.Response.StatusCode = 500;
@@ -1457,6 +1475,27 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            // ---------- Web assets export (audio / counter skins / decor) ----------
+            if (path == "/api/web-assets/manifest" && request.HttpMethod == "GET")
+            {
+                WriteJson(response, 200, LayoutEditorJson.ToJson(BuildWebAssetsManifest()));
+                return;
+            }
+
+            if (path == "/api/web-assets/export" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<WebAssetExportStartDto>(body);
+                var err = LayoutEditorWebAssetExporter.StartExport(
+                    dto != null && dto.force,
+                    dto != null ? dto.categories : null);
+                if (!string.IsNullOrEmpty(err))
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                else
+                    WriteJson(response, 200, "{\"ok\":true}");
+                return;
+            }
+
             // ---------- Audio stream ----------
             if (path == "/api/audio/exports" && request.HttpMethod == "GET")
             {
@@ -2002,6 +2041,13 @@ public class LayoutEditorHttpServer
             LayoutEditorCatalogApi.SyncCookingStepsFromSelectedRecipes(levelInfo);
             LayoutEditorCatalogApi.SyncWebBackpackOptionalItems(levelInfo, doc);
             LayoutEditorCustomIngredients.EnsureWebDependencies(levelSet, levelInfo, true);
+            // commonW6 去本地化：EnsureWebDependencies 只加 commonW6 本体；这里再补
+            // wrapper/ SO 指向的游戏 bundle（bundle163/167/428…）。
+            var activeScene = EditorSceneManager.GetActiveScene();
+            if (activeScene.IsValid()
+                && string.Equals(activeScene.path, doc.sceneAssetPath,
+                    StringComparison.OrdinalIgnoreCase))
+                LayoutEditorCommonW6Dependencies.SyncForScene(activeScene, levelInfo);
             LayoutEditorLevelAdminApi.MergeAudioDependencies(levelInfo);
             EditorUtility.SetDirty(levelInfo);
             AssetDatabase.SaveAssets();
@@ -2269,17 +2315,8 @@ public class LayoutEditorHttpServer
         var bytes = File.ReadAllBytes(filePath);
         _responseSent = true;
         response.ContentType = GetContentType(filePath);
-        // 装饰缩略图按 guid 命名且带 ?v=<manifest version>，可长期缓存；
-        // manifest 自身必须每次校验，否则重新导出后前端拿不到新版本号。
-        if (path == "/icons/decor-preview/manifest.json")
-        {
+        if (path.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
             response.Headers["Cache-Control"] = "no-cache";
-        }
-        else if (path.StartsWith("/icons/decor-preview/", StringComparison.Ordinal)
-            && path.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
-        {
-            response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
-        }
         response.StatusCode = 200;
         response.ContentLength64 = bytes.Length;
         response.OutputStream.Write(bytes, 0, bytes.Length);
@@ -2896,6 +2933,82 @@ public class LayoutEditorHttpServer
             WriteJson(response, 200, "{\"ok\":true}");
     }
 
+    /// <summary>/api/web-assets/manifest：聚合 audio / counter-skins / decor 导出可用性与数量。
+    ///  只读 exports/ 文件系统；给编辑器 Web 与外部 Web 前端统一的发现入口。</summary>
+    private static WebAssetsManifestDto BuildWebAssetsManifest()
+    {
+        string root = LayoutEditorPaths.ExportsRoot;
+        var dto = new WebAssetsManifestDto();
+        long versionTicks = 0;
+
+        string audioManifest = Path.Combine(root, "audio/audio-exports.json");
+        dto.audio = new WebAssetCategoryDto();
+        dto.audio.available = File.Exists(audioManifest);
+        dto.audio.manifest = "/api/audio/exports";
+        dto.audio.baseUrl = "/api/audio/stream";
+        if (dto.audio.available)
+        {
+            dto.audio.version = File.GetLastWriteTimeUtc(audioManifest).Ticks.ToString("x");
+            versionTicks = Math.Max(versionTicks, File.GetLastWriteTimeUtc(audioManifest).Ticks);
+            try
+            {
+                string audioRoot = Path.GetDirectoryName(audioManifest);
+                dto.audio.count = Directory.GetFiles(audioRoot, "*.ogg", SearchOption.AllDirectories).Length
+                    + Directory.GetFiles(audioRoot, "*.wav", SearchOption.AllDirectories).Length;
+            }
+            catch { }
+        }
+
+        string counterRoot = Path.Combine(root, "counter-skins");
+        string counterManifest = Path.Combine(counterRoot, "manifest.json");
+        string iconManifest = Path.Combine(counterRoot, "icons/manifest.json");
+        dto.counterSkins = new WebAssetCategoryDto();
+        dto.counterSkins.available = File.Exists(counterManifest);
+        dto.counterSkins.manifest = "/api/counter-skins/3d/manifest.json";
+        dto.counterSkins.baseUrl = "/api/counter-skins/3d/";
+        if (dto.counterSkins.available)
+        {
+            dto.counterSkins.version = File.GetLastWriteTimeUtc(counterManifest).Ticks.ToString("x");
+            versionTicks = Math.Max(versionTicks, File.GetLastWriteTimeUtc(counterManifest).Ticks);
+            try { dto.counterSkins.count = Directory.GetFiles(counterRoot, "*.obj").Length; }
+            catch { }
+        }
+        if (File.Exists(iconManifest))
+        {
+            dto.counterSkins.available = true;
+            versionTicks = Math.Max(versionTicks, File.GetLastWriteTimeUtc(iconManifest).Ticks);
+            try
+            {
+                dto.counterSkins.iconCount = Directory.GetFiles(Path.Combine(counterRoot, "icons"), "*.png").Length;
+            }
+            catch { }
+        }
+
+        string decorRoot = Path.Combine(root, "decor");
+        string decorManifest = Path.Combine(decorRoot, "manifest.json");
+        dto.decor = new WebAssetCategoryDto();
+        dto.decor.available = File.Exists(decorManifest);
+        dto.decor.manifest = "/api/web-assets/decor/manifest.json";
+        dto.decor.baseUrl = "/api/web-assets/decor/";
+        if (dto.decor.available)
+        {
+            dto.decor.version = File.GetLastWriteTimeUtc(decorManifest).Ticks.ToString("x");
+            versionTicks = Math.Max(versionTicks, File.GetLastWriteTimeUtc(decorManifest).Ticks);
+            try
+            {
+                if (Directory.Exists(Path.Combine(decorRoot, "front")))
+                    dto.decor.count = Directory.GetFiles(Path.Combine(decorRoot, "front"), "*.png").Length;
+                if (Directory.Exists(Path.Combine(decorRoot, "back")))
+                    dto.decor.backCount = Directory.GetFiles(Path.Combine(decorRoot, "back"), "*.png").Length;
+            }
+            catch { }
+        }
+
+        dto.version = versionTicks.ToString("x");
+        dto.generatedAt = DateTime.UtcNow.ToString("o");
+        return dto;
+    }
+
     /// <summary>/api/env/status：启动环境一次性自检（依赖文件/目录可用性聚合）。</summary>
     private static EnvStatusDto BuildEnvStatus(int port)
     {
@@ -2909,8 +3022,8 @@ public class LayoutEditorHttpServer
             dictionaryLoaded = LayoutEditorManualLookup.DictionaryLoaded
         };
 
-        // 音频导出（audio-exports/）
-        var audioManifest = Path.GetFullPath(Path.Combine(Application.dataPath, "../audio-exports/audio-exports.json"));
+        // 音频导出（exports/audio/）
+        var audioManifest = Path.GetFullPath(Path.Combine(LayoutEditorPaths.ExportsRoot, "audio/audio-exports.json"));
         dto.audioExports = File.Exists(audioManifest);
         if (dto.audioExports)
         {
@@ -2922,6 +3035,32 @@ public class LayoutEditorHttpServer
             }
             catch { }
         }
+
+        // 装饰双视图 / 桌台导出（exports/，Unity 一键导出产物）
+        try
+        {
+            string decorRoot = Path.GetFullPath(Path.Combine(LayoutEditorPaths.ExportsRoot, "decor"));
+            string decorManifest = Path.Combine(decorRoot, "manifest.json");
+            dto.decorExports = File.Exists(decorManifest);
+            if (dto.decorExports)
+            {
+                string frontDir = Path.Combine(decorRoot, "front");
+                string backDir = Path.Combine(decorRoot, "back");
+                if (Directory.Exists(frontDir))
+                    dto.decorExportFront = Directory.GetFiles(frontDir, "*.png").Length;
+                if (Directory.Exists(backDir))
+                    dto.decorExportBack = Directory.GetFiles(backDir, "*.png").Length;
+            }
+
+            string counterRoot = Path.GetFullPath(Path.Combine(LayoutEditorPaths.ExportsRoot, "counter-skins"));
+            dto.counterSkin3d = File.Exists(Path.Combine(counterRoot, "manifest.json"));
+            if (dto.counterSkin3d)
+                dto.counterSkin3dCount = Directory.GetFiles(counterRoot, "*.obj").Length;
+            dto.counterSkinIcons = File.Exists(Path.Combine(counterRoot, "icons/manifest.json"));
+            if (dto.counterSkinIcons && Directory.Exists(Path.Combine(counterRoot, "icons")))
+                dto.counterSkinIconCount = Directory.GetFiles(Path.Combine(counterRoot, "icons"), "*.png").Length;
+        }
+        catch { }
 
         // 游戏 bundle（StreamingAssets/Windows，不计 .meta）
         var bundlesDir = Path.GetFullPath(Path.Combine(Application.dataPath, "StreamingAssets/Windows"));
@@ -2951,7 +3090,7 @@ public class LayoutEditorHttpServer
 
     private static void ServeAudioExports(HttpListenerResponse response)
     {
-        var manifestPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../audio-exports/audio-exports.json"));
+        var manifestPath = Path.GetFullPath(Path.Combine(LayoutEditorPaths.ExportsRoot, "audio/audio-exports.json"));
 
         AudioExportManifestDto manifest = null;
         if (File.Exists(manifestPath))
@@ -3057,7 +3196,7 @@ public class LayoutEditorHttpServer
             return;
         }
 
-        var root = Path.GetFullPath(Path.Combine(Application.dataPath, "../exports/counter-skins"));
+        var root = Path.GetFullPath(Path.Combine(LayoutEditorPaths.ExportsRoot, "counter-skins"));
         var absPath = Path.GetFullPath(Path.Combine(root, name));
         if (!absPath.StartsWith(root, StringComparison.OrdinalIgnoreCase) || !File.Exists(absPath))
         {
@@ -3114,7 +3253,7 @@ public class LayoutEditorHttpServer
             return;
         }
 
-        var audioRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "../audio-exports"));
+        var audioRoot = Path.GetFullPath(Path.Combine(LayoutEditorPaths.ExportsRoot, "audio"));
         var absPath = Path.GetFullPath(Path.Combine(audioRoot, rel));
 
         if (!absPath.StartsWith(audioRoot, StringComparison.OrdinalIgnoreCase) || !File.Exists(absPath))

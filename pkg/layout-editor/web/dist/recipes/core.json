@@ -78,6 +78,25 @@
       "icon": true
     },
     {
+      "guid": "7a1c11a61b27247419849c738881afa0",
+      "id": "MixedFlourEggHoneycomb",
+      "nameZh": "蜂蜜面糊",
+      "nameEn": "Honeycomb Batter",
+      "assetPath": "Assets/common03/food/Recipes_Patch/MixedFlourEggHoneycomb.asset",
+      "cookingStep": "",
+      "platingStep": "",
+      "ingredients": [],
+      "ingredientCount": 0,
+      "cookingStepCount": 0,
+      "score": 0,
+      "isCustom": false,
+      "group": "core",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [],
+      "icon": false
+    },
+    {
       "guid": "b29c18f5745b6fe4cb39282fc85a851d",
       "id": "Pasta_Marinara_SO",
       "nameZh": "海鲜意面",
@@ -422,6 +441,38 @@
       "icon": true
     },
     {
+      "guid": "b6001d47956133a4d9b9646f1187a8bd",
+      "id": "FriedChicken",
+      "nameZh": "煎鸡肉",
+      "nameEn": "Fried Chicken",
+      "assetPath": "Assets/common03/food/Recipes_Patch/FriedChicken.asset",
+      "cookingStep": "FryingPan",
+      "platingStep": "",
+      "ingredients": [
+        "BurritoChickenSO"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "core",
+      "type": "fry",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "FryingPan",
+          "utensils": [
+            "Cooker",
+            "FryPan"
+          ],
+          "ingredients": [
+            "BurritoChickenSO"
+          ]
+        }
+      ],
+      "icon": true
+    },
+    {
       "guid": "866bc2270ca61834590b2134ad113a71",
       "id": "FriedMeat",
       "nameZh": "煎肉排",
@@ -615,6 +666,25 @@
         }
       ],
       "icon": true
+    },
+    {
+      "guid": "9488aa378b08fcd4a998005cd2bc4abd",
+      "id": "MixedFlourEggChocolate",
+      "nameZh": "巧克力面糊",
+      "nameEn": "Chocolate Batter",
+      "assetPath": "Assets/common03/food/Recipes_Patch/MixedFlourEggChocolate.asset",
+      "cookingStep": "",
+      "platingStep": "",
+      "ingredients": [],
+      "ingredientCount": 0,
+      "cookingStepCount": 0,
+      "score": 0,
+      "isCustom": false,
+      "group": "core",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [],
+      "icon": false
     },
     {
       "guid": "41f46c9d3978bd8488503aee9fe9dbaa",
@@ -1551,25 +1621,6 @@
       "icon": false
     },
     {
-      "guid": "b6001d47956133a4d9b9646f1187a8bd",
-      "id": "FriedChicken",
-      "nameZh": "FriedChicken",
-      "nameEn": "Fried Chicken",
-      "assetPath": "Assets/common03/food/Recipes_Patch/FriedChicken.asset",
-      "cookingStep": "",
-      "platingStep": "",
-      "ingredients": [],
-      "ingredientCount": 0,
-      "cookingStepCount": 0,
-      "score": 0,
-      "isCustom": false,
-      "group": "core",
-      "type": "fry",
-      "intermediate": true,
-      "cookingGroups": [],
-      "icon": false
-    },
-    {
       "guid": "f1b4e0eaf1220444791b23808bcc1f7e",
       "id": "FriedChickenNuggets",
       "nameZh": "FriedChickenNuggets",
@@ -1651,44 +1702,6 @@
       "nameZh": "MixedFlourEgg",
       "nameEn": "Mixed Flour Egg",
       "assetPath": "Assets/common03/food/Recipes_Patch/MixedFlourEgg.asset",
-      "cookingStep": "",
-      "platingStep": "",
-      "ingredients": [],
-      "ingredientCount": 0,
-      "cookingStepCount": 0,
-      "score": 0,
-      "isCustom": false,
-      "group": "core",
-      "type": "batter",
-      "intermediate": true,
-      "cookingGroups": [],
-      "icon": false
-    },
-    {
-      "guid": "9488aa378b08fcd4a998005cd2bc4abd",
-      "id": "MixedFlourEggChocolate",
-      "nameZh": "MixedFlourEggChocolate",
-      "nameEn": "Mixed Flour Egg Chocolate",
-      "assetPath": "Assets/common03/food/Recipes_Patch/MixedFlourEggChocolate.asset",
-      "cookingStep": "",
-      "platingStep": "",
-      "ingredients": [],
-      "ingredientCount": 0,
-      "cookingStepCount": 0,
-      "score": 0,
-      "isCustom": false,
-      "group": "core",
-      "type": "batter",
-      "intermediate": true,
-      "cookingGroups": [],
-      "icon": false
-    },
-    {
-      "guid": "7a1c11a61b27247419849c738881afa0",
-      "id": "MixedFlourEggHoneycomb",
-      "nameZh": "MixedFlourEggHoneycomb",
-      "nameEn": "Mixed Flour Egg Honeycomb",
-      "assetPath": "Assets/common03/food/Recipes_Patch/MixedFlourEggHoneycomb.asset",
       "cookingStep": "",
       "platingStep": "",
       "ingredients": [],

@@ -45,6 +45,9 @@ public static class LayoutEditorCustomIngredients
     /// <summary>Web 增量库：OC1/AYCE BGM、桌台皮肤、食材、卷饼菜谱（打包为 commonW5 bundle）。</summary>
     public const string CommonW5Root = "Assets/commonW5";
 
+    /// <summary>oc2_dlc_story 造景/地板补充库（bundle 引用 SO + 空壳 wrapper，打包为 commonW6 bundle）。</summary>
+    public const string CommonW6Root = "Assets/commonW6";
+
     /// <summary>上游通用素材库（自定义食材/锅具/工作台模板与 supplies，打包为 common04 bundle）。</summary>
     public const string Common04Root = "Assets/common04";
 
@@ -70,6 +73,9 @@ public static class LayoutEditorCustomIngredients
 
     /// <summary>commonW5 bundle 名（folder meta assetBundleName）。</summary>
     public const string CommonW5BundleName = "commonW5";
+
+    /// <summary>commonW6 bundle 名（folder meta assetBundleName）。</summary>
+    public const string CommonW6BundleName = "commonW6";
 
     /// <summary>common04 bundle 名（folder meta assetBundleName）。</summary>
     public const string Common04BundleName = "common04";
@@ -293,6 +299,14 @@ public static class LayoutEditorCustomIngredients
         return assetPath.StartsWith(CommonW5Root + "/", StringComparison.Ordinal);
     }
 
+    /// <summary>是否 commonW6 原版补充库内资产。</summary>
+    public static bool IsCommonW6Asset(string assetPath)
+    {
+        if (string.IsNullOrEmpty(assetPath))
+            return false;
+        return assetPath.StartsWith(CommonW6Root + "/", StringComparison.Ordinal);
+    }
+
     /// <summary>本关卡集是否有任意关卡需要 commonW5 bundle（导出 zip 按需携带）。</summary>
     public static bool SetNeedsCommonW5Bundle(string levelSet)
     {
@@ -363,6 +377,7 @@ public static class LayoutEditorCustomIngredients
         return IsCommon03Asset(assetPath)
             || IsCommonW1Asset(assetPath)
             || IsCommonW4Asset(assetPath)
+            || IsCommonW6Asset(assetPath)
             || IsCommon04Asset(assetPath)
             || IsCustomContentAsset(assetPath)
             || assetPath.IndexOf("/common01/", StringComparison.Ordinal) >= 0
@@ -386,6 +401,10 @@ public static class LayoutEditorCustomIngredients
                 continue;
             ValidateDocGuid(it.prefabGuid);
             ValidateDocGuid(it.pseudoPrefabGuid);
+            LayoutEditorCommonW6Dependencies.CollectBundleNamesForGuid(
+                it.prefabGuid, _pendingDocBundles);
+            LayoutEditorCommonW6Dependencies.CollectBundleNamesForGuid(
+                it.pseudoPrefabGuid, _pendingDocBundles);
             if (it.dispenser != null)
                 ValidateDocGuid(it.dispenser.spawnerItemPrefabGuid);
             // 随机食材箱：候选食材的 bundle 也要进依赖收集（CustomStub.RandomCrate
@@ -403,10 +422,21 @@ public static class LayoutEditorCustomIngredients
             if (it.cleanPlateStack != null)
                 ValidateDocGuid(it.cleanPlateStack.platePrefabGuid);
             if (it.meshWithMaterial != null)
+            {
                 ValidateDocGuid(it.meshWithMaterial.pseudoPrefabGuid);
+                ValidateDocGuid(it.meshWithMaterial.materialGuid);
+                LayoutEditorCommonW6Dependencies.CollectBundleNamesForGuid(
+                    it.meshWithMaterial.pseudoPrefabGuid, _pendingDocBundles);
+                LayoutEditorCommonW6Dependencies.CollectBundleNamesForGuid(
+                    it.meshWithMaterial.materialGuid, _pendingDocBundles);
+            }
             if (it.soArray != null && it.soArray.pseudoPrefabGuids != null)
                 foreach (var g in it.soArray.pseudoPrefabGuids)
+                {
                     ValidateDocGuid(g);
+                    LayoutEditorCommonW6Dependencies.CollectBundleNamesForGuid(
+                        g, _pendingDocBundles);
+                }
             if (it.webBackpack != null && it.webBackpack.initialFillGuids != null)
                 foreach (var g in it.webBackpack.initialFillGuids)
                     ValidateDocGuid(g);
@@ -422,6 +452,8 @@ public static class LayoutEditorCustomIngredients
                 _pendingDocBundles.Add(Common04BundleName);
             if (!string.IsNullOrEmpty(it.prefabAssetPath) && IsCommonW5Asset(it.prefabAssetPath))
                 _pendingDocBundles.Add(CommonW5BundleName);
+            if (!string.IsNullOrEmpty(it.prefabAssetPath) && IsCommonW6Asset(it.prefabAssetPath))
+                _pendingDocBundles.Add(CommonW6BundleName);
         }
         return map;
     }
@@ -481,6 +513,14 @@ public static class LayoutEditorCustomIngredients
         if (IsCommonW5Asset(path))
         {
             _pendingDocBundles.Add(CommonW5BundleName);
+            return;
+        }
+        // commonW6 原版补充库（造景/地板 bundle 引用 SO；目标 bundle 由 LayoutEditorCommonW6Dependencies 同步）。
+        if (IsCommonW6Asset(path))
+        {
+            _pendingDocBundles.Add(CommonW6BundleName);
+            LayoutEditorCommonW6Dependencies.CollectBundleNamesForAsset(
+                path, _pendingDocBundles);
             return;
         }
         // 依赖注册仅针对本地源库资产（common03 / common01 / common02）：

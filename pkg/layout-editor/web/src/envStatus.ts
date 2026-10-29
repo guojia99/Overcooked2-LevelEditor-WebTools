@@ -25,6 +25,18 @@ export interface EnvStatus {
   audioExports?: boolean;
   /** 已导出的音频数量（ogg + wav）。 */
   audioExportClips?: number;
+  /** 装饰双视图清单存在。 */
+  decorExports?: boolean;
+  /** 装饰正面图数量。 */
+  decorExportFront?: number;
+  /** 装饰背面图数量。 */
+  decorExportBack?: number;
+  /** 桌台皮肤图标清单存在。 */
+  counterSkinIcons?: boolean;
+  counterSkinIconCount?: number;
+  /** 桌台皮肤 3D 清单存在。 */
+  counterSkin3d?: boolean;
+  counterSkin3dCount?: number;
   /** 游戏 bundle 目录存在。 */
   gameBundles?: boolean;
   /** 游戏 bundle 数量。 */

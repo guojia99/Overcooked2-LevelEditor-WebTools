@@ -95,11 +95,15 @@ node layout-editor/scripts/build-catalog.mjs
 node layout-editor/scripts/scaffold-dictionary.mjs --refresh --decor-core
 node layout-editor/scripts/scaffold-dictionary.mjs --check --decor-core
 
-# 装饰缩略图（Unity 菜单，勿加 -nographics）
-#   Layout Editor/素材导出 (Asset Export)/导出装饰物缩略图 (Export Decor Thumbnails)
-# 生成 web/public/icons/decor-preview/<guid>.png 后重建 manifest：
-node layout-editor/scripts/build-decor-preview-manifest.mjs
-# 说明：无网格的粒子/灯光/空壳资源会被跳过（manifest.missing 可查）；前端回退到食材/菜谱图标或首字占位。
+# 装饰双视图缩略图（Unity 菜单，勿加 -nographics）
+#   Layout Editor/素材导出 (Asset Export)/导出装饰物双视图缩略图
+# 产物：exports/decor/front|back/<guid>.png（192 缩略图）、
+#       exports/decor/detail/front|back/<guid>.png（1024/1536/2048 详情）
+#       exports/decor/models/<guid>/model.obj|mtl + _textures/（3D 预览）
+#       + manifest.json
+# 前端经 /api/web-assets/decor/ 读取；无网格的粒子/灯光/空壳资源会跳过（Console 可查）。
+# 一键导出全部 Web 资源（音频/桌台/装饰）：关卡编辑器顶栏「🌐 导出web预览资源依赖」。
+# 首次生成装饰预览后，建议再跑一次 build-catalog.mjs（commonW6 调色板会优先保留有预览的变体）。
 
 # 生成 / 更新 commonW3 Web 单果汁（葡萄/橙子/桃子）
 node layout-editor/scripts/gen-commonw3-smoothies.mjs --apply

@@ -80,6 +80,33 @@ export type ViewMode = "2d" | "3d";
 /** 3D 地板板厚档位。real = 0.4（Unity Col_Floor 真实厚度，见 SceneLayoutApplier.CreateColFloor）。 */
 export type FloorSlabMode = "real" | "auto" | "thin";
 
+/** 装饰调色板可筛的素材库。空选 = 全部。 */
+export const DECOR_SOURCE_LIBS = [
+  "common01",
+  "common02",
+  "common03",
+  "common04",
+  "commonW1",
+  "commonW2",
+  "commonW3",
+  "commonW4",
+  "commonW5",
+  "commonW6",
+] as const;
+
+export type DecorSourceLib = (typeof DECOR_SOURCE_LIBS)[number];
+
+function initialDecorSourceFilter(): DecorSourceLib[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem("decorSourceFilter") || "[]");
+    if (!Array.isArray(raw)) return [];
+    const allow = new Set<string>(DECOR_SOURCE_LIBS);
+    return raw.filter((x): x is DecorSourceLib => typeof x === "string" && allow.has(x));
+  } catch {
+    return [];
+  }
+}
+
 /** 左侧装饰预览尺寸：无 / 小 / 中 / 大。 */
 export type DecorPreviewSize = "none" | "small" | "medium" | "large";
 
@@ -404,6 +431,8 @@ export const S = {
   hoverWz: Number.NaN,
   /** 装饰层尺寸筛选：all / small / medium / large / xl（按 footprint 判定）。 */
   decorSizeFilter: "all" as "all" | "small" | "medium" | "large" | "xl",
+  /** 装饰层素材库多选。空数组 = 不过滤。 */
+  decorSourceFilter: initialDecorSourceFilter(),
   /** 装饰层调色板分组方式：主题（DLC/场景）/ 类型（建筑构件…）/ 用途（铺地…）。 */
   paletteGroupMode: "theme" as "theme" | "type" | "usage",
   /** 地板高度过滤：层厚（每层高度带宽，可调）+ 当前显示区间 [min,max]。

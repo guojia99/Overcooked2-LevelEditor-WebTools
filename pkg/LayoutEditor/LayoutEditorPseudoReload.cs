@@ -366,6 +366,8 @@ public static class LayoutEditorPseudoReload
         var info = manager.stub != null ? manager.stub.levelInfo : null;
         if (info == null)
             return;
+        // commonW6 已切换为 bundle 引用：Init 前补齐 SO 指向的游戏 bundle。
+        LayoutEditorCommonW6Dependencies.SyncForScene(SceneManager.GetActiveScene(), info);
         var assetPath = AssetDatabase.GetAssetPath(info);
         var parts = (assetPath ?? "").Replace('\\', '/').Split('/');
         if (parts.Length <= 2 || parts[1] != "LevelSets")

@@ -1,4 +1,4 @@
-import { S } from "./state";
+import { DECOR_SOURCE_LIBS, S, type DecorSourceLib } from "./state";
 import { dom } from "./dom";
 import { tidyCatalogNameZh } from "../displayLabels";
 import { hostRuleLabelZh } from "../stacking";
@@ -10,10 +10,13 @@ import { escHtml } from "./coords";
 import type { Catalog, CatalogItem } from "../types";
 import { bindPaletteCardTooltip, catalogPaletteTooltipContent } from "./paletteTooltip";
 import {
+  decorModelInfo,
   decorPreviewUrl,
   isDecorPreviewMissing,
   markDecorPreviewFailed,
 } from "./decorPreviewCache";
+import { openDecorPreviewLightbox } from "./ui/decorPreviewLightbox";
+import { openDecor3dPreview } from "./ui/decor3dPreview";
 
 function clampPaletteCount(n: number): number {
   if (!isFinite(n)) return 1;
@@ -84,6 +87,25 @@ export const DECOR_SIZE_LABEL_ZH: Record<Exclude<DecorSizeFilter, "all">, string
   large: "大",
   xl: "特大",
 };
+
+const DECOR_SOURCE_LIB_SET = new Set<string>(DECOR_SOURCE_LIBS);
+
+/** 从资源路径识别素材库（Assets/common01、Assets/commonW1 …）。不在可选列表里则返回 null。 */
+export function decorSourceLib(it: { assetPath?: string }): DecorSourceLib | null {
+  const m = (it.assetPath ?? "").match(/\/(common(?:0[1-4]|W[1-6]))\//i);
+  if (!m) return null;
+  const raw = m[1];
+  const hit = DECOR_SOURCE_LIBS.find((id) => id.toLowerCase() === raw.toLowerCase());
+  return hit && DECOR_SOURCE_LIB_SET.has(hit) ? hit : null;
+}
+
+/** 多选按钮文案。空选显示「全部」。 */
+export function decorSourceFilterButtonText(selected: readonly string[]): string {
+  if (selected.length === 0) return "来源：全部";
+  const short = selected.map((id) => (id.startsWith("commonW") ? id.slice("common".length) : id.replace("common", "")));
+  if (short.length <= 3) return `来源：${short.join("、")}`;
+  return `来源：${short.length} 库`;
+}
 
 export function decorSizeTier(it: { footprint?: { cellsX?: number; cellsZ?: number } }): Exclude<DecorSizeFilter, "all"> {
   const f = it.footprint;
@@ -183,6 +205,10 @@ export function buildPalette(catalog: Catalog, filter: string) {
   const q = filter.trim().toLowerCase();
   const sizeFilter: DecorSizeFilter =
     S.currentLayer === "decor" ? (S.decorSizeFilter ?? "all") : "all";
+  const sourceFilter =
+    S.currentLayer === "decor" && S.decorSourceFilter.length > 0
+      ? new Set<string>(S.decorSourceFilter)
+      : null;
 
   const themeMode = S.currentLayer !== "decor" || S.paletteGroupMode === "theme";
   let byKey = catalog.byCategory;
@@ -235,6 +261,7 @@ export function buildPalette(catalog: Catalog, filter: string) {
       if (isAmbientBackgroundCat(it)) return false;
       if (isWaterBackgroundCat(it)) return false;
       if (sizeFilter !== "all" && decorSizeTier(it) !== sizeFilter) return false;
+      if (sourceFilter && !sourceFilter.has(decorSourceLib(it) ?? "")) return false;
       if (!q) return true;
       return (
         it.id.toLowerCase().includes(q) ||
@@ -325,7 +352,23 @@ export function buildPalette(catalog: Catalog, filter: string) {
             ? `<div class="pc-thumb-wrap"><span class="pc-thumb-fallback" style="display:flex">${fallbackChar}</span></div>`
             : foodIcon;
       const idLine = decorPreviewOn ? escHtml(it.id) : cardSubId(it);
-      row.innerHTML = `${thumb}<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}${skinBadge}${stubBadge}</div><div class="id" title="${escHtml(it.id)}">${idLine}</div>${footprintRow}${sub}`;
+      const zoomBtn = decorPreviewOn && it.guid && (renderPreviewUrl || foodPreviewSrc)
+        ? `<button type="button" class="pc-zoom" title="放大查看正面/背面">🔍</button>`
+        : "";
+      const modelBtn = decorPreviewOn && it.guid && decorModelInfo(it.guid)
+        ? `<button type="button" class="pc-3d" title="打开 3D 模型预览">🧊</button>`
+        : "";
+      row.innerHTML = `${zoomBtn}${modelBtn}${thumb}<div class="zh">${tidyCatalogNameZh(it.nameZh, it.id)}${skinBadge}${stubBadge}</div><div class="id" title="${escHtml(it.id)}">${idLine}</div>${footprintRow}${sub}`;
+      row.querySelector<HTMLButtonElement>(".pc-zoom")?.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openDecorPreviewLightbox(it.guid, tidyCatalogNameZh(it.nameZh, it.id), "front");
+      });
+      row.querySelector<HTMLButtonElement>(".pc-3d")?.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openDecor3dPreview(it.guid, tidyCatalogNameZh(it.nameZh, it.id));
+      });
       const previewImg = row.querySelector<HTMLImageElement>("img.pc-thumb");
       if (previewImg) {
         previewImg.addEventListener("error", () => {

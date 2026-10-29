@@ -10,23 +10,69 @@ using UnityEngine;
 /// 装饰层缩略图导出器（左侧调色板大图预览数据源）。
 ///
 /// 与 JiaMap 的缩略图导出思路一致：pseudo prefab 需要先从
-/// Assets/StreamingAssets/Windows 的 bundle 中物化真实网格，再用 45° 正交相机
+/// Assets/StreamingAssets/Windows 的 bundle 中物化真实网格，再用正交相机
 /// 渲染成 PNG。本文件不依赖 JiaMap 程序集，保持 LayoutEditor 独立。
 ///
-/// 输出：layout-editor/web/public/icons/decor-preview/&lt;guid&gt;.png
-/// 命名按 guid（catalog id 可能重名，guid 唯一），前端由 manifest 查表。
+/// 输出：exports/decor/front/&lt;guid&gt;.png + exports/decor/back/&lt;guid&gt;.png
+///       + exports/decor/manifest.json（正/背双视图；命名按 guid，前端由 manifest 查表）
+/// 前端经 /api/web-assets/decor/ 路由读取，不再写入 layout-editor/web/public。
 ///
 /// 铁律：batchmode 导出时禁加 -nographics（RenderTexture 读回会全灰）。
 /// </summary>
 public static class LayoutEditorDecorThumbnailExporter
 {
     private const int ThumbSize = 192;
-    private const string OutSubDir = "icons/decor-preview";
+    private const string OutSubDir = "decor";
     private const string MenuRoot = "Layout Editor/素材导出 (Asset Export)/";
 
-    private static string OutDir
+    /// <summary>Unity 2017 克隆这些超大 Timeline prefab 时会在 remove_duplicates.h
+    /// 触发 pred(*previous, *i) 断言；导出器保留既有预览并跳过重新物化。</summary>
+    private static readonly HashSet<string> UnsafeInstantiatePrefabs = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        get { return Path.Combine(LayoutEditorPaths.WebPublicRoot, OutSubDir); }
+        "Timeline_DynamicStage_04",
+        "Timeline_Tutorial_01",
+    };
+
+    /// <summary>与 UnsafeInstantiatePrefabs 对应的 catalog id：强制重导时保留已有正/背图。</summary>
+    private static readonly HashSet<string> PreserveExistingPreviewIds = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "timeline_dynamicstage_04",
+        "timeline_tutorial_01",
+    };
+
+    private static string RootDir
+    {
+        get { return Path.Combine(LayoutEditorPaths.ExportsRoot, OutSubDir); }
+    }
+
+    private static string FrontDir
+    {
+        get { return Path.Combine(RootDir, "front"); }
+    }
+
+    private static string BackDir
+    {
+        get { return Path.Combine(RootDir, "back"); }
+    }
+
+    private static string DetailFrontDir
+    {
+        get { return Path.Combine(RootDir, "detail/front"); }
+    }
+
+    private static string DetailBackDir
+    {
+        get { return Path.Combine(RootDir, "detail/back"); }
+    }
+
+    private static string ModelsDir
+    {
+        get { return Path.Combine(RootDir, "models"); }
+    }
+
+    private static string ModelsTextureDir
+    {
+        get { return Path.Combine(ModelsDir, "_textures"); }
     }
 
     /// <summary>排障用：设置环境变量 LAYOUT_DECOR_DEBUG_ID=某个 catalog id 时打印层级/材质/像素统计。</summary>
@@ -35,13 +81,13 @@ public static class LayoutEditorDecorThumbnailExporter
         get { return Environment.GetEnvironmentVariable("LAYOUT_DECOR_DEBUG_ID") ?? ""; }
     }
 
-    [MenuItem(MenuRoot + "导出装饰物缩略图 (Export Decor Thumbnails)", false, 2)]
+    [MenuItem(MenuRoot + "导出装饰物双视图缩略图 (Export Decor Thumbnails)", false, 2)]
     public static void ExportMenu()
     {
         Export(false);
     }
 
-    [MenuItem(MenuRoot + "强制重导装饰物缩略图 (Re-export Decor Thumbnails)", false, 3)]
+    [MenuItem(MenuRoot + "强制重导装饰物双视图缩略图 (Re-export Decor Thumbnails)", false, 3)]
     public static void ExportAllMenu()
     {
         Export(true);
@@ -49,12 +95,27 @@ public static class LayoutEditorDecorThumbnailExporter
 
     public static void Export(bool force)
     {
+        ExportInternal(force, null);
+    }
+
+    /// <summary>一键 Web 资源导出用：进度经回调上报，返回统计结果。</summary>
+    public static LayoutEditorDecorExportResult ExportSilent(bool force, Action<string, float> progress)
+    {
+        return ExportInternal(force, progress);
+    }
+
+    private static LayoutEditorDecorExportResult ExportInternal(bool force, Action<string, float> progress)
+    {
+        var result = new LayoutEditorDecorExportResult();
+        result.rootDir = RootDir;
         string publicRoot = LayoutEditorPaths.WebPublicRoot;
         string catalogPath = Path.Combine(publicRoot, "catalog.json");
         if (!File.Exists(catalogPath))
         {
-            Debug.LogError("[DecorThumb] 缺少 catalog.json（先运行 layout-editor/scripts/build-catalog.mjs）: " + catalogPath);
-            return;
+            string err = "缺少 catalog.json（先运行 layout-editor/scripts/build-catalog.mjs）: " + catalogPath;
+            Debug.LogError("[DecorThumb] " + err);
+            result.fatalError = err;
+            return result;
         }
 
         List<CatalogItemDto> items;
@@ -64,16 +125,26 @@ public static class LayoutEditorDecorThumbnailExporter
         }
         catch (Exception ex)
         {
-            Debug.LogError("[DecorThumb] 读取 catalog 失败: " + ex.Message);
-            return;
+            string err = "读取 catalog 失败: " + ex.Message;
+            Debug.LogError("[DecorThumb] " + err);
+            result.fatalError = err;
+            return result;
         }
         if (items.Count == 0)
         {
-            Debug.LogWarning("[DecorThumb] catalog 中没有 layoutTier=decor 条目");
-            return;
+            string err = "catalog 中没有 layoutTier=decor 条目";
+            Debug.LogWarning("[DecorThumb] " + err);
+            result.fatalError = err;
+            return result;
         }
 
-        Directory.CreateDirectory(OutDir);
+        Directory.CreateDirectory(RootDir);
+        Directory.CreateDirectory(FrontDir);
+        Directory.CreateDirectory(BackDir);
+        Directory.CreateDirectory(DetailFrontDir);
+        Directory.CreateDirectory(DetailBackDir);
+        Directory.CreateDirectory(ModelsDir);
+        Directory.CreateDirectory(ModelsTextureDir);
         var loader = new BundleLoader();
         var tempRoot = new GameObject("__LayoutDecorThumbRoot");
         tempRoot.transform.position = new Vector3(7000f, 0f, 7000f);
@@ -93,13 +164,20 @@ public static class LayoutEditorDecorThumbnailExporter
         light.intensity = 1.2f;
         lightGo.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
 
-        var rt = new RenderTexture(ThumbSize, ThumbSize, 24, RenderTextureFormat.ARGB32);
-        rt.name = "__LayoutDecorThumbRT";
-        int rendered = 0;
+        var detailRts = new Dictionary<int, RenderTexture>();
+        var thumbRt = new RenderTexture(ThumbSize, ThumbSize, 24, RenderTextureFormat.ARGB32);
+        thumbRt.name = "__LayoutDecorThumbRT";
+        int frontRendered = 0;
+        int backRendered = 0;
+        int detailFrontRendered = 0;
+        int detailBackRendered = 0;
         int skipped = 0;
         int missing = 0;
         int failed = 0;
         var missingLog = new List<string>();
+        var entries = new List<ManifestEntry>();
+        var modelCtx = new LayoutEditorModelExportContext();
+        modelCtx.TextureDirAbs = ModelsTextureDir;
         bool cancelled = false;
 
         try
@@ -108,24 +186,77 @@ public static class LayoutEditorDecorThumbnailExporter
             {
                 var item = items[i];
                 if (EditorUtility.DisplayCancelableProgressBar(
-                        "导出装饰物缩略图",
+                        "导出装饰物双视图缩略图",
                         string.Format("{0} ({1}/{2})", item.id, i + 1, items.Count),
                         (float)i / items.Count))
                 {
                     cancelled = true;
                     break;
                 }
+                ReportProgress(progress, "导出装饰物 " + (i + 1) + "/" + items.Count + "：" + item.id,
+                    0.05f + 0.90f * ((float)i / Mathf.Max(1, items.Count)));
 
-                string pngPath = Path.Combine(OutDir, item.guid + ".png");
-                if (!force && File.Exists(pngPath))
+                string frontPath = Path.Combine(FrontDir, item.guid + ".png");
+                string backPath = Path.Combine(BackDir, item.guid + ".png");
+                string detailFrontPath = Path.Combine(DetailFrontDir, item.guid + ".png");
+                string detailBackPath = Path.Combine(DetailBackDir, item.guid + ".png");
+                string modelDir = Path.Combine(ModelsDir, item.guid);
+                string modelObjPath = Path.Combine(modelDir, "model.obj");
+                string modelMtlPath = Path.Combine(modelDir, "model.mtl");
+                bool frontExists = File.Exists(frontPath);
+                bool backExists = File.Exists(backPath);
+                bool detailFrontExists = File.Exists(detailFrontPath);
+                bool detailBackExists = File.Exists(detailBackPath);
+                bool modelExists = File.Exists(modelObjPath) && File.Exists(modelMtlPath);
+                if (!force && frontExists && backExists && detailFrontExists && detailBackExists && modelExists)
                 {
                     skipped++;
+                    var skipEntry = new ManifestEntry();
+                    skipEntry.guid = item.guid;
+                    skipEntry.id = item.id;
+                    skipEntry.nameZh = item.nameZh;
+                    skipEntry.hasFront = true;
+                    skipEntry.hasBack = true;
+                    skipEntry.hasDetailFront = true;
+                    skipEntry.hasDetailBack = true;
+                    skipEntry.hasModel = true;
+                    entries.Add(skipEntry);
                     continue;
                 }
-                if (force && File.Exists(pngPath))
+                bool preserveExisting = PreserveExistingPreviewIds.Contains(item.id);
+                if (preserveExisting)
                 {
-                    try { File.Delete(pngPath); }
-                    catch (Exception ex) { Debug.LogWarning("[DecorThumb] 删除旧图失败 " + pngPath + ": " + ex.Message); }
+                    if (frontExists || backExists)
+                    {
+                        skipped++;
+                        var keepEntry = new ManifestEntry();
+                        keepEntry.guid = item.guid;
+                        keepEntry.id = item.id;
+                        keepEntry.nameZh = item.nameZh;
+                        keepEntry.hasFront = frontExists;
+                        keepEntry.hasBack = backExists;
+                        keepEntry.hasDetailFront = detailFrontExists;
+                        keepEntry.hasDetailBack = detailBackExists;
+                        keepEntry.hasModel = modelExists;
+                        entries.Add(keepEntry);
+                        continue;
+                    }
+                    missing++;
+                    missingLog.Add(item.id + "（Unity 2017 克隆断言 prefab，暂无可保留预览）");
+                    continue;
+                }
+                if (force)
+                {
+                    TryDelete(frontPath);
+                    TryDelete(backPath);
+                    TryDelete(detailFrontPath);
+                    TryDelete(detailBackPath);
+                    TryDeleteDirectory(modelDir);
+                    frontExists = false;
+                    backExists = false;
+                    detailFrontExists = false;
+                    detailBackExists = false;
+                    modelExists = false;
                 }
 
                 GameObject inst = null;
@@ -154,13 +285,83 @@ public static class LayoutEditorDecorThumbnailExporter
                         continue;
                     }
 
+                    bool modelExported = modelExists;
+                    if (!modelExists)
+                    {
+                        string modelError;
+                        modelExported = LayoutEditorModelObjExporter.Export(
+                            inst, tempRoot.transform.position, modelDir, "model", modelCtx, out modelError);
+                        if (!modelExported)
+                        {
+                            // 粒子/灯光/空壳装饰没有网格，属于预期情况；只有真正异常才告警。
+                            if (modelError != "没有可导出的网格")
+                                Debug.LogWarning("[DecorModel] " + item.id + " 3D 模型导出失败: " + modelError);
+                            TryDeleteDirectory(modelDir);
+                        }
+                    }
+
                     LayoutEditorThumbMaterialFix.DebugItemId = item.id == DebugItemId ? item.id : "";
                     Color fallbackColor = FallbackColorFor(item);
                     patchedMats = LayoutEditorThumbMaterialFix.FixRenderers(inst, fallbackColor);
                     if (item.id == DebugItemId)
                         LogHierarchy(inst);
-                    RenderItem(inst, cam, rt, pngPath, item.id, fallbackColor, item.typeKind != "food_model");
-                    rendered++;
+                    bool commonW6 = !string.IsNullOrEmpty(item.assetPath)
+                        && item.assetPath.Replace('\\', '/').IndexOf("/commonW6/", StringComparison.OrdinalIgnoreCase) >= 0;
+                    bool tintGray = item.typeKind != "food_model";
+
+                    var entry = new ManifestEntry();
+                    entry.guid = item.guid;
+                    entry.id = item.id;
+                    entry.nameZh = item.nameZh;
+                    entry.hasModel = modelExported;
+
+                    bool needFront = !frontExists || !detailFrontExists;
+                    if (!needFront)
+                    {
+                        entry.hasFront = true;
+                        entry.hasDetailFront = true;
+                    }
+                    else
+                    {
+                        bool ok = RenderView(inst, cam, light, detailRts, thumbRt,
+                            frontPath, detailFrontPath, item.id, "front",
+                            fallbackColor, tintGray, commonW6, false);
+                        entry.hasFront = ok || frontExists;
+                        entry.hasDetailFront = ok;
+                        if (ok)
+                        {
+                            if (!frontExists) frontRendered++;
+                            if (!detailFrontExists) detailFrontRendered++;
+                        }
+                        else if (!frontExists)
+                        {
+                            missing++;
+                            missingLog.Add(item.id + "（正面渲染为空）");
+                            continue;
+                        }
+                    }
+
+                    bool needBack = !backExists || !detailBackExists;
+                    if (!needBack)
+                    {
+                        entry.hasBack = true;
+                        entry.hasDetailBack = true;
+                    }
+                    else
+                    {
+                        bool ok = RenderView(inst, cam, light, detailRts, thumbRt,
+                            backPath, detailBackPath, item.id, "back",
+                            fallbackColor, tintGray, commonW6, true);
+                        entry.hasBack = ok || backExists;
+                        entry.hasDetailBack = ok;
+                        if (ok)
+                        {
+                            if (!backExists) backRendered++;
+                            if (!detailBackExists) detailBackRendered++;
+                        }
+                    }
+
+                    entries.Add(entry);
                 }
                 catch (Exception ex)
                 {
@@ -192,20 +393,43 @@ public static class LayoutEditorDecorThumbnailExporter
             RenderTexture.active = null;
             if (cam != null)
                 cam.targetTexture = null;
-            if (rt != null)
+            if (thumbRt != null)
             {
-                rt.Release();
-                UnityEngine.Object.DestroyImmediate(rt);
+                thumbRt.Release();
+                UnityEngine.Object.DestroyImmediate(thumbRt);
             }
+            foreach (var kv in detailRts)
+            {
+                if (kv.Value == null) continue;
+                kv.Value.Release();
+                UnityEngine.Object.DestroyImmediate(kv.Value);
+            }
+            detailRts.Clear();
             if (tempRoot != null)
                 UnityEngine.Object.DestroyImmediate(tempRoot);
             loader.UnloadAll();
         }
 
-        Debug.Log(string.Format(
-            "[DecorThumb] {0}：完成 {1} / 跳过已存在 {2} / 缺失 {3} / 失败 {4}（共 {5}）→ {6}",
+        WriteManifest(entries);
+        result.frontCount = frontRendered;
+        result.backCount = backRendered;
+        result.frontTotal = CountEntries(entries, true);
+        result.backTotal = CountEntries(entries, false);
+        result.detailFrontTotal = CountDetailEntries(entries, true);
+        result.detailBackTotal = CountDetailEntries(entries, false);
+        result.modelTotal = CountModelEntries(entries);
+        result.skipped = skipped;
+        result.missing = missing;
+        result.failed = failed;
+        result.cancelled = cancelled;
+
+        string summary = string.Format(
+            "[DecorThumb] {0}：正面 {1} / 背面 {2} / 详情正 {3} / 详情背 {4} / 3D {5} / 跳过 {6} / 缺失 {7} / 失败 {8}（共 {9}）→ {10}",
             cancelled ? "已取消" : "完成",
-            rendered, skipped, missing, failed, items.Count, OutDir));
+            frontRendered, backRendered, detailFrontRendered, detailBackRendered,
+            result.modelTotal, skipped, missing, failed, items.Count, RootDir);
+        Debug.Log(summary);
+        result.summary = summary;
         if (missingLog.Count > 0)
         {
             int print = Mathf.Min(missingLog.Count, 120);
@@ -215,6 +439,127 @@ public static class LayoutEditorDecorThumbnailExporter
                 sb.AppendLine("  " + missingLog[i]);
             Debug.LogWarning(sb.ToString());
         }
+        return result;
+    }
+
+    private static void ReportProgress(Action<string, float> progress, string message, float value)
+    {
+        if (progress != null)
+        {
+            try { progress(message, value); }
+            catch { }
+        }
+    }
+
+    private static void TryDelete(string path)
+    {
+        if (!File.Exists(path)) return;
+        try { File.Delete(path); }
+        catch (Exception ex) { Debug.LogWarning("[DecorThumb] 删除旧图失败 " + path + ": " + ex.Message); }
+    }
+
+    private static void TryDeleteDirectory(string path)
+    {
+        if (!Directory.Exists(path)) return;
+        try { Directory.Delete(path, true); }
+        catch (Exception ex) { Debug.LogWarning("[DecorThumb] 删除旧模型目录失败 " + path + ": " + ex.Message); }
+    }
+
+    private static int CountEntries(List<ManifestEntry> entries, bool front)
+    {
+        int n = 0;
+        for (int i = 0; i < entries.Count; i++)
+        {
+            if (entries[i] == null) continue;
+            if (front ? entries[i].hasFront : entries[i].hasBack) n++;
+        }
+        return n;
+    }
+
+    private static int CountDetailEntries(List<ManifestEntry> entries, bool front)
+    {
+        int n = 0;
+        for (int i = 0; i < entries.Count; i++)
+        {
+            if (entries[i] == null) continue;
+            if (front ? entries[i].hasDetailFront : entries[i].hasDetailBack) n++;
+        }
+        return n;
+    }
+
+    private static int CountModelEntries(List<ManifestEntry> entries)
+    {
+        int n = 0;
+        for (int i = 0; i < entries.Count; i++)
+        {
+            if (entries[i] != null && entries[i].hasModel) n++;
+        }
+        return n;
+    }
+
+    private sealed class ManifestEntry
+    {
+        public string guid;
+        public string id;
+        public string nameZh;
+        public bool hasFront;
+        public bool hasBack;
+        public bool hasDetailFront;
+        public bool hasDetailBack;
+        public bool hasModel;
+    }
+
+    private static void WriteManifest(List<ManifestEntry> entries)
+    {
+        string version = DateTime.UtcNow.Ticks.ToString("x");
+        var sb = new StringBuilder();
+        sb.Append("{\n");
+        sb.Append("  \"version\": \"").Append(version).Append("\",\n");
+        sb.Append("  \"generatedAt\": \"").Append(DateTime.UtcNow.ToString("o")).Append("\",\n");
+        sb.Append("  \"thumbSize\": ").Append(ThumbSize).Append(",\n");
+        sb.Append("  \"views\": [\"front\", \"back\"],\n");
+        sb.Append("  \"files\": {\n");
+        int emitted = 0;
+        int total = 0;
+        for (int i = 0; i < entries.Count; i++)
+            if (entries[i] != null && entries[i].hasFront) total++;
+        for (int i = 0; i < entries.Count; i++)
+        {
+            var e = entries[i];
+            if (e == null || !e.hasFront) continue;
+            sb.Append("    \"").Append(e.guid).Append("\": { \"front\": \"front/")
+              .Append(e.guid).Append(".png\"");
+            if (e.hasBack)
+                sb.Append(", \"back\": \"back/").Append(e.guid).Append(".png\"");
+            if (e.hasModel)
+            {
+                sb.Append(", \"model\": { \"obj\": \"models/").Append(e.guid)
+                  .Append("/model.obj\", \"mtl\": \"models/").Append(e.guid).Append("/model.mtl\" }");
+            }
+            if (e.hasDetailFront || e.hasDetailBack)
+            {
+                sb.Append(", \"detail\": { ");
+                bool needComma = false;
+                if (e.hasDetailFront)
+                {
+                    sb.Append("\"front\": \"detail/front/").Append(e.guid).Append(".png\"");
+                    needComma = true;
+                }
+                if (e.hasDetailBack)
+                {
+                    if (needComma) sb.Append(", ");
+                    sb.Append("\"back\": \"detail/back/").Append(e.guid).Append(".png\"");
+                }
+                sb.Append(" }");
+            }
+            sb.Append(" }");
+            emitted++;
+            if (emitted < total) sb.Append(",");
+            sb.Append("\n");
+        }
+        sb.Append("  },\n");
+        sb.Append("  \"missing\": []\n}\n");
+        File.WriteAllText(Path.Combine(RootDir, "manifest.json"), sb.ToString(), new UTF8Encoding(false));
     }
 
     // ------------------------------------------------------------------ catalog
@@ -236,6 +581,7 @@ public static class LayoutEditorDecorThumbnailExporter
     {
         public string id;
         public string guid;
+        public string nameZh;
         public string assetPath;
         public string layoutTier;
         public string category;
@@ -423,7 +769,7 @@ public static class LayoutEditorDecorThumbnailExporter
         if (prefab == null)
             return null;
 
-        var go = UnityEngine.Object.Instantiate(prefab) as GameObject;
+        var go = LayoutEditorSafeInstantiate.Instantiate(prefab);
         if (go == null)
             return null;
         go.name = item.id;
@@ -479,7 +825,12 @@ public static class LayoutEditorDecorThumbnailExporter
                 var real = loader.LoadPrefab(so);
                 if (real == null)
                     continue;
-                var child = UnityEngine.Object.Instantiate(real, stub.transform.position, stub.transform.rotation, stub.transform) as GameObject;
+                if (UnsafeInstantiatePrefabs.Contains(real.name))
+                {
+                    Debug.Log("[DecorThumb] 跳过 Unity 2017 克隆断言的 prefab（保留既有预览）：" + real.name);
+                    continue;
+                }
+                var child = LayoutEditorSafeInstantiate.InstantiateUnder(real, stub.transform);
                 if (child == null)
                     continue;
                 child.name = so.prefabName;
@@ -803,30 +1154,51 @@ public static class LayoutEditorDecorThumbnailExporter
         return true;
     }
 
-    private static void RenderItem(GameObject inst, Camera cam, RenderTexture rt, string pngPath, string itemId, Color fallbackColor, bool tintGray)
+    private static bool RenderView(GameObject inst, Camera cam, Light light,
+        Dictionary<int, RenderTexture> detailRts, RenderTexture thumbRt,
+        string thumbPath, string detailPath, string itemId, string view,
+        Color fallbackColor, bool tintGray, bool commonW6, bool tolerateBlank)
     {
         Bounds b = CalcBounds(inst);
-        float maxDim = Mathf.Max(b.size.x, b.size.y, b.size.z, 0.01f);
+        float rawMaxDim = Mathf.Max(b.size.x, b.size.y, b.size.z, 0.01f);
+        int detailSize = DetailSizeFor(rawMaxDim);
+        float maxDim = rawMaxDim;
+        // commonW6 的装饰多为小件；按 2.5m 收紧取景，避免小物件缩成几个像素。
+        if (commonW6)
+            maxDim = Mathf.Min(maxDim, 2.5f);
         cam.orthographicSize = maxDim * 0.75f;
         float dist = maxDim * 2.5f + 1f;
-        cam.nearClipPlane = -maxDim * 3f - 10f;
-        cam.farClipPlane = maxDim * 4f + 10f;
+        cam.nearClipPlane = 0.01f;
+        cam.farClipPlane = dist * 4f + maxDim * 4f + 20f;
         Vector3 center = b.center;
-        cam.transform.position = center + new Vector3(dist, dist * 0.8f, -dist);
+        float side = view == "back" ? 1f : -1f;
+        cam.transform.position = center + new Vector3(0f, maxDim * 0.35f, side * dist);
         cam.transform.LookAt(center);
+        if (light != null)
+            light.transform.rotation = Quaternion.Euler(50f, view == "back" ? 150f : -30f, 0f);
         if (itemId == DebugItemId)
-            Debug.Log("[DecorThumb][Debug] bounds=" + b + " maxDim=" + maxDim + " camPos=" + cam.transform.position);
+            Debug.Log("[DecorThumb][Debug] view=" + view + " detail=" + detailSize
+                + " bounds=" + b + " maxDim=" + maxDim + " camPos=" + cam.transform.position);
 
-        RenderTexture.active = rt;
-        cam.targetTexture = rt;
+        RenderTexture detailRt;
+        if (!detailRts.TryGetValue(detailSize, out detailRt) || detailRt == null)
+        {
+            detailRt = new RenderTexture(detailSize, detailSize, 24, RenderTextureFormat.ARGB32);
+            detailRt.name = "__LayoutDecorDetailRT_" + detailSize;
+            detailRts[detailSize] = detailRt;
+        }
+
+        cam.targetTexture = detailRt;
+        RenderTexture.active = detailRt;
         cam.Render();
+        cam.targetTexture = null;
 
-        var tex = new Texture2D(ThumbSize, ThumbSize, TextureFormat.ARGB32, false);
+        var detailTex = new Texture2D(detailSize, detailSize, TextureFormat.ARGB32, false);
         try
         {
-            tex.ReadPixels(new Rect(0, 0, ThumbSize, ThumbSize), 0, 0);
-            tex.Apply();
-            Color32[] pixels = tex.GetPixels32();
+            detailTex.ReadPixels(new Rect(0, 0, detailSize, detailSize), 0, 0);
+            detailTex.Apply();
+            Color32[] pixels = detailTex.GetPixels32();
             if (itemId == DebugItemId)
             {
                 int opaque = 0;
@@ -839,25 +1211,52 @@ public static class LayoutEditorDecorThumbnailExporter
                     if (pixels[i].r > 235 && pixels[i].g < 20 && pixels[i].b > 235) magenta++;
                 }
                 Debug.Log("[DecorThumb][Debug] pixels opaque=" + opaque + " maxAlpha=" + maxAlpha + " magenta=" + magenta);
-                try { File.WriteAllBytes(pngPath + ".debug.png", tex.EncodeToPNG()); }
+                try { File.WriteAllBytes(detailPath + ".debug.png", detailTex.EncodeToPNG()); }
                 catch { }
             }
             if (IsBlank(pixels))
+            {
+                if (tolerateBlank)
+                    return false;
                 throw new InvalidOperationException("渲染结果为空（无可见像素）");
+            }
             if (tintGray && IsGrayOrDark(pixels))
             {
                 ApplyTint(pixels, fallbackColor);
-                tex.SetPixels32(pixels);
-                tex.Apply();
+                detailTex.SetPixels32(pixels);
+                detailTex.Apply(false);
             }
-            File.WriteAllBytes(pngPath, tex.EncodeToPNG());
+            File.WriteAllBytes(detailPath, detailTex.EncodeToPNG());
+
+            // 大图 → 192 缩略图：GPU 降采样，避免把 1024/2048 的像素留在浏览器首屏。
+            Graphics.Blit(detailTex, thumbRt);
+            RenderTexture.active = thumbRt;
+            var thumbTex = new Texture2D(ThumbSize, ThumbSize, TextureFormat.ARGB32, false);
+            try
+            {
+                thumbTex.ReadPixels(new Rect(0, 0, ThumbSize, ThumbSize), 0, 0);
+                thumbTex.Apply();
+                File.WriteAllBytes(thumbPath, thumbTex.EncodeToPNG());
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(thumbTex);
+            }
+            return true;
         }
         finally
         {
             cam.targetTexture = null;
             RenderTexture.active = null;
-            UnityEngine.Object.DestroyImmediate(tex);
+            UnityEngine.Object.DestroyImmediate(detailTex);
         }
+    }
+
+    private static int DetailSizeFor(float maxDim)
+    {
+        if (maxDim >= 12f) return 2048;
+        if (maxDim >= 5f) return 1536;
+        return 1024;
     }
 
     /** 灰度/过暗模型：按分类兜底色染色，避免资源图整片灰/黑。 */
@@ -916,7 +1315,8 @@ public static class LayoutEditorDecorThumbnailExporter
             if (p.r > 235 && p.g < 20 && p.b > 235)
                 magenta++;
         }
-        if (opaque < pixels.Length / 200)
+        // 部分 commonW6 小件实际可见区域很小，阈值过严会误判空白。
+        if (opaque < pixels.Length / 2000)
             return true;
         if (magenta > opaque * 4 / 5)
             return true;
@@ -1152,4 +1552,23 @@ internal static class LayoutEditorThumbMaterialFix
         }
         return false;
     }
+}
+
+/// <summary>装饰物双视图导出结果（一键 Web 资源导出协调器消费）。</summary>
+public sealed class LayoutEditorDecorExportResult
+{
+    public int frontCount;
+    public int backCount;
+    public int frontTotal;
+    public int backTotal;
+    public int detailFrontTotal;
+    public int detailBackTotal;
+    public int modelTotal;
+    public int skipped;
+    public int missing;
+    public int failed;
+    public bool cancelled;
+    public string rootDir;
+    public string summary;
+    public string fatalError;
 }

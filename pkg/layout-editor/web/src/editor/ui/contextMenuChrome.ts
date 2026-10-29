@@ -1,4 +1,5 @@
 import { dom } from "../dom";
+import { syncDecorContextPreview } from "./decorContextPreview";
 import {
   clampFloatingElement,
   floatingDragBarHtml,
@@ -25,5 +26,8 @@ export function clampContextMenuInViewport(anchorX?: number, anchorY?: number): 
 
 /** 在 #ctx-menu 上挂一次拖动手势（事件委托，innerHTML 刷新后仍有效）。 */
 export function initContextMenuDrag(): void {
-  initFloatingPanelDrag(dom.ctxMenuEl, { draggingClass: "ctx-menu-dragging" });
+  initFloatingPanelDrag(dom.ctxMenuEl, {
+    draggingClass: "ctx-menu-dragging",
+    onDragMove: () => syncDecorContextPreview(),
+  });
 }

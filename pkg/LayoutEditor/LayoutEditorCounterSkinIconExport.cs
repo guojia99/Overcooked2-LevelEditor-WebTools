@@ -11,7 +11,8 @@ using LevelEditorStub;
 /// 遍历 common01/02/03 + commonW1 各 pseudo_prefab_so/counters 下的 PseudoPrefabSO，
 /// 按 bundleName 从 StreamingAssets/Windows 加载真实 prefab，取渲染器材质球主贴图，
 /// 产出两份资产供 web 前端展示皮肤：
-///   ① web/public/icons/counter-skins/&lt;Type&gt;_&lt;Theme|Default&gt;.png —— 128×128 中心裁切缩略图
+///   ① exports/counter-skins/icons/&lt;Type&gt;_&lt;Theme|Default&gt;.png —— 128×128 中心裁切缩略图
+///      + icons/manifest.json（版本/文件清单，经 /api/counter-skins/icons/ 只读路由提供）
 ///   ② layout-editor/scripts/data/counter-skin-icons.json —— guid → { color, file }（build-catalog.mjs 合并进
 ///     counter-appearances.json 的 color/icon 字段；键 = SO .meta guid，与扫描器同一权威）
 /// 主色 = 贴图均色（alpha&lt;0.5 像素跳过，全透明则不跳）；默认皮肤画布回退现行配色，无需单独条目。
@@ -32,17 +33,36 @@ public static class LayoutEditorCounterSkinIconExport
     [MenuItem("Layout Editor/素材导出 (Asset Export)/导出桌台皮肤图标与主色 (Export Skin Icons)", false, 0)]
     public static void ExportAll()
     {
+        var result = ExportAllInternal(true, null);
+        if (!string.IsNullOrEmpty(result.fatalError))
+        {
+            EditorUtility.DisplayDialog("桌台皮肤提取", result.fatalError, "确定");
+            return;
+        }
+        EditorUtility.DisplayDialog("桌台皮肤提取", result.report, "确定");
+    }
+
+    /// <summary>一键 Web 资源导出用：不弹结束对话框，进度经回调上报。</summary>
+    public static LayoutEditorCounterSkinIconExportResult ExportAllSilent(Action<string, float> progress)
+    {
+        return ExportAllInternal(false, progress);
+    }
+
+    private static LayoutEditorCounterSkinIconExportResult ExportAllInternal(bool interactive, Action<string, float> progress)
+    {
+        var result = new LayoutEditorCounterSkinIconExportResult();
         Array.Sort(CounterTypes, (a, b) => b.Length.CompareTo(a.Length)); // 最长前缀优先
         string repoRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
-        string iconDir = Path.Combine(repoRoot, "layout-editor/web/public/icons/counter-skins").Replace("\\", "/");
+        string iconDir = Path.Combine(LayoutEditorPaths.ExportsRoot, "counter-skins/icons").Replace("\\", "/");
         string sidecarPath = Path.Combine(repoRoot, "layout-editor/scripts/data/counter-skin-icons.json").Replace("\\", "/");
         Directory.CreateDirectory(iconDir);
+        result.iconDir = iconDir;
 
         List<string> soFiles = CollectCounterSoFiles();
         if (soFiles.Count == 0)
         {
-            EditorUtility.DisplayDialog("桌台皮肤提取", "未找到任何 counters 伪预制件 SO（pseudo_prefab_so/counters）", "确定");
-            return;
+            result.fatalError = "未找到任何 counters 伪预制件 SO（pseudo_prefab_so/counters）";
+            return result;
         }
 
         // own = 本工具 LoadFromFile 的（可 Unload）；借自 PseudoPrefabManager 的已加载 bundle 绝不能卸
@@ -60,6 +80,7 @@ public static class LayoutEditorCounterSkinIconExport
             {
                 string file = soFiles[i];
                 EditorUtility.DisplayProgressBar("桌台皮肤提取", file, (float)i / soFiles.Count);
+                ReportProgress(progress, "导出桌台图标 " + (i + 1) + "/" + soFiles.Count + "：" + Path.GetFileNameWithoutExtension(file), (float)i / Mathf.Max(1, soFiles.Count));
                 var row = ExtractOne(repoRoot, iconDir, bundles, own, manifest, file);
                 if (row != null)
                 {
@@ -77,6 +98,7 @@ public static class LayoutEditorCounterSkinIconExport
         }
 
         WriteSidecar(sidecarPath, results);
+        WriteIconManifest(iconDir, results);
 
         int failed = 0;
         var sb = new StringBuilder();
@@ -89,11 +111,47 @@ public static class LayoutEditorCounterSkinIconExport
             }
         }
         string report = "共 " + done + " 个皮肤 SO，成功 " + written + "，失败 " + failed +
-            "\n图标 → layout-editor/web/public/icons/counter-skins/" +
+            "\n图标 → exports/counter-skins/icons/" +
             "\n主色 → layout-editor/scripts/data/counter-skin-icons.json（重跑 build-catalog.mjs 合并进 counter-appearances.json）";
         if (sb.Length > 0) report += "\n失败明细（前若干条）:" + sb;
         Debug.Log("[LayoutEditor/Export] " + report.Replace("\n", " | "));
-        EditorUtility.DisplayDialog("桌台皮肤提取", report, "确定");
+        result.okCount = written;
+        result.failCount = failed;
+        result.report = report;
+        return result;
+    }
+
+    private static void ReportProgress(Action<string, float> progress, string message, float value)
+    {
+        if (progress != null)
+        {
+            try { progress(message, value); }
+            catch { }
+        }
+    }
+
+    private static void WriteIconManifest(string iconDir, List<Dictionary<string, string>> results)
+    {
+        var sb = new StringBuilder();
+        string version = DateTime.UtcNow.Ticks.ToString("x");
+        sb.Append("{\n  \"version\": \"").Append(version).Append("\",\n");
+        sb.Append("  \"generatedAt\": \"").Append(DateTime.UtcNow.ToString("o")).Append("\",\n");
+        sb.Append("  \"comment\": \"Counter skin material thumbnails. Served via /api/counter-skins/icon/<file>.\",\n");
+        sb.Append("  \"files\": {\n");
+        int n = 0;
+        foreach (var r in results)
+            if (string.IsNullOrEmpty(r["error"]) && !string.IsNullOrEmpty(r["file"])) n++;
+        int emitted = 0;
+        foreach (var r in results)
+        {
+            if (!string.IsNullOrEmpty(r["error"]) || string.IsNullOrEmpty(r["file"])) continue;
+            sb.Append("    \"").Append(r["guid"]).Append("\": \"").Append(r["file"]).Append("\"");
+            emitted++;
+            if (emitted < n) sb.Append(",");
+            sb.Append("\n");
+        }
+        sb.Append("  }\n}\n");
+        File.WriteAllText(Path.Combine(iconDir, "manifest.json"), sb.ToString(), new UTF8Encoding(false));
     }
 
     internal static List<string> CollectCounterSoFiles()
@@ -411,4 +469,14 @@ public static class LayoutEditorCounterSkinIconExport
         sb.Append("  }\n}\n");
         File.WriteAllText(path, sb.ToString(), new UTF8Encoding(false));
     }
+}
+
+/// <summary>桌台图标导出结果（一键 Web 资源导出协调器消费）。</summary>
+public sealed class LayoutEditorCounterSkinIconExportResult
+{
+    public int okCount;
+    public int failCount;
+    public string iconDir;
+    public string report;
+    public string fatalError;
 }

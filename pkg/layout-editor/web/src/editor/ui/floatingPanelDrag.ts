@@ -11,6 +11,8 @@ export interface FloatingDragOptions {
   onDragStart?: () => void;
   /** 拖动时加在根节点上的 class。 */
   draggingClass?: string;
+  /** 长按拖动过程中，位置每次更新后回调。 */
+  onDragMove?: () => void;
 }
 
 /** 顶部拖动手柄 HTML（inner 为标题区内容）。 */
@@ -117,6 +119,7 @@ export function initFloatingPanelDrag(root: HTMLElement, opts?: FloatingDragOpti
       top = Math.max(margin, Math.min(top, vh - margin - h));
       root.style.left = `${left}px`;
       root.style.top = `${top}px`;
+      opts?.onDragMove?.();
     };
 
     const cleanup = () => {

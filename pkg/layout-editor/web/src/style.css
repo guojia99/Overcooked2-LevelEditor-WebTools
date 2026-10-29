@@ -1447,7 +1447,8 @@ mark.guide-search-mark,
 .palette-header select,
 select.decor-size-filter,
 select.palette-group-mode,
-select.decor-preview-size {
+select.decor-preview-size,
+.decor-source-btn {
   flex: 1 1 80px;
   min-width: 0;
   width: auto;
@@ -1466,6 +1467,7 @@ select.decor-preview-size {
 select.decor-size-filter:focus,
 select.palette-group-mode:focus,
 select.decor-preview-size:focus,
+.decor-source-btn:focus,
 .palette-add-themed select:focus {
   outline: none;
   border-color: var(--ui-border-focus);
@@ -1475,10 +1477,80 @@ select.decor-preview-size:focus,
 .palette-header .decor-size-filter.hidden,
 .palette-header .palette-group-mode.hidden,
 .palette-header .decor-preview-size.hidden,
+.palette-header .decor-source-filter.hidden,
 select.decor-size-filter.hidden,
 select.palette-group-mode.hidden,
 select.decor-preview-size.hidden {
   display: none;
+}
+
+/* 装饰层素材库多选。按钮外观与同行 select 一致，弹出层勾选 common01–04 / commonW1–6。 */
+.palette-header {
+  position: relative;
+  z-index: 4;
+}
+
+.decor-source-filter {
+  position: relative;
+  flex: 1 1 80px;
+  min-width: 0;
+}
+
+.decor-source-btn {
+  width: 100%;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.decor-source-pop {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 6;
+  min-width: 148px;
+  padding: 4px;
+  border-radius: var(--ui-radius-sm);
+  border: 1px solid var(--ui-border-strong);
+  background: var(--ui-bg-modal);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+}
+
+.decor-source-pop.hidden {
+  display: none;
+}
+
+.decor-source-pop label,
+.decor-source-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ui-text);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.decor-source-pop label:hover,
+.decor-source-all:hover {
+  background: var(--ui-scene-item-hover);
+}
+
+.decor-source-all {
+  font-weight: 600;
+}
+
+.decor-source-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--ui-border);
 }
 
 /* ── 高度层过滤（画布左下角悬浮面板 + 唤醒按钮） ── */
@@ -1732,6 +1804,41 @@ select.decor-preview-size.hidden {
   background: var(--card-bg-hover, rgba(118, 168, 255, 0.28));
 }
 
+.palette-card .pc-zoom,
+.palette-card .pc-3d {
+  position: absolute;
+  top: 4px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity var(--ui-transition-fast), background var(--ui-transition-fast);
+}
+
+.palette-card .pc-zoom {
+  right: 4px;
+}
+
+.palette-card .pc-3d {
+  right: 28px;
+}
+
+.palette-card:hover .pc-zoom,
+.palette-card:hover .pc-3d,
+.palette-card .pc-zoom:focus-visible,
+.palette-card .pc-3d:focus-visible {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.7);
+}
+
 .palette-card .zh {
   color: var(--ui-palette-card-text);
   font-weight: 600;
@@ -1754,7 +1861,7 @@ select.decor-preview-size.hidden {
 }
 
 /* 装饰预览大图卡片：左侧调色板在「显示配置 → 🖼 装饰预览」开启时使用。
-   图片来自 Unity 导出 decor-preview/<guid>.png；透明底，按卡片宽度等比展示。 */
+   图片来自 Unity 导出的 exports/decor/front/<guid>.png（经 API）；透明底，按卡片宽度等比展示。 */
 .palette-card.palette-card-preview {
   padding: 4px 6px 6px;
   gap: 2px;
@@ -2663,6 +2770,51 @@ body.view-3d .hint-3d {
 
 .item-detail .close-hint {
   margin-top: 8px;
+  color: #9aa0a6;
+  font-size: 11px;
+}
+
+/* 装饰物详情：正/背双视图左右并排 */
+.si-decor-views {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 8px 0 10px;
+}
+
+.si-decor-views figure {
+  margin: 0;
+  min-width: 0;
+  text-align: center;
+}
+
+.si-decor-views figure[data-decor-view] {
+  cursor: zoom-in;
+}
+
+.si-decor-views img {
+  display: block;
+  width: 100%;
+  height: 150px;
+  object-fit: contain;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid #4a5060;
+  border-radius: 4px;
+}
+
+.si-decor-views figure.si-decor-empty div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 150px;
+  color: #9aa0a6;
+  background: rgba(0, 0, 0, 0.12);
+  border: 1px dashed #4a5060;
+  border-radius: 4px;
+}
+
+.si-decor-views figcaption {
+  margin-top: 4px;
   color: #9aa0a6;
   font-size: 11px;
 }
@@ -7025,6 +7177,374 @@ body.manage-bg {
 
 .ctx-menu.hidden {
   display: none;
+}
+
+/* 装饰物右键：画布右上角缩略图（不挡菜单操作）。 */
+.decor-ctx-preview {
+  position: fixed;
+  z-index: 1001;
+  width: 176px;
+  max-width: min(176px, 42vw);
+  padding: 8px;
+  pointer-events: none;
+  background: var(--ui-bg-modal);
+  border: 1px solid var(--ui-border-strong);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.decor-ctx-preview.hidden {
+  display: none;
+}
+
+.decor-ctx-preview.is-dual {
+  width: 260px;
+  max-width: min(260px, 58vw);
+}
+
+.decor-ctx-preview-views {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.decor-ctx-preview-view {
+  min-width: 0;
+}
+
+.decor-ctx-preview-view-label {
+  margin-top: 3px;
+  text-align: center;
+  color: #9aa0a6;
+  font-size: 10px;
+}
+
+/* 装饰物双视图大图查看器 */
+.decor-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 5200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.decor-lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.74);
+  backdrop-filter: blur(2px);
+}
+
+.decor-lightbox-card {
+  position: relative;
+  width: min(920px, 92vw);
+  height: min(760px, 88vh);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--ui-bg-modal, #2d323c);
+  border: 1px solid var(--ui-border-strong, #4a5060);
+  border-radius: 10px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+}
+
+.decor-lightbox-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--ui-border, #3a4050);
+}
+
+.decor-lightbox-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.decor-lightbox-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.decor-lightbox-tab {
+  padding: 4px 12px;
+  border: 1px solid var(--ui-border-strong, #4a5060);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ui-text, #e8eaed);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.decor-lightbox-tab.active {
+  background: var(--accent, #e0a44a);
+  border-color: var(--accent, #e0a44a);
+  color: #1d2026;
+  font-weight: 600;
+}
+
+.decor-lightbox-tab:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.decor-lightbox-close {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ui-text, #e8eaed);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.decor-lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.decor-lightbox-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background:
+    repeating-conic-gradient(rgba(255, 255, 255, 0.025) 0% 25%, transparent 0% 50%) 50% / 24px 24px,
+    rgba(0, 0, 0, 0.22);
+}
+
+.decor-lightbox-pane {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.decor-lightbox-pane.hidden,
+.decor-lightbox-foot.hidden {
+  display: none;
+}
+
+.decor-lightbox-pane-2d {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.decor-lightbox-pane-2d.dragging {
+  cursor: grabbing;
+}
+
+.decor-lightbox-pane-3d {
+  background: #1d2026;
+}
+
+.decor-preview-3d-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.decor-lightbox-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform-origin: center;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.decor-lightbox-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(16, 18, 22, 0.82);
+  color: var(--ui-text, #e8eaed);
+  font-size: 13px;
+  text-align: center;
+  padding: 20px;
+}
+
+.decor-lightbox-loading .busy-spinner {
+  width: 30px;
+  height: 30px;
+}
+
+.decor-lightbox-progress {
+  width: min(280px, 70%);
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.decor-lightbox-progress-inner {
+  height: 100%;
+  width: 0;
+  border-radius: 3px;
+  background: var(--accent, #e0a44a);
+  transition: width 0.15s linear;
+}
+
+.decor-lightbox-progress.indeterminate .decor-lightbox-progress-inner {
+  width: 40% !important;
+  animation: decor-progress-slide 1.1s ease-in-out infinite;
+}
+
+@keyframes decor-progress-slide {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(310%); }
+}
+
+.decor-lightbox-retry {
+  padding: 6px 16px;
+  border: 1px solid var(--ui-border-strong, #4a5060);
+  border-radius: 5px;
+  background: var(--ui-bg-modal, #2d323c);
+  color: var(--ui-text, #e8eaed);
+  cursor: pointer;
+}
+
+.decor-lightbox-retry:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.decor-lightbox-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9aa0a6;
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.decor-lightbox-foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border-top: 1px solid var(--ui-border, #3a4050);
+  font-size: 12px;
+}
+
+.decor-lightbox-zoom-btn,
+.decor-lightbox-reset {
+  min-width: 28px;
+  height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--ui-border-strong, #4a5060);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ui-text, #e8eaed);
+  cursor: pointer;
+}
+
+.decor-lightbox-zoom-btn:hover,
+.decor-lightbox-reset:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.decor-lightbox-zoom-label {
+  min-width: 46px;
+  text-align: center;
+  color: #9aa0a6;
+}
+
+.decor-lightbox-size {
+  color: #9aa0a6;
+  font-size: 11px;
+  margin-left: 2px;
+}
+
+.decor-lightbox-hint {
+  margin-left: auto;
+  color: #9aa0a6;
+  font-size: 11px;
+}
+
+.decor-ctx-preview-thumb {
+  cursor: zoom-in;
+  pointer-events: auto;
+}
+
+.decor-ctx-preview-zoom {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.45);
+  font-size: 10px;
+  line-height: 1.3;
+  pointer-events: none;
+}
+
+.decor-ctx-preview-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 6px;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.08), transparent 62%),
+    rgba(0, 0, 0, 0.16);
+}
+
+.decor-ctx-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.decor-ctx-preview-img.is-icon {
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.decor-ctx-preview-fallback {
+  display: none;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  font-weight: 700;
+  color: var(--ui-text-muted);
+}
+
+.decor-ctx-preview-name {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ui-text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* ---------- Shared floating drag handle (ctx-menu / item-detail / pick-tip / modal) ---------- */

@@ -690,6 +690,7 @@ const DEPS_MANIFEST_FALLBACK: DepsManifestEntry[] = [
   { zipPath: "OC2DIYLevelRuntimeWLoader/commonW2", label: "commonW2", state: "ok", sizeBytes: 0, note: "汉堡菜谱素材（依赖包通用，无条件携带；导出时删旧重打）" },
   { zipPath: "OC2DIYLevelRuntimeWLoader/commonW3", label: "commonW3", state: "ok", sizeBytes: 0, note: "扩展素材包（源目录存在即导出时删旧重打并携带；导出前无产物故大小显示 —，可随时用 Unity 菜单「重新打包 commonW 素材包」单独重打）" },
   { zipPath: "OC2DIYLevelRuntimeWLoader/commonW5", label: "commonW5", state: "ok", sizeBytes: 0, note: "Web 增量包：OC1/AYCE BGM + 桌台皮肤 + 食材 + 卷饼菜谱（源目录存在即导出时删旧重打并携带）" },
+  { zipPath: "OC2DIYLevelRuntimeWLoader/commonW6", label: "commonW6", state: "ok", sizeBytes: 0, note: "oc2_dlc_story 造景/地板补充包（bundle 引用 SO + 空壳 wrapper；源目录存在即携带）" },
   { zipPath: "OC2DIYLevelRuntimeWLoader/package_version.txt", label: "package_version.txt", state: "ok", sizeBytes: 0, note: "导出时自动生成：打包版本/时间/环境 + 文件 MD5" },
 ];
 
@@ -4001,7 +4002,7 @@ async function wireAudioEditor(
   renderCustomState();
   renderCustomList();
 
-  // ---- exports-only wiring（原版曲库/音效试听依赖 audio-exports） ----
+  // ---- exports-only wiring（原版曲库/音效试听依赖 exports/audio（/api/audio/*）） ----
   if (exports) {
     const bgmByGuid = new Map<string, string>();
     for (const b of exports.bgm) bgmByGuid.set(b.guid, b.filename);

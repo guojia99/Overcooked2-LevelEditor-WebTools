@@ -288,6 +288,13 @@
       ]
     },
     {
+      "id": "FriedChicken",
+      "step": "FryingPan",
+      "ingredients": [
+        "BurritoChickenSO"
+      ]
+    },
+    {
       "id": "Fry_All_SO",
       "step": "DeepFatFryer",
       "ingredients": [

@@ -352,6 +352,11 @@ def main():
         + collect_ids("commonW1/pseudo_prefab_so/dlc11/food")
     )
 
+    # 导出范围 = 扫描到的菜谱 id ∪ 策展表 ∪ 覆盖表。
+    # 上游 Recipes_Patch 包装（如 FriedChicken）不在 rec_ids 扫描根里，
+    # 只有策展图标；不并进来就永远不会出图（/icons/recipes/<id>.png 缺失）。
+    rec_export_ids = sorted(set(rec_ids) | set(rec_curated) | set(rec_overrides))
+
     # ---- AssetBundle sprites ----
     print(f"loading bundles from {WIN} ...")
     env = UnityPy.load(WIN)
@@ -389,7 +394,7 @@ def main():
         out_dir = os.path.join(OUT, "recipes")
         if not check:
             os.makedirs(out_dir, exist_ok=True)
-        for sid in rec_ids:
+        for sid in rec_export_ids:
             nm = rec_overrides.get(sid, rec_curated.get(sid))
             if nm is None:
                 # explicit null or unmapped – try local PNG fallback
@@ -436,7 +441,7 @@ def main():
         print("  unmapped ingredients (add to ingredient-icons.json or icon-overrides.json):")
         for s in stats["ing_miss"]:
             print(f"    {s}")
-    print(f"recipes:     {stats['rec_ok']}/{len(rec_ids)} ok, {len(stats['rec_miss'])} unmapped"
+    print(f"recipes:     {stats['rec_ok']}/{len(rec_export_ids)} ok, {len(stats['rec_miss'])} unmapped"
           + (f" ({stats['rec_local']} from local PNGs)" if stats.get("rec_local") else ""))
     if stats["rec_miss"]:
         print("  unmapped recipes (curate in recipe-icons.json):")

@@ -1,0 +1,197 @@
+{
+  "comment": "commonW6 本地烘焙件 -> 游戏 bundle 容器的显式映射。key 为去掉 _<8位hash> 的 base id（小写）。未列出的条目走 oc2r/bundle_refs.py 的同名/网格集合/关键字匹配。",
+  "map": {
+    "sandfloorcombined floor tile": {
+      "bundle": "bundle167",
+      "container": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/sand_01.prefab"
+    },
+    "raft_water_combined floor tile": {
+      "bundle": "bundle167",
+      "container": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/raft_water.prefab"
+    },
+    "water_bottom_combined floor tile": {
+      "bundle": "bundle210",
+      "container": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/wonderland theme/water.prefab"
+    },
+    "poolwatersurfacecombined floor tile": {
+      "bundle": "bundle167",
+      "container": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/poolwater_01.prefab"
+    },
+    "floors": {
+      "bundle": "bundle428",
+      "container": "assets/downloadablecontent/dlc11/dlc_assets/models/s_summer_1_4/flooring_01.fbx"
+    },
+    "large water": {
+      "bundle": "bundle210",
+      "container": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/wonderland theme/water.prefab"
+    },
+    "m_dlc07_water_3_2_01": {
+      "bundle": "bundle210",
+      "container": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/wonderland theme/water.prefab"
+    },
+    "m_dlc10_water_middle": {
+      "bundle": "bundle210",
+      "container": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/wonderland theme/water.prefab"
+    },
+    "m_dlc5_camp_4_1_river": {
+      "bundle": "bundle250",
+      "container": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/dressing/p_dlc5_camp_2_3_river_01.prefab"
+    },
+    "m_dlc5_camp_water_special": {
+      "bundle": "bundle210",
+      "container": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/wonderland theme/water.prefab"
+    },
+    "m_dlc5_cliffs_1_4": {
+      "bundle": "bundle250",
+      "container": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/dressing/p_dlc5_cliff_01.prefab"
+    },
+    "m_dlc07_sewer_stones_01": {
+      "bundle": "bundle250",
+      "container": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/dressing/p_dlc5_cliff_01.prefab"
+    },
+    "m_dlc5_grasscards_1_4": {
+      "bundle": "bundle250",
+      "container": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/dressing/p_dlc5_forest_floor_1_4_01.prefab"
+    },
+    "m_dlc5_grasscards_2_3": {
+      "bundle": "bundle250",
+      "container": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/dressing/p_dlc5_forest_floor_1_4_01.prefab"
+    },
+    "m_dlc5_ground_2_5": {
+      "bundle": "bundle250",
+      "container": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/dressing/p_dlc5_forest_floor_1_4_01.prefab"
+    },
+    "kitchen_tile_ 3": {
+      "bundle": "bundle250",
+      "container": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/dressing/cityassets/p_dlc5_kitchen_tile_01.prefab"
+    },
+    "ice_straightb 15": {
+      "bundle": "bundle35",
+      "container": "assets/models/overcooked_legacy/kitchen/arctic/ice_straighta.fbx"
+    },
+    "m_dlc4_dragon_head_01": {
+      "bundle": "bundle225",
+      "container": "assets/downloadablecontent/dlc04/dlc_assets/models/characters/m_dlc4_dragon_03.fbx"
+    },
+    "m_dlc4_coyfish_01": {
+      "bundle": "bundle420",
+      "container": "assets/downloadablecontent/dlc10/dlc_assets/models/dressingassets/coyfish_generic01.fbx"
+    },
+    "m_dlc4_coyfish_02": {
+      "bundle": "bundle420",
+      "container": "assets/downloadablecontent/dlc10/dlc_assets/models/dressingassets/coyfish_generic01.fbx"
+    },
+    "m_dlc7_city_countertop_01": {
+      "bundle": "bundle167",
+      "container": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/shared kitchen/countertop_01.prefab"
+    },
+    "m_city_door_frame_01": {
+      "bundle": "bundle428",
+      "container": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/dressing/walls/m_city_door_double_02.prefab"
+    },
+    "m_city_door_frame_02": {
+      "bundle": "bundle428",
+      "container": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/dressing/walls/m_city_door_double_02.prefab"
+    },
+    "m_city_door_r_01": {
+      "bundle": "bundle428",
+      "container": "assets/downloadablecontent/dlc11/dlc_assets/prefabs/dressing/walls/m_city_door_double_02.prefab"
+    },
+    "m_dlc5_camp_4_1_river_ripples": {
+      "bundle": "bundle250",
+      "container": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/dressing/p_dlc5_camp_2_3_river_01.prefab"
+    },
+    "m_dlc5_camp_ripple_special": {
+      "bundle": "bundle250",
+      "container": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/dressing/p_dlc5_ripple_01.prefab"
+    },
+    "m_dlc07_slime_ripples_01": {
+      "bundle": "bundle250",
+      "container": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/dressing/p_dlc5_ripple_01.prefab"
+    },
+    "m_dlc07_3_3_slime_ripples_01": {
+      "bundle": "bundle250",
+      "container": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/dressing/p_dlc5_ripple_01.prefab"
+    },
+    "m_dlc07_ripples_3_2_01": {
+      "bundle": "bundle250",
+      "container": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/dressing/p_dlc5_ripple_01.prefab"
+    },
+    "m_dlc10_ripples": {
+      "bundle": "bundle250",
+      "container": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/dressing/p_dlc5_ripple_01.prefab"
+    },
+    "m_dlc07_1_3_ripples": {
+      "bundle": "bundle250",
+      "container": "assets/downloadablecontent/dlc05/dlc_assets/prefabs/dressing/p_dlc5_ripple_01.prefab"
+    },
+    "m_dlc4_lvl4_river_ripples_01": {
+      "bundle": "bundle210",
+      "container": "assets/downloadablecontent/dlc03/dlc_assets/prefabs/wonderland theme/water.prefab"
+    },
+    "m_dlc5_buntingrope_02": {
+      "bundle": "bundle248",
+      "container": "assets/downloadablecontent/dlc05/dlc_assets/models/dressing assets/m_dlc5_rope_bunting_01.fbx"
+    },
+    "m_dlc08_rail_shaft": {
+      "bundle": "bundle355",
+      "container": "assets/downloadablecontent/dlc08/dlc_assets/models/dressing assets/m_dlc08_railtrack_middle_01.fbx"
+    },
+    "m_dlc08_rail_stop_plate": {
+      "bundle": "bundle355",
+      "container": "assets/downloadablecontent/dlc08/dlc_assets/models/dressing assets/m_dlc08_railtrack_middle_01.fbx"
+    },
+    "m_dlc07_window_frame": {
+      "bundle": "bundle248",
+      "container": "assets/downloadablecontent/dlc05/dlc_assets/models/dressing assets/cityassets/m_dlc5_wall_window_01.fbx"
+    },
+    "m_parrot_q1": {
+      "bundle": "bundle163",
+      "container": "assets/downloadablecontent/dlc02/dlc_assets/models/beach theme/m_beach_parrot_01.fbx"
+    },
+    "wheel_rf": {
+      "bundle": "bundle355",
+      "container": "assets/downloadablecontent/dlc08/dlc_assets/models/dressing assets/m_dlc08_cart_wheel_01.fbx"
+    },
+    "wheel_lr": {
+      "bundle": "bundle355",
+      "container": "assets/downloadablecontent/dlc08/dlc_assets/models/dressing assets/m_dlc08_cart_wheel_01.fbx"
+    },
+    "wheel_rr": {
+      "bundle": "bundle355",
+      "container": "assets/downloadablecontent/dlc08/dlc_assets/models/dressing assets/m_dlc08_cart_wheel_01.fbx"
+    },
+    "wheel_lr1": {
+      "bundle": "bundle355",
+      "container": "assets/downloadablecontent/dlc08/dlc_assets/models/dressing assets/m_dlc08_cart_wheel_01.fbx"
+    },
+    "wheel1": {
+      "bundle": "bundle355",
+      "container": "assets/downloadablecontent/dlc08/dlc_assets/models/dressing assets/m_dlc08_cart_wheel_01.fbx"
+    },
+    "skirts": {
+      "bundle": "bundle428",
+      "container": "assets/downloadablecontent/dlc11/dlc_assets/models/kevincollarskirt.fbx"
+    },
+    "glow": {
+      "bundle": "bundle47",
+      "container": "assets/prefabs/particles/pfx_glow.prefab"
+    },
+    "base": {
+      "bundle": "bundle38",
+      "container": "assets/models/overcooked_legacy/props/switch/switch_base.fbx"
+    },
+    "mesh": {
+      "bundle": "bundle428",
+      "container": "assets/downloadablecontent/dlc11/dlc_assets/models/s_summer_1_3/-mesh_alpha.fbx"
+    },
+    "cube": {
+      "bundle": "bundle32",
+      "container": "assets/models/cube.fbx"
+    },
+    "m_mine_planks_01": {
+      "bundle": "bundle167",
+      "container": "assets/downloadablecontent/dlc02/dlc_assets/prefabs/beach theme/planks_3_01.prefab"
+    }
+  }
+}

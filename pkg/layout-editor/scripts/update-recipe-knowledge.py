@@ -7,7 +7,11 @@ update-recipe-knowledge.py — 用 extract-recipes.py 的权威提取数据更�
   叶子食材名（bundle m_Name） -> 编辑器食材 id（Ingredients 资产文件名）
 规范化规则：小写 + 去下划线/连字符/空格 后精确比对；特殊表兜底。
 
-用法：python3 layout-editor/scripts/update-recipe-knowledge.py [--dry]
+用法：python3 layout-editor/scripts/update-recipe-knowledge.py [--dry] [--add-missing]
+  --dry          只打印差异，不写盘
+  --add-missing  把提取数据中尚未收录的菜谱补进 knowledge（默认只更新已有条目，
+                 避免冲掉人工修正；补进来的 step 仍需人工复核 stepSource，如
+                 BoiledPrawns 的 "ingredients" 是启发式推断）
 """
 import json
 import os
@@ -22,6 +26,10 @@ RECIPE_DIRS = [
     "Assets/common01/food/Recipes",
     "Assets/common02/food/Recipes",
     "Assets/common03/Recipes",
+    # 上游剧情菜谱/模型库（PseudoPrefabSO 包裹游戏原 orderdefinition）：编辑器 id 就是
+    # 文件名（FriedChicken、BoiledRice…）。漏掉这个根会让这些中间产物永远进不了
+    # recipe-knowledge.json——表现为 /recipes 里它们都没有烹饪步骤（FriedChicken=煎）。
+    "Assets/common03/food/Recipes_Patch",
 ]
 ING_DIRS = [
     "Assets/common01/food/Ingredients",
@@ -304,6 +312,11 @@ def map_name(name, name_map, dlc, label):
 
 def main():
     dry = "--dry" in sys.argv
+    # 默认只更新已收录条目；--add-missing 才把提取数据里的新菜谱补进 knowledge。
+    # 不默认新建，是因为 knowledge 里存在人工修正（寿司 Steamer→Pot、披萨烤箱、
+    # 冰淇淋/浮冰饮 Blender 等），而提取侧的 step 有据可查的不多；整跑会把人工
+    # 修正冲回提取值（Pizza_Olives/RoastedMarshmallow 甚至被写成空步骤）。
+    add_missing = "--add-missing" in sys.argv
     extracted = json.load(open(EXTRACTED, encoding="utf-8"))["recipes"]
     knowledge = json.load(open(KNOWLEDGE, encoding="utf-8"))
 
@@ -341,6 +354,8 @@ def main():
             continue
         step = ext["step"]
         old = by_id.get(rid)
+        if old is None and not add_missing:
+            continue
         old_step = old["step"] if old else None
         old_ings = old["ingredients"] if old else None
         if (not old) or old_step != step or old_ings != ing_ids:

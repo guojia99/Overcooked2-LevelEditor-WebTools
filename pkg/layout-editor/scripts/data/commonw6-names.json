@@ -1,0 +1,1145 @@
+{
+  "comment": "oc2_dlc_story commonW6 装饰中文名（按去掉双 hash 的 base id 索引）",
+  "names": [
+    {
+      "id": "1_2_Float_Eggplant",
+      "zh": "夏日·茄子浮筒",
+      "en": "1 2 Float Eggplant"
+    },
+    {
+      "id": "a_tent_roof_placeholder",
+      "zh": "帐篷顶占位",
+      "en": "a tent roof placeholder"
+    },
+    {
+      "id": "Building_01_rooftiles",
+      "zh": "夏日·建筑01 屋顶瓦",
+      "en": "Building 01 rooftiles"
+    },
+    {
+      "id": "Building_01_walls",
+      "zh": "夏日·建筑01 墙体",
+      "en": "Building 01 walls"
+    },
+    {
+      "id": "Building_02_roof",
+      "zh": "夏日·建筑02 屋顶",
+      "en": "Building 02 roof"
+    },
+    {
+      "id": "Building_02_walls",
+      "zh": "夏日·建筑02 墙体",
+      "en": "Building 02 walls"
+    },
+    {
+      "id": "Building_03_rooftiles",
+      "zh": "夏日·建筑03 屋顶瓦",
+      "en": "Building 03 rooftiles"
+    },
+    {
+      "id": "Building_03_walls",
+      "zh": "夏日·建筑03 墙体",
+      "en": "Building 03 walls"
+    },
+    {
+      "id": "Building_04_walls",
+      "zh": "夏日·建筑04 墙体",
+      "en": "Building 04 walls"
+    },
+    {
+      "id": "Building_05_walls",
+      "zh": "夏日·建筑05 墙体",
+      "en": "Building 05 walls"
+    },
+    {
+      "id": "Building_07_roof",
+      "zh": "夏日·建筑07 屋顶",
+      "en": "Building 07 roof"
+    },
+    {
+      "id": "Building_07_Walls",
+      "zh": "夏日·建筑07 墙体",
+      "en": "Building 07 Walls"
+    },
+    {
+      "id": "Building_08_rooftiles",
+      "zh": "夏日·建筑08 屋顶瓦",
+      "en": "Building 08 rooftiles"
+    },
+    {
+      "id": "Building_08_walls",
+      "zh": "夏日·建筑08 墙体",
+      "en": "Building 08 walls"
+    },
+    {
+      "id": "Building_09_roof",
+      "zh": "夏日·建筑09 屋顶",
+      "en": "Building 09 roof"
+    },
+    {
+      "id": "Building_09_walls",
+      "zh": "夏日·建筑09 墙体",
+      "en": "Building 09 walls"
+    },
+    {
+      "id": "Building_11_roof",
+      "zh": "夏日·建筑11 屋顶",
+      "en": "Building 11 roof"
+    },
+    {
+      "id": "Building_11_walls",
+      "zh": "夏日·建筑11 墙体",
+      "en": "Building 11 walls"
+    },
+    {
+      "id": "Building_12_roof",
+      "zh": "夏日·建筑12 屋顶",
+      "en": "Building 12 roof"
+    },
+    {
+      "id": "Building_12_walls",
+      "zh": "夏日·建筑12 墙体",
+      "en": "Building 12 walls"
+    },
+    {
+      "id": "Buildint_05_Rooftiles",
+      "zh": "夏日·建筑05 屋顶瓦",
+      "en": "Buildint 05 Rooftiles"
+    },
+    {
+      "id": "Carrot",
+      "zh": "胡萝卜装饰",
+      "en": "Carrot"
+    },
+    {
+      "id": "dlc11_city_path_side_Still_01",
+      "zh": "夏日·城市小径侧边静态 01",
+      "en": "dlc11 city path side Still 01"
+    },
+    {
+      "id": "dlc11_city_path_side_Still_02",
+      "zh": "夏日·城市小径侧边静态 02",
+      "en": "dlc11 city path side Still 02"
+    },
+    {
+      "id": "dlc11_mat_city_path_01",
+      "zh": "夏日·城市小径 01",
+      "en": "dlc11 mat city path 01"
+    },
+    {
+      "id": "dlc11_mat_city_path_objectspace",
+      "zh": "夏日·城市小径（物体空间）",
+      "en": "dlc11 mat city path objectspace"
+    },
+    {
+      "id": "dlc11_mat_city_path_Still_01",
+      "zh": "夏日·城市小径静态 01",
+      "en": "dlc11 mat city path Still 01"
+    },
+    {
+      "id": "dlc11_mat_city_path_Still_03",
+      "zh": "夏日·城市小径静态 03",
+      "en": "dlc11 mat city path Still 03"
+    },
+    {
+      "id": "dlc11_mat_pool_vent_01",
+      "zh": "夏日·泳池通风口 01",
+      "en": "dlc11 mat pool vent 01"
+    },
+    {
+      "id": "floor_2",
+      "zh": "地面 2",
+      "en": "floor 2"
+    },
+    {
+      "id": "floor_2 (1)",
+      "zh": "地板 2-1",
+      "en": "floor 2 (1)"
+    },
+    {
+      "id": "Floor_Confetti_02",
+      "zh": "夏日·彩纸地面 02",
+      "en": "Floor Confetti 02"
+    },
+    {
+      "id": "Floor_confetti_03",
+      "zh": "夏日·彩纸地面 03",
+      "en": "Floor confetti 03"
+    },
+    {
+      "id": "Floor_Path_Road",
+      "zh": "夏日·道路铺面",
+      "en": "Floor Path Road"
+    },
+    {
+      "id": "Floor_Path_Road_02",
+      "zh": "夏日·道路铺面 02",
+      "en": "Floor Path Road 02"
+    },
+    {
+      "id": "Floor_Path_Road_03",
+      "zh": "夏日·道路铺面 03",
+      "en": "Floor Path Road 03"
+    },
+    {
+      "id": "Floor_Road_Path_04",
+      "zh": "夏日·道路铺面 04",
+      "en": "Floor Road Path 04"
+    },
+    {
+      "id": "Flooring_01",
+      "zh": "夏日·地板 01",
+      "en": "Flooring 01"
+    },
+    {
+      "id": "Floors",
+      "zh": "夏日·地面组",
+      "en": "Floors"
+    },
+    {
+      "id": "h9_pool_water_01",
+      "zh": "泳池水面 01",
+      "en": "h9 pool water 01"
+    },
+    {
+      "id": "Ice_StraightB 15",
+      "zh": "冬季·冰面直线B",
+      "en": "Ice StraightB 15"
+    },
+    {
+      "id": "Ice_StraightB 15 (37)",
+      "zh": "冬季·冰面直线B 37",
+      "en": "Ice StraightB 15 (37)"
+    },
+    {
+      "id": "Ice_StraightB 15 (38)",
+      "zh": "冬季·冰面直线B 38",
+      "en": "Ice StraightB 15 (38)"
+    },
+    {
+      "id": "Ice_StraightB 15 (39)",
+      "zh": "冬季·冰面直线B 39",
+      "en": "Ice StraightB 15 (39)"
+    },
+    {
+      "id": "Ice_StraightB 15 (40)",
+      "zh": "冬季·冰面直线B 40",
+      "en": "Ice StraightB 15 (40)"
+    },
+    {
+      "id": "Ice_StraightB 15 (41)",
+      "zh": "冬季·冰面直线B 41",
+      "en": "Ice StraightB 15 (41)"
+    },
+    {
+      "id": "Ice_StraightB 15 (42)",
+      "zh": "冬季·冰面直线B 42",
+      "en": "Ice StraightB 15 (42)"
+    },
+    {
+      "id": "Ice_StraightB 15 (43)",
+      "zh": "冬季·冰面直线B 43",
+      "en": "Ice StraightB 15 (43)"
+    },
+    {
+      "id": "Ice_StraightB 15 (44)",
+      "zh": "冬季·冰面直线B 44",
+      "en": "Ice StraightB 15 (44)"
+    },
+    {
+      "id": "Ice_StraightB 15 (45)",
+      "zh": "冬季·冰面直线B 45",
+      "en": "Ice StraightB 15 (45)"
+    },
+    {
+      "id": "Ice_StraightB 15 (46)",
+      "zh": "冬季·冰面直线B 46",
+      "en": "Ice StraightB 15 (46)"
+    },
+    {
+      "id": "Ice_StraightB 15 (47)",
+      "zh": "冬季·冰面直线B 47",
+      "en": "Ice StraightB 15 (47)"
+    },
+    {
+      "id": "Ice_StraightB 15 (48)",
+      "zh": "冬季·冰面直线B 48",
+      "en": "Ice StraightB 15 (48)"
+    },
+    {
+      "id": "Ice_StraightB 15 (49)",
+      "zh": "冬季·冰面直线B 49",
+      "en": "Ice StraightB 15 (49)"
+    },
+    {
+      "id": "Ice_StraightB 15 (50)",
+      "zh": "冬季·冰面直线B 50",
+      "en": "Ice StraightB 15 (50)"
+    },
+    {
+      "id": "Ice_StraightB 15 (51)",
+      "zh": "冬季·冰面直线B 51",
+      "en": "Ice StraightB 15 (51)"
+    },
+    {
+      "id": "Ice_StraightB 15 (52)",
+      "zh": "冬季·冰面直线B 52",
+      "en": "Ice StraightB 15 (52)"
+    },
+    {
+      "id": "Ice_StraightB 15 (53)",
+      "zh": "冬季·冰面直线B 53",
+      "en": "Ice StraightB 15 (53)"
+    },
+    {
+      "id": "Ice_StraightB 15 (54)",
+      "zh": "冬季·冰面直线B 54",
+      "en": "Ice StraightB 15 (54)"
+    },
+    {
+      "id": "Ice_StraightB 15 (55)",
+      "zh": "冬季·冰面直线B 55",
+      "en": "Ice StraightB 15 (55)"
+    },
+    {
+      "id": "Ice_StraightB 15 (56)",
+      "zh": "冬季·冰面直线B 56",
+      "en": "Ice StraightB 15 (56)"
+    },
+    {
+      "id": "Ice_StraightB 15 (57)",
+      "zh": "冬季·冰面直线B 57",
+      "en": "Ice StraightB 15 (57)"
+    },
+    {
+      "id": "Ice_StraightB 15 (58)",
+      "zh": "冬季·冰面直线B 58",
+      "en": "Ice StraightB 15 (58)"
+    },
+    {
+      "id": "Ice_StraightB 15 (59)",
+      "zh": "冬季·冰面直线B 59",
+      "en": "Ice StraightB 15 (59)"
+    },
+    {
+      "id": "Ice_StraightB 15 (60)",
+      "zh": "冬季·冰面直线B 60",
+      "en": "Ice StraightB 15 (60)"
+    },
+    {
+      "id": "Ice_StraightB 15 (61)",
+      "zh": "冬季·冰面直线B 61",
+      "en": "Ice StraightB 15 (61)"
+    },
+    {
+      "id": "Ice_StraightB 15 (62)",
+      "zh": "冬季·冰面直线B 62",
+      "en": "Ice StraightB 15 (62)"
+    },
+    {
+      "id": "Ice_StraightB 15 (63)",
+      "zh": "冬季·冰面直线B 63",
+      "en": "Ice StraightB 15 (63)"
+    },
+    {
+      "id": "Ice_StraightB 15 (64)",
+      "zh": "冬季·冰面直线B 64",
+      "en": "Ice StraightB 15 (64)"
+    },
+    {
+      "id": "Kitchen_Tile_ 3",
+      "zh": "厨房地砖 3",
+      "en": "Kitchen Tile  3"
+    },
+    {
+      "id": "Kitchen_Tile_ 3 (152)",
+      "zh": "厨房地砖 3-152",
+      "en": "Kitchen Tile  3 (152)"
+    },
+    {
+      "id": "Kitchen_Tile_ 3 (170)",
+      "zh": "厨房地砖 3-170",
+      "en": "Kitchen Tile  3 (170)"
+    },
+    {
+      "id": "Kitchen_Tile_ 3 (75)",
+      "zh": "厨房地砖 3-75",
+      "en": "Kitchen Tile  3 (75)"
+    },
+    {
+      "id": "Large Water",
+      "zh": "大水面",
+      "en": "Large Water"
+    },
+    {
+      "id": "m_dlc07_1_3_water 1",
+      "zh": "部落·1-3 水面",
+      "en": "m dlc07 1 3 water 1"
+    },
+    {
+      "id": "m_dlc07_2_1_water_01 1",
+      "zh": "部落·2-1 水面 01",
+      "en": "m dlc07 2 1 water 01 1"
+    },
+    {
+      "id": "m_dlc07_battlement_wall_02_m_dlc07_stone_half_block_02_a1",
+      "zh": "部落·城墙石半块 02",
+      "en": "m dlc07 battlement wall 02 m dlc07 stone half block 02 a1"
+    },
+    {
+      "id": "m_dlc07_battlement_wall_02_m_dlc07_stone_half_block_02_a1 (1)",
+      "zh": "部落·城墙石半块 02-1",
+      "en": "m dlc07 battlement wall 02 m dlc07 stone half block 02 a1 (1)"
+    },
+    {
+      "id": "m_dlc07_hiddencity_floor_01",
+      "zh": "部落·隐藏城市地面 01",
+      "en": "m dlc07 hiddencity floor 01"
+    },
+    {
+      "id": "m_dlc07_hiddencity_floor_02",
+      "zh": "部落·隐藏城市地面 02",
+      "en": "m dlc07 hiddencity floor 02"
+    },
+    {
+      "id": "m_dlc07_sewer_stones_01",
+      "zh": "部落·下水道石块",
+      "en": "m dlc07 sewer stones 01"
+    },
+    {
+      "id": "m_dlc07_sewer_stones_01 (1)",
+      "zh": "部落·下水道石块 1",
+      "en": "m dlc07 sewer stones 01 (1)"
+    },
+    {
+      "id": "m_dlc07_stone_broken_block_02",
+      "zh": "石块",
+      "en": "m dlc07 stone broken block 02"
+    },
+    {
+      "id": "m_dlc07_stone_broken_block_03",
+      "zh": "石块",
+      "en": "m dlc07 stone broken block 03"
+    },
+    {
+      "id": "m_dlc07_stone_broken_block_04",
+      "zh": "石块",
+      "en": "m dlc07 stone broken block 04"
+    },
+    {
+      "id": "m_dlc07_stone_broken_block_05",
+      "zh": "石块",
+      "en": "m dlc07 stone broken block 05"
+    },
+    {
+      "id": "m_dlc07_stone_broken_block_06",
+      "zh": "石块",
+      "en": "m dlc07 stone broken block 06"
+    },
+    {
+      "id": "m_dlc07_water_3_2_01",
+      "zh": "部落·3-2 水面",
+      "en": "m dlc07 water 3 2 01"
+    },
+    {
+      "id": "m_dlc07_water_3_2_01 (1)",
+      "zh": "部落·3-2 水面 1",
+      "en": "m dlc07 water 3 2 01 (1)"
+    },
+    {
+      "id": "m_dlc10_water_middle",
+      "zh": "春节·水面中段",
+      "en": "m dlc10 water middle"
+    },
+    {
+      "id": "m_dlc11_Banana_01",
+      "zh": "夏日·皮纳塔香蕉 01",
+      "en": "m dlc11 Banana 01"
+    },
+    {
+      "id": "m_dlc11_pinata_bush_02",
+      "zh": "夏日·皮纳塔灌木 02",
+      "en": "m dlc11 pinata bush 02"
+    },
+    {
+      "id": "m_dlc2_palmtree_canopy_02",
+      "zh": "海滩·棕榈树冠 02",
+      "en": "m dlc2 palmtree canopy 02"
+    },
+    {
+      "id": "m_dlc2_seaplane_ThroneRoom_01 wet_sand",
+      "zh": "海滩·王座厅湿沙",
+      "en": "m dlc2 seaplane ThroneRoom 01 wet sand"
+    },
+    {
+      "id": "m_dlc3_level_02_snowfloor_03",
+      "zh": "冬季·1-2 雪地 03",
+      "en": "m dlc3 level 02 snowfloor 03"
+    },
+    {
+      "id": "m_dlc4_floor_Stone1_2_01",
+      "zh": "火锅·1-2 石地 01",
+      "en": "m dlc4 floor Stone1 2 01"
+    },
+    {
+      "id": "m_dlc4_lvl4_river_01",
+      "zh": "火锅·4 河流 01",
+      "en": "m dlc4 lvl4 river 01"
+    },
+    {
+      "id": "m_dlc4_mud_1-1",
+      "zh": "火锅·1-1 泥地",
+      "en": "m dlc4 mud 1-1"
+    },
+    {
+      "id": "m_dlc5_camp_4_1_river",
+      "zh": "露营·4-1 河流",
+      "en": "m dlc5 camp 4 1 river"
+    },
+    {
+      "id": "m_dlc5_camp_water_Special",
+      "zh": "露营·特殊水面",
+      "en": "m dlc5 camp water Special"
+    },
+    {
+      "id": "m_dlc5_cliff_2_3",
+      "zh": "露营·2-3 崖壁",
+      "en": "m dlc5 cliff 2 3"
+    },
+    {
+      "id": "m_dlc5_cliffs_1_4",
+      "zh": "露营·1-4 崖壁",
+      "en": "m dlc5 cliffs 1 4"
+    },
+    {
+      "id": "m_dlc5_forest_floor_1_4",
+      "zh": "露营·1-4 森林地面",
+      "en": "m dlc5 forest floor 1 4"
+    },
+    {
+      "id": "m_dlc5_grasscards_1_4",
+      "zh": "露营·1-4 草地贴片",
+      "en": "m dlc5 grasscards 1 4"
+    },
+    {
+      "id": "m_dlc5_grasscards_2_3",
+      "zh": "露营·2-3 草地贴片",
+      "en": "m dlc5 grasscards 2 3"
+    },
+    {
+      "id": "m_dlc5_ground_2_5",
+      "zh": "露营·2-5 地面",
+      "en": "m dlc5 ground 2 5"
+    },
+    {
+      "id": "m_dlc5_small_rock_01",
+      "zh": "露营·小岩石 01",
+      "en": "m dlc5 small rock 01"
+    },
+    {
+      "id": "m_dlc5_small_rock_02",
+      "zh": "露营·小岩石 02",
+      "en": "m dlc5 small rock 02"
+    },
+    {
+      "id": "m_dlc5_small_rock_03",
+      "zh": "露营·小岩石 03",
+      "en": "m dlc5 small rock 03"
+    },
+    {
+      "id": "m_dlc5_small_rock_04",
+      "zh": "露营·小岩石 04",
+      "en": "m dlc5 small rock 04"
+    },
+    {
+      "id": "m_dlc5_small_rock_04 (1)",
+      "zh": "露营·小岩石 04-1",
+      "en": "m dlc5 small rock 04 (1)"
+    },
+    {
+      "id": "m_dlc5_small_rock_05",
+      "zh": "露营·小岩石 05",
+      "en": "m dlc5 small rock 05"
+    },
+    {
+      "id": "m_dlc5_small_rock_06",
+      "zh": "露营·小岩石 06",
+      "en": "m dlc5 small rock 06"
+    },
+    {
+      "id": "m_dlc5_small_rock_07",
+      "zh": "露营·小岩石 07",
+      "en": "m dlc5 small rock 07"
+    },
+    {
+      "id": "m_dlc5_small_rock_08",
+      "zh": "露营·小岩石 08",
+      "en": "m dlc5 small rock 08"
+    },
+    {
+      "id": "m_dlc5_small_rock_09",
+      "zh": "露营·小岩石 09",
+      "en": "m dlc5 small rock 09"
+    },
+    {
+      "id": "m_dlc5_small_rock_10",
+      "zh": "露营·小岩石 10",
+      "en": "m dlc5 small rock 10"
+    },
+    {
+      "id": "m_grave_tree_02",
+      "zh": "墓地树 02",
+      "en": "m grave tree 02"
+    },
+    {
+      "id": "m_streetlamp_01",
+      "zh": "路灯 01",
+      "en": "m streetlamp 01"
+    },
+    {
+      "id": "m_streetlamp_01 (1)",
+      "zh": "路灯 01-1",
+      "en": "m streetlamp 01 (1)"
+    },
+    {
+      "id": "m_streetlamp_01 (2)",
+      "zh": "路灯 01-2",
+      "en": "m streetlamp 01 (2)"
+    },
+    {
+      "id": "m_streetlamp_01 (3)",
+      "zh": "路灯 01-3",
+      "en": "m streetlamp 01 (3)"
+    },
+    {
+      "id": "m_streetlamp_01 (4)",
+      "zh": "路灯 01-4",
+      "en": "m streetlamp 01 (4)"
+    },
+    {
+      "id": "m_streetlamp_01 (5)",
+      "zh": "路灯 01-5",
+      "en": "m streetlamp 01 (5)"
+    },
+    {
+      "id": "m_streetlamp_01 (6)",
+      "zh": "路灯 01-6",
+      "en": "m streetlamp 01 (6)"
+    },
+    {
+      "id": "m_streetlamp_01 (7)",
+      "zh": "路灯 01-7",
+      "en": "m streetlamp 01 (7)"
+    },
+    {
+      "id": "mat_dlc07_hiddencity_floor_01",
+      "zh": "部落·隐藏城市地面 01",
+      "en": "mat dlc07 hiddencity floor 01"
+    },
+    {
+      "id": "mat_dlc07_sink_water_01",
+      "zh": "部落·水槽水面 01",
+      "en": "mat dlc07 sink water 01"
+    },
+    {
+      "id": "mat_dlc08_sink_water_01",
+      "zh": "马戏团·水槽水面 01",
+      "en": "mat dlc08 sink water 01"
+    },
+    {
+      "id": "mat_dlc2_pool_01",
+      "zh": "海滩·泳池水面 01",
+      "en": "mat dlc2 pool 01"
+    },
+    {
+      "id": "mat_dlc2_pool_corner_02",
+      "zh": "海滩·泳池转角 02",
+      "en": "mat dlc2 pool corner 02"
+    },
+    {
+      "id": "mat_dlc2_poolwater_01",
+      "zh": "海滩·泳池水面 01",
+      "en": "mat dlc2 poolwater 01"
+    },
+    {
+      "id": "mat_dlc2_river_foam_01",
+      "zh": "海滩·河水泡沫 01",
+      "en": "mat dlc2 river foam 01"
+    },
+    {
+      "id": "mat_dlc2_sand_02",
+      "zh": "海滩·沙地 02",
+      "en": "mat dlc2 sand 02"
+    },
+    {
+      "id": "mat_dlc2_sand_10",
+      "zh": "海滩·沙地 10",
+      "en": "mat dlc2 sand 10"
+    },
+    {
+      "id": "mat_dlc2_sand_18",
+      "zh": "海滩·沙地 18",
+      "en": "mat dlc2 sand 18"
+    },
+    {
+      "id": "mat_dlc2_sand_19",
+      "zh": "海滩·沙地 19",
+      "en": "mat dlc2 sand 19"
+    },
+    {
+      "id": "mat_dlc2_sand_decal_01",
+      "zh": "海滩·沙地贴花 01",
+      "en": "mat dlc2 sand decal 01"
+    },
+    {
+      "id": "mat_dlc2_sand_decal_02",
+      "zh": "海滩·沙地贴花 02",
+      "en": "mat dlc2 sand decal 02"
+    },
+    {
+      "id": "mat_dlc2_sand_decal_03",
+      "zh": "海滩·沙地贴花 03",
+      "en": "mat dlc2 sand decal 03"
+    },
+    {
+      "id": "mat_dlc2_shoreline_animatoncontrol_01_transparent",
+      "zh": "海滩·海岸线（透明）",
+      "en": "mat dlc2 shoreline animatoncontrol 01 transparent"
+    },
+    {
+      "id": "mat_dlc2_shoreline_animatoncontrol_03",
+      "zh": "海滩·海岸线 03",
+      "en": "mat dlc2 shoreline animatoncontrol 03"
+    },
+    {
+      "id": "mat_dlc2_shoreline_animatoncontrol_04",
+      "zh": "海滩·海岸线 04",
+      "en": "mat dlc2 shoreline animatoncontrol 04"
+    },
+    {
+      "id": "mat_dlc2_shoreline_animatoncontrol_05",
+      "zh": "海滩·海岸线 05",
+      "en": "mat dlc2 shoreline animatoncontrol 05"
+    },
+    {
+      "id": "mat_dlc2_shoreline_animatoncontrol_06",
+      "zh": "海滩·海岸线 06",
+      "en": "mat dlc2 shoreline animatoncontrol 06"
+    },
+    {
+      "id": "mat_dlc3_ice_floor_01",
+      "zh": "冬季·冰面地砖 01",
+      "en": "mat dlc3 ice floor 01"
+    },
+    {
+      "id": "mat_dlc3_ice_floor_02",
+      "zh": "冬季·冰面地砖 02",
+      "en": "mat dlc3 ice floor 02"
+    },
+    {
+      "id": "mat_dlc3_iceedge_01",
+      "zh": "冬季·冰缘 01",
+      "en": "mat dlc3 iceedge 01"
+    },
+    {
+      "id": "mat_dlc3_iceedge_02",
+      "zh": "冬季·冰缘 02",
+      "en": "mat dlc3 iceedge 02"
+    },
+    {
+      "id": "mat_dlc3_snow_01",
+      "zh": "冬季·雪地 01",
+      "en": "mat dlc3 snow 01"
+    },
+    {
+      "id": "mat_dlc4_grass_02_objectspace",
+      "zh": "火锅·草地 02（物体空间）",
+      "en": "mat dlc4 grass 02 objectspace"
+    },
+    {
+      "id": "mat_dlc4_water_02",
+      "zh": "火锅·水面 02",
+      "en": "mat dlc4 water 02"
+    },
+    {
+      "id": "mat_dlc4_water_03",
+      "zh": "火锅·水面 03",
+      "en": "mat dlc4 water 03"
+    },
+    {
+      "id": "mat_dlc5_ground_1_4",
+      "zh": "露营·1-4 地面",
+      "en": "mat dlc5 ground 1 4"
+    },
+    {
+      "id": "mat_dlc5_ground_2_3",
+      "zh": "露营·2-3 地面",
+      "en": "mat dlc5 ground 2 3"
+    },
+    {
+      "id": "mat_dlc9_snow_01",
+      "zh": "圣诞·雪地 01",
+      "en": "mat dlc9 snow 01"
+    },
+    {
+      "id": "mat_raft_water_bottom _05",
+      "zh": "木筏·水底 05",
+      "en": "mat raft water bottom  05"
+    },
+    {
+      "id": "mat_raft_water_bottom _08",
+      "zh": "木筏·水底 08",
+      "en": "mat raft water bottom  08"
+    },
+    {
+      "id": "NB1_Road_receive_noCast_Building",
+      "zh": "夏日·北岸1 道路建筑",
+      "en": "NB1 Road receive noCast Building"
+    },
+    {
+      "id": "NB1_Road_receive_noCast_Road",
+      "zh": "夏日·北岸1 道路",
+      "en": "NB1 Road receive noCast Road"
+    },
+    {
+      "id": "NB4_Road_receive_noCast_Building",
+      "zh": "夏日·北岸4 道路建筑",
+      "en": "NB4 Road receive noCast Building"
+    },
+    {
+      "id": "NB4_Road_receive_noCast_Road",
+      "zh": "夏日·北岸4 道路",
+      "en": "NB4 Road receive noCast Road"
+    },
+    {
+      "id": "p_dlc07_path_corner_in_01 (1)",
+      "zh": "部落·道路转角内侧 01",
+      "en": "p dlc07 path corner in 01 (1)"
+    },
+    {
+      "id": "p_dlc07_path_side_01 (10)",
+      "zh": "部落·道路侧边 01-10",
+      "en": "p dlc07 path side 01 (10)"
+    },
+    {
+      "id": "p_dlc07_path_side_01 (6)",
+      "zh": "部落·道路侧边 01-6",
+      "en": "p dlc07 path side 01 (6)"
+    },
+    {
+      "id": "p_dlc07_path_side_01 (7)",
+      "zh": "部落·道路侧边 01-7",
+      "en": "p dlc07 path side 01 (7)"
+    },
+    {
+      "id": "p_dlc07_road_01 (11)",
+      "zh": "部落·道路 01-11",
+      "en": "p dlc07 road 01 (11)"
+    },
+    {
+      "id": "p_dlc07_road_01 (18)",
+      "zh": "部落·道路 01-18",
+      "en": "p dlc07 road 01 (18)"
+    },
+    {
+      "id": "p_dlc07_stone_kerb_01 (2)",
+      "zh": "部落·石路缘 01-2",
+      "en": "p dlc07 stone kerb 01 (2)"
+    },
+    {
+      "id": "p_dlc07_stone_kerb_01 (3)",
+      "zh": "部落·石路缘 01-3",
+      "en": "p dlc07 stone kerb 01 (3)"
+    },
+    {
+      "id": "p_dlc07_stone_kerb_01 (4)",
+      "zh": "部落·石路缘 01-4",
+      "en": "p dlc07 stone kerb 01 (4)"
+    },
+    {
+      "id": "p_dlc07_stone_kerb_01 (5)",
+      "zh": "部落·石路缘 01-5",
+      "en": "p dlc07 stone kerb 01 (5)"
+    },
+    {
+      "id": "p_dlc07_stone_kerb_01 (6)",
+      "zh": "部落·石路缘 01-6",
+      "en": "p dlc07 stone kerb 01 (6)"
+    },
+    {
+      "id": "p_dlc07_stone_kerb_01 (7)",
+      "zh": "部落·石路缘 01-7",
+      "en": "p dlc07 stone kerb 01 (7)"
+    },
+    {
+      "id": "p_dlc07_stone_kerb_01 (8)",
+      "zh": "部落·石路缘 01-8",
+      "en": "p dlc07 stone kerb 01 (8)"
+    },
+    {
+      "id": "p_dlc07_stone_kerb_01 (9)",
+      "zh": "部落·石路缘 01-9",
+      "en": "p dlc07 stone kerb 01 (9)"
+    },
+    {
+      "id": "p_dlc08_city_bench_01",
+      "zh": "马戏团·城市长椅 01",
+      "en": "p dlc08 city bench 01"
+    },
+    {
+      "id": "p_dlc08_city_bench_01 (2)",
+      "zh": "马戏团·城市长椅 01-2",
+      "en": "p dlc08 city bench 01 (2)"
+    },
+    {
+      "id": "p_dlc08_city_bench_01 (3)",
+      "zh": "马戏团·城市长椅 01-3",
+      "en": "p dlc08 city bench 01 (3)"
+    },
+    {
+      "id": "p_dlc08_city_bench_01 (4)",
+      "zh": "马戏团·城市长椅 01-4",
+      "en": "p dlc08 city bench 01 (4)"
+    },
+    {
+      "id": "p_dlc08_city_bench_01 (5)",
+      "zh": "马戏团·城市长椅 01-5",
+      "en": "p dlc08 city bench 01 (5)"
+    },
+    {
+      "id": "p_dlc08_city_bench_01 (6)",
+      "zh": "马戏团·城市长椅 01-6",
+      "en": "p dlc08 city bench 01 (6)"
+    },
+    {
+      "id": "p_dlc08_city_bench_01 (7)",
+      "zh": "马戏团·城市长椅 01-7",
+      "en": "p dlc08 city bench 01 (7)"
+    },
+    {
+      "id": "p_dlc08_city_bench_01 (8)",
+      "zh": "马戏团·城市长椅 01-8",
+      "en": "p dlc08 city bench 01 (8)"
+    },
+    {
+      "id": "p_dlc09_streetlamp_01",
+      "zh": "圣诞·路灯 01",
+      "en": "p dlc09 streetlamp 01"
+    },
+    {
+      "id": "p_dlc09_streetlamp_01 (1)",
+      "zh": "圣诞·路灯 01-1",
+      "en": "p dlc09 streetlamp 01 (1)"
+    },
+    {
+      "id": "p_dlc09_streetlamp_01 (2)",
+      "zh": "圣诞·路灯 01-2",
+      "en": "p dlc09 streetlamp 01 (2)"
+    },
+    {
+      "id": "p_dlc09_streetlamp_01 (3)",
+      "zh": "圣诞·路灯 01-3",
+      "en": "p dlc09 streetlamp 01 (3)"
+    },
+    {
+      "id": "p_dlc09_streetlamp_01 (4)",
+      "zh": "圣诞·路灯 01-4",
+      "en": "p dlc09 streetlamp 01 (4)"
+    },
+    {
+      "id": "p_dlc09_streetlamp_01 (5)",
+      "zh": "圣诞·路灯 01-5",
+      "en": "p dlc09 streetlamp 01 (5)"
+    },
+    {
+      "id": "p_dlc09_streetlamp_01 (6)",
+      "zh": "圣诞·路灯 01-6",
+      "en": "p dlc09 streetlamp 01 (6)"
+    },
+    {
+      "id": "p_dlc09_streetlamp_01 (7)",
+      "zh": "圣诞·路灯 01-7",
+      "en": "p dlc09 streetlamp 01 (7)"
+    },
+    {
+      "id": "p_dlc5_road_white_line_01 (12)",
+      "zh": "露营·道路白线 01-12",
+      "en": "p dlc5 road white line 01 (12)"
+    },
+    {
+      "id": "p_dlc5_rock_01",
+      "zh": "露营·岩石 01",
+      "en": "p dlc5 rock 01"
+    },
+    {
+      "id": "p_dlc5_rock_01 (1)",
+      "zh": "露营·岩石 01-1",
+      "en": "p dlc5 rock 01 (1)"
+    },
+    {
+      "id": "p_dlc5_rock_03",
+      "zh": "露营·岩石 03",
+      "en": "p dlc5 rock 03"
+    },
+    {
+      "id": "p_dlc5_rock_03 (1)",
+      "zh": "露营·岩石 03-1",
+      "en": "p dlc5 rock 03 (1)"
+    },
+    {
+      "id": "p_dlc5_small_rock_01",
+      "zh": "露营·小岩石 01",
+      "en": "p dlc5 small rock 01"
+    },
+    {
+      "id": "p_dlc5_small_rock_01 (1)",
+      "zh": "露营·小岩石 01-1",
+      "en": "p dlc5 small rock 01 (1)"
+    },
+    {
+      "id": "p_dlc5_small_rock_01 (2)",
+      "zh": "露营·小岩石 01-2",
+      "en": "p dlc5 small rock 01 (2)"
+    },
+    {
+      "id": "p_dlc5_small_rock_02",
+      "zh": "露营·小岩石 02",
+      "en": "p dlc5 small rock 02"
+    },
+    {
+      "id": "p_dlc5_small_rock_02 (1)",
+      "zh": "露营·小岩石 02-1",
+      "en": "p dlc5 small rock 02 (1)"
+    },
+    {
+      "id": "p_dlc5_small_rock_03",
+      "zh": "露营·小岩石 03",
+      "en": "p dlc5 small rock 03"
+    },
+    {
+      "id": "p_dlc5_small_rock_03 (1)",
+      "zh": "露营·小岩石 03-1",
+      "en": "p dlc5 small rock 03 (1)"
+    },
+    {
+      "id": "p_dlc7_city_bench_01",
+      "zh": "部落·城市长椅 01",
+      "en": "p dlc7 city bench 01"
+    },
+    {
+      "id": "p_dlc7_city_bench_01 (1)",
+      "zh": "部落·城市长椅 01-1",
+      "en": "p dlc7 city bench 01 (1)"
+    },
+    {
+      "id": "p_dlc7_city_bench_01 (2)",
+      "zh": "部落·城市长椅 01-2",
+      "en": "p dlc7 city bench 01 (2)"
+    },
+    {
+      "id": "p_dlc7_city_bench_01 (3)",
+      "zh": "部落·城市长椅 01-3",
+      "en": "p dlc7 city bench 01 (3)"
+    },
+    {
+      "id": "p_dlc7_city_bench_01 (4)",
+      "zh": "部落·城市长椅 01-4",
+      "en": "p dlc7 city bench 01 (4)"
+    },
+    {
+      "id": "p_dlc7_city_bench_01 (5)",
+      "zh": "部落·城市长椅 01-5",
+      "en": "p dlc7 city bench 01 (5)"
+    },
+    {
+      "id": "p_dlc7_city_bench_01 (6)",
+      "zh": "部落·城市长椅 01-6",
+      "en": "p dlc7 city bench 01 (6)"
+    },
+    {
+      "id": "PoolWaterSurfaceCombined Floor Tile",
+      "zh": "泳池水面地砖",
+      "en": "PoolWaterSurfaceCombined Floor Tile"
+    },
+    {
+      "id": "raft_water_Combined Floor Tile",
+      "zh": "木筏水面地砖",
+      "en": "raft water Combined Floor Tile"
+    },
+    {
+      "id": "Roof_Flooring",
+      "zh": "屋顶地板",
+      "en": "Roof Flooring"
+    },
+    {
+      "id": "Roof_Flooring (1)",
+      "zh": "屋顶地板 1",
+      "en": "Roof Flooring (1)"
+    },
+    {
+      "id": "Roof_Flooring (2)",
+      "zh": "屋顶地板 2",
+      "en": "Roof Flooring (2)"
+    },
+    {
+      "id": "Sand",
+      "zh": "沙地",
+      "en": "Sand"
+    },
+    {
+      "id": "SandFloorCombined Floor Tile",
+      "zh": "沙地地砖",
+      "en": "SandFloorCombined Floor Tile"
+    },
+    {
+      "id": "SB2_Road_receive_noCast_Building",
+      "zh": "夏日·南岸2 道路建筑",
+      "en": "SB2 Road receive noCast Building"
+    },
+    {
+      "id": "SB2_Road_receive_noCast_Road",
+      "zh": "夏日·南岸2 道路",
+      "en": "SB2 Road receive noCast Road"
+    },
+    {
+      "id": "SB3_Road_receive_noCast_Building_01",
+      "zh": "夏日·南岸3 道路建筑 01",
+      "en": "SB3 Road receive noCast Building 01"
+    },
+    {
+      "id": "SB3_Road_receive_noCast_Building_02",
+      "zh": "夏日·南岸3 道路建筑 02",
+      "en": "SB3 Road receive noCast Building 02"
+    },
+    {
+      "id": "SB3_Road_receive_noCast_Road",
+      "zh": "夏日·南岸3 道路",
+      "en": "SB3 Road receive noCast Road"
+    },
+    {
+      "id": "tent_roof_placeholder_b",
+      "zh": "帐篷顶占位 B",
+      "en": "tent roof placeholder b"
+    },
+    {
+      "id": "Water",
+      "zh": "水面",
+      "en": "Water"
+    },
+    {
+      "id": "water",
+      "zh": "水面",
+      "en": "water"
+    },
+    {
+      "id": "Water 1",
+      "zh": "水面 1",
+      "en": "Water 1"
+    },
+    {
+      "id": "Water_Bottom_Combined Floor Tile",
+      "zh": "水底地砖",
+      "en": "Water Bottom Combined Floor Tile"
+    }
+  ]
+}

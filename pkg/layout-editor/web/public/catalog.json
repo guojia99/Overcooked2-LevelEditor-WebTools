@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-27T06:45:58.771Z",
+  "generatedAt": "2026-10-29T03:29:29.412Z",
   "schemaVersion": 10,
   "gridCellSize": 1.2,
-  "itemCount": 3502,
+  "itemCount": 3586,
   "itemChunks": [
     "catalog/items.0.json",
     "catalog/items.1.json",
@@ -120,7 +120,7 @@
       "labelZh": "地板 / 背景",
       "labelEn": "Floor & background surfaces",
       "layoutTier": "floor",
-      "itemCount": 163
+      "itemCount": 189
     },
     {
       "key": "decor/food",
@@ -179,6 +179,13 @@
       "itemCount": 8
     },
     {
+      "key": "art/beach",
+      "labelZh": "装饰 · beach",
+      "labelEn": "Decor · beach",
+      "layoutTier": "decor",
+      "itemCount": 3
+    },
+    {
       "key": "art/beach_theme",
       "labelZh": "装饰 · 海滩主题",
       "labelEn": "Decor · beach_theme",
@@ -193,11 +200,25 @@
       "itemCount": 3
     },
     {
+      "key": "art/campsite",
+      "labelZh": "装饰 · campsite",
+      "labelEn": "Decor · campsite",
+      "layoutTier": "decor",
+      "itemCount": 6
+    },
+    {
       "key": "art/characters",
       "labelZh": "装饰 · 角色",
       "labelEn": "Decor · characters",
       "layoutTier": "decor",
       "itemCount": 24
+    },
+    {
+      "key": "art/chinatown",
+      "labelZh": "装饰 · chinatown",
+      "labelEn": "Decor · chinatown",
+      "layoutTier": "decor",
+      "itemCount": 2
     },
     {
       "key": "art/circus",
@@ -211,7 +232,7 @@
       "labelZh": "装饰 · 城市",
       "labelEn": "Decor · city",
       "layoutTier": "decor",
-      "itemCount": 2
+      "itemCount": 10
     },
     {
       "key": "art/city_sushi",
@@ -232,7 +253,7 @@
       "labelZh": "装饰 · 庭院",
       "labelEn": "Decor · courtyard",
       "layoutTier": "decor",
-      "itemCount": 20
+      "itemCount": 22
     },
     {
       "key": "art/data",
@@ -361,6 +382,13 @@
       "itemCount": 1
     },
     {
+      "key": "art/festivemashup",
+      "labelZh": "装饰 · festivemashup",
+      "labelEn": "Decor · festivemashup",
+      "layoutTier": "decor",
+      "itemCount": 1
+    },
+    {
       "key": "art/fireworksmechanical",
       "labelZh": "装饰 · 烟花机关",
       "labelEn": "Decor · fireworksmechanical",
@@ -403,11 +431,18 @@
       "itemCount": 5
     },
     {
+      "key": "art/inside",
+      "labelZh": "装饰 · inside",
+      "labelEn": "Decor · inside",
+      "layoutTier": "decor",
+      "itemCount": 2
+    },
+    {
       "key": "art/keep",
       "labelZh": "装饰 · 城堡",
       "labelEn": "Decor · keep",
       "layoutTier": "decor",
-      "itemCount": 40
+      "itemCount": 41
     },
     {
       "key": "art/landscapemechanism",
@@ -564,6 +599,13 @@
       "itemCount": 55
     },
     {
+      "key": "art/summer",
+      "labelZh": "装饰 · summer",
+      "labelEn": "Decor · summer",
+      "layoutTier": "decor",
+      "itemCount": 31
+    },
+    {
       "key": "art/swamp",
       "labelZh": "装饰 · 沼泽",
       "labelEn": "Decor · swamp",
@@ -604,6 +646,13 @@
       "labelEn": "Decor · wizards_school",
       "layoutTier": "decor",
       "itemCount": 9
+    },
+    {
+      "key": "art/wonderland",
+      "labelZh": "装饰 · wonderland",
+      "labelEn": "Decor · wonderland",
+      "layoutTier": "decor",
+      "itemCount": 2
     }
   ],
   "taxonomy": {

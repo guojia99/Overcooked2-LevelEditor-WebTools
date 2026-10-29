@@ -322,16 +322,61 @@ public class EnvStatusDto
     public bool knowledgeLoaded;
     /** 手册词典已加载。 */
     public bool dictionaryLoaded;
-    /** 音频导出清单（audio-exports/audio-exports.json）存在。 */
+    /** 音频导出清单（exports/audio/audio-exports.json）存在。 */
     public bool audioExports;
-    /** 已导出的 ogg 数量（无导出时为 0）。 */
+    /** 已导出的 ogg/wav 数量（无导出时为 0）。 */
     public int audioExportClips;
+    /** 装饰双视图清单（exports/decor/manifest.json）存在且正面图可用。 */
+    public bool decorExports;
+    /** 装饰正面图数量。 */
+    public int decorExportFront;
+    /** 装饰背面图数量。 */
+    public int decorExportBack;
+    /** 桌台皮肤图标清单（exports/counter-skins/icons/manifest.json）存在。 */
+    public bool counterSkinIcons;
+    /** 桌台皮肤图标数量。 */
+    public int counterSkinIconCount;
+    /** 桌台皮肤 3D 清单（exports/counter-skins/manifest.json）存在。 */
+    public bool counterSkin3d;
+    /** 桌台皮肤 3D 条目数量。 */
+    public int counterSkin3dCount;
     /** 游戏 bundle 目录（StreamingAssets/Windows）存在。 */
     public bool gameBundles;
     /** 游戏 bundle 数量（不含 .meta）。 */
     public int gameBundleCount;
     /** dump_bundle/manifest.json（bundle 分析依赖）存在。 */
     public bool dumpManifest;
+}
+
+[Serializable]
+public class WebAssetsManifestDto
+{
+    public string version;
+    public string generatedAt;
+    public WebAssetCategoryDto audio;
+    public WebAssetCategoryDto counterSkins;
+    public WebAssetCategoryDto decor;
+}
+
+[Serializable]
+public class WebAssetCategoryDto
+{
+    public bool available;
+    public string manifest;
+    public string baseUrl;
+    public int count;
+    public int backCount;
+    public int iconCount;
+    public string version;
+}
+
+[Serializable]
+public class WebAssetExportStartDto
+{
+    /** 强制重导（装饰默认只补缺失视图）。 */
+    public bool force;
+    /** 可选类别：audio / counter-icons / counter-3d / decor；空 = 全部。 */
+    public List<string> categories;
 }
 
 [Serializable]

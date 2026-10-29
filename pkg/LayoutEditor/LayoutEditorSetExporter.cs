@@ -501,6 +501,9 @@ public static class LayoutEditorSetExporter
             if (_status == "running")
                 return "已有导出任务正在进行（" + _setName + "），请等待完成后再试。";
         }
+        var webAssetStatus = LayoutEditorWebAssetExporter.GetStatus();
+        if (webAssetStatus != null && webAssetStatus.status == "running")
+            return "Web 资源导出正在进行中，请等待完成后再导出关卡集。";
         // 上次导出异常中断的 LevelSetInfo 备份先还原（此刻无导出在跑，安全）
         RecoverSetInfoBackups();
         var safeList = new List<string>();
@@ -948,6 +951,10 @@ public static class LayoutEditorSetExporter
                 EditorUtility.DisplayProgressBar("导出关卡集 " + joinedName,
                     "准备场景 " + i + "/" + totalScenes + "…", (float)i / (totalScenes + 1));
                 var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                // commonW6 去本地化：把 SO 指向的游戏 bundle 补进 LevelInfo.dependencies，
+                // 否则真机/编辑器 PseudoPrefabManager 找不到 bundle。
+                LayoutEditorCommonW6Dependencies.SyncForScene(
+                    scene, LayoutEditorLevelInfoResolver.ResolveForScene(scenePath));
                 // 一次性迁移兜底：旧关卡茶杯回收台仍带着旧默认 returnClean=true 时
                 // 在保存前改回 false（标记在 SaveScene 成功后落盘）。
                 var migratedTeacupReturns = LayoutEditorLayoutMigrations.ApplyToOpenScene(scene);

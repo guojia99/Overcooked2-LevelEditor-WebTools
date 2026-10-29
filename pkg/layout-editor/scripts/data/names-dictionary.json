@@ -4883,6 +4883,11 @@
       "en": "Fried Cheese Sticks"
     },
     {
+      "id": "FriedChicken",
+      "zh": "煎鸡肉",
+      "en": "Fried Chicken"
+    },
+    {
       "id": "friedchickenburger",
       "zh": "炸鸡汉堡",
       "en": "Fried Chicken Burger"

@@ -603,13 +603,6 @@ export async function fetchAudioExports(): Promise<AudioExportManifest | null> {
       return _audioExports;
     }
   } catch { /* ignore */ }
-  try {
-    const r = await fetch("/audio-exports.json");
-    if (r.ok) {
-      _audioExports = await r.json();
-      return _audioExports;
-    }
-  } catch { /* ignore */ }
   return null;
 }
 
@@ -702,6 +695,77 @@ export async function fetchSetExportStatus(): Promise<SetExportStatus> {
 export async function fetchDepsExportManifest(): Promise<DepsExportManifest> {
   const r = await fetch("/api/set/export/deps-manifest");
   return readApiJson<DepsExportManifest>(r);
+}
+
+// ==================== Web 资源导出（音频 / 桌台 / 装饰双视图） ====================
+
+export type WebAssetCategory = "audio" | "counter-icons" | "counter-3d" | "decor";
+
+export interface WebAssetCategoryInfo {
+  available: boolean;
+  manifest: string;
+  baseUrl: string;
+  count: number;
+  backCount: number;
+  iconCount: number;
+  version: string;
+}
+
+export interface WebAssetsManifest {
+  version: string;
+  generatedAt: string;
+  audio: WebAssetCategoryInfo;
+  counterSkins: WebAssetCategoryInfo;
+  decor: WebAssetCategoryInfo;
+}
+
+export interface WebAssetExportSummary {
+  audioClips: number;
+  audioFailed: number;
+  counterIcons: number;
+  counterIconsFailed: number;
+  counter3d: number;
+  counter3dFailed: number;
+  decorFront: number;
+  decorBack: number;
+  decorDetailFront: number;
+  decorDetailBack: number;
+  decorModels: number;
+  decorMissing: number;
+  decorFailed: number;
+}
+
+export interface WebAssetExportStatus {
+  status: "idle" | "running" | "done" | "error";
+  phase: string;
+  progress: number;
+  message: string;
+  error: string;
+  startedAt: string;
+  finishedAt: string;
+  durationMs: number;
+  categories: string[];
+  force: boolean;
+  summary: WebAssetExportSummary;
+}
+
+export async function startWebAssetsExport(force: boolean, categories: WebAssetCategory[]): Promise<void> {
+  const r = await fetch("/api/web-assets/export", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ force, categories }),
+  });
+  await readApiJson<{ ok?: boolean }>(r);
+}
+
+export async function fetchWebAssetsExportStatus(): Promise<WebAssetExportStatus> {
+  const r = await fetch("/api/web-assets/export/status", { cache: "no-store" });
+  return readApiJson<WebAssetExportStatus>(r);
+}
+
+export async function fetchWebAssetsManifest(): Promise<WebAssetsManifest> {
+  const r = await fetch("/api/web-assets/manifest", { cache: "no-store" });
+  return readApiJson<WebAssetsManifest>(r);
 }
 
 // ==================== CustomStub（随机食材箱等关卡代码）web 工具 ====================
@@ -1509,6 +1573,30 @@ let _counter3dVersion = "";
 export function counter3dUrl(name: string): string {
   const v = _counter3dVersion;
   return `/api/counter-skins/3d/${encodeURIComponent(name)}${v ? `?v=${encodeURIComponent(v)}` : ""}`;
+}
+
+let _counterIconVersion = "";
+let _counterIconVersionPromise: Promise<void> | null = null;
+
+/** 桌台图标清单（exports/counter-skins/icons/manifest.json）：只取版本号做缓存击穿。 */
+export function ensureCounterIconVersion(): Promise<void> {
+  if (_counterIconVersionPromise) return _counterIconVersionPromise;
+  _counterIconVersionPromise = fetch("/api/counter-skins/icons/manifest.json", { cache: "no-cache" })
+    .then((r) => (r.ok ? (r.json() as Promise<{ version?: string }>) : null))
+    .then((m) => {
+      _counterIconVersion = m?.version ?? "";
+    })
+    .catch(() => {
+      _counterIconVersion = "";
+    });
+  return _counterIconVersionPromise;
+}
+
+/** 桌台图标 URL（位于 exports/counter-skins/icons，经后端只读路由）。 */
+export function counterSkinIconUrl(file: string): string {
+  const name = file.replace(/\.png$/i, "");
+  const v = _counterIconVersion;
+  return `/api/counter-skins/icon/${encodeURIComponent(name)}.png${v ? `?v=${encodeURIComponent(v)}` : ""}`;
 }
 
 export async function fetchSwitchMaterials(): Promise<SwitchMaterialOption[]> {

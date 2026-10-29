@@ -3,7 +3,9 @@ import {
   LayerKey,
   LayerVisibility,
   ViewMode,
-  FloorSlabMode
+  FloorSlabMode,
+  DECOR_SOURCE_LIBS,
+  type DecorSourceLib
 } from "./state";
 import { dom, ROUTE } from "./dom";
 import { setStatus, setStatusTagged } from "./status";
@@ -16,6 +18,7 @@ import {
   fetchRecipeCatalog,
   fetchCounterAppearances,
   fetchCounter3dManifest,
+  ensureCounterIconVersion,
   fetchSwitchMaterials,
   fetchLevelSets,
   fetchLevelRecipes,
@@ -33,7 +36,7 @@ import {
 } from "./sceneIO";
 import { ingredientGuidById, rebuildIngredientLookup } from "./catalog";
 import { allDispenserPrefabIds, dispenserIngredientIds, utensilIntermediateRecipes } from "./recipeKnowledge";
-import { buildPalette, initPaletteGroupActions } from "./palette";
+import { buildPalette, decorSourceFilterButtonText, initPaletteGroupActions } from "./palette";
 import { loadDecorPreviewManifest, preloadDecorPreviews } from "./decorPreviewCache";
 import { setActiveCatalog, mergeCustomContentIntoCatalog } from "./customContentCatalog";
 import { buildFloorPalette, refreshFloorHeightPanel, refreshAfterHeightFilterChange } from "./floorPalette";
@@ -49,6 +52,7 @@ import { openRecipesDialog } from "./ui/recipesDialogs";
 import { requestTestLayout } from "./testLayout";
 import { openUtensilManager } from "./ui/utensilManager";
 import { openCounterSkinManager, ensureCounter3dLoaded } from "./ui/counterSkinManager";
+import { openWebAssetsExportModal } from "./ui/webAssetsExportModal";
 import { openCameraLightModal } from "./cameraLight";
 import { buildLightPalette } from "./lightPalette";
 import {
@@ -335,6 +339,11 @@ export function setLayer(layer: LayerKey): void {
     previewSizeEl.classList.toggle("hidden", layer !== "decor");
     previewSizeEl.value = S.decorPreviewSize;
   }
+  const sourceFilterEl = document.getElementById("decor-source-filter");
+  if (sourceFilterEl) {
+    sourceFilterEl.classList.toggle("hidden", layer !== "decor");
+    if (layer !== "decor") document.getElementById("decor-source-pop")?.classList.add("hidden");
+  }
   const filterRowEl = document.getElementById("palette-filter-row");
   if (filterRowEl) filterRowEl.classList.toggle("hidden", layer !== "decor");
   const groupActionsEl = document.getElementById("palette-group-actions");
@@ -432,6 +441,7 @@ export async function init() {
       draw();
     })
     .catch(() => {});
+  void ensureCounterIconVersion();
   buildPalette(catalog, "");
 
   const scenes = await fetchLevelSets().catch(() => []);
@@ -484,6 +494,50 @@ export async function init() {
     if (S.currentLayer === "decor") {
       buildPalette(catalog, (document.getElementById("palette-search") as HTMLInputElement).value);
     }
+  });
+
+  const sourceRoot = document.getElementById("decor-source-filter");
+  const sourceBtn = document.getElementById("decor-source-btn");
+  const sourcePop = document.getElementById("decor-source-pop");
+  const syncSourceFilterUi = () => {
+    if (sourceBtn) {
+      sourceBtn.textContent = decorSourceFilterButtonText(S.decorSourceFilter);
+      sourceBtn.setAttribute("aria-expanded", sourcePop && !sourcePop.classList.contains("hidden") ? "true" : "false");
+    }
+    sourcePop?.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((box) => {
+      box.checked = (S.decorSourceFilter as readonly string[]).indexOf(box.value) >= 0;
+    });
+  };
+  syncSourceFilterUi();
+  const applySourceFilter = (next: string[]) => {
+    const allow = new Set<string>(DECOR_SOURCE_LIBS);
+    S.decorSourceFilter = next.filter((id): id is DecorSourceLib => allow.has(id));
+    try {
+      localStorage.setItem("decorSourceFilter", JSON.stringify(S.decorSourceFilter));
+    } catch {
+      /* ignore */
+    }
+    syncSourceFilterUi();
+    if (S.currentLayer === "decor") {
+      buildPalette(catalog, (document.getElementById("palette-search") as HTMLInputElement).value);
+    }
+  };
+  sourceBtn?.addEventListener("click", () => {
+    sourcePop?.classList.toggle("hidden");
+    syncSourceFilterUi();
+  });
+  document.getElementById("decor-source-all")?.addEventListener("click", () => applySourceFilter([]));
+  sourcePop?.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((box) => {
+    box.addEventListener("change", () => {
+      const picked = Array.from(sourcePop.querySelectorAll<HTMLInputElement>('input[type="checkbox"]:checked')).map((el) => el.value);
+      applySourceFilter(picked);
+    });
+  });
+  document.addEventListener("click", (e) => {
+    if (!sourceRoot || !sourcePop || sourcePop.classList.contains("hidden")) return;
+    if (sourceRoot.contains(e.target as Node)) return;
+    sourcePop.classList.add("hidden");
+    syncSourceFilterUi();
   });
 
   // 装饰层分组方式：主题（DLC/场景）/ 类型（建筑构件…）/ 用途（铺地…）
@@ -559,6 +613,7 @@ export async function init() {
   document.getElementById("btn-recipes")!.addEventListener("click", () => void openRecipesDialog());
   document.getElementById("btn-utensils")!.addEventListener("click", () => openUtensilManager());
   document.getElementById("btn-counters")!.addEventListener("click", () => openCounterSkinManager());
+  document.getElementById("btn-web-assets-export")!.addEventListener("click", () => openWebAssetsExportModal());
   document.getElementById("btn-camera-light")!.addEventListener("click", () => openCameraLightModal());
   document.getElementById("chk-auto-intermediates")!.addEventListener("change", (e) => {
     S.autoIntermediates = (e.target as HTMLInputElement).checked;

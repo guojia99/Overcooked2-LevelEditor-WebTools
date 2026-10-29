@@ -71,6 +71,8 @@ import {
   PORTAL_COLOR_NAMES
 } from "./constants";
 import { floatingDragBarHtml, positionFloatingAt } from "./floatingPanelDrag";
+import { decorPreviewUrl, type DecorView } from "../decorPreviewCache";
+import { openDecorPreviewLightbox } from "./decorPreviewLightbox";
 
 export function positionFloating(el: HTMLElement, clientX: number, clientY: number) {
   positionFloatingAt(el, clientX, clientY);
@@ -358,6 +360,21 @@ function dispenserDetailHtml(item: EditorItem): string {
   return `<dt>食材</dt><dd>${ingredientNameZh(S.ingredientsCache, item.dispenser?.spawnerItemPrefabGuid)}</dd>`;
 }
 
+/** 装饰物详情：正面/背面双视图左右并排（默认正视；无背面时只显示正面）。 */
+function decorViewsHtml(cat: CatalogItem | undefined, guid: string, foodIcon: string): string {
+  if (!cat || cat.layoutTier !== "decor") return "";
+  const front = decorPreviewUrl(guid, "front") || foodIcon;
+  const back = decorPreviewUrl(guid, "back");
+  if (!front && !back) return "";
+  const frontHtml = front
+    ? `<figure data-decor-view="front" title="点击放大查看"><img loading="lazy" decoding="async" src="${escHtml(front)}" alt="正面" /><figcaption>正面 · 点击放大</figcaption></figure>`
+    : `<figure class="si-decor-empty"><div>无正面图</div><figcaption>正面</figcaption></figure>`;
+  const backHtml = back
+    ? `<figure data-decor-view="back" title="点击放大查看"><img loading="lazy" decoding="async" src="${escHtml(back)}" alt="背面" /><figcaption>背面 · 点击放大</figcaption></figure>`
+    : `<figure class="si-decor-empty"><div>无背面图</div><figcaption>背面</figcaption></figure>`;
+  return `<div class="si-decor-views">${frontHtml}${backHtml}</div>`;
+}
+
 export function showDetail(item: EditorItem, clientX: number, clientY: number) {
   const cat = catalogItemForGuidOrPath(item.prefabGuid, item.prefabAssetPath);
   const fp = isAirWallItem(item)
@@ -408,8 +425,16 @@ export function showDetail(item: EditorItem, clientX: number, clientY: number) {
     </div>`
       : "";
 
+  const decorGuid = (cat?.guid || item.prefabGuid) ?? "";
+  const decorFoodIcon = cat?.ingredientDecor
+    ? `/icons/ingredients/${encodeURIComponent(cat.id)}.png`
+    : cat?.recipeDecor
+      ? `/icons/recipes/${encodeURIComponent(cat.id)}.png`
+      : "";
+
   dom.detailEl.innerHTML = `
     ${floatingDragBarHtml(`<h3>${itemLabel(item)}</h3>`)}
+    ${decorViewsHtml(cat, decorGuid, decorFoodIcon)}
     <dl>
       <dt>Prefab ID</dt><dd>${id}</dd>
       <dt>中文名</dt><dd>${cat?.nameZh ? tidyCatalogNameZh(cat.nameZh, cat.id) : "—"}</dd>
@@ -437,6 +462,12 @@ export function showDetail(item: EditorItem, clientX: number, clientY: number) {
 
   dom.detailEl.classList.remove("hidden");
   positionFloating(dom.detailEl, clientX, clientY);
+
+  dom.detailEl.querySelectorAll<HTMLElement>("[data-decor-view]").forEach((el) => {
+    el.addEventListener("click", () => {
+      openDecorPreviewLightbox(decorGuid, itemLabel(item), (el.dataset.decorView as DecorView) || "front");
+    });
+  });
 
   if (isAirWallItem(item)) {
     const hInp = document.getElementById("si-aw-h") as HTMLInputElement | null;

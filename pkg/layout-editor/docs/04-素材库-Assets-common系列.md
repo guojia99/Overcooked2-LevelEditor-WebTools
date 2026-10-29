@@ -149,6 +149,23 @@ AssetBundle assetBundle = AssetBundle.LoadFromFile(path);
 - 生成：`node layout-editor/scripts/gen-commonw3-migration-batch1.mjs [--apply]`；清单见 `backup_rebuild/.../自定义菜谱/_audit_docs/00-迁移清单-commonW3-batch1.md`。
 - 烘焙：commonW3 模型已全部烘焙完成（原 `Bake commonW3 …` 菜单已下线）；如需重新烘焙走 web 菜谱管理流程 → Build AssetBundles（`commonW3`）。
 
+### 2.1b commonW6 —— oc2_dlc_story 原版造景/地板补充（bundle 引用版）
+
+- 定位：`Assets/commonW6`，bundle 名 `commonW6`，由 Loader 动态发现、导出依赖包自动携带。
+- 架构（与 common01/02/03 一致）：
+  - `pseudo_prefab_so/oc2dlc/*.asset`：只存 `prefabName + bundleName + assetPath`，`assetPath` 指向游戏原 bundle 内的 prefab 或 model（`.fbx/.obj`）。
+  - `prefabs/oc2dlc/variants/`：单材质覆写变体（`PseudoPrefabMeshWithMaterial`，base prefab SO + material SO 均在 bundle）；多材质/隐藏子物体变体回退到基础 prefab 的 bundle SO（实例级多材质覆写不再保留）。
+  - `prefabs/oc2dlc/supplement/`：源场景 `scene-embedded-mesh` / `mesh-no-model-container` 解析回 bundle prefab/model 后的普通 wrapper；解析不到的不再本地烘焙，直接丢弃。
+  - `prefabs/oc2dlc/art/<theme>/`：调色板按 base id 去重后的可摆放造景（bundle 引用）。
+  - **没有** `_sources/`、`meshes/`、`materials/`、`textures/`：commonW6 不再包含 `m_IndexBuffer`、本地网格、贴图或材质。
+- 映射：`layout-editor/scripts/data/commonw6-bundle-map.json` 是人工校对表；未列出的条目由 `oc2r/bundle_refs.py` 按同名 prefab/model → 网格名称集合 → 关键字 → 保守模糊匹配解析。
+- 迁移：`python3 layout-editor/scripts/oc2-rebuild/migrate_commonw6_bundle_refs.py --dry/--apply [--clean]`；原地改写 SO 并保留 guid，LevelSets 场景无需重生成。
+- 生成：`python3 layout-editor/scripts/oc2-rebuild/rebuild.py --set dlc`（已不再静态烘焙）；审计：`python3 layout-editor/scripts/oc2-rebuild/audit_oc2dlc.py`。
+- 依赖：`LayoutEditorCommonW6Dependencies` 在打开场景 / 导出 prepare / 写回时扫描场景引用，把 SO 指向的游戏 bundle（bundle163/167/428…）补进 `LevelInfoSO.dependencies`；只登记 StreamingAssets 中真实存在的 bundle。
+- 中文名：`layout-editor/scripts/data/commonw6-names.json`（去掉 1~2 层 hash 后匹配；调色板装饰已覆盖）。
+- 装饰双视图预览：Unity 菜单「素材导出 → 导出装饰物双视图缩略图」会包含 commonW6，产物写入 `exports/decor/front|back/<guid>.png`（192 缩略图）、`exports/decor/detail/front|back/<guid>.png`（高清详情：默认 1024；包围盒最大边 ≥5m 用 1536、≥12m 用 2048）、`exports/decor/models/<guid>/model.obj|mtl` + `_textures/`（3D 预览用 OBJ/MTL/贴图）和 `manifest.json`（git 忽略），由后端 `/api/web-assets/decor/` 只读提供；不再写入 `layout-editor/web/public`。首次导出后建议重跑 `build-catalog.mjs`，commonW6 调色板会优先保留有预览的变体。导出器通过 `LayoutEditorSafeInstantiate` 移除编辑态运行时组件（避免 `SetupCustomPrefab.Awake` NRE）；`Timeline_DynamicStage_04` / `Timeline_Tutorial_01` 两个超大 Timeline prefab 会触发 Unity 2017 原生克隆断言，导出时保留既有预览、跳过重新物化。
+- 尺寸：改造前约 597 MB（meshes 370MB / textures 182MB / `_sources` 20.5MB）；改造后源码约 3 MB（1,117 wrapper + 1,095 SO），`du` 约 17 MB，bundle 体积随之大幅下降。
+
 ### 2.2 commonW5 —— Web 增量库（BGM / 桌台皮肤 / 食材 / 卷饼）
 
 | 目录 | 内容 | 说明 |

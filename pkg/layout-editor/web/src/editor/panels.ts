@@ -7,7 +7,6 @@ import {
 } from "./state";
 import { dom } from "./dom";
 import {
-  worldToCanvas,
   prefabIdFromPath,
   escHtml
 } from "./coords";
@@ -28,6 +27,7 @@ import { renderAnimControlPanel, groupVisibleInLayer, updateAnimPickBar } from "
 import { renderLightPanel } from "./lightPanel";
 import { renderTriggerSourcePanel } from "./triggerOrchestrator";
 import { applyPaletteGridCols } from "./palette";
+import { scene3dHandle } from "./scene3dBridge";
 import { itemInCurrentPart, floorInCurrentPart } from "./partLevel";
 import {
   coreGroupKey,
@@ -331,6 +331,7 @@ export function updatePanelTabButtons(): void {
   });
 }
 
+/** 把镜头对准这件物品（列表点击等「跳转」）。已在画面内也会居中，避免点了却几乎不动。 */
 export function ensureItemVisible(item: EditorItem): void {
   const w = dom.canvas.clientWidth;
   const h = dom.canvas.clientHeight;
@@ -338,12 +339,10 @@ export function ensureItemVisible(item: EditorItem): void {
     dom.canvas.width = w;
     dom.canvas.height = h;
   }
-  const p = worldToCanvas(item._wx, item._wz);
-  const margin = 60;
-  if (p.x >= margin && p.x <= w - margin && p.y >= margin && p.y <= h - margin) return;
   const k = PX_PER_UNIT * S.scale;
   S.panX = -item._wx * k;
   S.panY = item._wz * k;
+  if (S.viewMode === "3d") scene3dHandle()?.lookAtWorld(item._wx, item._wz);
 }
 
 /** 将 2D 视野对准世界矩形（必要时放大），用于重叠告警等定位。 */

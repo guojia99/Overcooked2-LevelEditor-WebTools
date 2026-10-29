@@ -78,6 +78,12 @@ export interface ModelPreviewOptions {
   readonly?: boolean;
   /** 只读时展示的原因说明（缺省给通用文案）。 */
   readonlyReason?: string;
+  /** 只读时底部操作提示（缺省为菜谱/容器说明）。 */
+  readonlyHint?: string;
+  /** 是否显示半透明参考容器（盘子/玻璃杯）；装饰物 3D 预览可关闭。 */
+  showReference?: boolean;
+  /** 是否显示橙色虚拟包围盒；装饰物 3D 预览可关闭。 */
+  showVirtualBox?: boolean;
   /** 本地模型（选择文件后未保存）：直接解析 ArrayBuffer，不走服务器。 */
   localBuffer?: ArrayBuffer;
   /** 本地贴图（File 列表）：FBX 内嵌纹理无法加载时注入到全部材质。 */
@@ -234,7 +240,7 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
        <div class="mp-side">
          ${controlsHtml}
           ${opts.readonly
-            ? `<p class="modal-hint">左键旋转视角 · 右键平移 · 滚轮缩放 · <b>半透明标的物 = 参考容器（盘子直径 100 cm / 玻璃杯口径 69 cm，纯视觉无碰撞）</b>，其<b>包围盒中心 = 原点 (0,0,0)</b> · <b>橙色线框 = 模型虚拟包围盒</b>（尺寸见上方读数）· 视角操作不会改动任何数据。</p>`
+            ? `<p class="modal-hint">${esc(opts.readonlyHint ?? "左键旋转视角 · 右键平移 · 滚轮缩放 · <b>半透明标的物 = 参考容器（盘子直径 100 cm / 玻璃杯口径 69 cm，纯视觉无碰撞）</b>，其<b>包围盒中心 = 原点 (0,0,0)</b> · <b>橙色线框 = 模型虚拟包围盒</b>（尺寸见上方读数）· 视角操作不会改动任何数据。")}</p>`
             : `<p class="modal-hint">左键旋转视角 · 右键平移 · 滚轮缩放 · <b>半透明标的物 = 参考容器（盘子直径 100 cm / 玻璃杯口径 69 cm，纯视觉无碰撞）</b>，其<b>包围盒中心 = 原点 (0,0,0)</b>（红/绿/蓝轴 X/Y/Z，黄色点为原点，网格按 cm 标注格距，1 单位 = 100 cm）· <b>橙色线框 = 模型虚拟包围盒</b>（尺寸见右侧读数，6 个面各有一个中心点；<b>下拉选中的面会微微高亮</b>）· 「🎯 面中心设为原点」旋转/缩放绕该面中心 · 「⬇ 该面朝下」旋转模型让该面贴地 · 「重选原点」后可点击模型上任意点 · 「自动适配」按目标（盘子 85 cm / 杯子 37 cm）缩放，<b>位置 Y 保持 0（不自动下沉，高度手动调）</b> · 尺寸/位置单位为 cm（4 位小数精度）</p>`}
        </div>
      </div>`,
@@ -692,7 +698,8 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
     pivotGroup.add(obj);
     scene.add(pivotGroup);
     previewObj = pivotGroup;
-    setupVirtualBox(obj);
+    if (opts.showVirtualBox !== false)
+      setupVirtualBox(obj);
     applyTransform(initial);
     if (opts.unitySize) {
       const db = new THREE.Box3().setFromObject(previewObj);
@@ -716,7 +723,8 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
   }
 
   // 参考容器（盘子/玻璃杯，纯视觉标的物，无碰撞）：包围盒中心 = 原点，随适配目标切换
-  loadReference(opts.fitTarget ?? "plate");
+  if (opts.showReference !== false)
+    loadReference(opts.fitTarget ?? "plate");
 
   // 变换控件 DOM 与读写（顶层作用域：控件块与点击选原点共用）
   const mpIds = ["mp-scale", "mp-rot-x", "mp-rot-y", "mp-rot-z", "mp-pos-x", "mp-pos-y", "mp-pos-z"] as const;

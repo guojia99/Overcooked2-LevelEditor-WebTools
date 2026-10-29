@@ -31,6 +31,8 @@ export const dom = {
   canvas3d: null as unknown as HTMLCanvasElement,
   detailEl: null as unknown as HTMLElement,
   ctxMenuEl: null as unknown as HTMLElement,
+  /** 装饰物右键时的画布右上角缩略图。 */
+  decorCtxPreviewEl: null as unknown as HTMLElement,
   pickTipEl: null as unknown as HTMLElement,
   animPickBar: null as unknown as HTMLElement,
   floorBar: null as unknown as HTMLElement,
@@ -60,6 +62,7 @@ export function buildLayoutDom(): void {
       <button id="btn-level-config" type="button" title="分数、环境（天花板/分 P）、音频与关卡截图">📊 关卡配置</button>
       <button id="btn-camera-light" type="button" title="修改游戏相机背景色、FOV 与出发点位置">🎥 相机</button>
       <button id="btn-tools-history" type="button" title="关卡工具、工作量推测与最近 15 次写回历史">🧰 工具与历史</button>
+      <button id="btn-web-assets-export" type="button" title="导出音频 / 桌台图标与 3D / 装饰双视图与高清详情到 exports/（Web 前端经后端接口读取）">🌐 导出web预览资源依赖</button>
       <button id="btn-part-level" type="button" class="hidden" title="分 P 管理：阶段 / 退场去向 / 转场节奏与清理">🔀 分P管理</button>
     </div>
     <div class="part-bar hidden" id="part-bar"></div>
@@ -147,6 +150,23 @@ export function buildLayoutDom(): void {
             <option value="medium">预览：中</option>
             <option value="large">预览：大</option>
           </select>
+          <div class="decor-source-filter hidden" id="decor-source-filter">
+            <button type="button" id="decor-source-btn" class="decor-source-btn" title="按素材库多选过滤。不选 = 全部。可选 common01–04 与 commonW1–W6" aria-haspopup="listbox" aria-expanded="false">来源：全部</button>
+            <div id="decor-source-pop" class="decor-source-pop hidden" role="listbox" aria-label="素材库">
+              <button type="button" class="decor-source-all" id="decor-source-all">全部</button>
+              <label><input type="checkbox" value="common01" /> common01</label>
+              <label><input type="checkbox" value="common02" /> common02</label>
+              <label><input type="checkbox" value="common03" /> common03</label>
+              <label><input type="checkbox" value="common04" /> common04</label>
+              <div class="decor-source-sep"></div>
+              <label><input type="checkbox" value="commonW1" /> commonW1</label>
+              <label><input type="checkbox" value="commonW2" /> commonW2</label>
+              <label><input type="checkbox" value="commonW3" /> commonW3</label>
+              <label><input type="checkbox" value="commonW4" /> commonW4</label>
+              <label><input type="checkbox" value="commonW5" /> commonW5</label>
+              <label><input type="checkbox" value="commonW6" /> commonW6</label>
+            </div>
+          </div>
         </div>
         <div class="palette-group-actions" id="palette-group-actions">
           <button type="button" id="palette-expand-all" title="展开左侧全部分组">展开全部</button>
@@ -163,6 +183,7 @@ export function buildLayoutDom(): void {
         <canvas id="canvas3d" class="canvas3d hidden"></canvas>
         <div id="item-detail" class="item-detail hidden" role="dialog"></div>
         <div id="ctx-menu" class="ctx-menu hidden" role="dialog"></div>
+        <div id="decor-ctx-preview" class="decor-ctx-preview hidden" aria-hidden="true"></div>
         <div id="pick-tip" class="pick-tip hidden" role="dialog"></div>
         <div id="anim-pick-bar" class="anim-pick-bar hidden" role="dialog"></div>
         <div id="floor-bar" class="floor-bar hidden"></div>
@@ -216,6 +237,7 @@ export function buildLayoutDom(): void {
   dom.canvas3d = document.getElementById("canvas3d") as HTMLCanvasElement;
   dom.detailEl = document.getElementById("item-detail")!;
   dom.ctxMenuEl = document.getElementById("ctx-menu")!;
+  dom.decorCtxPreviewEl = document.getElementById("decor-ctx-preview")!;
   dom.pickTipEl = document.getElementById("pick-tip")!;
   dom.animPickBar = document.getElementById("anim-pick-bar")!;
   dom.floorBar = document.getElementById("floor-bar")!;

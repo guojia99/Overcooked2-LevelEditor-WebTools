@@ -37,9 +37,8 @@ web/
 │   ├── recipes.json + recipes/{core,custom,dlc02~11}.json
 │   ├── ingredients.json / cooking-steps.json / counter-appearances.json
 │   ├── floor-materials.json / switch-materials.json / bundle-manifest.json
-│   ├── audio-catalog.json / audio-exports.json（回退）
+│   ├── audio-catalog.json
 │   ├── icons/{ingredients,recipes,catalog,steps}/   # 提取的 PNG 图标
-│   ├── icons/decor-preview/{<guid>.png,manifest.json} # 装饰层卡片大图（Unity 导出 + manifest）
 │   ├── recipe-ui/          # 菜谱卡片背景图
 │   ├── models/             # 3D 预览参考模型（预留）
 │   ├── OC2LevelRuntimeLoader.dll   # 随关卡包分发的加载器（手动与 BepInExPlugins 构建产物同步）
@@ -166,7 +165,9 @@ flowchart LR
 | **renderFloors.ts** | 地板绘制（材质色/主题/贴图平铺/图片/着色/空气地板）、接缝、可行走区、击杀面、命中测试 |
 | **labels.ts** | 画布文字/图标标签工具（换行、食材箱食材图） |
 | **iconCaches.ts** | 图片缓存（异步加载回调重绘）；`loadQuestionMarks` 拉 `/api/catalog/questionmarks` |
-| **decorPreviewCache.ts** | 装饰缩略图缓存中枢：manifest（guid→PNG + version）、后台并发预热全部装饰图到浏览器 HTTP 缓存、成功/失败状态位；卡片 `<img loading=lazy>` 命中缓存，缺失时回退食材/菜谱图标或占位字 |
+| **ui/decor3dPreview.ts** | 打开统一预览并切到 3D 页签（模型未导出时返回 false） |
+| **ui/decorPreviewLightbox.ts** | 装饰统一预览弹窗：正面/背面/3D 页签，默认正面；2D 优先 `detail` 高清图（回退 192），3D 点击时才加载 OBJ/MTL；图片/模型请求显示加载动画与进度条；2D 支持缩放/平移，3D 用 OrbitControls |
+| **decorPreviewCache.ts** | 装饰缩略图缓存中枢：`/api/web-assets/decor/manifest.json`（guid→front/back + version）、后台并发预热正面图到浏览器 HTTP 缓存、按 guid+视图记录成功/失败；卡片 `<img loading=lazy>` 命中缓存，缺失时回退食材/菜谱图标或占位字 |
 
 **交互**
 
@@ -189,7 +190,7 @@ flowchart LR
 | **floorHeight.ts** | 行走面高度约定（镜像后端 FloorWalkY）：`floorWalkY`、高度分层索引、`floorHeightAt` |
 | **floorPalette.ts** | 地板/背景层调色板 + 画布底部地板信息条 |
 | **floorEditorModal.ts** | 地板详情弹窗（750 行）：尺寸/材质/着色/图片地板（tile/stretch/warp）/平铺/主题信息 |
-| **palette.ts** | 调色板构建：分组、搜索、双击武装 N 连放、变体家族归并卡片；装饰层左侧调色板「预览：无/小/中/大」四档（与「尺寸」「分组」同行自适应）：卡片显示 Unity 渲染大图 + 占格/高度 + 尺寸徽标 |
+| **palette.ts** | 调色板构建：分组、搜索、双击武装 N 连放、变体家族归并卡片；装饰层左侧调色板「预览：无/小/中/大」四档，以及素材库多选（common01–04、commonW1–W6，空选=全部；与「尺寸」「分组」同行自适应）：卡片显示 Unity 渲染大图 + 占格/高度 + 尺寸徽标 |
 | **combos.ts** | 联合组合定义（一次放置多物品+自动联动）：饮料机/酱料机/断头台/传送门成对/热源+石炉。默认输出食材一律经 `ingredientGuidById()` 解析（别名感知 + 去重），**禁止 `find(i => i.id === id)` 精确匹配** |
 | **itemVariants.ts** | DLC 换肤变体表：调色板只显示基础版，右键切换变体 |
 | **stubControls.ts** | Stub 参数中枢（1311 行）：`STUB_KIND_BY_PREFAB_ID`、锅具计时、柜台外观/开关材质选择、`wireStubControls`；按钮控速块（`speedControlBlockHtml`/`wireSpeedControl`，步带/传送带共用：档位列表增删改 + 启用开关）、生成器按钮批次块（`ctx-fs-btn/count/cooldown`）；`isButtonPollingStubTarget`（stub 轮询目标判定）并入 `isSwitchLinkTarget` 白名单——步带/传送带（已启用控速）与食材生成器（已启用按钮批次）可作直连目标，触发名自动置空 |
@@ -225,7 +226,7 @@ flowchart LR
 |---|---|
 | **panels.ts** | 右侧面板：物品清单（分组/点击定位）、Tab 切换、面板宽度拖拽与折叠（localStorage） |
 | **ui/detailPanel.ts** | 物品点击浮动详情卡：stub 参数区 + 变体切换 + 联动摘要 |
-| **ui/contextMenu.ts** | 右键菜单（661 行）：微移/旋转/删除/批量高度/变体/动画控制/路径点/参数项 |
+| **ui/contextMenu.ts** | 右键菜单：微移/旋转/删除/批量高度/变体/动画控制/路径点/参数项。聚焦单个装饰物（点选或右侧列表跳转）时在画布右上角持续显示缩略图（`ui/decorContextPreview.ts`；右键菜单挡住该角时改放到不压住菜单的空位）。列表点击会把 2D/3D 镜头对准该物品。食材/成品菜用彩色图标，其余用 /api/web-assets/decor/front/<guid>.png 正面大图；详情面板左右并排显示正/背双视图；装饰物右键提供独立一行「🖼 预览」（统一弹窗） |
 | **ui/overlay.ts / ui/pickTip.ts / ui/pickOverlap.ts** | 浮层隐藏 / 通用候选选择 / 重叠候选封装 |
 | **ui/recipesDialogs.ts** | 菜谱管理大弹窗（1533 行，五 Tab）：select/selected/autofill（按菜谱自动补道具）/optional（含无效条目检测：重复注册/自定义菜谱残留 → 警告条 + 🧹 一键清理）/matchlist |
 | **ui/utensilManager.ts** | 锅具管理弹窗：按菜谱自动装填 allowedIngredientGuids、一键同步 |
@@ -291,7 +292,9 @@ flowchart LR
 
 ### 5.5 静态数据（桥无关）
 
-`/catalog.json`（+items.0~12 分块）、`/recipes.json`（+分组文件）、`/ingredients.json`、`/cooking-steps.json`、`/counter-appearances.json`、`/switch-materials.json`、`/bundle-manifest.json`、`/audio-exports.json`、`/UPDATE_LOG.md`、图标 `/icons/**`——目录 JSON 由 `scripts/build-catalog.mjs` 生成；`icons/decor-preview/manifest.json` 由 `scripts/build-decor-preview-manifest.mjs` 生成。当前装饰缩略图覆盖 3169/3217（98.5%）；无网格的粒子/灯光/空壳资源记入 `manifest.missing`，前端回退食材/菜谱图标或首字占位。
+`/catalog.json`（+items.0~12 分块）、`/recipes.json`（+分组文件）、`/ingredients.json`、`/cooking-steps.json`、`/counter-appearances.json`、`/switch-materials.json`、`/bundle-manifest.json`、`/UPDATE_LOG.md`、图标 `/icons/**`——目录 JSON 由 `scripts/build-catalog.mjs` 生成。
+
+**Web 导出产物（不再走静态资源）**：`GET /api/web-assets/manifest`（聚合发现）、`GET /api/web-assets/decor/manifest.json`、`GET /api/web-assets/decor/front|back/<guid>.png`（192 缩略图）与 `GET /api/web-assets/decor/detail/front|back/<guid>.png`（1024/1536/2048 高清详情，查看器按需加载）、`GET /api/web-assets/decor/models/<guid>/model.obj|mtl`（3D 预览，按需加载）、`GET /api/counter-skins/icon/<file>.png` 与 `/api/counter-skins/icons/manifest.json`（桌台图标）、`GET /api/counter-skins/3d/<name>`（桌台 3D）、`GET /api/audio/exports` 与 `/api/audio/stream?path=`（音频）。产物统一在 `<repo>/exports/`（git 忽略），由 Unity 导出器生成；装饰无网格/空壳资源被跳过，前端回退食材/菜谱图标或首字占位。详情面板对装饰物左右并排显示正面/背面，调色板与右键预览默认正面。
 
 ---
 

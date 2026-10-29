@@ -4,7 +4,7 @@
 
 ```
 layout-editor/web/
-├── public/              # 静态数据文件（JSON），构建时原样复制到 dist/
+├── public/              # 静态数据文件（JSON/图标），构建时原样复制到 dist/；audio/桌台/装饰导出在 <repo>/exports（后端 API）
 │   ├── recipes.json     # 菜谱定义
 │   ├── ingredients.json # 食材定义
 │   ├── catalog.json     # 道具/物件目录

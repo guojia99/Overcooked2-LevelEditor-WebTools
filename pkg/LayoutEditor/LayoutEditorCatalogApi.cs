@@ -509,6 +509,31 @@ public static class LayoutEditorCatalogApi
                 var id = Path.GetFileNameWithoutExtension(path);
                 string zh, en;
                 LayoutEditorManualLookup.TryGet(id, out zh, out en);
+
+                // 步骤/食材与官方 PseudoPrefabSORecipe 分支同源（recipe-knowledge.json）：
+                // 这里曾硬编码空值，导致 FriedChicken 等上游中间产物在 /recipes 里既没有
+                // 烹饪步骤角标也没有组成（FriedChicken 实为 FryingPan 煎制）。
+                string step;
+                string[] ings;
+                string[] compositionIds = null;
+                string originalPlating = "";
+                bool orderable = false;
+                var known = LayoutEditorRecipeKnowledge.TryGetOriginalEntry(
+                    id, out step, out ings, out compositionIds, out originalPlating, out orderable);
+                if (!known && !string.IsNullOrEmpty(so.prefabName))
+                    known = LayoutEditorRecipeKnowledge.TryGetOriginalEntry(
+                        so.prefabName + "_SO", out step, out ings, out compositionIds, out originalPlating, out orderable);
+                if (!known)
+                {
+                    step = "";
+                    ings = new string[0];
+                    compositionIds = null;
+                    originalPlating = "";
+                    orderable = false;
+                }
+                if (compositionIds != null && compositionIds.Length == 0)
+                    compositionIds = null;
+
                 list.Add(new RecipeEntryDto
                 {
                     guid = HealGuidDesync(path, asset.guid),
@@ -516,12 +541,12 @@ public static class LayoutEditorCatalogApi
                     nameZh = zh,
                     nameEn = en,
                     assetPath = path,
-                    cookingStep = "",
-                    platingStep = "",
-                    ingredients = new string[0],
-                    compositionIds = null,
-                    ingredientCount = 0,
-                    cookingStepCount = 0,
+                    cookingStep = step,
+                    platingStep = originalPlating,
+                    ingredients = ings,
+                    compositionIds = compositionIds,
+                    ingredientCount = ings.Length,
+                    cookingStepCount = LayoutEditorRecipeKnowledge.IsCookStep(step) ? 1 : 0,
                     score = 0,
                     isCustom = false,
                     group = FoodGroupOf(path),

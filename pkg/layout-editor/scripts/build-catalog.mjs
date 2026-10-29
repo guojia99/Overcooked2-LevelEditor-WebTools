@@ -27,6 +27,7 @@ const MANUAL_PATH = path.join(repoRoot, "使用手册.md");
 const KNOWLEDGE_PATH = path.join(__dirname, "data", "recipe-knowledge.json");
 const AUDIO_KNOWLEDGE_PATH = path.join(__dirname, "data", "audio-knowledge.json");
 const DICTIONARY_PATH = path.join(__dirname, "data", "names-dictionary.json");
+const COMMONW6_NAMES_PATH = path.join(__dirname, "data", "commonw6-names.json");
 const OUT_DIR = path.join(repoRoot, "layout-editor/web/public");
 const DIST_DIR = path.join(repoRoot, "layout-editor/web/dist");
 
@@ -897,6 +898,7 @@ function categorize(assetPath) {
   rel = rel.replace(/^Assets\/commonW1\/prefabs\/?/, "");
   rel = rel.replace(/^Assets\/commonW2\/prefabs\/?/, "");
   rel = rel.replace(/^Assets\/commonW4\/prefabs\/?/, "");
+  rel = rel.replace(/^Assets\/commonW6\/prefabs\/oc2dlc\/?/, "");
   rel = rel.replace(/^Assets\/LevelSets\/[^/]+\/(custom_web|custom_ingredients)\/prefabs\/?/, "");
   rel = rel.replace(/^(?:core|dlc\d+)\//, "");
   const seg = rel.split("/");
@@ -1101,6 +1103,13 @@ function readPseudoPrefabSoGuid(prefabPath) {
   } catch {
     return undefined;
   }
+}
+
+/** commonW6 调色板去重键：去掉 wrapper/source 两层 hash 与副本序号。 */
+function commonW6BaseId(id) {
+  let b = id;
+  for (let i = 0; i < 2; i++) b = b.replace(/_[0-9a-f]{8}$/i, "");
+  return b.replace(/\s*\(\d+\)$/, "").trim().toLowerCase();
 }
 
 function walkPrefabs(dir, baseAssetsPath, out, measuredFootprints) {
@@ -1371,6 +1380,19 @@ function loadDictionary() {
   return map;
 }
 
+let commonW6NamesCache = null;
+function loadCommonW6Names() {
+  if (commonW6NamesCache) return commonW6NamesCache;
+  const map = new Map();
+  if (!fs.existsSync(COMMONW6_NAMES_PATH)) { commonW6NamesCache = map; return map; }
+  const raw = JSON.parse(fs.readFileSync(COMMONW6_NAMES_PATH, "utf8"));
+  for (const entry of raw.names || []) {
+    if (entry && entry.id) map.set(entry.id.toLowerCase(), { zh: entry.zh, en: entry.en });
+  }
+  commonW6NamesCache = map;
+  return map;
+}
+
 /** Footprints + display names from commonW1 background manifest. */
 function loadCommonW1Manifest() {
   const manifestPath = path.join(__dirname, "data/commonw1-backgrounds.json");
@@ -1391,17 +1413,41 @@ function loadCommonW1Manifest() {
   return { names, footprints };
 }
 
-/** Lookup order: names-dictionary.json -> 使用手册.md -> id fallback. */
+/** Lookup order: names-dictionary.json -> commonW6 names -> 使用手册.md -> id fallback. */
 function lookupName(dictionary, idToRow, id) {
-  const dict = dictionary.get(id) || dictionary.get(id.replace(/SO$/, ""));
-  if (dict?.zh) {
-    // Dictionary entries are curated; do NOT strip "xN" (can be a real size tag like 1x28).
-    return { nameZh: dict.zh, nameEn: dict.en || fallbackNameEn(id) };
+  // commonW6 的资产名带 1~2 层 _<8位hash> 后缀；先剥掉再查词典。
+  const bases = [id];
+  let b = id;
+  for (let i = 0; i < 2; i++) {
+    const next = b.replace(/_[0-9a-f]{8}$/i, "");
+    if (next === b) break;
+    b = next;
+    bases.push(b);
   }
-  const row = idToRow.get(id) || idToRow.get(id.replace(/SO$/, ""));
+  const commonW6 = loadCommonW6Names();
+  for (let i = 0; i < bases.length; i++) {
+    const key = bases[i];
+    const low = key.toLowerCase();
+    const dict = dictionary.get(key) || dictionary.get(low) || dictionary.get(key.replace(/SO$/, ""));
+    if (dict?.zh) {
+      let zh = dict.zh;
+      const suffix = key.match(/\s*\((\d+)\)$/);
+      if (suffix && i > 0 && !new RegExp("(^|[ ·-])" + suffix[1] + "$").test(zh)) zh += " ·" + suffix[1];
+      return { nameZh: zh, nameEn: dict.en || fallbackNameEn(key) };
+    }
+    const w6 = commonW6.get(low);
+    if (w6?.zh) return { nameZh: w6.zh, nameEn: w6.en || fallbackNameEn(key) };
+    const row = idToRow.get(key) || idToRow.get(low) || idToRow.get(key.replace(/SO$/, ""));
+    if (row?.zh) {
+      let zh = tidyCatalogNameZh(row.zh);
+      const suffix = key.match(/\s*\((\d+)\)$/);
+      if (suffix && i > 0 && !new RegExp("(^|[ ·-])" + suffix[1] + "$").test(zh)) zh += " ·" + suffix[1];
+      return { nameZh: zh, nameEn: row.en || fallbackNameEn(key) };
+    }
+  }
   return {
-    nameZh: tidyCatalogNameZh(row?.zh || fallbackNameZh(id)),
-    nameEn: row?.en || fallbackNameEn(id),
+    nameZh: tidyCatalogNameZh(fallbackNameZh(id)),
+    nameEn: fallbackNameEn(id),
   };
 }
 
@@ -2019,16 +2065,29 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge, ingredientIds) {
       const guid = readGuid(file + ".meta");
       if (!guid || !patchSeen.add(guid)) continue;
       const id = path.basename(file, ".asset");
+      // 步骤/食材同样取自 recipe-knowledge.json（与官方 PseudoPrefabSORecipe 分支一致）；
+      // 这里曾硬编码空值，导致 FriedChicken 等上游中间产物即便已收录也永远没有
+      // 烹饪步骤角标与组成（FriedChicken 实为 FryingPan 煎制，而非无步骤）。
+      const k =
+        knowledge.recipes[id] ||
+        (fields.prefabName ? knowledge.recipes[`${fields.prefabName}_SO`] : null) ||
+        { step: "", ingredients: [], plating: "" };
+      const step = k.step || "";
+      const ings = (k.ingredients || []).filter((ing) => {
+        if (ingredientIds.has(ing)) return true;
+        console.warn(`WARN: knowledge ${id}: unknown ingredient id ${ing}`);
+        return false;
+      });
       list.push({
         guid,
         id,
         ...lookupName(dictionary, idToRow, id),
         assetPath,
-        cookingStep: "",
-        platingStep: "",
-        ingredients: [],
-        ingredientCount: 0,
-        cookingStepCount: 0,
+        cookingStep: step,
+        platingStep: k.plating || "",
+        ingredients: ings,
+        ingredientCount: ings.length,
+        cookingStepCount: step && knowledge.cookSteps.has(step) ? 1 : 0,
         score: 0,
         isCustom: false,
         group: foodGroupOf(assetPath),
@@ -2471,6 +2530,26 @@ function main() {
   walkPrefabs(common03PrefabRoot, "Assets/common03/prefabs", items, measuredFootprints);
   const commonW1PrefabRoot = path.join(repoRoot, "Assets/commonW1/prefabs");
   walkPrefabs(commonW1PrefabRoot, "Assets/commonW1/prefabs", items, measuredFootprints);
+  // oc2_dlc_story 原版补充造景（commonW6）：只收 art/ 下的调色板条目，
+  // _sources / variants / supplement 是场景内部变体，不进调色板。
+  const commonW6PaletteRoot = path.join(repoRoot, "Assets/commonW6/prefabs/oc2dlc/art");
+  if (fs.existsSync(commonW6PaletteRoot)) {
+    const start = items.length;
+    walkPrefabs(commonW6PaletteRoot, "Assets/commonW6/prefabs/oc2dlc", items, measuredFootprints);
+    // 同一 base 的多个场景副本只保留一条调色板条目（优先已有预览图的条目）。
+    const grouped = new Map();
+    for (let i = start; i < items.length; i++) {
+      const it = items[i];
+      const key = commonW6BaseId(it.id);
+      const prev = grouped.get(key);
+      const decorFrontDir = path.join(repoRoot, "exports", "decor", "front");
+      const hasPng = fs.existsSync(path.join(decorFrontDir, it.guid + ".png"));
+      const prevPng = prev ? fs.existsSync(path.join(decorFrontDir, prev.guid + ".png")) : false;
+      if (!prev || (hasPng && !prevPng)) grouped.set(key, it);
+    }
+    items.length = start;
+    for (const it of grouped.values()) items.push(it);
+  }
   // commonW5 热水器 / 茶杯 / 茶杯堆（完整本地功能 prefab）。
   for (const sub of ["kettle", "teacups", "counters"]) {
     const dir = path.join(repoRoot, "Assets/commonW5/prefabs", sub);
@@ -2602,6 +2681,7 @@ function main() {
   // 展示层去重：同一 id 多来源时优先 commonW1 > common03 > 其它 > custom_web 拷贝。
   function catalogSourcePriority(assetPath) {
     if (/\/commonW1\//.test(assetPath)) return 4;
+    if (/\/commonW6\//.test(assetPath)) return 3;
     if (/\/common03\//.test(assetPath)) return 3;
     if (/\/custom_(web|ingredients)\//.test(assetPath)) return 0;
     return 2;

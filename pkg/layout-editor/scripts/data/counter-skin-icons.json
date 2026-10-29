@@ -113,7 +113,9 @@
     "c8de7b0afb6063195aa3843444e871ba": { "color": "#81301e", "file": "ChoppingCounter_Wood13.png", "id": "ChoppingCounterWood13SO" },
     "0cbe46b4f4e64863b6214b2204ddd3b0": { "color": "#574859", "file": "PlateReturn_Wood13.png", "id": "PlateReturnWood13SO" },
     "42953571827adcba1e4704e4129eb495": { "color": "#81301e", "file": "CounterCorner_Wood13.png", "id": "CounterCornerWood13SO" },
-    "6a047abaf8aaafd3b6ab3997c2b75974": { "color": "#785853", "file": "Sink_Wood13.png", "id": "SinkWood13SO" }
+    "6a047abaf8aaafd3b6ab3997c2b75974": { "color": "#785853", "file": "Sink_Wood13.png", "id": "SinkWood13SO" },
+    "4ca6af2a458abb1dcdd951edbc609001": { "color": "#734d4a", "file": "Counter_Anniversary.png", "id": "CounterAnniversarySO" },
+    "f003394d7dffb22700efedd141e3da21": { "color": "#b38241", "file": "Counter_Jungle.png", "id": "CounterJungleSO" }
   },
   "failures": {
   }

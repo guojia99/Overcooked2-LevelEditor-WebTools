@@ -11,7 +11,7 @@ using UnityEngine;
 /// 音频导出：扫描 common01/common02 的 BGM 与 AudioDirectory PseudoPrefabSO，
 /// 直接解析游戏 AssetBundle（UnityFS/LZ4/SerializedFile/TypeTree，见 AudioFs/），
 /// 从 FSB5 提取音频：Vorbis → 无损重组 .ogg，IMA ADPCM → 解码 .wav，
-/// 写出到仓库根目录 audio-exports/，并生成 audio-exports.json 供 web 编辑器试听。
+/// 写出到 exports/audio/，并生成 audio-exports.json 供 web 编辑器试听（经 /api/audio/* 读取）。
 /// 不依赖 python / libvorbis；不通过 AudioClip.GetData（压缩 clip 不支持）。
 /// </summary>
 public static class LayoutEditorAudioExporter
@@ -56,10 +56,28 @@ public static class LayoutEditorAudioExporter
 
     public static void ExportAudioForWeb()
     {
+        var result = ExportAudioForWebInternal(true, null);
+        if (!string.IsNullOrEmpty(result.fatalError))
+        {
+            EditorUtility.DisplayDialog("Export Audio Error", result.fatalError, "OK");
+            return;
+        }
+        EditorUtility.DisplayDialog("Export Audio", result.summary, "OK");
+    }
+
+    /// <summary>一键 Web 资源导出用：不弹结束对话框，进度经回调上报。</summary>
+    public static LayoutEditorAudioExportResult ExportAudioForWebSilent(Action<string, float> progress)
+    {
+        return ExportAudioForWebInternal(false, progress);
+    }
+
+    private static LayoutEditorAudioExportResult ExportAudioForWebInternal(bool interactive, Action<string, float> progress)
+    {
+        var result = new LayoutEditorAudioExportResult();
         if (_exporting)
         {
-            EditorUtility.DisplayDialog("Export Audio", "上一次导出仍在进行中，请稍候。", "OK");
-            return;
+            result.fatalError = "上一次音频导出仍在进行中，请稍候。";
+            return result;
         }
 
         _exporting = true;
@@ -68,21 +86,22 @@ public static class LayoutEditorAudioExporter
         try
         {
             // ---- Phase 1: tables ----
-            EditorUtility.DisplayProgressBar("Export Audio", "加载解析表…", 0.01f);
+            ReportProgress(progress, "加载音频解析表…", 0.01f);
             LoadTables();
 
             // ---- Phase 2: Scan ----
-            EditorUtility.DisplayProgressBar("Export Audio", "扫描 BGM 资源…", 0.03f);
+            ReportProgress(progress, "扫描 BGM 资源…", 0.03f);
             var musicAssets = ScanAudioAssets("audio/music");
-            EditorUtility.DisplayProgressBar("Export Audio", "扫描音效集资源…", 0.05f);
+            ReportProgress(progress, "扫描音效集资源…", 0.05f);
             var dirAssets = ScanAudioAssets("audio/AudioDirectories");
 
             // ---- Phase 3: Prepare output ----
-            string exportRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "../audio-exports"));
+            string exportRoot = Path.GetFullPath(Path.Combine(LayoutEditorPaths.ExportsRoot, "audio"));
             if (Directory.Exists(exportRoot))
                 Directory.Delete(exportRoot, true);
             Directory.CreateDirectory(Path.Combine(exportRoot, "bgm"));
             Directory.CreateDirectory(Path.Combine(exportRoot, "sfx"));
+            result.exportRoot = exportRoot;
 
             _bundlesDir = Path.Combine(Application.streamingAssetsPath, "Windows").Replace('\\', '/');
 
@@ -105,6 +124,7 @@ public static class LayoutEditorAudioExporter
                     canceled = true;
                     break;
                 }
+                ReportProgress(progress, "导出 BGM " + (i + 1) + "/" + musicAssets.Count + "：" + a.nameZh, p);
 
                 string rel = "bgm/" + SanitizeFilename(a.id);
                 try
@@ -146,6 +166,7 @@ public static class LayoutEditorAudioExporter
                         canceled = true;
                         break;
                     }
+                    ReportProgress(progress, "导出音效集 " + (i + 1) + "/" + dirAssets.Count + "：" + a.nameZh, p);
 
                     string dirFolder = "sfx/" + SanitizeFilename(a.id);
                     try
@@ -165,7 +186,7 @@ public static class LayoutEditorAudioExporter
             }
 
             // ---- Phase 5: Write manifest ----
-            EditorUtility.DisplayProgressBar("Export Audio", "写出 manifest…", 0.96f);
+            ReportProgress(progress, "写出音频清单…", 0.96f);
 
             var ambList = new List<AudioExportAmbienceDto>();
             foreach (var tagName in Enum.GetNames(typeof(LevelInfoSO.GameLoopingAudioTag)))
@@ -190,6 +211,10 @@ public static class LayoutEditorAudioExporter
                 Path.Combine(exportRoot, "audio-exports.json"),
                 JsonUtility.ToJson(manifest, true));
 
+            result.okCount = okCount;
+            result.failCount = failCount;
+            result.canceled = canceled;
+
             // ---- Phase 6: Summary ----
             if (failures.Count > 0)
             {
@@ -205,12 +230,14 @@ public static class LayoutEditorAudioExporter
                 canceled ? "导出已取消（已写出已完成部分）" : "导出", okCount, failCount, exportRoot);
             if (failures.Count > 0)
                 msg += "\n\n⚠️ 有 " + failures.Count + " 项失败，详见 Console 日志。";
-            EditorUtility.DisplayDialog("Export Audio", msg, "OK");
+            result.summary = msg;
+            Debug.Log("[Export Audio] " + msg.Replace("\n", " | "));
         }
         catch (Exception ex)
         {
             Debug.LogError("Export Audio failed: " + ex);
-            EditorUtility.DisplayDialog("Export Audio Error", ex.Message, "OK");
+            result.fatalError = ex.Message;
+            result.summary = "音频导出失败：" + ex.Message;
         }
         finally
         {
@@ -219,6 +246,16 @@ public static class LayoutEditorAudioExporter
             _cabToBundle.Clear();
             _bundleOrder.Clear();
             _exporting = false;
+        }
+        return result;
+    }
+
+    private static void ReportProgress(Action<string, float> progress, string message, float value)
+    {
+        if (progress != null)
+        {
+            try { progress(message, value); }
+            catch { }
         }
     }
 
@@ -632,4 +669,15 @@ public static class LayoutEditorAudioExporter
                 chars[i] = '_';
         return new string(chars);
     }
+}
+
+/// <summary>音频导出结果（一键 Web 资源导出协调器消费）。</summary>
+public sealed class LayoutEditorAudioExportResult
+{
+    public bool canceled;
+    public int okCount;
+    public int failCount;
+    public string exportRoot;
+    public string summary;
+    public string fatalError;
 }

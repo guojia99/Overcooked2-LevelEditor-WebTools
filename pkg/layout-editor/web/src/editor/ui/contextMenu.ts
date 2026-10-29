@@ -52,6 +52,8 @@ import {
   contextMenuDragBarHtml,
   positionContextMenuAt
 } from "./contextMenuChrome";
+import { hideDecorContextPreview, showDecorContextPreview } from "./decorContextPreview";
+import { openDecorPreviewLightbox } from "./decorPreviewLightbox";
 import {
   showSurfaceItemDetail,
   showDetail
@@ -155,6 +157,7 @@ function partMoveRowHtml(): string {
 
 /** 多选地板/物品时仅显示批量高度菜单（地板层右键）。 */
 export function showBatchHeightMenu(clientX: number, clientY: number) {  if (selectionHeightTargetCount() < 2) return;
+  hideDecorContextPreview();
   const batch = isBatchTransform();
   const step = S.freeSnapStep;
   const nudgeLabel = batchNudgeRowLabel() || `微移 ${step.toFixed(stepDecimals(step))}`;
@@ -213,6 +216,8 @@ export function showBatchHeightMenu(clientX: number, clientY: number) {  if (sel
 
 export function showContextMenu(item: EditorItem, clientX: number, clientY: number) {
   const cat = S.catalogByGuid.get(item.prefabGuid);
+  const isDecorItem = itemCategoryOf(item) === "decor";
+  const decorGuid = cat?.guid || item.prefabGuid;
   const isSurface = isSurfaceItem(cat);
   const isPlayer = isPlayerItem(item);
   const batchHeight = selectionHeightTargetCount() >= 2;
@@ -344,6 +349,9 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
     ${appearHtml}
     ${itemVariantHtml(item)}
     <div class="ctx-actions">
+      ${isDecorItem ? `<div class="ctx-actions-row ctx-preview-row">
+        <button type="button" class="ctx-btn" data-act="preview" title="打开正面/背面/3D 统一预览">🖼 预览</button>
+      </div>` : ""}
       <div class="ctx-actions-row">
         <button type="button" class="ctx-btn" data-act="detail">详情…</button>
         ${isPlayer ? "" : `<button type="button" class="ctx-btn" data-act="copy" title="Ctrl+C（同时写入跨页剪贴板）">复制</button>
@@ -364,6 +372,8 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
   `;
 
   positionContextMenuAt(clientX, clientY);
+  if (itemCategoryOf(item) === "decor") showDecorContextPreview(item);
+  else hideDecorContextPreview();
 
   const refreshCtxPosInputs = () => {
     const xInp = document.getElementById("ctx-x-input") as HTMLInputElement | null;
@@ -597,6 +607,10 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
     }
     hideContextMenu();
   });
+  dom.ctxMenuEl.querySelector('[data-act="preview"]')?.addEventListener("click", () => {
+    if (decorGuid) openDecorPreviewLightbox(decorGuid, itemLabel(item), "front");
+    hideContextMenu();
+  });
   dom.ctxMenuEl.querySelector('[data-act="enable-move"]')?.addEventListener("click", () => {
     enableAnimControl(item);
     hideContextMenu();
@@ -637,6 +651,7 @@ export function showContextMenu(item: EditorItem, clientX: number, clientY: numb
 /** Waypoint right-click menu: world coordinates + precision nudge, exactly like
  *  items, plus route/delete actions. */
 export function showWaypointContextMenu(wpId: string, clientX: number, clientY: number): void {
+  hideDecorContextPreview();
   const info = waypointInfo(wpId);
   if (!info) return;
   const { group, wp, num } = info;

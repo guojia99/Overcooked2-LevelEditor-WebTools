@@ -1,6 +1,21 @@
 # 更新日志
 
 
+## Web 资源导出（未发布）
+### 2026-10-29
+#### 重大更新
+- **Web 导出产物统一迁移到 `exports/`**：音频、桌台图标/3D、装饰物不再写入 `layout-editor/web/public`，改由后端接口读取。
+- **装饰物双视图 + 高清详情 + 3D**：导出正面/背面 192×192 缩略图（`exports/decor/front|back/`）、高清详情图（`exports/decor/detail/front|back/`，默认 1024，大件按包围盒 ≥5m 用 1536、≥12m 用 2048）与 3D 模型（`exports/decor/models/<guid>/model.obj|mtl` + 共享贴图）。详情面板左右并排展示；选中装饰物时画布右上角预览也并排显示；双视图、高清详情与 3D 统一在一个预览弹窗：默认正面，点击「3D」页签才请求并渲染模型；图片/模型请求期间显示加载动画与进度条。右键装饰物只有一个「🖼 预览」按钮（独立一行），卡片仍提供 🔍 / 🧊 快捷入口。
+- **一键导出 Web 资源**：关卡编辑器顶栏「🌐 导出web预览资源依赖」可按类别导出/强制重导，长任务轮询状态；Unity Bridge 与菜单也提供入口。
+- **移除旧静态地址**：`/icons/decor-preview/*`、`/audio-exports.json` 不再提供；桌台图标改走 `/api/counter-skins/icon/*`。
+- **导出稳定性**：安全实例化移除编辑态运行时组件，消除 `SetupCustomPrefab.Awake` NRE 与 `Camera.targetTexture` 渲染纹理告警；两个超大 Timeline prefab（`Timeline_DynamicStage_04` / `Timeline_Tutorial_01`）因 Unity 2017 克隆断言，保留既有正/背预览、不参与强制重导。
+
+#### 接口
+- 新增 `GET /api/web-assets/manifest`、`GET /api/web-assets/decor/manifest.json`、`GET /api/web-assets/decor/front|back/<guid>.png`
+- 新增 `GET /api/counter-skins/icon/<file>.png`、`GET /api/counter-skins/icons/manifest.json`
+- 新增 `POST /api/web-assets/export`、`GET /api/web-assets/export/status`
+- `GET /api/audio/exports` / `/api/audio/stream` 数据源改为 `exports/audio/`
+
 ## v0.11.0
 ### 2026-10-28
 #### 重大更新
@@ -27,6 +42,7 @@
 - 修复安装器无法自动安装commonW3后面的其他commonW*
 - 修复汇总页web菜谱归纳为未分类的问题
 - 修复可移动火锅无烧糊画面的问题
+- 修复菜谱清单中 FriedChicken 缺少图标与「煎」步骤的问题（Recipes_Patch 未纳入菜谱知识库扫描，Bridge 也硬编码了空步骤）
 
 
 ## v0.10

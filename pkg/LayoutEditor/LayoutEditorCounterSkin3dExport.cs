@@ -9,7 +9,7 @@ using LevelEditorStub;
 /// <summary>
 /// 桌台皮肤 3D 资产导出（俯视图 + 模型）：
 /// 遍历 counters 伪预制件 SO（与 IconExport 同源），按 bundle 加载真实 prefab，
-/// 临时实例化后产出三件套到 exports/counter-skins/（repo 根，git 忽略，类比 audio-exports/）：
+/// 临时实例化后产出三件套到 exports/counter-skins/（repo 根 exports/，git 忽略）：
 ///   ① <Type>_<Theme>_top.png —— 正交相机俯拍（Sprites/Default 无光照直出 diffuse×tint，
 ///      透明背景，宽高比 = 模型 X:Z 包围盒，长边 256）→ 2D 画布「🎨 桌台皮肤」开关直接绘制
 ///   ② <Type>_<Theme>.obj/.mtl + _m&lt;i&gt;.png —— 世界变换烘平网格 + 材质 diffuse（≤1024）
@@ -27,16 +27,34 @@ public static class LayoutEditorCounterSkin3dExport
     [MenuItem("Layout Editor/素材导出 (Asset Export)/导出桌台皮肤 3D 模型与俯视图 (Export Skin 3D)", false, 1)]
     public static void ExportAll()
     {
+        var result = ExportAllInternal(null);
+        if (!string.IsNullOrEmpty(result.fatalError))
+        {
+            EditorUtility.DisplayDialog("桌台 3D 导出", result.fatalError, "确定");
+            return;
+        }
+        EditorUtility.DisplayDialog("桌台 3D 导出", result.report, "确定");
+    }
+
+    /// <summary>一键 Web 资源导出用：不弹结束对话框，进度经回调上报。</summary>
+    public static LayoutEditorCounterSkin3dExportResult ExportAllSilent(Action<string, float> progress)
+    {
+        return ExportAllInternal(progress);
+    }
+
+    private static LayoutEditorCounterSkin3dExportResult ExportAllInternal(Action<string, float> progress)
+    {
+        var result = new LayoutEditorCounterSkin3dExportResult();
         Array.Sort(LayoutEditorCounterSkinIconExport.CounterTypes, (a, b) => b.Length.CompareTo(a.Length));
-        string repoRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
-        string outDir = Path.Combine(repoRoot, "exports/counter-skins").Replace("\\", "/");
+        string outDir = Path.Combine(LayoutEditorPaths.ExportsRoot, "counter-skins").Replace("\\", "/");
         Directory.CreateDirectory(outDir);
+        result.outDir = outDir;
 
         List<string> soFiles = LayoutEditorCounterSkinIconExport.CollectCounterSoFiles();
         if (soFiles.Count == 0)
         {
-            EditorUtility.DisplayDialog("桌台 3D 导出", "未找到任何 counters 伪预制件 SO（pseudo_prefab_so/counters）", "确定");
-            return;
+            result.fatalError = "未找到任何 counters 伪预制件 SO（pseudo_prefab_so/counters）";
+            return result;
         }
 
         var own = new List<AssetBundle>();
@@ -53,6 +71,7 @@ public static class LayoutEditorCounterSkin3dExport
             {
                 string file = soFiles[i];
                 EditorUtility.DisplayProgressBar("桌台 3D 导出", file, (float)i / soFiles.Count);
+                ReportProgress(progress, "导出桌台 3D " + (i + 1) + "/" + soFiles.Count + "：" + Path.GetFileNameWithoutExtension(file), (float)i / Mathf.Max(1, soFiles.Count));
                 var row = ExtractOne(outDir, bundles, own, manifest, file);
                 if (row != null) { items.Add(row); done++; }
             }
@@ -82,7 +101,19 @@ public static class LayoutEditorCounterSkin3dExport
             "\n前端经 /api/counter-skins/3d/ 路由读取，无需重新构建前端";
         if (sb.Length > 0) report += "\n失败明细（前若干条）:" + sb;
         Debug.Log("[LayoutEditor/Export] " + report.Replace("\n", " | "));
-        EditorUtility.DisplayDialog("桌台 3D 导出", report, "确定");
+        result.okCount = ok;
+        result.failCount = failed;
+        result.report = report;
+        return result;
+    }
+
+    private static void ReportProgress(Action<string, float> progress, string message, float value)
+    {
+        if (progress != null)
+        {
+            try { progress(message, value); }
+            catch { }
+        }
     }
 
     private class SkinMatInfo
@@ -128,7 +159,8 @@ public static class LayoutEditorCounterSkin3dExport
             if (prefab == null) { row["error"] = "prefab 加载失败: " + so.assetPath; return row; }
 
             Vector3 offset = new Vector3(-5000f, 0f, -5000f);
-            inst = (GameObject)UnityEngine.Object.Instantiate(prefab, offset, Quaternion.identity);
+            inst = LayoutEditorSafeInstantiate.InstantiateAt(prefab, offset, Quaternion.identity);
+            if (inst == null) { row["error"] = "实例化失败"; return row; }
 
             // ① 仅收集参与渲染（active+enabled）的渲染器；先取各槽 diffuse+tint（材质替换前）
             var renderers = inst.GetComponentsInChildren<Renderer>(false);
@@ -200,6 +232,7 @@ public static class LayoutEditorCounterSkin3dExport
             rt = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32);
             cam.targetTexture = rt;
             cam.Render();
+            cam.targetTexture = null;
             RenderTexture prev = RenderTexture.active;
             RenderTexture.active = rt;
             var png = new Texture2D(w, h, TextureFormat.ARGB32, false, false);
@@ -306,7 +339,13 @@ public static class LayoutEditorCounterSkin3dExport
         }
         finally
         {
-            if (rt != null) { RenderTexture.active = null; UnityEngine.Object.DestroyImmediate(rt); }
+            if (camGo != null)
+            {
+                var cam = camGo.GetComponent<Camera>();
+                if (cam != null) cam.targetTexture = null;
+            }
+            RenderTexture.active = null;
+            if (rt != null) UnityEngine.Object.DestroyImmediate(rt);
             if (camGo != null) UnityEngine.Object.DestroyImmediate(camGo);
             if (inst != null) UnityEngine.Object.DestroyImmediate(inst);
         }
@@ -394,4 +433,14 @@ public static class LayoutEditorCounterSkin3dExport
         sb.Append("  }\n}\n");
         File.WriteAllText(path, sb.ToString(), new UTF8Encoding(false));
     }
+}
+
+/// <summary>桌台 3D 导出结果（一键 Web 资源导出协调器消费）。</summary>
+public sealed class LayoutEditorCounterSkin3dExportResult
+{
+    public int okCount;
+    public int failCount;
+    public string outDir;
+    public string report;
+    public string fatalError;
 }

@@ -7,6 +7,7 @@ public static class LayoutEditorPaths
     // Application.dataPath 只能在 Unity 主线程调用；HTTP 监听线程 fast-path 只读缓存。
     private static volatile string s_webDistRoot;
     private static volatile string s_webPublicRoot;
+    private static volatile string s_exportsRoot;
 
     /// <summary>主线程预计算前端根目录（Start/菜单/导出器调用）。监听线程随后只读缓存。</summary>
     public static void PrecomputeRoots()
@@ -15,6 +16,8 @@ public static class LayoutEditorPaths
             s_webDistRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "../layout-editor/web/dist"));
         if (string.IsNullOrEmpty(s_webPublicRoot))
             s_webPublicRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "../layout-editor/web/public"));
+        if (string.IsNullOrEmpty(s_exportsRoot))
+            s_exportsRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "../exports"));
     }
 
     /// <summary>监听线程安全读取：未预计算时返回 false，让请求回主线程处理。</summary>
@@ -23,6 +26,13 @@ public static class LayoutEditorPaths
         webDistRoot = s_webDistRoot;
         webPublicRoot = s_webPublicRoot;
         return !string.IsNullOrEmpty(webDistRoot) && !string.IsNullOrEmpty(webPublicRoot);
+    }
+
+    /// <summary>监听线程安全读取 exports 根目录（音频/桌台/装饰导出产物，git 忽略）。</summary>
+    public static bool TryGetCachedExportsRoot(out string exportsRoot)
+    {
+        exportsRoot = s_exportsRoot;
+        return !string.IsNullOrEmpty(exportsRoot);
     }
 
     public static string WebDistRoot
@@ -34,14 +44,23 @@ public static class LayoutEditorPaths
         }
     }
 
-    /// <summary>布局编辑器前端源码资源根（web/public）。缩略图等导出产物先落这里，
-    /// 再由 vite build 同步到 dist。</summary>
+    /// <summary>布局编辑器前端源码资源根（web/public）：仅剩构建期目录/图标，导出产物不再写这里。</summary>
     public static string WebPublicRoot
     {
         get
         {
             PrecomputeRoots();
             return s_webPublicRoot;
+        }
+    }
+
+    /// <summary>Web 前端导出产物根目录（&lt;repo&gt;/exports，git 忽略）：audio / counter-skins / decor。</summary>
+    public static string ExportsRoot
+    {
+        get
+        {
+            PrecomputeRoots();
+            return s_exportsRoot;
         }
     }
 

@@ -61,6 +61,23 @@ function buildRows(env: EnvStatus | null): DepRow[] {
       fix: "音频尚未导出。请在 Unity 菜单「Layout Editor / Open Bridge」窗口中点击「导出音频依赖」，完成后点击「重新检查」。缺失时音乐/音效试听不可用（不影响布局编辑）。",
     },
     {
+      name: "装饰双视图",
+      ok: !!env.decorExports,
+      detail: env.decorExports
+        ? `${env.decorExportFront ?? 0} 正面 / ${env.decorExportBack ?? 0} 背面`
+        : undefined,
+      fix: "装饰缩略图尚未导出。请在关卡管理页点击「🌐 导出 Web 资源」或 Unity 菜单「Layout Editor / 素材导出 / 导出装饰物双视图缩略图」。缺失时装饰卡片显示首字占位。",
+    },
+    {
+      name: "桌台图标 / 3D",
+      ok: !!env.counterSkinIcons && !!env.counterSkin3d,
+      detail:
+        env.counterSkinIcons || env.counterSkin3d
+          ? `${env.counterSkinIconCount ?? 0} 图标 / ${env.counterSkin3dCount ?? 0} 个 3D`
+          : undefined,
+      fix: "桌台皮肤导出缺失。请在关卡管理页点击「🌐 导出 Web 资源」或 Unity 菜单「素材导出 → 导出桌台皮肤图标/3D」。缺失时皮肤选择器回退主色。",
+    },
+    {
       name: "Bundle 清单（dump）",
       ok: !!env.dumpManifest,
       fix: "dump_bundle/manifest.json 缺失。请在「Layout Editor / Open Bridge」窗口点击「导出 Bundle 全部内容」。缺失时 bundle 依赖分析不可用（不影响布局编辑）。",

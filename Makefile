@@ -1,6 +1,6 @@
 all: run
 
-ZIP_NAME := OC2-Web-v0.11.0-beta.zip
+ZIP_NAME := OC2-Web-v0.11.0-early.zip
 INSTALLER_ZIP := OC2-Installer.zip
 
 .PHONY: all build run installer installer-zip
@@ -43,3 +43,5 @@ run:
 	rm -rf ./pkg/layout-editor/scripts/oc2-rebuild/
 	rm -rf ./pkg/layout-editor/web/node_modules/
 	rm -rf ./pkg/layout-editor/scripts/.venv-audio/
+	rm -rf ./pkg/layout-editor/node_modules/
+	rm -rf ./pkg/layout-editor/offline-check/

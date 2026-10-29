@@ -1,21 +1,50 @@
 /**
  * 装饰缩略图缓存中枢。
  *
- * - manifest：guid → png 文件（Unity 菜单导出，Node 脚本生成），带版本号防旧缓存。
+ * - manifest：guid → { front, back? }（Unity 菜单导出到 exports/decor），带版本号防旧缓存。
+ * - 图片经后端 /api/web-assets/decor/ 读取，不再走 layout-editor/web/public 静态资源。
  * - 预热：开启「装饰预览」后后台并发请求全部装饰图，写进浏览器 HTTP 缓存；
  *   不长期持有解码后的 HTMLImageElement（3000+ 张会吃光内存），只记录成功/失败状态。
  * - 卡片 <img> 仍用 loading="lazy"，滚动到视口时直接从 HTTP 缓存命中。
  */
 
+export type DecorView = "front" | "back";
+
+export interface DecorPreviewDetail {
+  front?: string;
+  back?: string;
+}
+
+export interface DecorPreviewModel {
+  obj: string;
+  mtl?: string;
+}
+
+export interface DecorPreviewEntry {
+  front: string;
+  back?: string;
+  /** 高清详情图（1024，个别大件 1536/2048）；仅在打开大图查看器时加载。 */
+  detail?: DecorPreviewDetail;
+  /** 3D 预览模型（OBJ/MTL + 共享贴图）；仅在打开 3D 查看器时加载。 */
+  model?: DecorPreviewModel;
+}
+
+export interface DecorModelInfo {
+  resourceBase: string;
+  modelFileName: string;
+  mtlUrl: string;
+}
+
 export interface DecorPreviewManifest {
   version: string;
   generatedAt?: string;
   thumbSize?: number;
-  files: Record<string, string>;
+  views?: DecorView[];
+  files: Record<string, DecorPreviewEntry>;
   missing?: Array<{ id: string; guid: string; nameZh?: string }>;
 }
 
-const PREVIEW_DIR = "/icons/decor-preview";
+const PREVIEW_BASE = "/api/web-assets/decor";
 const PRELOAD_CONCURRENCY = 12;
 
 let manifest: DecorPreviewManifest | null = null;
@@ -33,7 +62,7 @@ function validGuid(guid: string): boolean {
 
 export async function loadDecorPreviewManifest(): Promise<DecorPreviewManifest | null> {
   if (manifestPromise) return manifestPromise;
-  manifestPromise = fetch(`${PREVIEW_DIR}/manifest.json`, { cache: "no-cache" })
+  manifestPromise = fetch(`${PREVIEW_BASE}/manifest.json`, { cache: "no-cache" })
     .then((r) => {
       if (!r.ok) throw new Error(`manifest HTTP ${r.status}`);
       return r.json() as Promise<DecorPreviewManifest>;
@@ -42,7 +71,7 @@ export async function loadDecorPreviewManifest(): Promise<DecorPreviewManifest |
       if (!data || typeof data !== "object" || !data.files) throw new Error("manifest 格式不正确");
       manifest = data;
       for (const m of data.missing ?? []) {
-        if (m && m.guid) failed.add(m.guid);
+        if (m && m.guid) failed.add(failKey(m.guid, "front"));
       }
       return manifest;
     })
@@ -57,31 +86,74 @@ export function decorPreviewVersion(): string {
   return manifest?.version ?? "";
 }
 
-export function isDecorPreviewMissing(guid: string): boolean {
-  return !!guid && failed.has(guid);
+function failKey(guid: string, view: DecorView): string {
+  return `${guid}:${view}`;
+}
+
+export function isDecorPreviewMissing(guid: string, view: DecorView = "front"): boolean {
+  return !!guid && failed.has(failKey(guid, view));
 }
 
 /** 卡片图片 URL；manifest 明确缺失 / 已知加载失败时返回 null（显示占位）。 */
-export function decorPreviewUrl(guid: string): string | null {
-  if (!guid || !validGuid(guid) || failed.has(guid)) return null;
-  const file = manifest?.files?.[guid];
-  if (manifest && !file) return null;
-  const name = file || `${guid}.png`;
-  const base = `${PREVIEW_DIR}/${encodeURIComponent(name)}`;
+export function decorPreviewUrl(guid: string, view: DecorView = "front"): string | null {
+  if (!guid || !validGuid(guid) || failed.has(failKey(guid, view))) return null;
+  const entry = manifest?.files?.[guid];
+  if (manifest) {
+    if (!entry || !entry.front) return null;
+    if (view === "back" && !entry.back) return null;
+  }
+  const rel = (view === "back" ? entry?.back : entry?.front) || `${view}/${guid}.png`;
+  const safeRel = rel
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+  const base = `${PREVIEW_BASE}/${safeRel}`;
   const version = manifest?.version;
   return version ? `${base}?v=${encodeURIComponent(version)}` : base;
 }
 
-export function markDecorPreviewLoaded(guid: string): void {
-  if (!guid) return;
-  loaded.add(guid);
-  failed.delete(guid);
+/** 3D 模型资源信息；manifest 未提供 model 时返回 null。 */
+export function decorModelInfo(guid: string): DecorModelInfo | null {
+  if (!guid || !validGuid(guid)) return null;
+  const model = manifest?.files?.[guid]?.model;
+  if (!model || !model.obj) return null;
+  const slash = model.obj.lastIndexOf("/");
+  const dir = slash >= 0 ? model.obj.slice(0, slash + 1) : "";
+  const fileName = slash >= 0 ? model.obj.slice(slash + 1) : model.obj;
+  const mtlRel = model.mtl || dir + "model.mtl";
+  const mtlUrl = mtlRel.indexOf(dir) === 0 ? mtlRel.slice(dir.length) : mtlRel;
+  return {
+    resourceBase: `${PREVIEW_BASE}/${dir}`,
+    modelFileName: fileName,
+    mtlUrl,
+  };
 }
 
-export function markDecorPreviewFailed(guid: string): void {
+/** 高清详情图 URL；manifest 未提供 detail 时返回 null（查看器回退 192 缩略图）。 */
+export function decorDetailUrl(guid: string, view: DecorView = "front"): string | null {
+  if (!guid || !validGuid(guid)) return null;
+  const entry = manifest?.files?.[guid];
+  const rel = view === "back" ? entry?.detail?.back : entry?.detail?.front;
+  if (!rel) return null;
+  const safeRel = rel
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+  const base = `${PREVIEW_BASE}/${safeRel}`;
+  const version = manifest?.version;
+  return version ? `${base}?v=${encodeURIComponent(version)}` : base;
+}
+
+export function markDecorPreviewLoaded(guid: string, view: DecorView = "front"): void {
   if (!guid) return;
-  failed.add(guid);
-  loaded.delete(guid);
+  loaded.add(failKey(guid, view));
+  failed.delete(failKey(guid, view));
+}
+
+export function markDecorPreviewFailed(guid: string, view: DecorView = "front"): void {
+  if (!guid) return;
+  failed.add(failKey(guid, view));
+  loaded.delete(failKey(guid, view));
 }
 
 function pump(): void {
@@ -103,7 +175,7 @@ function pump(): void {
     };
     for (const guid of batch) {
       queued.delete(guid);
-      if (loaded.has(guid) || failed.has(guid)) {
+      if (loaded.has(failKey(guid, "front")) || failed.has(failKey(guid, "front"))) {
         doneOne();
         continue;
       }
@@ -120,11 +192,11 @@ function pump(): void {
           return r.arrayBuffer();
         })
         .then(() => {
-          markDecorPreviewLoaded(guid);
+          markDecorPreviewLoaded(guid, "front");
           doneOne();
         })
         .catch(() => {
-          markDecorPreviewFailed(guid);
+          markDecorPreviewFailed(guid, "front");
           doneOne();
         });
     }
@@ -139,7 +211,7 @@ export function preloadDecorPreviews(
 ): void {
   if (onProgress) progressCb = onProgress;
   for (const guid of guids) {
-    if (!guid || !validGuid(guid) || loaded.has(guid) || failed.has(guid) || queued.has(guid)) continue;
+    if (!guid || !validGuid(guid) || loaded.has(failKey(guid, "front")) || failed.has(failKey(guid, "front")) || queued.has(guid)) continue;
     queued.add(guid);
     queue.push(guid);
   }
