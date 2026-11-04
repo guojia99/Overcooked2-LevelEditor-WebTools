@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: CustomRecipeConfig
   m_EditorClassIdentifier: 
   uidPrefix: 58323
-  nextSequence: 12
+  nextSequence: 19
   categories:
   - id: burrito
     zh: "\u5377\u997C"
@@ -20,5 +20,11 @@ MonoBehaviour:
   - id: milk_tea
     zh: "\u5976\u8336"
     en: Milk Tea
+  - id: steamed
+    zh: "\u84B8\u83DC"
+    en: Steamed
+  - id: pasta
+    zh: "\u610F\u9762"
+    en: Pasta
   subcategories: []
   modelTransforms: []

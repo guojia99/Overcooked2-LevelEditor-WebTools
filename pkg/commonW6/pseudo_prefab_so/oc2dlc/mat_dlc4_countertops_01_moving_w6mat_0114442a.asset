@@ -9,7 +9,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0cff7c13895ab9e47a5e02d4619cc3b9, type: 3}
-  m_Name: mat_dlc4_countertops_01_moving_w6mat_0114442a
+  m_Name: mat_dlc4_countertops_01_moving_w6mat
   m_EditorClassIdentifier: 
   prefabName: mat_dlc4_countertops_01_moving
   bundleName: bundle420

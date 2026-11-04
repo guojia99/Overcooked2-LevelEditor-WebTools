@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: mat_dlc2_poolwater_01
+  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+  m_ShaderKeywords:
+  m_LightmapFlags: 0
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 2100
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+      _Diffuse_Map:
+        m_Texture: {fileID: 2800000, guid: b472776869fe7b9df88ebee1d2b38d85, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _NormalMap1:
+        m_Texture: {fileID: 2800000, guid: e3d54ae9c98977b5ac9050c27f3cb79f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _NormalMap2:
+        m_Texture: {fileID: 2800000, guid: e3d54ae9c98977b5ac9050c27f3cb79f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0.6, y: 0}
+    m_Floats:
+      _Cutoff: 0.5
+      _Diffuse_Distortion: 0.25
+      _Diffuse_Speed: 0
+      _Metallic: 1.32
+      _ReflDistort: 1.5
+      _Reflection_Intensity: -0.35
+      _RefrDistort: 1.5
+      _Refraction: 0.1
+      _Roughness: 0.44
+      _SpecIntensity: 0.04
+      _SpecPower: 0.4
+      _WaveScale: 0.0854
+      _node_1139: 0
+      _node_4480: 0.3
+      _node_4956: 0.8
+      _node_9170: 0.541
+      _scroll_speed: 0.02
+      _scroll_speed_1: -0.002
+      _scroll_speed_2: -0.0135
+      _scroll_speed_3: 0.1
+      _scroll_speed_copy: 0.051
+      _test: 0.5
+      _texture_distortion: 0.25
+      _vertex_distortion: 0
+      _verxtexdistortion: 0.1
+    m_Colors:
+      _Color: {r: 1, g: 1, b: 1, a: 1}
+      WaveSpeed: {r: -87, g: 4.5, b: -73, a: -3.5}
+      _BumpMap_ST: {r: 1, g: 1, b: 0, a: 0}
+      _Colour_Mask: {r: 0.6397059, g: 0.6397059, b: 0.6397059, a: 0.409}
+      _Fresnel_ST: {r: 1, g: 1, b: 0, a: 0}
+      _HorizonColor: {r: 0, g: 0.36920622, b: 0.591, a: 1}
+      _MainTex_ST: {r: 1, g: 1, b: 0, a: 0}
+      _MaskColor: {r: 0, g: 1, b: 0.68750024, a: 1}
+      _ReflectionTex_ST: {r: 1, g: 1, b: 0, a: 0}
+      _ReflectiveColorCube_ST: {r: 1, g: 1, b: 0, a: 0}
+      _ReflectiveColor_ST: {r: 1, g: 1, b: 0, a: 0}
+      _RefrColor: {r: 0.9372549, g: 0.9372549, b: 0.9372549, a: 1}
+      _RefractionTex_ST: {r: 1, g: 1, b: 0, a: 0}
+      _SpecColour: {r: 1, g: 1, b: 1, a: 1}
+      _node_1686: {r: 0.40405676, g: 1, b: 0.16911763, a: 1}
+      _node_2482: {r: 0, g: 1, b: 0.006896496, a: 0.503}

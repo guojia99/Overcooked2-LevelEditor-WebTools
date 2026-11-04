@@ -18,6 +18,8 @@ public static class SceneLayoutExporter
         // 燃烧弹射器波次时序 helper（TriggerTimer/TriggerOnObject 逻辑载体，
         // 由 BurnerScheduleBakery 重建，不作为物品导出/匹配/删除）。
         "Design/Burner Logic",
+        // 开关/压力地板调色 helper（CustomStub.SwitchTint 载体，不作为物品导出）。
+        "Design/Switch Tint Logic",
     };
 
     public static LayoutDocumentDto ExportActiveScene()
@@ -314,17 +316,49 @@ public static class SceneLayoutExporter
 
         var t = cam.transform;
         var e = t.eulerAngles;
+        var rig = FindCameraRigRoot(cam);
+        var splitTag = LayoutEditorStubIO.GetSplitScreenTagValue(cam.gameObject);
+        if (string.IsNullOrEmpty(splitTag) && rig != null)
+            splitTag = LayoutEditorStubIO.GetSplitScreenTagValue(rig);
+        var split = !string.IsNullOrEmpty(splitTag);
+        var splitCameras = LayoutEditorStubIO.ParseSplitScreenCameras(splitTag);
+        var mp = cam.GetComponentInParent<MultiplayerCamera>();
+        var minDistance = 0f;
+        if (mp != null)
+        {
+            var f = typeof(MultiplayerCamera).GetField("m_minDistance",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (f != null)
+                minDistance = (float)f.GetValue(mp);
+        }
+
         return new CameraInfoDto
         {
             backgroundColor = "#" + ColorUtility.ToHtmlStringRGB(cam.backgroundColor),
             fieldOfView = cam.fieldOfView,
+            minDistance = minDistance,
             position = LayoutVector3.From(t.position),
             pitch = e.x,
             yaw = e.y,
             roll = e.z,
             nearClip = cam.nearClipPlane,
-            farClip = cam.farClipPlane
+            farClip = cam.farClipPlane,
+            splitScreen = split,
+            splitScreenCameras = splitCameras
         };
+    }
+
+    /// <summary>相机根节点：优先 MultiplayerCamera 所在节点，其次场景根。
+    ///  相机偏移 tag（CameraOffset|）挂在这里；分屏 tag（SplitScreen|）优先挂
+    ///  Camera 子物体（避免与 CameraOffset| 同物体互斥覆盖）。</summary>
+    public static GameObject FindCameraRigRoot(Camera cam)
+    {
+        if (cam == null)
+            return null;
+        var mp = cam.GetComponentInParent<MultiplayerCamera>();
+        if (mp != null)
+            return mp.gameObject;
+        return cam.transform.root != null ? cam.transform.root.gameObject : cam.gameObject;
     }
 
     /// <summary>收集所有根物体下 "Lights" 子树中的非 prefab 灯光
@@ -466,6 +500,8 @@ public static class SceneLayoutExporter
         var scene = SceneManager.GetActiveScene();
         if (!scene.IsValid())
             return items;
+        // 调色 helper 可能刚由写回重建/清理：每次快照都重新扫描，避免前后快照复用旧颜色。
+        LayoutEditorStubIO.InvalidateSwitchTintCache();
 
         foreach (var rootGo in scene.GetRootGameObjects())
         {

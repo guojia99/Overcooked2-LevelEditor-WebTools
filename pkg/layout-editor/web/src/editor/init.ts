@@ -77,6 +77,7 @@ import { draw } from "./render";
 import { setupCanvas, resetOverlapMarqueePending } from "./input";
 import { clearWorkstationOverlapAlert } from "./workstationOverlapAlert";
 import { initCrossTabClipboardListener } from "./crossTabClipboard";
+import { wireGridAlign, syncGridAlignUI } from "./gridAlign";
 import {
   goManage,
   openConfigTabsModal,
@@ -326,6 +327,7 @@ export function setLayer(layer: LayerKey): void {
   if (layer === "anim") S.activeRightTab = "anim";
   updatePanelTabButtons();
   syncVisibilityPopover();
+  syncGridAlignUI(layer);
   const searchEl = document.getElementById("palette-search") as HTMLInputElement;
   const sizeEl = document.getElementById("decor-size-filter") as HTMLSelectElement;
   if (sizeEl) sizeEl.classList.toggle("hidden", layer !== "decor");
@@ -846,6 +848,7 @@ export async function init() {
   initPaletteGroupActions();
   wireVisibilityPopover();
   wireViewConfigPopover();
+  wireGridAlign();
   setupCanvas();
   initContextMenuDrag();
   initFloatingPanelDrag(dom.detailEl, { draggingClass: "item-detail-dragging" });

@@ -94,6 +94,8 @@ public static class SpeedControlBakery
         if (doc == null || doc.items == null)
             return null;
         var errors = new List<string>();
+        var unboundSpeedTargets = new List<string>();
+        var unboundSpawnerTargets = new List<string>();
         var usedHelpers = new HashSet<string>(StringComparer.Ordinal);
 
         var speedTargets = new List<SpeedTarget>();
@@ -103,7 +105,7 @@ public static class SpeedControlBakery
             if (item == null || string.IsNullOrEmpty(item.instanceId)) continue;
             PurgeMisplacedSpeedControls(item);
             if (item.stubKind == "Travelator" && item.travelator != null &&
-                item.travelator.speedControl != null)
+                item.travelator.speedControl != null && item.travelator.speedControl.enabled)
                 speedTargets.Add(new SpeedTarget
                 {
                     itemId = item.instanceId,
@@ -111,7 +113,7 @@ public static class SpeedControlBakery
                     cfg = item.travelator.speedControl
                 });
             else if (item.stubKind == "Conveyor" && item.conveyor != null &&
-                     item.conveyor.speedControl != null)
+                     item.conveyor.speedControl != null && item.conveyor.speedControl.enabled)
                 speedTargets.Add(new SpeedTarget
                 {
                     itemId = item.instanceId,
@@ -199,7 +201,7 @@ public static class SpeedControlBakery
             buttonsByItemId.TryGetValue(st.itemId, out buttons);
             if (buttons == null || buttons.Count == 0)
             {
-                errors.Add("按钮控速：目标 " + st.go.name + " 未绑定任何开关（触发编排①区添加），已跳过");
+                unboundSpeedTargets.Add(st.go.name);
                 continue;
             }
 
@@ -231,7 +233,7 @@ public static class SpeedControlBakery
             buttonsByItemId.TryGetValue(sp.itemId, out buttons);
             if (buttons == null || buttons.Count == 0)
             {
-                errors.Add("生成器批次：目标 " + sp.go.name + " 未绑定任何开关（触发编排①区添加），已跳过");
+                unboundSpawnerTargets.Add(sp.go.name);
                 continue;
             }
             int count = Mathf.Clamp(cfg.batchCount <= 0 ? 1 : cfg.batchCount, 1, MaxBatchCount);
@@ -257,12 +259,25 @@ public static class SpeedControlBakery
                 "s｜冷却 " + cooldown.ToString("0.##") + "s｜按钮 " + buttons.Count + " 个");
         }
 
+        WarnUnbound("按钮控速", unboundSpeedTargets);
+        WarnUnbound("生成器批次", unboundSpawnerTargets);
+
         if (fullWrite)
             CleanupStale(usedHelpers);
 
         if (errors.Count > 0)
             LayoutEditorLog.LogWarning("speedctl: bake errors: " + string.Join("; ", errors.ToArray()));
         return errors.Count > 0 ? string.Join("; ", errors.ToArray()) : null;
+    }
+
+    private static void WarnUnbound(string label, List<string> names)
+    {
+        if (names == null || names.Count == 0) return;
+        var shown = names.Count > 6 ? names.GetRange(0, 6) : names;
+        var message = label + "：目标未绑定任何开关，已跳过 " + names.Count +
+            " 个：" + string.Join("、", shown.ToArray()) + (names.Count > 6 ? " 等" : "");
+        LayoutEditorLog.LogWarning(message);
+        LayoutEditorLog.RecordApplyWarning(message);
     }
 
     private static Transform EnsureHelper(string helperName)

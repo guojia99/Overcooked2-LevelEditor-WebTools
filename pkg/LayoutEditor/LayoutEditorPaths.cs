@@ -54,7 +54,7 @@ public static class LayoutEditorPaths
         }
     }
 
-    /// <summary>Web 前端导出产物根目录（&lt;repo&gt;/exports，git 忽略）：audio / counter-skins / decor。</summary>
+    /// <summary>Web 前端导出产物根目录（&lt;repo&gt;/exports，git 忽略）：audio / counter-skins / decor / food-icons。</summary>
     public static string ExportsRoot
     {
         get

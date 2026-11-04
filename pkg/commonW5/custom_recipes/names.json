@@ -55,6 +55,36 @@
       "id": "Web_MilkTea_HoneyMilkTea",
       "zh": "蜂蜜奶茶",
       "en": "Honey Milk Tea"
+    },
+    {
+      "id": "Web_Steamed_Fish",
+      "zh": "Web 蒸鱼",
+      "en": "Web Steamed Fish"
+    },
+    {
+      "id": "Web_Steamed_PrawnPrep",
+      "zh": "Web 虾烧麦面团（中间）",
+      "en": "Web Prawn Shumai Dough (Intermediate)"
+    },
+    {
+      "id": "Web_Steamed_Prawns",
+      "zh": "Web 虾烧麦",
+      "en": "Web Prawn Shumai"
+    },
+    {
+      "id": "Web_Seafood_Pasta",
+      "zh": "Web 海鲜意面",
+      "en": "Web Seafood Pasta"
+    },
+    {
+      "id": "Web_Fish_Pasta",
+      "zh": "Web 鲜鱼意面",
+      "en": "Web Fish Pasta"
+    },
+    {
+      "id": "Web_Prawn_Pasta",
+      "zh": "Web 鲜虾意面",
+      "en": "Web Prawn Pasta"
     }
   ]
 }

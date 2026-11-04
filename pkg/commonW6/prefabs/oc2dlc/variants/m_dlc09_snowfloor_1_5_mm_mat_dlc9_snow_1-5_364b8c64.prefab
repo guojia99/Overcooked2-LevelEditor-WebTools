@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114096038827637246}
   - component: {fileID: 114967938430519454}
   m_Layer: 0
-  m_Name: m_dlc09_snowfloor_1_5_mm_mat_dlc9_snow_1-5_364b8c64
+  m_Name: m_dlc09_snowfloor_1_5_mm_mat_dlc9_snow_1-5
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

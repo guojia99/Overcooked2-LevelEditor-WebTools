@@ -520,6 +520,7 @@ export function computeUtensilIngredientFill(
         const vessel = subVesselOf(b) || finalVesselOf(r);
         if (vessel) {
           addInter(vessel, b.id);
+          if (vessel !== "Steamer") for (const ing of leafs) addIng(vessel, ing);
           bump(vessel, 1);
         }
       }
@@ -540,6 +541,7 @@ export function computeUtensilIngredientFill(
         const vessel = subVesselOf(b) || finalVesselOf(r);
         if (vessel) {
           addInter(vessel, b.id);
+          if (vessel !== "Steamer") for (const ing of leafs) addIng(vessel, ing);
           bump(vessel, 1);
         }
       }
@@ -588,6 +590,18 @@ export function computeUtensilIngredientFill(
       if (!container) continue;
       const gIngs = g.ingredients ?? [];
       if (gIngs.length === 0) {
+        if (r.isCustom) {
+          const ingredientIds = new Set(S.ingredientsCache.map((i) => i.id));
+          const customSubs = (r.compositionIds ?? []).filter((cid) => {
+            const sub = interById.get(cid);
+            return sub ? !!sub.isCustom : !ingredientIds.has(cid);
+          });
+          if (customSubs.length > 0) {
+            for (const cid of customSubs) addInter(container, cid);
+            bump(container, customSubs.length);
+            continue;
+          }
+        }
         // 空标记组（搅拌后整锅下终锅）：把终锅标记为清空，让运行时保留原版 lookup
         // （蒸笼认得三种烧麦面团 + 鱼、煎锅认得松饼面糊 + 肉/虾/鱼）。
         entry(container).clear = true;
@@ -801,6 +815,85 @@ export function computeRequiredUtensils(ingredientIds: Set<string>, steps: Set<s
   return [...set].map(functionalBaseId);
 }
 
+const MACHINE_OUTPUT_INGREDIENT_IDS = [
+  ...SODA_MACHINE_INGREDIENT_IDS,
+  ...DRINK_MACHINE_INGREDIENT_IDS,
+  ...CREAM_INGREDIENT_IDS,
+  ...CONDIMENT_MACHINE_INGREDIENT_IDS,
+];
+
+/** 汽水 / 饮料 / 奶油 / 酱料：机器或道具产出，食材箱和食材生成器都不该一键填进去。 */
+function isMachineOutputIngredient(id: string): boolean {
+  const lower = id.toLowerCase();
+  return MACHINE_OUTPUT_INGREDIENT_IDS.some((x) => x.toLowerCase() === lower);
+}
+
+/** 食材生成器一键填充要排除的 id：机器产出，以及分类上的饮料 / 酱料。
+ *  冰块仍可填（实体食材，不是饮料机产出）。 */
+export function isExcludedFromSpawnerFill(id: string): boolean {
+  if (isMachineOutputIngredient(id)) return true;
+  const cat = ingredientCategoryOf(id);
+  if (cat === "sauce") return true;
+  if (cat === "drink" && !id.toLowerCase().includes("icecube")) return true;
+  return false;
+}
+
+/** 把菜谱食材展开成可生成的叶 id。中间产物递归展开成组成食材，节点本身不进入结果。 */
+export function expandSpawnerFillLeaves(
+  id: string,
+  recipe: { group?: string } | undefined,
+  intermediates: RecipeEntry[],
+  stack: Set<string> = new Set()
+): string[] {
+  const normalized = crateIngredientId(id, recipe);
+  const key = normalized.toLowerCase();
+  if (stack.has(key)) return [];
+  const inter =
+    intermediates.find((x) => x.id === normalized) ??
+    intermediates.find((x) => x.id.toLowerCase() === key) ??
+    intermediates.find((x) => x.id === id) ??
+    intermediates.find((x) => x.id.toLowerCase() === id.toLowerCase());
+  if (!inter) return isExcludedFromSpawnerFill(normalized) ? [] : [normalized];
+  const ings = inter.ingredients ?? [];
+  if (ings.length === 0) return [];
+  stack.add(key);
+  const out: string[] = [];
+  for (const child of ings) out.push(...expandSpawnerFillLeaves(child, recipe, intermediates, stack));
+  stack.delete(key);
+  return out;
+}
+
+/** 一组已保存菜谱 → 食材生成器应勾选的叶食材 id（去重，不含酱料 / 饮料 / 奶油 / 中间产物）。 */
+export function collectSpawnerFillIngredientIds(recipes: RecipeEntry[], intermediates: RecipeEntry[]): string[] {
+  const required = new Set<string>();
+  for (const r of recipes) {
+    for (const i of r.ingredients ?? []) {
+      for (const leaf of expandSpawnerFillLeaves(i, r, intermediates)) required.add(leaf);
+    }
+  }
+  return [...required];
+}
+
+async function savedLevelRecipes(): Promise<RecipeEntry[]> {
+  const [level, recipes] = await Promise.all([
+    fetchLevelRecipes(S.scenePath).catch(() => null),
+    fetchRecipeCatalog(S.currentLevelSet).catch(() => [] as RecipeEntry[]),
+  ]);
+  const byGuid = new Map(recipes.map((r) => [r.guid, r] as const));
+  const byId = new Map(recipes.map((r) => [r.id, r] as const));
+  const seen = new Set<RecipeEntry>();
+  for (const g of level?.recipeGuids ?? []) {
+    const r = byGuid.get(g);
+    if (r) seen.add(r);
+  }
+  // recipeIds 兜底（已装副本不在当前目录时按 id 命中，同菜谱选择弹窗）
+  for (const id of level?.recipeIds ?? []) {
+    const r = byId.get(id);
+    if (r) seen.add(r);
+  }
+  return [...seen];
+}
+
 /** 当前关卡已保存菜谱所需的「食材箱可产出」叶食材 id 清单：
  *  中间产物展开为叶子（leafIngredientIds）、node 型与汉堡面皮的等价替换
  *  （crateIngredientId，**带菜谱上下文**：汉堡大全 commonW2 的成品推荐 DLC8 面皮
@@ -809,34 +902,23 @@ export function computeRequiredUtensils(ingredientIds: Set<string>, steps: Set<s
  *  随机食材箱编辑器「填充本关所需」复用。 */
 export async function levelRequiredCrateIngredientIds(): Promise<string[]> {
   try {
-    const [level, recipes] = await Promise.all([
-      fetchLevelRecipes(S.scenePath).catch(() => null),
-      fetchRecipeCatalog(S.currentLevelSet).catch(() => [] as RecipeEntry[]),
-    ]);
-    const byGuid = new Map(recipes.map((r) => [r.guid, r] as const));
-    const byId = new Map(recipes.map((r) => [r.id, r] as const));
-    const seen = new Set<RecipeEntry>();
-    for (const g of level?.recipeGuids ?? []) {
-      const r = byGuid.get(g);
-      if (r) seen.add(r);
-    }
-    // recipeIds 兜底（已装副本不在当前目录时按 id 命中，同菜谱选择弹窗）
-    for (const id of level?.recipeIds ?? []) {
-      const r = byId.get(id);
-      if (r) seen.add(r);
-    }
+    const seen = await savedLevelRecipes();
     const required = new Set<string>();
     for (const r of seen)
       (r.ingredients ?? []).forEach((i) =>
         leafIngredientIds(i).forEach((leaf) => required.add(crateIngredientId(leaf, r)))
       );
-    return [...required].filter(
-      (i) =>
-        !SODA_MACHINE_INGREDIENT_IDS.includes(i) &&
-        !DRINK_MACHINE_INGREDIENT_IDS.includes(i) &&
-        !CREAM_INGREDIENT_IDS.includes(i) &&
-        !CONDIMENT_MACHINE_INGREDIENT_IDS.includes(i)
-    );
+    return [...required].filter((i) => !isMachineOutputIngredient(i));
+  } catch {
+    return [];
+  }
+}
+
+/** 食材生成器「填充本关菜谱」：叶食材，递归展开中间产物；酱料、饮料、奶油不填。 */
+export async function levelRequiredSpawnerIngredientIds(): Promise<string[]> {
+  try {
+    const seen = await savedLevelRecipes();
+    return collectSpawnerFillIngredientIds(seen, S.intermediatesCache);
   } catch {
     return [];
   }

@@ -29,6 +29,7 @@ import {
   isIngredientSprayId,
   normalizeSpeedControlForDoc,
   stripMisplacedSpeedControl,
+  stripUnconfiguredSpeedControl,
 } from "./stubControls";
 import { partLevelActive, partIdOf } from "./partLevel";
 import { clampChefHeadLightRange } from "./lightsUtil";
@@ -131,11 +132,7 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
   //（不足 2 档整体丢弃 = 未配置；后端写回同款校验）。
   const scCarrier = rest.stubKind === "Travelator" ? rest.travelator : rest.stubKind === "Conveyor" ? rest.conveyor : null;
   if (scCarrier?.speedControl) {
-    const baseSpeed =
-      rest.stubKind === "Travelator"
-        ? rest.travelator?.speed ?? 2.5
-        : rest.conveyor?.conveySpeed ?? 0.5;
-    const normalized = normalizeSpeedControlForDoc(scCarrier.speedControl, baseSpeed);
+    const normalized = normalizeSpeedControlForDoc(scCarrier.speedControl);
     if (normalized) scCarrier.speedControl = normalized;
     else delete scCarrier.speedControl;
   } else if (rest.travelator?.speedControl && rest.stubKind !== "Travelator") {
@@ -144,6 +141,7 @@ export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz
     delete rest.conveyor.speedControl;
   }
   stripMisplacedSpeedControl(rest);
+  stripUnconfiguredSpeedControl(rest);
   // 生成器按钮批次：仅 AttachingFoodSpawner 允许携带；数量 1~50、间隔 >0、冷却 ≥0。
   if (rest.foodSpawner) {
     if (rest.stubKind !== "AttachingFoodSpawner") {
@@ -333,6 +331,25 @@ export function buildThemedItemsForDoc(): LayoutItem[] {
   return themedItems;
 }
 
+/** 写回前补齐分屏每镜头参考（旧 tag 只有 splitScreen 时 offset 默认 0 = 主相机
+ *  单目标默认跟随，不额外偏移；缺 size 补 1）。 */
+function normalizeSplitCameraConfigs(): void {
+  const cam = S.cameraInfo;
+  if (!cam || !cam.splitScreen) return;
+  if (!cam.splitScreenCameras) cam.splitScreenCameras = [];
+  const defOffset = { x: 0, y: 0, z: 0 };
+  for (let i = 0; i < 4; i++) {
+    let c = cam.splitScreenCameras[i];
+    if (!c) {
+      c = { visible: true, offset: { ...defOffset }, fieldOfView: cam.fieldOfView ?? 0, size: 1 };
+      cam.splitScreenCameras[i] = c;
+    } else if (!c.offset) {
+      c.offset = { ...defOffset };
+    }
+    if (!Number.isFinite(c.size) || c.size <= 0) c.size = 1;
+  }
+}
+
 export function buildDocument(only: SaveScope = ""): LayoutDocument {
   const animDoc = (): AnimControlData | undefined => {
     // Move controls are baked straight into the scene (no external config) and are
@@ -424,6 +441,7 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
     };
   }
 
+  normalizeSplitCameraConfigs();
   return {
     sceneAssetPath: S.scenePath,
     hasCeilingHeight: S.hasCeilingHeight,

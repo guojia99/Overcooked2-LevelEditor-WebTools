@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using LevelEditor;
 using LevelEditorStub;
 using UnityEditor;
@@ -8,6 +9,11 @@ using UnityEngine;
 public static class LayoutEditorStubIO
 {
     private const string IngredientSplitterCookingUI = "Assets/common04/_supplies/CookingUI.asset";
+
+    /// <summary>开关/压力地板调色 helper 根（独立于 Button Logic，避免清理误删）。</summary>
+    public const string SwitchTintRootPath = "Design/Switch Tint Logic";
+    private const string SwitchTintHelperPrefix = "Tint_";
+    public const string SwitchTintTagPrefix = "SwitchTint|";
 
     /// <summary>链路金丝雀：写回/导出后若 logs/layout_editor.log 无此行，说明编辑器
     /// 还在跑旧程序集（新代码未编译），一切“数据丢失”先查这条。</summary>
@@ -170,20 +176,32 @@ public static class LayoutEditorStubIO
 
             if (spawner.attachmentPrefabSOs != null && spawner.attachmentPrefabSOs.Length > 0)
             {
-                var guids = new string[spawner.attachmentPrefabSOs.Length];
+                var guids = new List<string>();
+                var weights = new List<float>();
                 for (int i = 0; i < spawner.attachmentPrefabSOs.Length; i++)
                 {
                     var so = spawner.attachmentPrefabSOs[i];
-                    guids[i] = so != null
-                        ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so))
-                        : string.Empty;
+                    if (so == null)
+                    {
+                        LayoutEditorLog.LogWarning("[LayoutEditor] ExportStub AttachingFoodSpawner: 空附件槽已跳过: " +
+                            go.name + " #" + i);
+                        continue;
+                    }
+                    var guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so));
+                    if (string.IsNullOrEmpty(guid))
+                        continue;
+                    guids.Add(guid);
+                    weights.Add(spawner.weights != null && i < spawner.weights.Length
+                        ? spawner.weights[i]
+                        : 1f);
                 }
 
-                dto.attachmentPrefabGuids = guids;
+                if (guids.Count > 0)
+                {
+                    dto.attachmentPrefabGuids = guids.ToArray();
+                    dto.weights = weights.ToArray();
+                }
             }
-
-            if (spawner.weights != null && spawner.weights.Length > 0)
-                dto.weights = (float[])spawner.weights.Clone();
 
             item.foodSpawner = dto;
             return;
@@ -197,6 +215,7 @@ public static class LayoutEditorStubIO
             {
                 conveySpeed = conveyor.conveySpeed,
                 buttonControlled = HasCustomStubTag(go, "ConveyorDirectionSync|")
+                    || HasCustomStubTag(go, "ConveyorServe|dir")
                     || FindCustomStubType(go, "ConveyorDirectionSync") != null
             };
             ExportPseudoPrefabGuidIfPresent(go, item);
@@ -253,11 +272,31 @@ public static class LayoutEditorStubIO
             {
                 // 跳过 null 引用（历史迁移/引用断裂残留）：不导出为空 guid，否则前端
                 // 原样回传后 LoadIngredientSOs 会把它写成 None，形成「三个 none」残留。
+                // 蒸笼的混合子菜谱组成食材只用于运行时 Composite 放入校验，不展示为额外食材。
+                var technicalIngredientSOs = new HashSet<ScriptableObject>();
+                bool isSteamer = go.name.IndexOf("steamer", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    (utensil.pseudoPrefabSO != null && utensil.pseudoPrefabSO.prefabName != null &&
+                     utensil.pseudoPrefabSO.prefabName.IndexOf("steamer", StringComparison.OrdinalIgnoreCase) >= 0);
+                if (isSteamer)
+                {
+                    for (int i = 0; i < utensil.allowedIngredientSOs.Length; i++)
+                    {
+                        var custom = utensil.allowedIngredientSOs[i] as CustomRecipeSO;
+                        if (custom == null || custom.type != CustomRecipeSO.RecipeType.Mixed ||
+                            custom.compositionSOs == null)
+                            continue;
+                        for (int j = 0; j < custom.compositionSOs.Length; j++)
+                        {
+                            if (custom.compositionSOs[j] != null)
+                                technicalIngredientSOs.Add(custom.compositionSOs[j]);
+                        }
+                    }
+                }
                 var guids = new System.Collections.Generic.List<string>();
                 for (int i = 0; i < utensil.allowedIngredientSOs.Length; i++)
                 {
                     var so = utensil.allowedIngredientSOs[i];
-                    if (so == null)
+                    if (so == null || technicalIngredientSOs.Contains(so))
                         continue;
                     guids.Add(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so)));
                 }
@@ -271,14 +310,18 @@ public static class LayoutEditorStubIO
                     stations.Add(utensil.allowedCookingStationTypes[i].ToString());
                 udto.stationTypes = stations.ToArray();
             }
+            // 锅内模型数组与 allowedIngredientSOs 按下标对齐（PseudoPrefabCookingUtensil.
+            // Setup 逐条取 models[i]/modelSOs[i]）：null 槽导出为 "" 占位而不是丢弃，
+            // 否则前端回传后模型会错位到别的食材上（意面煎锅炸虾饼/煎鱼模型等）。
             if (utensil.models != null && utensil.models.Length > 0)
             {
                 var guids = new System.Collections.Generic.List<string>();
                 for (int i = 0; i < utensil.models.Length; i++)
                 {
                     var model = utensil.models[i];
-                    if (model != null)
-                        guids.Add(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(model)));
+                    guids.Add(model != null
+                        ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(model))
+                        : "");
                 }
                 udto.modelGuids = guids.ToArray();
             }
@@ -288,8 +331,9 @@ public static class LayoutEditorStubIO
                 for (int i = 0; i < utensil.modelSOs.Length; i++)
                 {
                     var so = utensil.modelSOs[i];
-                    if (so != null)
-                        guids.Add(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so)));
+                    guids.Add(so != null
+                        ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so))
+                        : "");
                 }
                 udto.modelSoGuids = guids.ToArray();
             }
@@ -442,10 +486,19 @@ public static class LayoutEditorStubIO
             item.stubKind = (prefabName == "p_dlc08_button_cannon" || prefabName == "p_dlc09_button_cannon")
                 ? "CannonSwitch" : "Switch";
             var sdto = new LayoutSwitchStubDto { startEnabled = switchStub.startEnabled };
-            if (switchStub.activeMaterial != null)
-                sdto.activeMaterialGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(switchStub.activeMaterial));
-            if (switchStub.inactiveMaterial != null)
-                sdto.inactiveMaterialGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(switchStub.inactiveMaterial));
+            if (switchStub.activeMaterial != null
+                && !LayoutEditorSwitchMaterialRepair.IsMaterialSO(switchStub.activeMaterial))
+                LayoutEditorLog.LogWarning("switch material: 场景外观 SO 不是材质，已忽略: "
+                    + go.name + " activeMaterial=" + switchStub.activeMaterial.name);
+            if (switchStub.inactiveMaterial != null
+                && !LayoutEditorSwitchMaterialRepair.IsMaterialSO(switchStub.inactiveMaterial))
+                LayoutEditorLog.LogWarning("switch material: 场景外观 SO 不是材质，已忽略: "
+                    + go.name + " inactiveMaterial=" + switchStub.inactiveMaterial.name);
+            sdto.activeMaterialGuid = ExportSwitchMaterialGuid(go, switchStub.activeMaterial,
+                "activeMaterial", LayoutEditorSwitchMaterialRepair.DefaultActiveSoPath);
+            sdto.inactiveMaterialGuid = ExportSwitchMaterialGuid(go, switchStub.inactiveMaterial,
+                "inactiveMaterial", LayoutEditorSwitchMaterialRepair.DefaultInactiveSoPath);
+            ApplyTintToSwitchDto(go, sdto);
             item.switchStub = sdto;
             return;
         }
@@ -455,12 +508,32 @@ public static class LayoutEditorStubIO
         {
             item.stubKind = "PressureSwitch";
             var pdto = new LayoutPressureSwitchStubDto();
-            if (pressureSwitch.occupiedMaterialSO != null)
-                pdto.occupiedMaterialGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(pressureSwitch.occupiedMaterialSO));
-            if (pressureSwitch.unoccupiedMaterialSO != null)
-                pdto.unoccupiedMaterialGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(pressureSwitch.unoccupiedMaterialSO));
+            if (pressureSwitch.occupiedMaterialSO != null
+                && !LayoutEditorSwitchMaterialRepair.IsMaterialSO(pressureSwitch.occupiedMaterialSO))
+                LayoutEditorLog.LogWarning("switch material: 场景外观 SO 不是材质，已忽略: "
+                    + go.name + " occupiedMaterialSO=" + pressureSwitch.occupiedMaterialSO.name);
+            if (pressureSwitch.unoccupiedMaterialSO != null
+                && !LayoutEditorSwitchMaterialRepair.IsMaterialSO(pressureSwitch.unoccupiedMaterialSO))
+                LayoutEditorLog.LogWarning("switch material: 场景外观 SO 不是材质，已忽略: "
+                    + go.name + " unoccupiedMaterialSO=" + pressureSwitch.unoccupiedMaterialSO.name);
+            pdto.occupiedMaterialGuid = ExportSwitchMaterialGuid(go, pressureSwitch.occupiedMaterialSO,
+                "occupiedMaterialSO", LayoutEditorSwitchMaterialRepair.DefaultActiveSoPath);
+            pdto.unoccupiedMaterialGuid = ExportSwitchMaterialGuid(go, pressureSwitch.unoccupiedMaterialSO,
+                "unoccupiedMaterialSO", LayoutEditorSwitchMaterialRepair.DefaultInactiveSoPath);
+            ApplyTintToPressureDto(go, pdto);
             item.pressureSwitch = pdto;
             return;
+        }
+
+        // 莲花压力地板（dlc13_lotuspressureswitch_*）：无 PressureSwitchStub，
+        // 是 TriggerZone + Animator 驱动的特殊地板。这里标记为 PressureSwitch
+        // 让前端显示颜色面板，并继续走通用 PseudoPrefabStub 导出 pseudoPrefabGuid。
+        if (IsLotusPressureSwitchWrapper(go, item))
+        {
+            item.stubKind = "PressureSwitch";
+            var lpdto = new LayoutPressureSwitchStubDto();
+            ApplyTintToPressureDto(go, lpdto);
+            item.pressureSwitch = lpdto;
         }
 
         var terminal = go.GetComponent<PseudoPrefabTerminalStub>();
@@ -622,6 +695,139 @@ public static class LayoutEditorStubIO
         so.ApplyModifiedProperties();
     }
 
+    private class DoorColliderSpec
+    {
+        public Vector3 size;
+        public Vector3 center;
+    }
+
+    private static readonly Dictionary<string, DoorColliderSpec> DoorColliderCache =
+        new Dictionary<string, DoorColliderSpec>(StringComparer.Ordinal);
+
+    /** 门扇 prefab 识别：排除门框/门洞。 */
+    private static bool IsDoorPrefabId(string prefabId)
+    {
+        if (string.IsNullOrEmpty(prefabId)) return false;
+        string id = prefabId.ToLowerInvariant();
+        if (id.IndexOf("door", StringComparison.Ordinal) < 0) return false;
+        if (id.IndexOf("doorway", StringComparison.Ordinal) >= 0) return false;
+        if (id.IndexOf("door_frame", StringComparison.Ordinal) >= 0) return false;
+        if (id.IndexOf("doorframe", StringComparison.Ordinal) >= 0) return false;
+        return true;
+    }
+
+    /// <summary>门扇碰撞盒：优先用装饰导出模型的实际 AABB（与 prefab 根同空间），
+    ///  这样不同主题/尺寸的门都能贴合；缺模型时用 DLC5 实测值或通用门扇兜底。</summary>
+    private static bool TryGetDoorColliderSpec(LayoutItemDto item, string prefabId,
+        out DoorColliderSpec spec)
+    {
+        spec = null;
+        if (prefabId == "p_dlc5_door_01")
+        {
+            spec = new DoorColliderSpec
+            {
+                size = new Vector3(0.208f, 1.651f, 0.934f),
+                center = new Vector3(0f, 0.987f, -0.470f)
+            };
+            return true;
+        }
+        if (item == null || string.IsNullOrEmpty(item.prefabGuid))
+            return false;
+        DoorColliderSpec cached;
+        if (DoorColliderCache.TryGetValue(item.prefabGuid, out cached))
+        {
+            spec = cached;
+            return spec != null;
+        }
+        string root = System.IO.Directory.GetParent(Application.dataPath).FullName;
+        string path = System.IO.Path.Combine(root,
+            "exports/decor/models/" + item.prefabGuid + "/model.obj");
+        if (!System.IO.File.Exists(path))
+        {
+            DoorColliderCache[item.prefabGuid] = null;
+            return false;
+        }
+        bool any = false;
+        float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
+        float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
+        try
+        {
+            using (var sr = new System.IO.StreamReader(path))
+            {
+                string line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    if (!line.StartsWith("v ", StringComparison.Ordinal)) continue;
+                    string[] parts = line.Split(new char[] { ' ' },
+                        StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length < 4) continue;
+                    float x, y, z;
+                    if (!float.TryParse(parts[1], System.Globalization.NumberStyles.Float,
+                            System.Globalization.CultureInfo.InvariantCulture, out x)) continue;
+                    if (!float.TryParse(parts[2], System.Globalization.NumberStyles.Float,
+                            System.Globalization.CultureInfo.InvariantCulture, out y)) continue;
+                    if (!float.TryParse(parts[3], System.Globalization.NumberStyles.Float,
+                            System.Globalization.CultureInfo.InvariantCulture, out z)) continue;
+                    any = true;
+                    if (x < minX) minX = x; if (x > maxX) maxX = x;
+                    if (y < minY) minY = y; if (y > maxY) maxY = y;
+                    if (z < minZ) minZ = z; if (z > maxZ) maxZ = z;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            LayoutEditorLog.LogWarning("[LayoutEditor] 门碰撞读取失败 " + path + ": " + e.Message);
+        }
+        if (!any)
+        {
+            DoorColliderCache[item.prefabGuid] = null;
+            return false;
+        }
+        spec = new DoorColliderSpec
+        {
+            size = new Vector3(maxX - minX, maxY - minY, maxZ - minZ),
+            center = new Vector3((minX + maxX) * 0.5f, (minY + maxY) * 0.5f,
+                (minZ + maxZ) * 0.5f)
+        };
+        DoorColliderCache[item.prefabGuid] = spec;
+        return true;
+    }
+
+    private static void ApplyDoorCollision(GameObject go, LayoutItemDto item)
+    {
+        if (go == null || item == null || string.IsNullOrEmpty(item.prefabAssetPath)) return;
+        string prefabId = System.IO.Path.GetFileNameWithoutExtension(item.prefabAssetPath);
+        if (!IsDoorPrefabId(prefabId)) return;
+
+        DoorColliderSpec spec;
+        if (!TryGetDoorColliderSpec(item, prefabId, out spec))
+        {
+            // 无导出模型的旧门：按 1 格宽 × 2m 高 × 0.2m 厚、门轴在根原点的通用门扇兜底。
+            float w = item.footprint != null && item.footprint.cellsZ > 0f
+                ? Mathf.Max(0.5f, item.footprint.cellsZ * LayoutEditorCatalogLookup.GridCellSize - 0.25f)
+                : 0.95f;
+            spec = new DoorColliderSpec
+            {
+                size = new Vector3(0.2f, 2f, w),
+                center = new Vector3(0f, 1f, -w * 0.5f)
+            };
+        }
+
+        int walls = LayerMask.NameToLayer("Walls");
+        if (walls >= 0) go.layer = walls;
+        var col = go.GetComponent<BoxCollider>();
+        if (col == null)
+            col = Undo.AddComponent<BoxCollider>(go);
+        else
+            Undo.RecordObject(col, "Layout Editor Door Collision");
+        col.isTrigger = false;
+        col.size = spec.size;
+        col.center = spec.center;
+        EditorUtility.SetDirty(col);
+        EditorUtility.SetDirty(go);
+    }
+
     public static void ApplyStub(GameObject go, LayoutItemDto item)
     {
         if (go == null || item == null)
@@ -638,6 +844,10 @@ public static class LayoutEditorStubIO
         }
 
         EnsureIngredientSplitterDefaultUI(go);
+        // 门扇碰撞：门 prefab 只有 MeshFilter/MeshRenderer，默认可穿过。写回时在
+        // 伪根上补 BoxCollider（尺寸优先读 exports/decor/models/<guid>/model.obj，
+        // DLC5 门有精确兜底），随动画组旋转——关门挡住门洞、开门旋到侧面。
+        ApplyDoorCollision(go, item);
 
         if (!string.IsNullOrEmpty(item.pseudoPrefabGuid))
         {
@@ -986,11 +1196,45 @@ public static class LayoutEditorStubIO
             spawner.triggerTime = dto.triggerTime;
             spawner.triggerAtStart = dto.triggerAtStart;
 
-            if (dto.attachmentPrefabGuids != null && dto.attachmentPrefabGuids.Length > 0)
-                spawner.attachmentPrefabSOs = LoadPseudoPrefabSOs(dto.attachmentPrefabGuids);
+            if (dto.attachmentPrefabGuids != null)
+            {
+                var validSOs = new List<PseudoPrefabSO>();
+                var validWeights = new List<float>();
+                var guids = dto.attachmentPrefabGuids;
+                for (int i = 0; i < guids.Length; i++)
+                {
+                    var so = LoadPseudoPrefabSO(guids[i]);
+                    if (so == null)
+                    {
+                        LayoutEditorLog.LogWarning("[LayoutEditor] Apply AttachingFoodSpawner: 附件食材 guid 无法解析，已剔除: " +
+                            go.name + " #" + i + " (" + (guids[i] ?? "") + ")");
+                        continue;
+                    }
+                    validSOs.Add(so);
+                    validWeights.Add(dto.weights != null && i < dto.weights.Length ? dto.weights[i] : 1f);
+                }
 
-            if (dto.weights != null && dto.weights.Length > 0)
-                spawner.weights = dto.weights;
+                var serialized = new SerializedObject(spawner);
+                var prefabsProp = serialized.FindProperty("attachmentPrefabSOs");
+                if (prefabsProp != null)
+                {
+                    prefabsProp.arraySize = validSOs.Count;
+                    for (int i = 0; i < validSOs.Count; i++)
+                        prefabsProp.GetArrayElementAtIndex(i).objectReferenceValue = validSOs[i];
+                }
+                var weightsProp = serialized.FindProperty("weights");
+                if (weightsProp != null)
+                {
+                    weightsProp.arraySize = validWeights.Count;
+                    for (int i = 0; i < validWeights.Count; i++)
+                        weightsProp.GetArrayElementAtIndex(i).floatValue = validWeights[i];
+                }
+                serialized.ApplyModifiedProperties();
+                EditorUtility.SetDirty(spawner);
+                var prefabType = PrefabUtility.GetPrefabType(spawner);
+                if (prefabType == PrefabType.PrefabInstance || prefabType == PrefabType.DisconnectedPrefabInstance)
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(spawner);
+            }
             return;
         }
 
@@ -1009,6 +1253,7 @@ public static class LayoutEditorStubIO
                 item.conveyor.speedControl.levels.Length > 0)
                 conveyor.conveySpeed = item.conveyor.speedControl.levels[0];
             ApplyConveyorDirectionSync(go, item.conveyor.buttonControlled);
+            ApplyConveyorServe(go, IsServeConveyorPrefab(go, item.prefabAssetPath), item.conveyor.buttonControlled);
             return;
         }
 
@@ -1330,6 +1575,7 @@ public static class LayoutEditorStubIO
                 plateStack = Undo.AddComponent<PseudoPrefabCleanPlateStackStub>(go);
                 if (baseStub != null && baseStub.pseudoPrefabSO != null)
                     plateStack.pseudoPrefabSO = baseStub.pseudoPrefabSO;
+                CopyPlateStackStubFromPrefabParent(go, plateStack);
             }
 
             Undo.RecordObject(plateStack, "Layout Editor Clean Plate Stack");
@@ -1339,7 +1585,9 @@ public static class LayoutEditorStubIO
             {
                 plateStack.platePseudoPrefabSO = LoadPseudoPrefabSO(item.cleanPlateStack.platePrefabGuid);
             }
-            else if (plateStack.platePseudoPrefabSO == null)
+            if (plateStack.pseudoPrefabSO == null || plateStack.platePseudoPrefabSO == null)
+                CopyPlateStackStubFromPrefabParent(go, plateStack);
+            if (plateStack.platePseudoPrefabSO == null)
             {
                 // 未指定容器 SO 时按堆类型推断（堆 → 对应容器本体 SO）
                 var so = DefaultPlateSOForStack(go);
@@ -1347,12 +1595,14 @@ public static class LayoutEditorStubIO
                     plateStack.platePseudoPrefabSO = so;
             }
 
-            // 完整 prefab（common04 custom_content 克隆：SetupCustomUtensilStub +
-            // CleanPlateStack + Stack，无 PseudoPrefabStub 包装）不能用
-            // PseudoPrefabCleanPlateStack：基类 ResetChild 会 LoadAsset(null) → NRE。
-            // 改用 CustomStub.CleanPlateStackSeeder，直接以 prefab 的 m_platePrefab
-            // 做编辑预览/服务端补盘。
-            if (baseStub == null)
+            // 完整 prefab（茶杯堆/脏茶杯堆：根上自带游戏组件 CleanPlateStack 或
+            // DirtyPlateStack）不能用 PseudoPrefabCleanPlateStack：基类 ResetChild
+            // 会 LoadAsset(null) → NRE。改用 CustomStub.CleanPlateStackSeeder，直接以
+            // prefab 的 m_platePrefab 做编辑预览/服务端补盘。
+            // 不能用「没有基础 PseudoPrefabStub」当判据：干净盘/杯/马克杯/餐盘包装堆在
+            // 双 stub 修复后同样没有基础 stub，误走 seeder 会拆掉派生运行时，根上又没有
+            // Stack，编辑预览、Play 和真机都变成空堆。
+            if (IsFullPlateStackPrefab(go))
             {
                 EnsureFullCleanPlateStackSeeder(go, plateStack);
                 // 完整 prefab 不需要 PseudoPrefabCleanPlateStackStub：它没有 wrapper 子对象，
@@ -1363,6 +1613,9 @@ public static class LayoutEditorStubIO
                     Undo.DestroyObjectImmediate(plateStack);
                 return;
             }
+
+            // 包装堆若曾被误挂 seeder，写回时拆掉，数量仍以派生 stub 为准。
+            RemoveCleanPlateStackSeeder(go);
 
             // 防御：盘子 SO 缺失或真实 prefab 无 EditorGridSnap 时，宿主
             // PseudoPrefabCleanPlateStack.Setup 逐盘实例化会 NRE（如脏堆的 mesh 占位）。
@@ -1452,10 +1705,14 @@ public static class LayoutEditorStubIO
 
             Undo.RecordObject(sw, "Layout Editor Switch");
             sw.startEnabled = item.switchStub.startEnabled;
-            if (!string.IsNullOrEmpty(item.switchStub.activeMaterialGuid))
-                sw.activeMaterial = LoadPseudoPrefabSO(item.switchStub.activeMaterialGuid);
-            if (!string.IsNullOrEmpty(item.switchStub.inactiveMaterialGuid))
-                sw.inactiveMaterial = LoadPseudoPrefabSO(item.switchStub.inactiveMaterialGuid);
+            var activeSo = ResolveSwitchMaterialSO(go, item.switchStub.activeMaterialGuid,
+                "activeMaterial", LayoutEditorSwitchMaterialRepair.DefaultActiveSoPath);
+            if (activeSo != null)
+                sw.activeMaterial = activeSo;
+            var inactiveSo = ResolveSwitchMaterialSO(go, item.switchStub.inactiveMaterialGuid,
+                "inactiveMaterial", LayoutEditorSwitchMaterialRepair.DefaultInactiveSoPath);
+            if (inactiveSo != null)
+                sw.inactiveMaterial = inactiveSo;
 
             // 初始关闭外观（SwitchStartVisual）：编辑器写回烘焙组件（编辑器 Play
             // 直用）；真机由 EntryPoint 按 PseudoPrefabSwitchStub.startEnabled 扫描
@@ -1495,10 +1752,14 @@ public static class LayoutEditorStubIO
                 return;
 
             Undo.RecordObject(ps, "Layout Editor Pressure Switch");
-            if (!string.IsNullOrEmpty(item.pressureSwitch.occupiedMaterialGuid))
-                ps.occupiedMaterialSO = LoadPseudoPrefabSO(item.pressureSwitch.occupiedMaterialGuid);
-            if (!string.IsNullOrEmpty(item.pressureSwitch.unoccupiedMaterialGuid))
-                ps.unoccupiedMaterialSO = LoadPseudoPrefabSO(item.pressureSwitch.unoccupiedMaterialGuid);
+            var occSo = ResolveSwitchMaterialSO(go, item.pressureSwitch.occupiedMaterialGuid,
+                "occupiedMaterialSO", LayoutEditorSwitchMaterialRepair.DefaultActiveSoPath);
+            if (occSo != null)
+                ps.occupiedMaterialSO = occSo;
+            var unoccSo = ResolveSwitchMaterialSO(go, item.pressureSwitch.unoccupiedMaterialGuid,
+                "unoccupiedMaterialSO", LayoutEditorSwitchMaterialRepair.DefaultInactiveSoPath);
+            if (unoccSo != null)
+                ps.unoccupiedMaterialSO = unoccSo;
             return;
         }
 
@@ -2624,6 +2885,34 @@ public static class LayoutEditorStubIO
         return null;
     }
 
+    /// <summary>根上有游戏组件 CleanPlateStack / DirtyPlateStack 的才是完整堆 prefab
+    /// （茶杯堆、脏茶杯堆）。包装堆没有这两个组件。</summary>
+    private static bool IsFullPlateStackPrefab(GameObject go)
+    {
+        if (go == null)
+            return false;
+        if (go.GetComponent("CleanPlateStack") != null)
+            return true;
+        return go.GetComponent("DirtyPlateStack") != null;
+    }
+
+    private static Component FindCleanPlateStackSeeder(GameObject go)
+    {
+        if (go == null)
+            return null;
+        var seederType = FindCustomStubType(go, "CleanPlateStackSeeder");
+        if (seederType == null)
+            return null;
+        return go.GetComponent(seederType);
+    }
+
+    private static void RemoveCleanPlateStackSeeder(GameObject go)
+    {
+        var seeder = FindCleanPlateStackSeeder(go);
+        if (seeder != null)
+            Undo.DestroyObjectImmediate(seeder);
+    }
+
     /// <summary>完整 prefab 的堆初始化：移除误挂的 PseudoPrefab 运行时，补
     /// CustomStub.CleanPlateStackSeeder（读 CleanPlateStack.m_platePrefab）。</summary>
     private static void EnsureFullCleanPlateStackSeeder(GameObject go,
@@ -2658,26 +2947,196 @@ public static class LayoutEditorStubIO
             + " 已改用 CleanPlateStackSeeder（plate=" + (plateStack != null ? plateStack.plateCount : 0) + "）");
     }
 
-    /// <summary>场景打开/旧写回自愈：清理完整 prefab 上误挂的 PseudoPrefabCleanPlateStack
-    /// 并补 CleanPlateStackSeeder。返回处理对象数。</summary>
+    /// <summary>场景打开/旧写回自愈。完整堆（根上有游戏 CleanPlateStack/DirtyPlateStack）
+    /// 清掉误挂的 PseudoPrefabCleanPlateStack 并补 seeder；包装堆被误挂 seeder 或拆掉
+    /// 派生运行时时，拆 seeder、补回 stub 与 PseudoPrefabCleanPlateStack 并 ResetChild。
+    /// 有改动时把当前场景标脏。返回处理对象数。</summary>
     public static int RepairFullCleanPlateStackRuntimes()
     {
-        var stubs = UnityEngine.Object.FindObjectsOfType<PseudoPrefabCleanPlateStackStub>();
+        var seen = new HashSet<GameObject>();
         int fixedCount = 0;
+        var stubs = UnityEngine.Object.FindObjectsOfType<PseudoPrefabCleanPlateStackStub>();
         for (int i = 0; i < stubs.Length; i++)
         {
             var stub = stubs[i];
             if (stub == null)
                 continue;
             var go = stub.gameObject;
-            if (FindExactBaseStub(go) != null)
-                continue; // wrapper prefab 走原路径
-            EnsureFullCleanPlateStackSeeder(go, stub);
-            fixedCount++;
+            if (go == null || !seen.Add(go))
+                continue;
+            if (IsFullPlateStackPrefab(go))
+            {
+                if (RepairFullPlateStackPrefab(go, stub))
+                    fixedCount++;
+            }
+            else if (WrapperPlateStackNeedsRestore(go))
+            {
+                if (RestoreWrapperCleanPlateStack(go))
+                    fixedCount++;
+            }
         }
+
+        var seederType = FindCustomStubType(string.Empty, "CleanPlateStackSeeder");
+        if (seederType != null)
+        {
+            var seeders = UnityEngine.Object.FindObjectsOfType(seederType);
+            for (int i = 0; i < seeders.Length; i++)
+            {
+                var seeder = seeders[i] as Component;
+                if (seeder == null)
+                    continue;
+                var go = seeder.gameObject;
+                if (go == null || !seen.Add(go))
+                    continue;
+                if (IsFullPlateStackPrefab(go))
+                    continue;
+                if (RestoreWrapperCleanPlateStack(go))
+                    fixedCount++;
+            }
+        }
+
         if (fixedCount > 0)
-            LayoutEditorLog.Log("[LayoutEditor] CleanPlateStack 完整 prefab 自愈: " + fixedCount);
+        {
+            LayoutEditorLog.Log("[LayoutEditor] CleanPlateStack 自愈: " + fixedCount);
+            if (!Application.isPlaying)
+            {
+                var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+                if (scene.IsValid())
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+            }
+        }
         return fixedCount;
+    }
+
+    /// <summary>完整堆上若仍挂着编辑器运行时、基础运行时、或还没有 seeder，换成 seeder
+    /// 并摘掉派生 stub（否则下次场景打开 Promote 会把运行时补回来）。</summary>
+    private static bool RepairFullPlateStackPrefab(GameObject go, PseudoPrefabCleanPlateStackStub stub)
+    {
+        if (go == null)
+            return false;
+        bool badRuntime = go.GetComponent<LevelEditor.PseudoPrefabCleanPlateStack>() != null
+            || FindExactBaseRuntime(go) != null;
+        bool missingSeeder = FindCleanPlateStackSeeder(go) == null;
+        if (!badRuntime && !missingSeeder && stub == null)
+            return false;
+        if (badRuntime || missingSeeder)
+            EnsureFullCleanPlateStackSeeder(go, stub);
+        // 派生 stub 留在完整 prefab 上时，下次打开场景 Promote 会把编辑器运行时补回来。
+        // 只有 seeder 确实挂上之后才摘 stub，避免运行时程序集缺失时把数量一起拆掉。
+        bool removedStub = false;
+        if (stub != null && FindCleanPlateStackSeeder(go) != null)
+        {
+            Undo.DestroyObjectImmediate(stub);
+            removedStub = true;
+        }
+        return removedStub || (badRuntime && FindCleanPlateStackSeeder(go) != null);
+    }
+
+    private static bool WrapperPlateStackNeedsRestore(GameObject go)
+    {
+        if (go == null || IsFullPlateStackPrefab(go))
+            return false;
+        if (FindCleanPlateStackSeeder(go) != null)
+            return true;
+        return go.GetComponent<LevelEditor.PseudoPrefabCleanPlateStack>() == null;
+    }
+
+    /// <summary>包装堆恢复：拆掉误挂的 seeder，按 seeder 上已拷走的数量/容器 SO（否则
+    /// 用 prefab 上的派生 stub）补回 PseudoPrefabCleanPlateStackStub 与派生运行时，
+    /// 并 ResetChild 让编辑态按 plateCount 叠出预览。</summary>
+    private static bool RestoreWrapperCleanPlateStack(GameObject go)
+    {
+        if (go == null || IsFullPlateStackPrefab(go))
+            return false;
+
+        var seeder = FindCleanPlateStackSeeder(go);
+        bool removedSeeder = seeder != null;
+        int seededCount = 0;
+        bool haveCount = false;
+        PseudoPrefabSO seededPlate = null;
+        if (seeder != null)
+        {
+            var rawCount = GetStubField(seeder, "plateCount");
+            if (rawCount is int)
+            {
+                seededCount = (int)rawCount;
+                haveCount = true;
+            }
+            seededPlate = GetStubField(seeder, "platePseudoPrefabSO") as PseudoPrefabSO;
+            Undo.DestroyObjectImmediate(seeder);
+        }
+
+        var stub = go.GetComponent<PseudoPrefabCleanPlateStackStub>();
+        if (stub == null)
+        {
+            stub = Undo.AddComponent<PseudoPrefabCleanPlateStackStub>(go);
+            CopyPlateStackStubFromPrefabParent(go, stub);
+        }
+        if (stub.pseudoPrefabSO == null)
+            CopyPlateStackStubFromPrefabParent(go, stub);
+        if (haveCount && seededCount > 0)
+            stub.plateCount = seededCount;
+        if (seededPlate != null)
+            stub.platePseudoPrefabSO = seededPlate;
+        else if (stub.platePseudoPrefabSO == null)
+        {
+            var so = DefaultPlateSOForStack(go);
+            if (so != null)
+                stub.platePseudoPrefabSO = so;
+        }
+        EditorUtility.SetDirty(stub);
+
+        if (stub.pseudoPrefabSO == null)
+        {
+            LayoutEditorLog.LogWarning("[LayoutEditor] 包装堆缺少 pseudoPrefabSO，未补运行时: " + go.name);
+            return removedSeeder;
+        }
+
+        var baseStub = FindExactBaseStub(go);
+        if (baseStub != null && baseStub != stub)
+            Undo.DestroyObjectImmediate(baseStub);
+        var baseRuntime = FindExactBaseRuntime(go);
+        if (baseRuntime != null)
+            Undo.DestroyObjectImmediate(baseRuntime);
+
+        var runtime = go.GetComponent<LevelEditor.PseudoPrefabCleanPlateStack>();
+        if (runtime == null)
+            runtime = Undo.AddComponent<LevelEditor.PseudoPrefabCleanPlateStack>(go);
+
+        if (!Application.isPlaying)
+        {
+            try
+            {
+                runtime.ResetChild();
+            }
+            catch (Exception ex)
+            {
+                LayoutEditorLog.LogWarning("[LayoutEditor] 包装堆 ResetChild 失败: "
+                    + go.name + " — " + ex.Message);
+            }
+        }
+        LayoutEditorLog.Log("[LayoutEditor] 包装堆已恢复 PseudoPrefabCleanPlateStack: "
+            + go.name + " plate=" + stub.plateCount);
+        return true;
+    }
+
+    private static void CopyPlateStackStubFromPrefabParent(GameObject go,
+        PseudoPrefabCleanPlateStackStub stub)
+    {
+        if (go == null || stub == null)
+            return;
+        var parent = PrefabUtility.GetPrefabParent(go) as GameObject;
+        if (parent == null)
+            return;
+        var src = parent.GetComponent<PseudoPrefabCleanPlateStackStub>();
+        if (src == null)
+            return;
+        if (stub.pseudoPrefabSO == null)
+            stub.pseudoPrefabSO = src.pseudoPrefabSO;
+        if (stub.platePseudoPrefabSO == null)
+            stub.platePseudoPrefabSO = src.platePseudoPrefabSO;
+        if (stub.plateCount <= 0 && src.plateCount > 0)
+            stub.plateCount = src.plateCount;
     }
 
     [MenuItem("Layout Editor/诊断/修复 commonW5 茶杯堆（CleanPlateStack NRE）")]
@@ -4426,6 +4885,314 @@ public static class LayoutEditorStubIO
                 " 个初始关闭开关已应用关闭材质（编辑态预览）");
     }
 
+    // ============ 开关 / 压力地板调色（CustomStub.SwitchTint helper） ============
+
+    private class SwitchTintEntry
+    {
+        public string idleColor;
+        public string pressedColor;
+    }
+
+    private static Dictionary<string, SwitchTintEntry> s_switchTintCache;
+    private static string s_switchTintCacheScene;
+
+    /** 场景重新导出/写回前调用：helper 可能已变化，缓存必须失效。 */
+    public static void InvalidateSwitchTintCache()
+    {
+        s_switchTintCache = null;
+        s_switchTintCacheScene = null;
+    }
+
+    private static Dictionary<string, SwitchTintEntry> SwitchTintCache()
+    {
+        var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
+        if (s_switchTintCache != null && s_switchTintCacheScene == scene.path)
+            return s_switchTintCache;
+
+        s_switchTintCacheScene = scene.path;
+        var dict = new Dictionary<string, SwitchTintEntry>(StringComparer.Ordinal);
+        var rootT = LayoutEditorHierarchy.FindByPath(SwitchTintRootPath);
+        if (rootT != null)
+        {
+            var type = FindCustomStubType(rootT.gameObject, "SwitchTint");
+            foreach (Transform child in rootT)
+            {
+                var comp = type != null ? child.GetComponent(type) : null;
+                string path = null, idle = null, pressed = null;
+                if (comp != null)
+                {
+                    path = GetStubField(comp, "m_targetPath") as string;
+                    idle = GetStubField(comp, "m_idleColor") as string;
+                    pressed = GetStubField(comp, "m_pressedColor") as string;
+                }
+                if (string.IsNullOrEmpty(path))
+                {
+                    var tag = child.GetComponent<SpecificPseudoPrefabTag>();
+                    if (tag == null
+                        || !TryParseSwitchTintTag(tag.prefabTag, out path, out idle, out pressed))
+                        continue;
+                }
+                if (string.IsNullOrEmpty(path))
+                    continue;
+                dict[path] = new SwitchTintEntry
+                {
+                    idleColor = idle,
+                    pressedColor = pressed
+                };
+            }
+        }
+        s_switchTintCache = dict;
+        return dict;
+    }
+
+    private static SwitchTintEntry GetSwitchTintEntry(GameObject go)
+    {
+        if (go == null)
+            return null;
+        var path = LayoutEditorHierarchy.GetHierarchyPath(go.transform);
+        SwitchTintEntry entry;
+        return SwitchTintCache().TryGetValue(path, out entry) ? entry : null;
+    }
+
+    /** 外观材质 SO 解析：DTO 为空/非法时回落 prefab 默认/标准材质，防止
+    /// 宿主 LoadAsset<Material> 失败触发 DeInit/Init 重入。 */
+    private static PseudoPrefabSO ResolveSwitchMaterialSO(GameObject go, string guid,
+        string stubField, string defaultPath)
+    {
+        PseudoPrefabSO so = null;
+        if (!string.IsNullOrEmpty(guid))
+            so = LoadPseudoPrefabSO(guid);
+        if (!LayoutEditorSwitchMaterialRepair.IsMaterialSO(so))
+        {
+            if (so != null)
+                LayoutEditorLog.LogWarning("switch material: 忽略非材质 SO " + guid
+                    + "（" + (go != null ? go.name : "?") + "），回落默认材质");
+            so = LayoutEditorSwitchMaterialRepair.PrefabDefault(go, stubField);
+        }
+        if (!LayoutEditorSwitchMaterialRepair.IsMaterialSO(so))
+            so = LayoutEditorSwitchMaterialRepair.DefaultFor(defaultPath);
+        return so;
+    }
+
+    /** 外观导出：与 prefab 默认材质相同则导出空 guid（前端显示「— 默认 —」），
+     *  避免把「默认外观」当成显式材质选择，也避免写回时产生无意义的 prefab 覆盖。 */
+    private static string ExportSwitchMaterialGuid(GameObject go, PseudoPrefabSO so,
+        string stubField, string defaultPath)
+    {
+        if (!LayoutEditorSwitchMaterialRepair.IsMaterialSO(so))
+            return null;
+        var prefabDefault = LayoutEditorSwitchMaterialRepair.PrefabDefault(go, stubField);
+        if (prefabDefault == null)
+            prefabDefault = LayoutEditorSwitchMaterialRepair.DefaultFor(defaultPath);
+        if (prefabDefault != null && prefabDefault == so)
+            return null;
+        return AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so));
+    }
+
+    private static void ApplyTintToSwitchDto(GameObject go, LayoutSwitchStubDto dto)
+    {
+        if (dto == null) return;
+        var entry = GetSwitchTintEntry(go);
+        if (entry == null) return;
+        if (!string.IsNullOrEmpty(entry.idleColor)) dto.idleColor = entry.idleColor;
+        if (!string.IsNullOrEmpty(entry.pressedColor)) dto.pressedColor = entry.pressedColor;
+    }
+
+    private static void ApplyTintToPressureDto(GameObject go, LayoutPressureSwitchStubDto dto)
+    {
+        if (dto == null) return;
+        var entry = GetSwitchTintEntry(go);
+        if (entry == null) return;
+        if (!string.IsNullOrEmpty(entry.idleColor)) dto.idleColor = entry.idleColor;
+        if (!string.IsNullOrEmpty(entry.pressedColor)) dto.pressedColor = entry.pressedColor;
+    }
+
+    private static string BuildSwitchTintTag(string path, string idleColor, string pressedColor)
+    {
+        return SwitchTintTagPrefix
+            + "T:" + ButtonLinkBakery.EscTag(path ?? "")
+            + "|I:" + ButtonLinkBakery.EscTag(idleColor ?? "")
+            + "|P:" + ButtonLinkBakery.EscTag(pressedColor ?? "");
+    }
+
+    /** tag 字段解码（与 ButtonLinkBakery.EscTag / EntryPoint.UnescTag 对称）。 */
+    private static string UnescapeTagText(string s)
+    {
+        if (string.IsNullOrEmpty(s) || s.IndexOf('%') < 0)
+            return s;
+        var sb = new System.Text.StringBuilder(s.Length);
+        for (int i = 0; i < s.Length; i++)
+        {
+            if (s[i] == '%' && i + 2 < s.Length)
+            {
+                var hex = s.Substring(i + 1, 2);
+                if (hex == "25") { sb.Append('%'); i += 2; continue; }
+                if (hex == "2C") { sb.Append(','); i += 2; continue; }
+                if (hex == "3B") { sb.Append(';'); i += 2; continue; }
+                if (hex == "3E") { sb.Append('>'); i += 2; continue; }
+                if (hex == "7C") { sb.Append('|'); i += 2; continue; }
+            }
+            sb.Append(s[i]);
+        }
+        return sb.ToString();
+    }
+
+    private static bool TryParseSwitchTintTag(string prefabTag,
+        out string path, out string idleColor, out string pressedColor)
+    {
+        path = null;
+        idleColor = null;
+        pressedColor = null;
+        if (string.IsNullOrEmpty(prefabTag)
+            || !prefabTag.StartsWith(SwitchTintTagPrefix, StringComparison.Ordinal))
+            return false;
+        var parts = prefabTag.Split('|');
+        for (int i = 1; i < parts.Length; i++)
+        {
+            var seg = parts[i];
+            if (seg.StartsWith("T:", StringComparison.Ordinal)) path = UnescapeTagText(seg.Substring(2));
+            else if (seg.StartsWith("I:", StringComparison.Ordinal)) idleColor = UnescapeTagText(seg.Substring(2));
+            else if (seg.StartsWith("P:", StringComparison.Ordinal)) pressedColor = UnescapeTagText(seg.Substring(2));
+        }
+        return true;
+    }
+
+    /** helper 的目标路径：组件优先，组件缺失时回落 tag（Unity 未重编译时仍可往返）。 */
+    private static string SwitchTintPathOf(Transform helper)
+    {
+        if (helper == null)
+            return null;
+        var type = FindCustomStubType(helper.gameObject, "SwitchTint");
+        var comp = type != null ? helper.GetComponent(type) : null;
+        if (comp != null)
+        {
+            var compPath = GetStubField(comp, "m_targetPath") as string;
+            if (!string.IsNullOrEmpty(compPath))
+                return compPath;
+        }
+        var tag = helper.GetComponent<SpecificPseudoPrefabTag>();
+        string path, idle, pressed;
+        if (tag != null && TryParseSwitchTintTag(tag.prefabTag, out path, out idle, out pressed))
+            return path;
+        return null;
+    }
+
+    /** 写回单个开关/压力地板的调色 helper（颜色都为空 = 删除残留 helper）。 */
+    public static void ApplySwitchTint(GameObject go, string idleColor, string pressedColor)
+    {
+        if (go == null)
+            return;
+        var path = LayoutEditorHierarchy.GetHierarchyPath(go.transform);
+        if (string.IsNullOrEmpty(path))
+            return;
+
+        var any = !string.IsNullOrEmpty(idleColor) || !string.IsNullOrEmpty(pressedColor);
+        var helperName = SwitchTintHelperPrefix + ButtonLinkBakery.Hash8(path);
+        Transform helper = null;
+        var rootT = LayoutEditorHierarchy.FindByPath(SwitchTintRootPath);
+        if (rootT != null)
+            helper = rootT.Find(helperName);
+
+        if (!any)
+        {
+            if (helper != null)
+            {
+                Undo.DestroyObjectImmediate(helper.gameObject);
+                LayoutEditorLog.Log("switch tint: 清理 " + path);
+            }
+            return;
+        }
+
+        if (helper == null)
+        {
+            var root = LayoutEditorHierarchy.FindOrCreatePath(SwitchTintRootPath);
+            if (root == null)
+            {
+                LayoutEditorLog.LogWarning("switch tint: 无法创建 helper 根 " + SwitchTintRootPath);
+                return;
+            }
+            var goHelper = new GameObject(helperName);
+            goHelper.transform.SetParent(root, false);
+            Undo.RegisterCreatedObjectUndo(goHelper, "Layout Editor Switch Tint Helper");
+            helper = goHelper.transform;
+        }
+        helper.localPosition = Vector3.zero;
+        helper.localRotation = Quaternion.identity;
+        helper.localScale = Vector3.one;
+
+        SetCustomStubTag(helper.gameObject, BuildSwitchTintTag(path, idleColor, pressedColor));
+        var type = FindCustomStubType(helper.gameObject, "SwitchTint");
+        if (type == null)
+        {
+            LayoutEditorLog.LogWarning("switch tint: 找不到 CustomStub.SwitchTint"
+                + "（WebCustomStubRuntime 未编译？）——tag 已写入，真机自愈仍可用；编辑器预览/Play 暂不生效");
+            return;
+        }
+        var comp = helper.gameObject.GetComponent(type);
+        if (comp == null)
+            comp = Undo.AddComponent(helper.gameObject, type);
+        else
+            Undo.RecordObject(comp, "Layout Editor Switch Tint");
+        SetStubField(comp, "m_targetPath", path);
+        SetStubField(comp, "m_idleColor", idleColor ?? "");
+        SetStubField(comp, "m_pressedColor", pressedColor ?? "");
+        var behaviour = comp as Behaviour;
+        if (behaviour != null && !behaviour.enabled)
+            behaviour.enabled = true;
+        EditorUtility.SetDirty(comp);
+        var refresh = type.GetMethod("Refresh", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+        if (refresh != null)
+        {
+            try { refresh.Invoke(comp, null); }
+            catch (Exception ex) { LayoutEditorLog.LogWarning("switch tint: Refresh 失败 " + ex.Message); }
+        }
+    }
+
+    /** 全量写回收尾：删除不在 livePaths 里的调色 helper（物品删除/改路径/清色调）。 */
+    public static void CleanupSwitchTintHelpers(HashSet<string> livePaths)
+    {
+        var rootT = LayoutEditorHierarchy.FindByPath(SwitchTintRootPath);
+        if (rootT == null)
+            return;
+        var remove = new List<GameObject>();
+        foreach (Transform child in rootT)
+        {
+            var path = SwitchTintPathOf(child);
+            if (string.IsNullOrEmpty(path)
+                || livePaths == null
+                || !livePaths.Contains(path))
+                remove.Add(child.gameObject);
+        }
+        for (int i = 0; i < remove.Count; i++)
+            Undo.DestroyObjectImmediate(remove[i]);
+        if (remove.Count > 0)
+            LayoutEditorLog.Log("switch tint: 清理 " + remove.Count + " 个孤儿 helper");
+        if (rootT != null && rootT.childCount == 0)
+            Undo.DestroyObjectImmediate(rootT.gameObject);
+    }
+
+    /** 莲花压力地板识别（wrapper 名 / PseudoPrefabSO.prefabName / 原生 prefabTag）。 */
+    public static bool IsLotusPressureSwitchWrapper(GameObject go, LayoutItemDto item)
+    {
+        if (item != null && !string.IsNullOrEmpty(item.prefabAssetPath))
+        {
+            var id = System.IO.Path.GetFileNameWithoutExtension(item.prefabAssetPath);
+            if (!string.IsNullOrEmpty(id)
+                && id.StartsWith("dlc13_lotuspressureswitch", StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        if (go == null)
+            return false;
+        var stub = go.GetComponent<PseudoPrefabStub>();
+        var so = stub != null ? stub.pseudoPrefabSO : null;
+        if (so != null && !string.IsNullOrEmpty(so.prefabName)
+            && so.prefabName.StartsWith("dlc13_lotuspressureswitch", StringComparison.OrdinalIgnoreCase))
+            return true;
+        var tag = go.GetComponent<SpecificPseudoPrefabTag>();
+        return tag != null && !string.IsNullOrEmpty(tag.prefabTag)
+            && tag.prefabTag.StartsWith("dlc13_lotuspressureswitch", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static void SetCustomStubTag(GameObject go, string tagValue)
     {
         if (go == null || string.IsNullOrEmpty(tagValue))
@@ -4480,6 +5247,153 @@ public static class LayoutEditorStubIO
     public static void ClearCameraOffsetTag(GameObject rigRoot)
     {
         ClearCustomStubTag(rigRoot, "CameraOffset|");
+    }
+
+    /// <summary>多镜头分屏 tag：SplitScreen|2|C0:ox,oy,oz,fov,size,vis|C1:...
+    /// （优先 Camera 子物体，避免与根节点 CameraOffset| 共用同一个 tag 字符串）。
+    /// offset 相对玩家位置（玩家 + offset*size = 相机初始位），fov<=0 沿用主相机。
+    /// 存在 ⟺ 分屏模式开启；分屏时运行时屏蔽原版镜头并忽略 CameraOffset|。
+    /// 写回由 SceneLayoutApplier.ApplyCameraInfo 调用。</summary>
+    public const string SplitScreenTagPrefix = "SplitScreen|";
+
+    public static void SetSplitScreenTag(GameObject go)
+    {
+        SetSplitScreenTag(go, null);
+    }
+
+    public static void SetSplitScreenTag(GameObject go, SplitScreenCameraDto[] cameras)
+    {
+        if (go == null)
+            return;
+        var sb = new StringBuilder(SplitScreenTagPrefix + "2");
+        for (int i = 0; i < 4; i++)
+        {
+            var c = cameras != null && i < cameras.Length ? cameras[i] : null;
+            var off = c != null && c.offset != null ? c.offset : null;
+            var fov = c != null ? c.fieldOfView : 0f;
+            var size = c != null && c.size > 0f ? c.size : 1f;
+            var vis = c == null || c.visible;
+            sb.Append("|C").Append(i).Append(':')
+                .Append(Flt(off != null ? off.x : 0f)).Append(',')
+                .Append(Flt(off != null ? off.y : 0f)).Append(',')
+                .Append(Flt(off != null ? off.z : 0f)).Append(',')
+                .Append(Flt(fov)).Append(',')
+                .Append(Flt(size)).Append(',')
+                .Append(vis ? "1" : "0");
+        }
+        SetCustomStubTag(go, sb.ToString());
+    }
+
+    private static string Flt(float v)
+    {
+        return v.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>清除多镜头分屏 tag（仅当当前值确为 SplitScreen| 前缀）。</summary>
+    public static void ClearSplitScreenTag(GameObject go)
+    {
+        ClearCustomStubTag(go, SplitScreenTagPrefix);
+    }
+
+    public static bool HasSplitScreenTag(GameObject go)
+    {
+        return !string.IsNullOrEmpty(GetSplitScreenTagValue(go));
+    }
+
+    /// <summary>取 SplitScreen| 载体 tag 原始字符串；无则 null。</summary>
+    public static string GetSplitScreenTagValue(GameObject go)
+    {
+        if (go == null)
+            return null;
+        var tag = go.GetComponent<SpecificPseudoPrefabTag>();
+        if (tag == null || string.IsNullOrEmpty(tag.prefabTag))
+            return null;
+        return tag.prefabTag.StartsWith(SplitScreenTagPrefix, StringComparison.Ordinal)
+            ? tag.prefabTag
+            : null;
+    }
+
+    /// <summary>解析 SplitScreen tag 的每镜头参考（固定返回 4 项）。兼容旧版
+    /// 的 S:&lt;size,...&gt;：无 C 段时只带 size，offset 留空由前端/运行时补默认。</summary>
+    public static SplitScreenCameraDto[] ParseSplitScreenCameras(string tagValue)
+    {
+        var cameras = new SplitScreenCameraDto[4];
+        for (int i = 0; i < cameras.Length; i++)
+        {
+            cameras[i] = new SplitScreenCameraDto
+            {
+                visible = true,
+                offset = null,
+                fieldOfView = 0f,
+                size = 1f
+            };
+        }
+        if (string.IsNullOrEmpty(tagValue))
+            return cameras;
+
+        var parts = tagValue.Split('|');
+        // v2 起 C 段 offset 是“相对主机位单目标默认跟随”的额外偏移；
+        // 旧 v1 的 C offset 是主相机相对玩家平均位置的基准位，不能直接叠加，
+        // 否则会双倍偏移导致相机飞走/黑屏——v1 一律按 0 额外偏移迁移。
+        var version = parts.Length > 1 ? parts[1] : "1";
+        var useOffset = version == "2";
+        var sawC = false;
+        for (int p = 0; p < parts.Length; p++)
+        {
+            var part = parts[p];
+            if (!string.IsNullOrEmpty(part) && part.Length > 3 && part[0] == 'C'
+                && part[1] >= '0' && part[1] <= '3' && part[2] == ':')
+            {
+                int idx = part[1] - '0';
+                var vals = part.Substring(3).Split(',');
+                var c = cameras[idx];
+                if (vals.Length >= 5)
+                {
+                    if (useOffset)
+                    {
+                        c.offset = new LayoutVector3
+                        {
+                            x = FltAt(vals, 0),
+                            y = FltAt(vals, 1),
+                            z = FltAt(vals, 2)
+                        };
+                    }
+                    c.fieldOfView = FltAt(vals, 3);
+                    c.size = Mathf.Clamp(FltAt(vals, 4), 0.25f, 4f);
+                    c.visible = vals.Length < 6 || vals[5] != "0";
+                }
+                sawC = true;
+            }
+        }
+        if (sawC)
+            return cameras;
+
+        // 旧格式：SplitScreen|1|S:1,1.2,0.8,1
+        for (int p = 0; p < parts.Length; p++)
+        {
+            var part = parts[p];
+            if (string.IsNullOrEmpty(part) || part[0] != 'S' || part.Length < 3 || part[1] != ':')
+                continue;
+            var vals = part.Substring(2).Split(',');
+            for (int i = 0; i < cameras.Length && i < vals.Length; i++)
+            {
+                float v;
+                if (float.TryParse(vals[i], System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out v))
+                    cameras[i].size = Mathf.Clamp(v, 0.25f, 4f);
+            }
+            break;
+        }
+        return cameras;
+    }
+
+    private static float FltAt(string[] vals, int i)
+    {
+        if (vals == null || i < 0 || i >= vals.Length)
+            return 0f;
+        float v;
+        return float.TryParse(vals[i], System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out v) ? v : 0f;
     }
 
     /// <summary>随机箱需要但关卡集尚无 stub 程序集时发起（参数 = 关卡集名）。
@@ -4699,6 +5613,16 @@ public static class LayoutEditorStubIO
                 var t = "SwitchReenable|" + StubFloatStr(c, "m_resetDelay", 0.35f);
                 if (t != prefab) { SetCustomStubTag(go, t); rewritten++; }
             }
+            else if (prefab.StartsWith(SwitchTintTagPrefix, StringComparison.Ordinal))
+            {
+                var c = FindComp(go, "SwitchTint");
+                if (c == null) continue;
+                var t = BuildSwitchTintTag(
+                    GetStubField(c, "m_targetPath") as string,
+                    GetStubField(c, "m_idleColor") as string,
+                    GetStubField(c, "m_pressedColor") as string);
+                if (t != prefab) { SetCustomStubTag(go, t); rewritten++; }
+            }
             else if (prefab.StartsWith("UtensilTiming|", StringComparison.Ordinal))
             {
                 var c = FindComp(go, "UtensilTimingConfig");
@@ -4709,6 +5633,15 @@ public static class LayoutEditorStubIO
                     + StubFloatStr(c, "m_mixTime", 0f) + ","
                     + StubFloatStr(c, "m_overMixTime", 0f);
                 if (t != prefab) { SetCustomStubTag(go, t); rewritten++; }
+            }
+            else if (prefab.StartsWith(SplitScreenTagPrefix, StringComparison.Ordinal))
+            {
+                // 仅补最简格式；SplitScreen|2|C0:...|C1:... 的 payload 必须保留（每镜头参考）。
+                if (prefab == SplitScreenTagPrefix)
+                {
+                    SetCustomStubTag(go, SplitScreenTagPrefix + "2");
+                    rewritten++;
+                }
             }
             else if (prefab.StartsWith("WorldMapDressing|", StringComparison.Ordinal))
             {
@@ -4746,6 +5679,15 @@ public static class LayoutEditorStubIO
                     rewritten++;
                 }
             }
+            else if (prefab.StartsWith("ConveyorServe|", StringComparison.Ordinal))
+            {
+                var c = FindComp(go, "ConveyorServe");
+                if (c == null) continue;
+                bool dir = FindComp(go, "ConveyorDirectionSync") != null
+                    || prefab.StartsWith("ConveyorServe|dir", StringComparison.Ordinal);
+                var t = dir ? "ConveyorServe|dir" : "ConveyorServe|";
+                if (prefab != t) { SetCustomStubTag(go, t); rewritten++; }
+            }
             else if (prefab.StartsWith("Kettle|", StringComparison.Ordinal))
             {
                 // 无 payload；仅在与规范不一致时归一化（组件为权威，配置不进 tag）。
@@ -4762,6 +5704,55 @@ public static class LayoutEditorStubIO
             // 写回时已按最新格式烘焙，导出期不重算（避免误伤结构性数据）。
         }
         return rewritten;
+    }
+
+    /// <summary>判断当前传送带是否为 commonW5 的「可上菜传送带站」。
+    ///  能力由 prefab 决定（不新增 DTO 字段），prefab 名或 SO 名任一命中即可。</summary>
+    private static bool IsServeConveyorPrefab(GameObject go, string assetPath)
+    {
+        if (!string.IsNullOrEmpty(assetPath))
+        {
+            var path = assetPath.Replace('\\', '/');
+            var name = System.IO.Path.GetFileNameWithoutExtension(path);
+            if (string.Equals(name, "web_conveyor_station_serve", StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        var stub = go != null ? go.GetComponent<PseudoPrefabStub>() : null;
+        var so = stub != null ? stub.pseudoPrefabSO : null;
+        return so != null && string.Equals(so.name, "web_conveyor_station_serve_SO", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>可上菜传送带：写 CustomStub.ConveyorServe 组件 + 单 tag 载体。
+    ///  tag 格式 ConveyorServe| 或 ConveyorServe|dir（与方向切换按钮联动共用
+    ///  一个 tag，遵守「一个物体一个 stub tag」约束）。</summary>
+    private static void ApplyConveyorServe(GameObject go, bool serve, bool dirSync)
+    {
+        var type = FindCustomStubType(go, "ConveyorServe");
+        var comp = type != null ? go.GetComponent(type) : null;
+        if (!serve)
+        {
+            if (comp != null) Undo.DestroyObjectImmediate(comp);
+            if (HasCustomStubTag(go, "ConveyorServe|")) ClearCustomStubTag(go, "ConveyorServe|");
+            return;
+        }
+
+        bool dir = dirSync
+            || HasCustomStubTag(go, "ConveyorDirectionSync|")
+            || FindCustomStubType(go, "ConveyorDirectionSync") != null;
+
+        if (type == null)
+        {
+            LayoutEditorLog.LogWarning("[LayoutEditor] 关卡集缺 stub 程序集，可上菜传送带仅写入 tag 载体: " + go.name);
+            var setName = LevelSetOfScenePath(go.scene.path);
+            if (!string.IsNullOrEmpty(setName) && CustomStubCopyRequested != null)
+                CustomStubCopyRequested(setName);
+        }
+        else
+        {
+            if (comp == null) comp = Undo.AddComponent(go, type);
+            SetStubField(comp, "m_enabled", true);
+        }
+        SetCustomStubTag(go, dir ? "ConveyorServe|dir" : "ConveyorServe|");
     }
 
     private static void ApplyConveyorDirectionSync(GameObject go, bool enabled)

@@ -30,6 +30,8 @@ USAGE
   python3 extract-icons.py --check        # dry-run: report coverage, write nothing
   python3 extract-icons.py --ingredients  # only ingredients
   python3 extract-icons.py --recipes      # only recipes
+  python3 extract-icons.py --food-icons   # native-resolution copies → exports/food-icons
+                                          # (does not rewrite web/public/icons; never upscales)
 
 Requires: UnityPy, Pillow  (pip install UnityPy Pillow)
 """
@@ -39,6 +41,8 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 WIN = os.path.join(ROOT, "Assets/StreamingAssets/Windows")
 DATA = os.path.join(os.path.dirname(__file__), "data")
 OUT = os.path.join(ROOT, "layout-editor/web/public/icons")
+FOOD_OUT = os.path.join(ROOT, "exports/food-icons")
+SAFE_ICON_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
 try:
     import UnityPy
@@ -322,8 +326,208 @@ def emit_intermediate_ingredient_icons(ing_ids, check):
     return count
 
 
+def is_safe_icon_id(sid):
+    """导出文件名：字母数字、下划线、点、连字符。拒绝路径穿越。"""
+    if not sid or ".." in sid or "/" in sid or "\\" in sid:
+        return False
+    return bool(SAFE_ICON_ID.match(sid))
+
+
+def png_pixel_count(path):
+    try:
+        with Image.open(path) as im:
+            return im.size[0] * im.size[1], im.size
+    except Exception:
+        return 0, (0, 0)
+
+
+def index_pngs_by_stem(patterns):
+    """stem → 像素最多的那张 PNG（不放大）。"""
+    by_stem = {}
+    for pat in patterns:
+        for f in glob.glob(os.path.join(ROOT, pat), recursive=True):
+            stem = os.path.splitext(os.path.basename(f))[0]
+            if not is_safe_icon_id(stem):
+                continue
+            prev = by_stem.get(stem)
+            if prev is None or png_pixel_count(f)[0] > png_pixel_count(prev)[0]:
+                by_stem[stem] = f
+    return by_stem
+
+
+def public_png_ids(kind):
+    ids = set()
+    folder = os.path.join(OUT, kind)
+    if not os.path.isdir(folder):
+        return ids
+    for fn in os.listdir(folder):
+        if not fn.endswith(".png"):
+            continue
+        stem = fn[:-4]
+        if is_safe_icon_id(stem):
+            ids.add(stem)
+    return ids
+
+
+def choose_native_icon(sprite_obj, file_paths):
+    """在精灵原图与现有 PNG 之间取像素更多的一份。像素相同则保留文件字节，不重编码。
+    返回 ("img", PIL.Image) 或 ("file", path)，没有候选时返回 None。"""
+    best_px = -1
+    best = None
+    if sprite_obj is not None:
+        try:
+            img = sprite_obj.read().image
+            px = img.size[0] * img.size[1]
+            if px > best_px:
+                best_px = px
+                best = ("img", img)
+        except Exception as e:
+            print(f"   WARN: sprite read failed: {e}")
+    for path in file_paths:
+        if not path or not os.path.isfile(path):
+            continue
+        px, _size = png_pixel_count(path)
+        if px > best_px or (px == best_px and px > 0 and best and best[0] != "file"):
+            best_px = px
+            best = ("file", path)
+    if best is None or best_px <= 0:
+        return None
+    return best
+
+
+def write_native_icon(dest, chosen):
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    if chosen[0] == "file":
+        shutil.copy2(chosen[1], dest)
+    else:
+        chosen[1].save(dest)
+    with Image.open(dest) as im:
+        return {"w": im.size[0], "h": im.size[1]}
+
+
+def export_food_icons(check):
+    """把菜谱/食材图标按原图像素写到 exports/food-icons。不改 web/public/icons，不放大。"""
+    print("=== food-icons (native resolution, no upscale) ===")
+    overrides_all = load_json("icon-overrides.json", {})
+    ing_overrides = overrides_all.get("ingredients", {})
+    rec_overrides = overrides_all.get("recipes", {})
+    ing_curated = load_json("ingredient-icons.json", {})
+    rec_curated = load_json("recipe-icons.json", {})
+
+    ing_ids = set(
+        collect_ingredient_ids("common01/food/Ingredients")
+        + collect_ingredient_ids("common02/food/Ingredients")
+        + collect_ingredient_ids("common03/food/Ingredients")
+        + collect_ingredient_ids("commonW1/pseudo_prefab_so/dlc11/food")
+        + collect_ingredient_ids("commonW1/pseudo_prefab_so/dlc09/food")
+    )
+    rec_ids = set(
+        collect_ids("common01/food/Recipes")
+        + collect_ids("common02/food/Recipes")
+        + collect_ids("common01/food/CustomRecipes")
+        + collect_ids("common03/food/Recipes")
+        + collect_ids("commonW1/pseudo_prefab_so/dlc11/food")
+    )
+    rec_ids |= set(rec_curated) | set(rec_overrides)
+    ing_ids |= public_png_ids("ingredients")
+    rec_ids |= public_png_ids("recipes")
+
+    local_recipe_pngs = index_pngs_by_stem([
+        "Assets/*/food/CustomRecipes/**/models/*.png",
+        "Assets/common*/custom_recipes/**/icons/*.png",
+    ])
+    rec_ids |= set(local_recipe_pngs)
+    ing_ids = sorted(sid for sid in ing_ids if is_safe_icon_id(sid))
+    rec_ids = sorted(sid for sid in rec_ids if is_safe_icon_id(sid))
+
+    idx = {}
+    if os.path.isdir(WIN):
+        print(f"loading bundles from {WIN} ...")
+        try:
+            env = UnityPy.load(WIN)
+            idx = build_sprite_index(env)
+            print(f"sprite name index: {len(idx)} entries")
+        except Exception as e:
+            print(f"WARN: bundle load failed, file candidates only: {e}")
+    else:
+        print(f"WARN: bundle folder missing ({WIN}), file candidates only")
+
+    local_idx = build_local_png_index()
+    manifest = {"recipes": {}, "ingredients": {}}
+    written = {"recipes": 0, "ingredients": 0}
+    missed = {"recipes": [], "ingredients": []}
+
+    def emit(kind, sid, sprite_name, extra_files):
+        if not is_safe_icon_id(sid):
+            missed[kind].append(sid + " (unsafe id)")
+            return
+        files = []
+        pub = os.path.join(OUT, kind, sid + ".png")
+        if os.path.isfile(pub):
+            files.append(pub)
+        files.extend(extra_files)
+        sprite = idx.get((sprite_name or "").lower()) if sprite_name else None
+        chosen = choose_native_icon(sprite, files)
+        if chosen is None:
+            missed[kind].append(sid)
+            return
+        dest = os.path.join(FOOD_OUT, kind, sid + ".png")
+        if check:
+            written[kind] += 1
+            return
+        info = write_native_icon(dest, chosen)
+        manifest[kind][sid] = info
+        written[kind] += 1
+
+    for sid in ing_ids:
+        nm = ingredient_sprite_name(sid, ing_overrides, ing_curated)
+        emit("ingredients", sid, nm, [])
+
+    for sid in rec_ids:
+        nm = rec_overrides.get(sid, rec_curated.get(sid))
+        extras = []
+        local = local_recipe_pngs.get(sid)
+        if local:
+            extras.append(local)
+        if nm:
+            key = (sid + "_Icon").lower()
+            if key in local_idx:
+                extras.append(local_idx[key])
+            base = base_name(sid)
+            key_so = (base + "_Icon").lower()
+            if key_so in local_idx:
+                extras.append(local_idx[key_so])
+            if nm.lower() in local_idx:
+                extras.append(local_idx[nm.lower()])
+        else:
+            key = (sid + "_Icon").lower()
+            if key in local_idx:
+                extras.append(local_idx[key])
+        emit("recipes", sid, nm, extras)
+
+    mode = "CHECK" if check else "WRITE"
+    print(f"\n=== food-icons {mode} ===")
+    print(f"recipes:     {written['recipes']}  missed {len(missed['recipes'])}")
+    print(f"ingredients: {written['ingredients']}  missed {len(missed['ingredients'])}")
+    if missed["recipes"][:12]:
+        print("  sample missed recipes: " + ", ".join(missed["recipes"][:12]))
+    if missed["ingredients"][:12]:
+        print("  sample missed ingredients: " + ", ".join(missed["ingredients"][:12]))
+    if check:
+        return
+    os.makedirs(FOOD_OUT, exist_ok=True)
+    man_path = os.path.join(FOOD_OUT, "manifest.json")
+    with open(man_path, "w", encoding="utf-8") as fh:
+        json.dump(manifest, fh, ensure_ascii=False, indent=2, sort_keys=True)
+        fh.write("\n")
+    print(f"Wrote {FOOD_OUT}/{{recipes,ingredients}} and manifest.json")
+
+
 def main():
     args = [a.lower() for a in sys.argv[1:]]
+    if "--food-icons" in args:
+        export_food_icons("--check" in args)
+        return
     check = "--check" in args
     do_ing = "--recipes" not in args and "--catalog" not in args
     do_rec = "--ingredients" not in args and "--catalog" not in args

@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114096038827637246}
   - component: {fileID: 114967938430519454}
   m_Layer: 0
-  m_Name: ms_pfx_teleport_2_mm_mat_dlc08_portal_fx_01_1322d17d
+  m_Name: ms_pfx_teleport_2_mm_mat_dlc08_portal_fx_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

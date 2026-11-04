@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: mat_dlc2_road_double_yellow_01
+  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+  m_ShaderKeywords: _DETAILPREVIEW_ON _DIFFUSEPREVIEW_ON _PREVIEWAO_ON _USEROUGHNESSTEXTURE_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+      _DetailMap:
+        m_Texture: {fileID: 2800000, guid: 92806c6d6815bb05c894156ed7a00ad3, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _MainTex:
+        m_Texture: {fileID: 2800000, guid: d1018cfa4d1b3698bbd5d1f8bffc127b, type: 3}
+        m_Scale: {x: 1.0, y: 1.0}
+        m_Offset: {x: 0.0, y: 0.0}
+    m_Floats:
+      _Metallic: 0.4
+      _Roughness: 0.3
+      _WorldUVMultipllier: 0.2
+      _WorldUVRotator: 0.75
+    m_Colors:
+      _Color: {r: 1, g: 1, b: 1, a: 1}
+      _MaskColor: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 1}

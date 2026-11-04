@@ -1,0 +1,132 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: mat_dlc5_ground_2_4
+  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+  m_ShaderKeywords:
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+      _BlueColourHeight:
+        m_Texture: {fileID: 2800000, guid: d5f6df928128f713afa7a349721faccb, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _BlueNormal:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _BlueRMAO:
+        m_Texture: {fileID: 2800000, guid: 2696ea915bcf836ec03f4d3f0571be96, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _Detail:
+        m_Texture: {fileID: 2800000, guid: 8ea6cbd156a0e499b6db417bc03f3dc1, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _GreenColourHeight:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _GreenNormal:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _GreenRGAO:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _Mask:
+        m_Texture: {fileID: 2800000, guid: e176236aec2a1ff2f98afbbcb2669f39, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _RedColourHeight:
+        m_Texture: {fileID: 2800000, guid: d4f48d6aa7e40e29afd77974ffd9bae9, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _RedNormal:
+        m_Texture: {fileID: 2800000, guid: f934abb91758b326258a3874ac48ff54, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _RedRMAO:
+        m_Texture: {fileID: 2800000, guid: 159a7b846d40ba29ffea1c9934c31258, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+      _1: 0.15
+      _2: 0.6
+      _3: 0.05
+      _4: 2.19
+      _BlueBlendSoftness: 0.36
+      _BlueDensity: 0.9
+      _BlueScale: 16.24
+      _BumpScale: 1
+      _Cutoff: 0.5
+      _DetailNormalMapScale: 1
+      _DetailRotate: 4.1
+      _DetailScale: 0.3
+      _DstBlend: 0
+      _GlossMapScale: 1
+      _Glossiness: 0.5
+      _GlossyReflections: 1
+      _GreenBlendSoftness: -1.27
+      _GreenDensity: 0.1
+      _GreenScale: 17.3
+      _HardBlend: 0
+      _Metallic: 0
+      _Mode: 0
+      _OcclusionStrength: 1
+      _Parallax: 0.02
+      _RedBlendSoftness: -2.04
+      _RedDensity: 0
+      _RedScale: 11.05
+      _Scale1: 1
+      _Scale2: 1
+      _SmoothnessTextureChannel: 0
+      _SpecularHighlights: 1
+      _SrcBlend: 1
+      _UVSec: 0
+      _ZWrite: 1
+      _node_1026: 0.34
+      _node_1321: 3
+      _node_1321_copy: 6.35
+      _node_1321_copy_copy: 3
+      _node_1531: 5.7
+      _node_1610: 1.18
+      _node_1610_copy: 3.4
+      _node_1610_copy_copy: 3.4
+      _node_1920: 4
+      _node_1920_copy: 4
+      _node_1920_copy_copy: 4
+      _node_2254: 0
+      _node_2481: 0.47
+      _node_3078: -14.66
+      _node_3580: 1
+      _node_3876: 0
+      _node_4249: 1
+      _node_5624: -1.1
+      _node_5707: 16.7
+      _node_5756: 0.7
+      _node_6611: 0.2
+      _node_72: 0.29
+      _node_72_copy: 1.1
+      _node_72_copy_copy: 2.97
+      _node_7341: 0.85
+      _node_7871: 0.15
+      _node_897: 0.51
+      _node_9978: 6.52
+    m_Colors:
+      _Color: {r: 1, g: 1, b: 1, a: 1}
+      _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+      _node_81: {r: 1, g: 1, b: 1, a: 1}
+      _node_8760: {r: 0, g: 0, b: 0, a: 1}

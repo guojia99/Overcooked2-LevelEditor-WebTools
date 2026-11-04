@@ -1,0 +1,330 @@
+{
+ "nodes": {
+  "assets/data/orderdefinitions/cookedingredients/boiledpasta.asset": {
+   "m_GameObject": {
+    "m_FileID": 0,
+    "m_PathID": 0
+   },
+   "m_Enabled": 1,
+   "m_Script": {
+    "m_FileID": 0,
+    "m_PathID": 8554482606106332735
+   },
+   "m_Name": "BoiledPasta",
+   "m_orderGuiDescription": [],
+   "m_platingStep": {
+    "m_FileID": 0,
+    "m_PathID": 2423405141991993217
+   },
+   "m_platingPrefab": {
+    "m_FileID": 1,
+    "m_PathID": 1190526867680979883
+   },
+   "m_uID": 14906,
+   "m_composition": [
+    {
+     "m_FileID": 0,
+     "m_PathID": -4027930774974670935
+    }
+   ],
+   "m_optional": [],
+   "m_cookingStep": {
+    "m_FileID": 0,
+    "m_PathID": -8166179204333737862
+   },
+   "m_progress": 1
+  },
+  "assets/data/orderdefinitions/ingredients/sushifish.asset": {
+   "m_GameObject": {
+    "m_FileID": 0,
+    "m_PathID": 0
+   },
+   "m_Enabled": 1,
+   "m_Script": {
+    "m_FileID": 0,
+    "m_PathID": -8962588812211447133
+   },
+   "m_Name": "SushiFish",
+   "m_orderGuiDescription": [],
+   "m_platingStep": {
+    "m_FileID": 0,
+    "m_PathID": 2423405141991993217
+   },
+   "m_platingPrefab": {
+    "m_FileID": 1,
+    "m_PathID": 4443388703444188627
+   },
+   "m_uID": 23600,
+   "m_iconSprite": {
+    "m_FileID": 6,
+    "m_PathID": -3116810113721072681
+   },
+   "m_crateLid": {
+    "m_atlasTexture": {
+     "m_FileID": 7,
+     "m_PathID": -6872684607196468227
+    },
+    "m_subRect": {
+     "x": 256.0,
+     "y": 512.0,
+     "width": 256.0,
+     "height": 256.0
+    }
+   },
+   "m_colour": {
+    "r": 0.8823530077934265,
+    "g": 0.5137255191802979,
+    "b": 0.4941176772117615,
+    "a": 1.0
+   }
+  },
+  "assets/data/orderdefinitions/ingredients/sushiprawn.asset": {
+   "m_GameObject": {
+    "m_FileID": 0,
+    "m_PathID": 0
+   },
+   "m_Enabled": 1,
+   "m_Script": {
+    "m_FileID": 0,
+    "m_PathID": -8962588812211447133
+   },
+   "m_Name": "SushiPrawn",
+   "m_orderGuiDescription": [],
+   "m_platingStep": {
+    "m_FileID": 0,
+    "m_PathID": 2423405141991993217
+   },
+   "m_platingPrefab": {
+    "m_FileID": 1,
+    "m_PathID": 4443388703444188627
+   },
+   "m_uID": 21875,
+   "m_iconSprite": {
+    "m_FileID": 6,
+    "m_PathID": 5230619282654409096
+   },
+   "m_crateLid": {
+    "m_atlasTexture": {
+     "m_FileID": 7,
+     "m_PathID": -6872684607196468227
+    },
+    "m_subRect": {
+     "x": 512.0,
+     "y": 1024.0,
+     "width": 256.0,
+     "height": 256.0
+    }
+   },
+   "m_colour": {
+    "r": 1.0,
+    "g": 0.6352941393852234,
+    "b": 0.3450980484485626,
+    "a": 1.0
+   }
+  },
+  "assets/data/recipedata/cookingstepdata/fryingpan.asset": {
+   "m_GameObject": {
+    "m_FileID": 0,
+    "m_PathID": 0
+   },
+   "m_Enabled": 1,
+   "m_Script": {
+    "m_FileID": 0,
+    "m_PathID": -8955355816373304653
+   },
+   "m_Name": "FryingPan",
+   "m_icon": {
+    "m_atlasTexture": {
+     "m_FileID": 0,
+     "m_PathID": -974644252509345913
+    },
+    "m_subRect": {
+     "x": 0.0,
+     "y": 0.0,
+     "width": 128.0,
+     "height": 128.0
+    }
+   },
+   "m_iconSprite": {
+    "m_FileID": 0,
+    "m_PathID": 0
+   },
+   "m_sizzleSound": 6,
+   "m_addToSound": 3,
+   "m_uID": 20294
+  },
+  "assets/data/recipedata/cookingstepdata/pot.asset": {
+   "m_GameObject": {
+    "m_FileID": 0,
+    "m_PathID": 0
+   },
+   "m_Enabled": 1,
+   "m_Script": {
+    "m_FileID": 0,
+    "m_PathID": -8955355816373304653
+   },
+   "m_Name": "Pot",
+   "m_icon": {
+    "m_atlasTexture": {
+     "m_FileID": 0,
+     "m_PathID": -6094359502796925474
+    },
+    "m_subRect": {
+     "x": 0.0,
+     "y": 0.0,
+     "width": 128.0,
+     "height": 128.0
+    }
+   },
+   "m_iconSprite": {
+    "m_FileID": 0,
+    "m_PathID": 0
+   },
+   "m_sizzleSound": 5,
+   "m_addToSound": 15,
+   "m_uID": 20068
+  }
+ },
+ "prefabs": {
+  "assets/prefabs/meals/recipe_seafood_pasta_01.prefab": {
+   "type": "GameObject",
+   "tree": {
+    "m_Component": [
+     {
+      "component": {
+       "m_FileID": 0,
+       "m_PathID": -95301994154115873
+      }
+     },
+     {
+      "component": {
+       "m_FileID": 0,
+       "m_PathID": -8832855664300650027
+      }
+     },
+     {
+      "component": {
+       "m_FileID": 0,
+       "m_PathID": -3856629831615549293
+      }
+     },
+     {
+      "component": {
+       "m_FileID": 0,
+       "m_PathID": -821092503160012243
+      }
+     }
+    ],
+    "m_Layer": 0,
+    "m_Name": "recipe_seafood_pasta_01",
+    "m_Tag": 0,
+    "m_IsActive": true
+   }
+  },
+  "assets/prefabs/plated/plated_pasta_01.prefab": {
+   "type": "GameObject",
+   "tree": {
+    "m_Component": [
+     {
+      "component": {
+       "m_FileID": 0,
+       "m_PathID": -7534205046529652199
+      }
+     },
+     {
+      "component": {
+       "m_FileID": 0,
+       "m_PathID": 4536753416805604108
+      }
+     },
+     {
+      "component": {
+       "m_FileID": 0,
+       "m_PathID": -3895037018331435120
+      }
+     },
+     {
+      "component": {
+       "m_FileID": 0,
+       "m_PathID": -3026059480452202558
+      }
+     }
+    ],
+    "m_Layer": 0,
+    "m_Name": "plated_pasta_01",
+    "m_Tag": 0,
+    "m_IsActive": true
+   }
+  },
+  "assets/prefabs/plated/plated_pasta_fish_01.prefab": {
+   "type": "GameObject",
+   "tree": {
+    "m_Component": [
+     {
+      "component": {
+       "m_FileID": 0,
+       "m_PathID": -3802214309718405469
+      }
+     },
+     {
+      "component": {
+       "m_FileID": 0,
+       "m_PathID": 1634559654776301600
+      }
+     },
+     {
+      "component": {
+       "m_FileID": 0,
+       "m_PathID": -7347780332963297835
+      }
+     },
+     {
+      "component": {
+       "m_FileID": 0,
+       "m_PathID": 7536115283206727319
+      }
+     }
+    ],
+    "m_Layer": 0,
+    "m_Name": "plated_pasta_fish_01",
+    "m_Tag": 0,
+    "m_IsActive": true
+   }
+  },
+  "assets/prefabs/plated/plated_pasta_prawn_01.prefab": {
+   "type": "GameObject",
+   "tree": {
+    "m_Component": [
+     {
+      "component": {
+       "m_FileID": 0,
+       "m_PathID": 926082716126114874
+      }
+     },
+     {
+      "component": {
+       "m_FileID": 0,
+       "m_PathID": -3610813799869807491
+      }
+     },
+     {
+      "component": {
+       "m_FileID": 0,
+       "m_PathID": 1062633171491472994
+      }
+     },
+     {
+      "component": {
+       "m_FileID": 0,
+       "m_PathID": -4640764478772229430
+      }
+     }
+    ],
+    "m_Layer": 0,
+    "m_Name": "plated_pasta_prawn_01",
+    "m_Tag": 0,
+    "m_IsActive": true
+   }
+  }
+ }
+}

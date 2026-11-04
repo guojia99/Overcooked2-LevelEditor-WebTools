@@ -151,6 +151,9 @@ export function snapPlacement(
 ): { x: number; z: number } {
   const free = { x: snapValue(wx, S.freeSnapStep), z: snapValue(wz, S.freeSnapStep) };
   const cat = S.catalogByGuid.get(prefabGuid);
+  // 门不参与格心/半格磁吸：模型根必须由用户自由摆放（默认可落在格子左上角 0,0）。
+  // 否则拖入完整格子会被强制吸到 0.5 格心，写回后门根落在半格位置。
+  if (cat && (cat.category === "mechanisms/doors" || /^p_dlc5_door_01$/i.test(cat.id))) return free;
   if (!S.snapEnabled || itemLayerOf(cat) === "decor") return free;
   // 中心 pivot 道具（断头台）：长轴强制吸到半格奇偶位（0.6 mod 1.2），不做阈值
   // 门控——否则一半概率落在错位格，且后端已解除 Unity 侧自动纠偏，错位会持久化。

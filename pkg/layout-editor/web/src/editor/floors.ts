@@ -90,10 +90,10 @@ export function maybeSyncMaterialTilingOnResize(
  *  makes no sense). They remain regular floor-layer items. */
 export const THEMED_FLOOR_NOT_FLOOR_ID = /pillar|roof|rope|entrance|corner|edge|walkway/i;
 
-/** 压力开关（含 DLC13 莲花变体）是特殊地板道具：必须始终作为地板层物品保留
- *  （有自己的 footprint 尺寸 / 中文名 / PressureSwitch stub），
- *  绝不能并入主题地板——否则会被 mergeThemedItemsIntoFloors 按缺失的
- *  localScale 转成 1×1 地板（丢尺寸、丢名字、误被拖拽缩放）。 */
+/** 压力开关（含 DLC13 莲花变体）是铺在地面的核心层机关（有自己的 footprint
+ *  尺寸 / 中文名 / PressureSwitch stub），绝不能并入主题地板——否则会被
+ *  mergeThemedItemsIntoFloors 按缺失的 localScale 转成 1×1 地板
+ *  （丢尺寸、丢名字、误被拖拽缩放）。 */
 const PRESSURE_SWITCH_FLOOR_ID = /pressureswitch/i;
 
 /** True for catalog prefabs that can back a themed floor (excludes raft planks,

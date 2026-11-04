@@ -1,0 +1,74 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: mat_dlc5_plywood_01
+  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+  m_ShaderKeywords: _DIFFUSEEMISSIVETOGGLE_ON _DIFFUSEPREVIEW_ON _RIMPREVIEW_ON
+  m_LightmapFlags: 5
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+      _ColourAlpha:
+        m_Texture: {fileID: 2800000, guid: a87eb1074e25c76b602b8e8253f3c3ae, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _Normal:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _RMEAO:
+        m_Texture: {fileID: 2800000, guid: 531ab77a7d139d97eb262248e4671a8c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+      _Brightness: 0
+      _BumpScale: 1
+      _Cutoff: 0.5
+      _DetailNormalMapScale: 1
+      _DetailPreview: 0
+      _DiffuseEmissiveToggle: 0.5
+      _DiffusePreview: 1
+      _DstBlend: 0
+      _EmissionScaleUI: 0
+      _Glossiness: 0
+      _Metallic: 0.367
+      _Mode: 0
+      _OcclusionStrength: 1
+      _Parallax: 0.02
+      _PreviewAO: 0
+      _PreviewEmission: 0
+      _ReflectionCubemap_Preivew: 0
+      _RimIntensity: 1
+      _RimPower: 1
+      _RimPreview: 1
+      _Roughness: 0
+      _ScreenspaceDetail: 0
+      _SrcBlend: 1
+      _UVSec: 0
+      _UseMetallicTexture: 0
+      _UseRoughnessTexture: 0
+      _WorldUVMultipllier: 0
+      _WorldUVRotator: 0
+      _ZWrite: 1
+      _node_1439: 0
+      _node_2382: 0
+      _node_3545: 0
+    m_Colors:
+      _Color: {r: 1, g: 1, b: 1, a: 1}
+      _EmissionColor: {r: 0, g: 0, b: 0, a: 0}
+      _EmissionColorUI: {r: 1, g: 1, b: 1, a: 1}
+      _EmissionColour: {r: 1, g: 1, b: 1, a: 1}
+      _EmissiveColour: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+      _MaskColor: {r: 0.5294118, g: 0.46712804, b: 0.46712804, a: 1}
+      _SpecColor: {r: 0, g: 0, b: 0, a: 1}
+      _highlight_colour: {r: 0.9117647, g: 0.8719588, b: 0.7843858, a: 1}

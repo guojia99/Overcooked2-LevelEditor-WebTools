@@ -54,6 +54,112 @@ export type UtensilIngredientFill = Map<string, UtensilFillEntry>;
 /** 锅具管理弹窗与额外食材选择器共用的菜谱筛选（reopen 时保留）。 */
 const utmSharedRecipeFilters = emptyUtensilRecipeFilters();
 
+// ---------- Web 意面家族（commonW5/pasta）：煎锅中间产物 + 锅内熟物模型 ----------
+/** 煎寿司鱼/虾中间产物（CustomRecipeSO type=Cooked）资产 id。 */
+const PASTA_FISH_NODE_ID = "Web_Seafood_Pasta_FishNode";
+const PASTA_PRAWN_NODE_ID = "Web_Seafood_Pasta_PrawnNode";
+/** 意面成品菜谱 id（compositionIds 不可用时的兜底判定）。 */
+const PASTA_FINAL_IDS = new Set(["Web_Seafood_Pasta", "Web_Fish_Pasta", "Web_Prawn_Pasta"]);
+/** 锅内熟虾模型：commonW2 炸虾饼（原版锅内为圆形煎制物；prawn_fried_01 是接盘
+ *  造型，留给中间产物装盘展示）。 */
+const PASTA_PRAWN_PAN_MODEL_GUID = "949a48257d6a82246918e3af3e81524e";
+/** 锅内熟鱼模型：commonW5 Web_Model_PrepFishSliced（PseudoPrefabSO → bundle47
+ *  原版煎鱼 prep_fish_sliced_01，懒加载不直连 bundle guid）。 */
+const PASTA_FISH_PAN_MODEL_SO_GUID = "f099b5194b8af4747789845c829644e5";
+
+/** 所选菜谱是否含意面家族（组成引用煎寿司鱼/虾中间产物）。 */
+export function pastaFamilySelected(recipes: RecipeEntry[]): boolean {
+  return recipes.some((r) => {
+    const comps = r.compositionIds ?? [];
+    return (
+      PASTA_FINAL_IDS.has(r.id) ||
+      comps.includes(PASTA_FISH_NODE_ID) ||
+      comps.includes(PASTA_PRAWN_NODE_ID)
+    );
+  });
+}
+
+/** 意面家族选中时：给场景煎锅（含 DLC 变体）补挂煎寿司鱼/虾中间产物，并对齐写入
+ *  锅内熟物模型（models/modelSOs 与 allowedIngredientSOs 按下标对齐——
+ *  PseudoPrefabCookingUtensil.Setup 逐条取 models[i]/modelSOs[i]；空串槽位写回为
+ *  null = 无专属模型，运行时回落原版/兜底）。真机经场景序列化引用加载模型。
+ *  返回写入的煎锅数。 */
+export function applyPastaPanModels(
+  recipes: RecipeEntry[],
+  recipeGuid: Map<string, string>
+): number {
+  if (!pastaFamilySelected(recipes)) return 0;
+  const fishGuid = recipeGuid.get(PASTA_FISH_NODE_ID);
+  const prawnGuid = recipeGuid.get(PASTA_PRAWN_NODE_ID);
+  if (!fishGuid && !prawnGuid) return 0;
+  // [allowed guid, modelGuid, modelSoGuid]
+  const additions: Array<[string, string, string]> = [];
+  if (fishGuid) additions.push([fishGuid, "", PASTA_FISH_PAN_MODEL_SO_GUID]);
+  if (prawnGuid) additions.push([prawnGuid, PASTA_PRAWN_PAN_MODEL_GUID, ""]);
+  let touched = 0;
+  for (const it of S.items) {
+    if (!itemInCurrentPart(it)) continue;
+    if (stubKindOf(it) !== "CookingUtensil") continue;
+    const id =
+      S.catalogByGuid.get(it.prefabGuid ?? "")?.id ?? prefabIdFromPath(it.prefabAssetPath ?? "");
+    if (functionalBaseId(id ?? "") !== "FryPan") continue;
+    if (!it.cookingUtensil) it.cookingUtensil = {};
+    const cu = it.cookingUtensil;
+    const allowed = cu.allowedIngredientGuids ?? [];
+    const models = [...(cu.modelGuids ?? [])];
+    const soGuids = [...(cu.modelSoGuids ?? [])];
+    while (models.length < allowed.length) models.push("");
+    while (soGuids.length < allowed.length) soGuids.push("");
+    let changed = false;
+    for (const [g, modelGuid, soGuid] of additions) {
+      const idx = allowed.indexOf(g);
+      if (idx >= 0) {
+        // 已在列表：仅补空模型槽
+        if (modelGuid && !models[idx]) { models[idx] = modelGuid; changed = true; }
+        if (soGuid && !soGuids[idx]) { soGuids[idx] = soGuid; changed = true; }
+        continue;
+      }
+      allowed.push(g);
+      models.push(modelGuid);
+      soGuids.push(soGuid);
+      changed = true;
+    }
+    if (!changed) continue;
+    cu.allowedIngredientGuids = allowed;
+    cu.modelGuids = models;
+    cu.modelSoGuids = soGuids;
+    if (cu.capacity == null || cu.capacity <= 0) cu.capacity = defaultUtensilCapacity(it);
+    touched++;
+  }
+  return touched;
+}
+
+/** allowed 列表变化时按 guid 迁移模型槽位，保持 modelGuids/modelSoGuids 下标对齐
+ *  （额外食材选择器删项 / 按菜谱自动填充覆盖写入都会改变 allowed；模型数组不迁移
+ *  会让槽位错位到别的食材上）。从未配置过模型则不动。 */
+function realignUtensilModels(
+  cu: NonNullable<EditorItem["cookingUtensil"]>,
+  nextAllowed: string[]
+): void {
+  const prevAllowed = cu.allowedIngredientGuids ?? [];
+  const prevModels = cu.modelGuids ?? [];
+  const prevSoGuids = cu.modelSoGuids ?? [];
+  if (prevModels.length === 0 && prevSoGuids.length === 0) return;
+  const modelByGuid = new Map<string, { m: string; s: string }>();
+  prevAllowed.forEach((g, i) => {
+    if (g) modelByGuid.set(g, { m: prevModels[i] ?? "", s: prevSoGuids[i] ?? "" });
+  });
+  const nextModels = nextAllowed.map((g) => modelByGuid.get(g)?.m ?? "");
+  const nextSoGuids = nextAllowed.map((g) => modelByGuid.get(g)?.s ?? "");
+  if (nextModels.some((x) => x) || nextSoGuids.some((x) => x)) {
+    cu.modelGuids = nextModels;
+    cu.modelSoGuids = nextSoGuids;
+  } else {
+    delete cu.modelGuids;
+    delete cu.modelSoGuids;
+  }
+}
+
 /** 把 computeUtensilIngredientFill 的结果写进场景锅具的 allowedIngredientSOs。
  *  两个入口共用：锅具管理页「按菜谱自动填充」与菜谱弹窗「安装缺失」。
  *  ings 按 id→食材 guid、intermediates 按 id→菜谱 guid 解析；返回写入的锅具数。
@@ -99,7 +205,10 @@ export function applyUtensilIngredientFill(
     if (!isPushablePot) it.stubKind = "CookingUtensil";
     if (!it.cookingUtensil) it.cookingUtensil = {};
     it.cookingUtensil.capacity = Math.max(1, f.capacity);
-    it.cookingUtensil.allowedIngredientGuids = [...new Set(add)];
+    // 覆盖写入 allowed 前按 guid 迁移模型槽位（意面煎锅模型等），防下标错位
+    const nextAllowed = [...new Set(add)];
+    realignUtensilModels(it.cookingUtensil, nextAllowed);
+    it.cookingUtensil.allowedIngredientGuids = nextAllowed;
     touched++;
   }
   return touched;
@@ -294,6 +403,8 @@ async function showUtensilManagerModal(opts?: UtensilManagerModalOpts) {
 
       pushHistory();
       const touched = applyUtensilIngredientFill(fill, ingGuid, recipeGuid);
+      // Web 意面家族：煎锅补挂煎寿司鱼/虾中间产物 + 锅内熟物模型（炸虾饼/原版煎鱼）
+      const pastaPans = applyPastaPanModels(recs, recipeGuid);
       draw();
       const vesselZh = (v: string) => {
         const kind = UTENSIL_KIND_BY_ID[v];
@@ -307,7 +418,7 @@ async function showUtensilManagerModal(opts?: UtensilManagerModalOpts) {
       });
       setStatus(
         touched
-          ? `已按 ${recs.length} 道菜谱填充 ${touched} 个锅具（${parts.join("、")}；写回后生效）`
+          ? `已按 ${recs.length} 道菜谱填充 ${touched} 个锅具（${parts.join("、")}${pastaPans > 0 ? `；${pastaPans} 个煎锅已挂煎寿司鱼/虾中间产物与锅内模型` : ""}；写回后生效）`
           : `场景中没有匹配的锅具（需要：${parts.join("、")}）——可先用菜谱弹窗「自动补全道具」放置缺失锅具`,
         touched > 0
       );
@@ -368,6 +479,8 @@ async function showUtensilManagerModal(opts?: UtensilManagerModalOpts) {
         (guids) => {
           pushHistory();
           const cu = ensureUtensil(it);
+          // allowed 增删后按 guid 迁移模型槽位（意面煎锅模型），防下标错位
+          realignUtensilModels(cu, guids);
           cu.allowedIngredientGuids = guids;
           // capacity 缺省会写回 0（后端 int）——兜底原版默认
           if (cu.capacity == null) cu.capacity = defaultUtensilCapacity(it);
@@ -401,6 +514,9 @@ async function showUtensilManagerModal(opts?: UtensilManagerModalOpts) {
         it.cookingUtensil = {
           capacity: cap,
           allowedIngredientGuids: [...allowed],
+          // 锅内模型随 allowed 一起同步（下标对齐；意面煎锅炸虾饼/煎鱼模型）
+          ...(cu.modelGuids?.length ? { modelGuids: [...cu.modelGuids] } : {}),
+          ...(cu.modelSoGuids?.length ? { modelSoGuids: [...cu.modelSoGuids] } : {}),
           ...(cu.cookTime != null && cu.cookTime > 0 ? { cookTime: cu.cookTime } : {}),
           ...(cu.burnTime != null && cu.burnTime > 0 ? { burnTime: cu.burnTime } : {}),
           ...(cu.mixTime != null && cu.mixTime > 0 ? { mixTime: cu.mixTime } : {}),

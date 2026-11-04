@@ -141,8 +141,11 @@ namespace CustomStub
         /// 随机选一个候选发出；信号名+分隔符+可编程参数值；冷却限流；服务端
         /// 权威掷骰）。纯自治组件（事件驱动 + 可选低频轮询协程），不计入 ticker
         /// 激活票数（TeleportalExitOnly 同款豁免），自愈挂载走 tag
-        /// RandomTrigger|I:..|C:..|S:..|N:..|E:..（%,;&gt;|/@ 转义）。</summary>
-        public const string Version = "v18(" + StubVersion.Value + ")";
+        /// RandomTrigger|I:..|C:..|S:..|N:..|E:..（%,;&gt;|/@ 转义）。
+        ///  v19（4.1.0）：多镜头分屏 SplitScreenCamera（SplitScreen|1 tag 自愈；
+        ///  原版镜头屏蔽、按本地厨师数量自动 1/2/3/4 镜头、单目标复用
+        ///  MultiplayerCamera 运镜；分屏时忽略 CameraOffset|）。</summary>
+        public const string Version = "v19(" + StubVersion.Value + ")";
 
         private const string SentinelName = "CustomStub.Runtime";
         private const string HarmonyId = "oc2.customstub";
@@ -1075,6 +1078,50 @@ namespace CustomStub
             }
         }
 
+        /// <summary>可上菜传送带的「非盘子无效上菜」补丁（ServerPlateStation.OnItemAdded
+        /// 前缀，见 HarmonyPatches「可上菜传送带」节）：仅在 ConveyorServe.TransportInProgress
+        /// 时接管，普通玩家放置/普通上菜台不受影响。按需安装（ConveyorServe| tag），幂等；
+        /// 安装失败时 ConveyorServe.PatchesReady=false，非盘子不再送入上菜台（留在传送带上），
+        /// 以免触发宿主 OnItemAdded 的空引用。</summary>
+        private static bool s_conveyorServePatched;
+        private static bool s_conveyorServePatchFailed;
+
+        internal static void EnsureConveyorServePatches()
+        {
+            if (s_conveyorServePatched || s_conveyorServePatchFailed)
+                return;
+            try
+            {
+                var type = GameApi.Find("ServerPlateStation");
+                var prefix = HarmonyPatches.ServerPlateStationItemAddedPrefixMethod;
+                if (type == null || prefix == null)
+                {
+                    s_conveyorServePatchFailed = true;
+                    StubLog.LogWarn("[CustomStub] ServerPlateStation 反射/补丁缺失，可上菜传送带非盘子拦截未装");
+                    return;
+                }
+                var target = type.GetMethod("OnItemAdded",
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (target == null)
+                {
+                    s_conveyorServePatchFailed = true;
+                    StubLog.LogWarn("[CustomStub] 未找到 ServerPlateStation.OnItemAdded，可上菜传送带非盘子拦截未装");
+                    return;
+                }
+                var harmony = new Harmony(HarmonyId + ".conveyorserve");
+                harmony.Patch(target, new HarmonyMethod(prefix));
+                s_conveyorServePatched = true;
+                ConveyorServe.PatchesReady = true;
+                StubLog.Dbg("[CustomStub] 可上菜传送带无效上菜补丁已装（按需）: "
+                    + target.DeclaringType.Name + ".OnItemAdded");
+            }
+            catch (Exception ex)
+            {
+                s_conveyorServePatchFailed = true;
+                StubLog.LogWarn("[CustomStub] 可上菜传送带补丁安装失败（非盘子仍会被消耗，但不断小费）: " + ex);
+            }
+        }
+
         /// <summary>脏茶杯合并补丁（ServerDirtyPlateStack.CanHandlePlacement /
         /// HandlePlacement 前缀，见 HarmonyPatches「脏茶杯合并」节）：单个脏茶杯
         /// 放上脏茶杯堆时合并入堆。按需安装（DirtyTeacup| tag），幂等；失败仅损失
@@ -1732,6 +1779,7 @@ namespace CustomStub
                 // 扫描会重新注册）。不挂 ResetSceneTickers——该链在 HealScene 之后
                 // 跑，会把刚注册的相机清掉。
                 CameraAuthoredOffset.OnSceneChanged();
+                SplitScreenCamera.OnSceneChanged();
                 UpstreamPseudoHeal.OnSceneChanged();
                 var tags = UnityEngine.Object.FindObjectsOfType<SpecificPseudoPrefabTag>();
                 var stubTags = 0;
@@ -1754,7 +1802,9 @@ namespace CustomStub
                     // （v12 三态门控的同一条性能约定）。RandomTrigger 同款豁免
                     //（事件驱动 + 可选低频轮询，零 ticker 零补丁）。
                     if (!tag.prefabTag.StartsWith(TeleportalExitOnly.TagPrefix, StringComparison.Ordinal)
-                        && !tag.prefabTag.StartsWith(RandomTrigger.TagPrefix, StringComparison.Ordinal))
+                        && !tag.prefabTag.StartsWith(RandomTrigger.TagPrefix, StringComparison.Ordinal)
+                        && !tag.prefabTag.StartsWith(SwitchTint.TagPrefix, StringComparison.Ordinal)
+                        && !tag.prefabTag.StartsWith(SplitScreenCamera.TagPrefix, StringComparison.Ordinal))
                         tickerTags++;
                     if (tag.prefabTag.StartsWith(UtensilTimingConfig.TagPrefix, StringComparison.Ordinal))
                         sawUtensilTiming = true;
@@ -1858,18 +1908,21 @@ namespace CustomStub
                 || prefabTag.StartsWith(WorldMapDressing.TagPrefix, StringComparison.Ordinal)
                 || prefabTag.StartsWith(UtensilTimingConfig.TagPrefix, StringComparison.Ordinal)
                 || prefabTag.StartsWith(CameraAuthoredOffset.TagPrefix, StringComparison.Ordinal)
+                || prefabTag.StartsWith(SplitScreenCamera.TagPrefix, StringComparison.Ordinal)
                 || prefabTag.StartsWith(TravelatorReverser.TagPrefix, StringComparison.Ordinal)
                 || prefabTag.StartsWith(TeleportalExitOnly.TagPrefix, StringComparison.Ordinal)
                  || prefabTag.StartsWith(RatHeist.TagPrefix, StringComparison.Ordinal)
                  || prefabTag.StartsWith(ConveyorDirectionSync.TagPrefix, StringComparison.Ordinal)
+                 || prefabTag.StartsWith(ConveyorServe.TagPrefix, StringComparison.Ordinal)
                  || prefabTag.StartsWith("BLRelay|", StringComparison.Ordinal)
                  || prefabTag.StartsWith(CoaxialButtonGroup.TagPrefix, StringComparison.Ordinal)
                  || prefabTag.StartsWith(RandomTrigger.TagPrefix, StringComparison.Ordinal)
                 || prefabTag.StartsWith(ButtonSpeedControl.TagPrefix, StringComparison.Ordinal)
                 || prefabTag.StartsWith(ButtonSpawnerBatch.TagPrefix, StringComparison.Ordinal)
-                || prefabTag.StartsWith(WebBackpackStorage.TagPrefix, StringComparison.Ordinal)
-                || prefabTag.StartsWith(WebKillerGhost.TagPrefix, StringComparison.Ordinal)
-                || prefabTag.StartsWith(Kettle.TagPrefix, StringComparison.Ordinal);
+                 || prefabTag.StartsWith(WebBackpackStorage.TagPrefix, StringComparison.Ordinal)
+                 || prefabTag.StartsWith(WebKillerGhost.TagPrefix, StringComparison.Ordinal)
+                 || prefabTag.StartsWith(Kettle.TagPrefix, StringComparison.Ordinal)
+                 || prefabTag.StartsWith(SwitchTint.TagPrefix, StringComparison.Ordinal);
         }
 
         /// <summary>统计对象上 CustomStub 命名空间组件数（自愈前后对比用）。</summary>
@@ -2014,6 +2067,27 @@ namespace CustomStub
                 sync.enabled = true;
                 StubLog.Dbg("[CustomStub] 自愈 ConveyorDirectionSync: " + go.name);
             }
+            else if (prefabTag.StartsWith(ConveyorServe.TagPrefix, StringComparison.Ordinal))
+            {
+                // ConveyorServe| / ConveyorServe|dir（无 payload；dir 同时补方向同步组件）。
+                EnsureConveyorServePatches();
+                if (!HasStubComponentNamed(go, "ConveyorServe"))
+                {
+                    var serve = go.AddComponent<ConveyorServe>();
+                    serve.enabled = false;
+                    serve.m_enabled = true;
+                    serve.enabled = true;
+                }
+                if (prefabTag.StartsWith("ConveyorServe|dir", StringComparison.Ordinal)
+                    && !HasStubComponentNamed(go, "ConveyorDirectionSync"))
+                {
+                    var dirSync = go.AddComponent<ConveyorDirectionSync>();
+                    dirSync.enabled = false;
+                    dirSync.m_enabled = true;
+                    dirSync.enabled = true;
+                }
+                StubLog.Dbg("[CustomStub] 自愈 ConveyorServe: " + go.name);
+            }
             else if (prefabTag.StartsWith("BLRelay|", StringComparison.Ordinal))
             {
                 if (HasStubComponentNamed(go, "ButtonLogicRelay"))
@@ -2066,6 +2140,18 @@ namespace CustomStub
                 StubLog.Dbg("[CustomStub] 自愈 DirtyTeacupMergeWatcher: " + go.name
                     + "（缺序列化 m_stackPrefab，单杯+单杯合并不可用；单杯入堆不受影响）");
             }
+            else if (prefabTag.StartsWith(SwitchTint.TagPrefix, StringComparison.Ordinal))
+            {
+                if (HasStubComponentNamed(go, "SwitchTint"))
+                    return;
+                var tint = go.AddComponent<SwitchTint>();
+                tint.enabled = false;
+                ParseSwitchTint(prefabTag, tint);
+                tint.enabled = true;
+                StubLog.Dbg("[CustomStub] 自愈 SwitchTint: " + go.name
+                    + "（目标 " + tint.m_targetPath + "｜未按下 " + tint.m_idleColor
+                    + "｜按下 " + tint.m_pressedColor + "）");
+            }
             else if (prefabTag.StartsWith(CameraAuthoredOffset.TagPrefix, StringComparison.Ordinal))
             {
                 // CameraOffset|<x>,<z>（invariant 浮点 = 相机根节点摆放位世界 XZ，
@@ -2080,6 +2166,36 @@ namespace CustomStub
                 }
                 CameraAuthoredOffset.RegisterFromTag(go,
                     ParseFloat(parts[0], 0f), ParseFloat(parts[1], 0f));
+            }
+            else if (prefabTag.StartsWith(SplitScreenCamera.TagPrefix, StringComparison.Ordinal))
+            {
+                // 多镜头分屏：不挂组件，登记相机根并启动分屏驱动。
+                SplitScreenCamera.ActivateFromTag(go, prefabTag);
+            }
+        }
+
+        /// <summary>SwitchTint|T:&lt;目标路径&gt;|I:&lt;未按下色&gt;|P:&lt;按下色&gt;
+        /// （%,;&gt;| 做 %XX 转义；颜色段空 = 该状态不染色）。</summary>
+        private static void ParseSwitchTint(string prefabTag, SwitchTint tint)
+        {
+            try
+            {
+                var parts = prefabTag.Split('|');
+                string t = null, i = null, p = null;
+                for (int k = 1; k < parts.Length; k++)
+                {
+                    var seg = parts[k];
+                    if (seg.StartsWith("T:", StringComparison.Ordinal)) t = seg.Substring(2);
+                    else if (seg.StartsWith("I:", StringComparison.Ordinal)) i = seg.Substring(2);
+                    else if (seg.StartsWith("P:", StringComparison.Ordinal)) p = seg.Substring(2);
+                }
+                tint.m_targetPath = UnescTag(t ?? "");
+                tint.m_idleColor = UnescTag(i ?? "");
+                tint.m_pressedColor = UnescTag(p ?? "");
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] SwitchTint tag 解析失败 " + prefabTag + ": " + ex.Message);
             }
         }
 

@@ -15,7 +15,7 @@ using UnityEngine;
 ///  - 只写 Assets/LevelSets/&lt;set&gt;/custom_content/；common04 / Modules 只读。
 ///  - 模板资源永不修改；克隆后用 PrefabUtility.InstantiatePrefab + ReplacePrefab
 ///    （Unity 2017 兼容）写回。
-///  - 依赖 common04 的 supplies；导出时 common04 由 LayoutEditorSetExporter 携带。
+///  - 依赖 common04 的 supplies；common04 仅作编辑器克隆模板，不随依赖包导出。
 ///  - C# 4.0（Unity 2017），禁止 ?. / 字符串插值 / nameof / 表达式体。
 /// </summary>
 public static class LayoutEditorCustomContentApi

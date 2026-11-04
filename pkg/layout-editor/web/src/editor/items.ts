@@ -40,7 +40,8 @@ import {
   planeScaleFromCells,
   defaultBackgroundPlaneCells,
   catalogItemById,
-  ingredientIdByGuid
+  ingredientIdByGuid,
+  isPressureSwitchSurfaceCat
 } from "./catalog";
 import {
   isCollisionItem,
@@ -48,6 +49,7 @@ import {
   isAirSlopeItem,
   isLotusPressureSwitchItem,
   stripMisplacedSpeedControl,
+  stripUnconfiguredSpeedControl,
 } from "./stubControls";
 import { cleanOrphanedButtonLinks, cleanOrphanedCoaxialLinks } from "./buttonLinks";
 import { cleanOrphanedButtonEvents } from "./buttonEvents";
@@ -188,7 +190,8 @@ export function enrichItem(raw: LayoutItem, editorKey: string): EditorItem {
     stubZ = ed.z;
   }
   stripMisplacedSpeedControl(raw);
-  return {
+  stripUnconfiguredSpeedControl(raw);
+  const item: EditorItem = {
     ...raw,
     _editorKey: editorKey,
     footprint: fp,
@@ -197,6 +200,7 @@ export function enrichItem(raw: LayoutItem, editorKey: string): EditorItem {
     _parentWx: wp.x - raw.localPosition.x,
     _parentWz: wp.z - raw.localPosition.z,
   };
+  return item;
 }
 
 export function enrichFloor(raw: FloorObject, key: string): EditorFloor {
@@ -442,14 +446,14 @@ export function moveBlockedAt(_item: EditorItem, _wx: number, _wz: number, _igno
 export function checkPlayerCollisions(): string[] {
   const result: string[] = [];
   const players = S.items.filter((it) => isPlayerItem(it) && itemInCurrentPart(it));
-  const nonPlayerGameplay = S.items.filter(
-    (it) =>
-      // 分 P：玩家碰撞按 P 作用域校验（P1/P2 同位物件互不构成碰撞）。
-      itemInCurrentPart(it) &&
-      !isPlayerItem(it) &&
-      !isCollisionItem(it) &&
-      itemLayerOfIt(it) === "items"
-  );
+  const nonPlayerGameplay = S.items.filter((it) => {
+    // 分 P：玩家碰撞按 P 作用域校验（P1/P2 同位物件互不构成碰撞）。
+    if (!itemInCurrentPart(it) || isPlayerItem(it) || isCollisionItem(it)) return false;
+    if (itemLayerOfIt(it) !== "items") return false;
+    // 压力开关是可行走/可站立的，不能按普通核心物品拦截玩家。
+    const cat = catalogItemForGuidOrPath(it.prefabGuid, it.prefabAssetPath);
+    return !isPressureSwitchSurfaceCat(cat);
+  });
   // 精确 XZ AABB 相交（工作台写回校验另加 Y，见 checkWorkstationCollisions），而不是网格离散化：
   // 网格化在物体不在格子正中心时会多算相邻格子，造成假重叠。
   const EPS = 0.02;
@@ -811,6 +815,11 @@ export function addFromCatalog(
     };
   }
   if (cat.id === "ConveyorStation") {
+    item.stubKind = "Conveyor";
+    item.conveyor = { conveySpeed: 0.5 };
+  }
+  if (cat.id === "web_conveyor_station_serve") {
+    // commonW5 可上菜传送带站：复用 Conveyor 参数轨，运行时由 ConveyorServe| 接管上菜。
     item.stubKind = "Conveyor";
     item.conveyor = { conveySpeed: 0.5 };
   }

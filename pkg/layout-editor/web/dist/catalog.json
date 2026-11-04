@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-29T03:29:29.412Z",
+  "generatedAt": "2026-11-03T06:40:44.428Z",
   "schemaVersion": 10,
   "gridCellSize": 1.2,
-  "itemCount": 3586,
+  "itemCount": 3706,
   "itemChunks": [
     "catalog/items.0.json",
     "catalog/items.1.json",
@@ -21,7 +21,8 @@
     "catalog/items.14.json",
     "catalog/items.15.json",
     "catalog/items.16.json",
-    "catalog/items.17.json"
+    "catalog/items.17.json",
+    "catalog/items.18.json"
   ],
   "paletteGroups": [
     {
@@ -99,7 +100,14 @@
       "labelZh": "核心 · 机关",
       "labelEn": "Mechanisms",
       "layoutTier": "core",
-      "itemCount": 22
+      "itemCount": 26
+    },
+    {
+      "key": "mechanisms/doors",
+      "labelZh": "核心 · 门 / 自动门",
+      "labelEn": "Doors & automatic doors",
+      "layoutTier": "core",
+      "itemCount": 1
     },
     {
       "key": "surface",
@@ -120,7 +128,7 @@
       "labelZh": "地板 / 背景",
       "labelEn": "Floor & background surfaces",
       "layoutTier": "floor",
-      "itemCount": 189
+      "itemCount": 200
     },
     {
       "key": "decor/food",
@@ -176,7 +184,7 @@
       "labelZh": "装饰 · 城垛",
       "labelEn": "Decor · battlements",
       "layoutTier": "decor",
-      "itemCount": 8
+      "itemCount": 26
     },
     {
       "key": "art/beach",
@@ -197,7 +205,7 @@
       "labelZh": "装饰 · 露营",
       "labelEn": "Decor · camping",
       "layoutTier": "decor",
-      "itemCount": 3
+      "itemCount": 4
     },
     {
       "key": "art/campsite",
@@ -225,14 +233,14 @@
       "labelZh": "装饰 · 马戏团",
       "labelEn": "Decor · circus",
       "layoutTier": "decor",
-      "itemCount": 2
+      "itemCount": 4
     },
     {
       "key": "art/city",
       "labelZh": "装饰 · 城市",
       "labelEn": "Decor · city",
       "layoutTier": "decor",
-      "itemCount": 10
+      "itemCount": 34
     },
     {
       "key": "art/city_sushi",
@@ -295,7 +303,7 @@
       "labelZh": "装饰 · 露营 DLC",
       "labelEn": "Decor · dlc05_camping",
       "layoutTier": "decor",
-      "itemCount": 229
+      "itemCount": 228
     },
     {
       "key": "art/dlc07_horde",
@@ -365,7 +373,7 @@
       "labelZh": "装饰 · 装饰件",
       "labelEn": "Decor · dressing_assets",
       "layoutTier": "decor",
-      "itemCount": 22
+      "itemCount": 27
     },
     {
       "key": "art/dressingassets",
@@ -375,11 +383,18 @@
       "itemCount": 11
     },
     {
+      "key": "art/dynamic",
+      "labelZh": "装饰 · dynamic",
+      "labelEn": "Decor · dynamic",
+      "layoutTier": "decor",
+      "itemCount": 13
+    },
+    {
       "key": "art/enemies",
       "labelZh": "装饰 · 敌人",
       "labelEn": "Decor · enemies",
       "layoutTier": "decor",
-      "itemCount": 1
+      "itemCount": 2
     },
     {
       "key": "art/festivemashup",
@@ -428,7 +443,14 @@
       "labelZh": "装饰 · 部落",
       "labelEn": "Decor · horde",
       "layoutTier": "decor",
-      "itemCount": 5
+      "itemCount": 7
+    },
+    {
+      "key": "art/hordenpc",
+      "labelZh": "装饰 · hordenpc",
+      "labelEn": "Decor · hordenpc",
+      "layoutTier": "decor",
+      "itemCount": 3
     },
     {
       "key": "art/inside",
@@ -443,6 +465,13 @@
       "labelEn": "Decor · keep",
       "layoutTier": "decor",
       "itemCount": 41
+    },
+    {
+      "key": "art/kitchen",
+      "labelZh": "装饰 · kitchen",
+      "labelEn": "Decor · kitchen",
+      "layoutTier": "decor",
+      "itemCount": 1
     },
     {
       "key": "art/landscapemechanism",
@@ -491,7 +520,7 @@
       "labelZh": "装饰 · 矿洞",
       "labelEn": "Decor · mine",
       "layoutTier": "decor",
-      "itemCount": 66
+      "itemCount": 85
     },
     {
       "key": "art/misc",
@@ -582,7 +611,7 @@
       "labelZh": "装饰 · 共享厨房",
       "labelEn": "Decor · shared_kitchen",
       "layoutTier": "decor",
-      "itemCount": 18
+      "itemCount": 19
     },
     {
       "key": "art/sharedkitchen",
@@ -603,7 +632,14 @@
       "labelZh": "装饰 · summer",
       "labelEn": "Decor · summer",
       "layoutTier": "decor",
-      "itemCount": 31
+      "itemCount": 32
+    },
+    {
+      "key": "art/sushi",
+      "labelZh": "装饰 · sushi",
+      "labelEn": "Decor · sushi",
+      "layoutTier": "decor",
+      "itemCount": 10
     },
     {
       "key": "art/swamp",
@@ -627,6 +663,13 @@
       "itemCount": 2
     },
     {
+      "key": "art/tutorial",
+      "labelZh": "装饰 · tutorial",
+      "labelEn": "Decor · tutorial",
+      "layoutTier": "decor",
+      "itemCount": 3
+    },
+    {
       "key": "art/walls",
       "labelZh": "装饰 · 墙体",
       "labelEn": "Decor · walls",
@@ -638,7 +681,7 @@
       "labelZh": "装饰 · 魔法学校",
       "labelEn": "Decor · wizard",
       "layoutTier": "decor",
-      "itemCount": 30
+      "itemCount": 31
     },
     {
       "key": "art/wizards_school",

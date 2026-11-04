@@ -443,6 +443,78 @@ namespace CustomStub
         ///    TriggerTimer 同步 UI + 三态动画）→ Active 才可接一杯热水（CanHandlePlacement
         ///    前缀门禁）→ 冷却复位开关；接水食材 = 本库 Node_HotWater（uID 100000004）。
         ///    特征 kettle；Harmony 组 .kettle（门禁/接水/客户端表现三补丁，按需装）。
+        /// 4.0.10（2026-11-04 开局 DelayRefreshStartConveying NRE）：
+        ///  - 4.0.9 的高频/整 90° 兜底可能在 ServerConveyorStation.StartSynchronising
+        ///    之前调用 UpdateAdjacentReceiver()，宿主 SetAdjacentReceiver 启动协程，
+        ///    下一帧 m_selfReceiver 仍为 null → RefreshConveyTo() NRE
+        ///    （ServerConveyorStation.cs:121）。刷新前增加同步器就绪门禁：
+        ///    m_selfReceiver 已由 StartSynchronising 赋值才允许刷新；pending 保留。
+        ///  - Loader 仅同步版本号。
+        /// 4.0.9（2026-11-04 传送带整 90° 兜底被 moved 标志挡住）：
+        ///  - 4.0.8 状态轨迹实锤：180° 站已回到 idlehold_1（idle=True），但随后
+        ///    仍未刷新；怀疑位姿「本帧仍在动」标志长期为真，在 pending 后提前
+        ///    return，使 Idle/整 90° 兜底都排不上。现在「站体停在整 90° 朝向」
+        ///    的低频兜底不再受 moved 标志影响（它本身已要求整格朝向 + 空闲），
+        ///    并在每次「动画停稳」打印 posePending/movedNow/pendingSince/conveying/
+        ///    站体与包装世界欧拉角，便于一次性定位。
+        ///  - 诊断日志统一带完整层级路径（同名站 Design/Conveyors/ConveyorStation (1)
+        ///    与传送带阵内的 ConveyorStation (1) 不再混淆）。
+        ///  - Loader 仅同步版本号。
+        /// 4.0.8（2026-11-04 传送带节点动画卡在 FlipOn 的诊断/兜底）：
+        ///  - 4.0.7 日志显示 180° 站（阵1·2）检测到动画开始后，Animator 再未回到
+        ///    Idle（位姿/Idle 双兜底都不触发），模型停在新朝向、投递目标不刷新。
+        ///    新增动画状态轨迹（AniState=当前/下一 clip、是否过渡、是否 Idle，每站
+        ///    前 16 次）+ 卡死超时兜底：节点动画超过 1.5s 仍未离开当前状态时强制
+        ///    刷新投递目标一次。位姿检测/Idle 停稳/卡死超时三路任一命中即刷新。
+        ///  - Loader 仅同步版本号。
+        /// 4.0.7（2026-11-04 传送带方向刷新不依赖位姿比较）：
+        ///  - 真机日志实锤：180° 站（阵1·2）的模型已转、但 ConveyorDirectionSync
+        ///    连「位姿变化」都没检测到（既无刷新日志也无阻塞告警），而其余三站正常。
+        ///    方向刷新改为双触发：① 原有位姿停稳；② 节点环 Animator 从节点动画
+        ///    回到 Idle（= 一次方向切换完成，与 vanilla AnimationFinished 同义）。
+        ///    后者不依赖「动画到底转了哪个 Transform」，可覆盖伪预制实例化/包装层级
+        ///    造成的检测盲区。首次检测到节点动画播放 / 按停稳兜底刷新均有日志。
+        ///  - Loader 仅同步版本号。
+        /// 4.0.6（2026-11-04 传送带按方向刷新被共享垃圾桶永久挡死）：
+        ///  - ConveyorDirectionSync 空闲门控曾检查【下游】m_adjacentReceiver.IsReceiving()。
+        ///    共享垃圾桶同时被另一条传送带喂入时该标志几乎常真，方向切换动画完成后
+        ///    刷新被永久阻塞，食物继续沿旧目标全部送进垃圾桶（阵中「绑定按钮的第二个
+        ///    传送带」必现）。刷新门控只保留本站 IsConveying()（向外投递在途）——
+        ///    这是 EndConveyence 换接收器唯一危险窗口；上游送菜/下游接收均与换
+        ///    m_adjacentReceiver 无关，不能作为门控。另新增「方向已变但刷新被阻塞
+        ///    Ns」常开诊断（旧版静默无日志）。
+        ///  - AnimGroupBakery 四元数首键半球：Y=180° 基准（w≈0）盲目强制 w&gt;=0
+        ///    会翻轴，使 ccw 下一键落入 w&lt;0 半球（Unity 长弧、转到一半被拉回）。
+        ///    近零首键改为只修正 w 符号并按后续键决定是否整段取反；含 Y=180°
+        ///    传送带的关卡需再写回一次以重生 .anim/.controller。
+        ///  - Loader 仅同步版本号。
+        /// 4.0.5（2026-11-04 部分传送带送菜方向和皮带模型相反）：
+        ///  - 停稳后若原方向前方没有接收器，会把 Leftwards/Rightwards 翻到对面。
+        ///    皮带模型不转，食物走到箭头反方向。枚举保持原样，食物沿站体 -right
+        ///    （与模型同向）；前方是空格就冲出皮带。
+        ///  - Loader 仅同步版本号。
+        /// 4.0.4（2026-11-04 传送带第一次按压转到新朝向后立刻弹回）：
+        ///  - 节点环对账在 QueueEvent 入队时就加权威步，SetTrigger 还要等队列
+        ///    到点。开局第一次按压时对账抢先 Play 下一格 Idle，真正的 BLPress
+        ///    从那一格再播返回动画，所有传送带都转 90° 后弹回开局朝向；对账
+        ///    把本地步数记超前，后续按压不再被改写所以才正常。尚未 SetTrigger
+        ///    的权威步不再补步。
+        ///  - Loader 仅同步版本号。
+        /// 4.0.3（2026-11-04 Y=180° 传送带逆时针转到一半被拉回）：
+        ///  - 4.0.2 用欧拉角把站体朝向再写回包装，180° 附近欧拉角会翻成另一套，
+        ///    节点环播到一半被盖回开局角。吸附也不再改 Animator 正在驱动的包装。
+        ///  - 旋转曲线烘焙：首键 w&gt;=0，后续键与前一键同半球，避免 180° 键被
+        ///    Unity 翻号后走 270° 长弧。需对含 Y=180° 传送带的关卡再写回一次。
+        ///  - Loader 仅同步版本号。
+        /// 4.0.2（2026-11-04 传送带转完食物仍沿旧方向冲出皮带）：
+        ///  - GetNextGridIndex 读站体 transform.right，按钮动画转的是包装。停稳后把
+        ///    站体 Y 朝向对齐包装，再调用宿主 UpdateAdjacentReceiver（不直接写
+        ///    m_adjacentReceiver，避免拆掉投递回调）。原方向正前方是空格、对面有
+        ///    接收器时改 Leftwards/Rightwards，食物改去工作台而不是冲出皮带。
+        ///  - Loader 仅同步版本号。
+        /// 4.0.1（2026-11-04 传送带旋转后食物不跟皮带走）：
+        ///  - 曾按 -right 直接改接收器；会拆掉 SetAdjacentReceiver 的回调，且站体
+        ///    朝向没对齐时仍沿旧方向送。4.0.2 改回宿主刷新。
         /// 4.0.0（2026-10-28 commonW5 版本门控断点）：
         ///  - 本版运行时主内容 = commonW5 增量库：OC1/AYCE 主题 BGM 30 首
         ///    （audio/music，PseudoPrefabSO 直引）、桌台皮肤 丛林/生日
@@ -462,6 +534,13 @@ namespace CustomStub
         ///  - Loader PluginVersion 同步 4.0.0（requires.txt 门控与依赖包版本对齐）。
         ///  - ⚠ 改 StubVersion 后须 Unity 重编译并重新 staging
         ///    RuntimeDll/WebCustomStubRuntime.dll.bytes（导出新鲜度守卫会拦过期包）。
-        public const string Value = "4.0.0";
+        /// 4.1.0（2026-11-04 多镜头分屏）：
+        ///  - 新增 SplitScreenCamera：SplitScreen|1 tag 自愈；按本地厨师数量
+        ///    自动 1/2/3/4 镜头（单人双厨师=2）；原版镜头屏蔽（保留 Camera.main/
+        ///    AudioListener），每个分屏镜头单目标复用 MultiplayerCamera 运镜；
+        ///    分屏时忽略 CameraOffset|；彩色框线 + 3 人黑边布局。
+        ///  - 编辑器 CameraInfoDto.splitScreen 往返；导出特征 camera。
+        ///  - Loader 仅同步版本号。
+        public const string Value = "4.1.0";
     }
 }

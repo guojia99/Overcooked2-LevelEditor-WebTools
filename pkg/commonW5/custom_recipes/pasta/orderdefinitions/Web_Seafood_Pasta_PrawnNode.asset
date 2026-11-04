@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83fb008bcc8e793429b02c178c430815, type: 3}
+  m_Name: Web_Seafood_Pasta_PrawnNode
+  m_EditorClassIdentifier:
+  type: 2
+  recipeName: Web_Seafood_Pasta_PrawnNode
+  uID: 58323018
+  score: 0
+  platingStepSO: {fileID: 11400000, guid: 02b04fdf6fef0e944870fd5e06375ed1, type: 2}
+  modelSO: {fileID: 11400000, guid: 72db978f4e5c06b4db758b931057670b, type: 2}
+  model: {fileID: 1717355270871722, guid: 949a48257d6a82246918e3af3e81524e, type: 2}
+  iconSO: {fileID: 0}
+  icon: {fileID: 0}
+  compositionSOs:
+  - {fileID: 11400000, guid: df4a04d1549f9ee41a991153bd723110, type: 2}
+  optionalSOs: []
+  cookingStepSO: {fileID: 11400000, guid: 72bee3db65786774683403e9c362cb97, type: 2}
+  cookingStepIconSO: {fileID: 11400000, guid: 292a7ea66aa4d1d48a3477fe3a56675c, type: 2}
+  cookingStepIcon: {fileID: 0}
+  cookingProgress: 1
+  mixingIconSO: {fileID: 0}
+  mixingIcon: {fileID: 0}
+  mixingProgress: 0

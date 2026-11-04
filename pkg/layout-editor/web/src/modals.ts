@@ -21,6 +21,7 @@ import { getQuestionMarkStyles } from "./editor/iconCaches";
 import { questionMarkIconUrl, crateAirIconUrl } from "./api";
 import {
   levelRequiredCrateIngredientIds,
+  levelRequiredSpawnerIngredientIds,
   recipeCategoryOf,
   utensilIntermediateRecipes,
 } from "./editor/recipeKnowledge";
@@ -53,6 +54,8 @@ export interface IngredientPickerOptions {
   utensilRecipeFilters?: boolean;
   /** 与锅具管理「按菜谱自动填充」共用筛选状态时传入同一对象。 */
   sharedUtensilRecipeFilters?: UtensilRecipeFilterState;
+  /** 食材生成器：筛选条显示「填充本关菜谱」。 */
+  levelFill?: boolean;
 }
 
 function ingredientCard(ing: IngredientEntry, checked: boolean, opts?: IngredientPickerOptions): string {
@@ -223,30 +226,33 @@ export function openFoodSpawnerEditor(
   onSave: (patch: NonNullable<LayoutItem["foodSpawner"]>) => void
 ) {
   const fs = item.foodSpawner ?? {};
-  const selected = new Set(fs.attachmentPrefabGuids ?? []);
-  const grid = ingredientGrid(ingredients, selected, {
-    // node 型食材无实体 prefab，挂点生成器无法实例化
+  // 与锅具「额外食材」共用同一套目录和筛选（搜索 / 来源 / 分类 / 已选）。
+  // 节点型食材没有实体 prefab，生成器实例化会失败，保持禁选。
+  const session = createIngredientPickerSession(ingredients, fs.attachmentPrefabGuids ?? [], undefined, {
     isDisabled: (i) => (i.nodeOnly ? "node 型食材（无实体 prefab），生成器无法生成" : null),
+    levelFill: true,
   });
 
   openModal(
     "食材生成器 · 参数",
     `
-    <label class="modal-check"><input type="checkbox" id="modal-spawn-order" ${fs.spawnInOrder !== false ? "checked" : ""} /> 按顺序生成 (spawnInOrder)</label>
-    <label class="modal-check"><input type="checkbox" id="modal-trigger-start" ${fs.triggerAtStart !== false ? "checked" : ""} ${fs.startByButton ? "disabled" : ""} /> 开局触发 (triggerAtStart)${fs.startByButton ? "（按钮批次模式下不适用）" : ""}</label>
-    <label class="modal-field">触发间隔 triggerTime (秒)<input type="number" id="modal-trigger-time" step="0.5" min="0" value="${fs.triggerTime ?? 5}" /></label>
-    <p class="modal-hint">attachmentPrefabSOs（勾选食材，权重均分）</p>
-    <div class="modal-scroll">${grid}</div>
+    <label class="modal-check"><input type="checkbox" id="modal-spawn-order" ${fs.spawnInOrder !== false ? "checked" : ""} /> 按顺序生成</label>
+    <label class="modal-check"><input type="checkbox" id="modal-trigger-start" ${fs.triggerAtStart !== false ? "checked" : ""} ${fs.startByButton ? "disabled" : ""} /> 开局触发${fs.startByButton ? "（按钮批次模式下不适用）" : ""}</label>
+    <label class="modal-field" style="max-width:220px">触发间隔（秒）<input type="number" id="modal-trigger-time" step="0.5" min="0" value="${fs.triggerTime ?? 5}" /></label>
+    <p class="modal-hint">勾选要生成的食材，或点「填充本关菜谱」勾上本关菜谱的叶食材（酱料、饮料、奶油和中间产物不填）。权重自动均分。按顺序生成时，顺序与目录中的先后一致。节点型食材没有实体，无法生成。</p>
+    ${session.bodyHtml}
     `,
     modalFooterBtnsHtml()
   );
+  session.bind();
 
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", () => {
-    const guids: string[] = [];
-    document.querySelectorAll<HTMLInputElement>(".modal-scroll input:checked").forEach((el) => {
-      guids.push(el.value);
-    });
+    // 按目录顺序收集，和「已选」里的排列一致，避免筛选视图把勾选顺序打乱。
+    const picked = new Set(session.getSelected());
+    const guids = visibleIngredients(ingredients)
+      .filter((i) => picked.has(i.guid) && !i.nodeOnly)
+      .map((i) => i.guid);
     const n = guids.length;
     const weights = n > 0 ? guids.map(() => 1 / n) : [];
     onSave({
@@ -258,18 +264,16 @@ export function openFoodSpawnerEditor(
     });
     closeModal();
   });
-  syncPickCards(document);
 }
 
-export function openIngredientMultiPicker(
-  title: string,
-  hint: string,
+/** 食材多选/单选的筛选列表（搜索、来源分组、分类、已选）。
+ *  锅具额外食材与食材生成器共用。调用方先 openModal 插入 bodyHtml，再 bind()。 */
+function createIngredientPickerSession(
   ingredients: IngredientEntry[],
   selectedGuids: string[],
-  onSave: (guids: string[]) => void,
   intermediates?: RecipeEntry[],
   opts?: IngredientPickerOptions
-) {
+): { bodyHtml: string; bind: () => void; getSelected: () => string[] } {
   ingredients = visibleIngredients(ingredients);
   const groups = [...new Set(ingredients.map((i) => i.group ?? "other"))]
     .filter((g) => g !== "core")
@@ -322,15 +326,20 @@ export function openIngredientMultiPicker(
     return `<div class="pick-grid">${recipes.map((r) => recipeCard(r, selected.has(r.guid))).join("")}</div>`;
   }
 
+  const levelFillBtn = opts?.levelFill
+    ? `<button type="button" class="ing-group-btn" id="ing-fill-level" title="勾选本关已保存菜谱的叶食材。酱料、饮料、奶油和中间产物不填；已勾选的保留。">⚡ 填充本关菜谱</button><span id="ing-fill-note" class="muted" style="font-size:11px"></span>`
+    : "";
+
   const filterBar = `
     <div class="ing-filter-bar">
       <input type="search" id="ing-pick-search" class="ing-search" placeholder="搜索食材…" />
+      ${levelFillBtn}
       <div class="ing-groups">
         <button type="button" class="ing-group-btn active" data-group="">全部</button>
         ${groups.map((g) => `        <button type="button" class="ing-group-btn" data-group="${g}">${foodGroupLabel(g)}</button>${""}`).join("")}
         ${hasIntermediates ? '<button type="button" class="ing-group-btn" data-group="__intermediate__">中间产物</button>' : ""}
         ${hasCustomRecipes && utensilFiltersOn ? '<button type="button" class="ing-group-btn" data-group="__custom__">自定义菜谱</button>' : ""}
-        <button type="button" class="ing-group-btn" data-group="__selected__" title="只显示当前已勾选的条目，便于审查与取消">✓ 已选 (${selected.size})</button>
+        <button type="button" class="ing-group-btn" data-group="__selected__" title="只显示当前已勾选的条目（不受分类限制），便于审查与取消">✓ 已选 (${selected.size})</button>
       </div>
     </div>
     ${utensilFiltersOn ? utensilRecipeFilterBarHtml(recipeFilterState, cookStepChips, { barId: "ing-pick-recipe-filters" }) : ""}
@@ -361,11 +370,12 @@ export function openIngredientMultiPicker(
       r.id.toLowerCase().includes(q) ||
       (r.ingredients ?? []).join(" ").toLowerCase().includes(q);
 
-    // 已选 tab：当前勾选的食材 + 中间产物（仍受分类/搜索过滤）
+    // 已选：审查全部勾选。忽略分类（否则切到「蔬菜」后再看已选，肉类勾选会消失）。
+    // 搜索仍然生效，方便在已选里找一项。
     if (activeGroup === "__selected__") {
-      const selIngs = ingredients.filter((i) => selected.has(i.guid) && catMatch(i) && textMatch(i));
-      const selPool = pickerIntermediates.filter((r) => selected.has(r.guid));
-      const selRecs = filterRecipesPool(selPool, recipeCatMatch, recipeTextMatch);
+      const selIngs = ingredients.filter((i) => selected.has(i.guid) && textMatch(i));
+      const selRecs = pickerIntermediates.filter((r) => selected.has(r.guid) && recipeTextMatch(r));
+      if (!selIngs.length && !selRecs.length) return '<p class="modal-hint">还没有勾选</p>';
       return ingredientGrid(selIngs, selected, opts) + (selRecs.length ? recipeGrid(selRecs, selected) : "");
     }
 
@@ -386,13 +396,13 @@ export function openIngredientMultiPicker(
     if (activeGroup) filtered = filtered.filter((i) => (i.group ?? "other") === activeGroup);
     filtered = filtered.filter(catMatch);
     filtered = filtered.filter(textMatch);
-    let html = ingredientGrid(filtered, selected, opts);
+    let html = filtered.length ? ingredientGrid(filtered, selected, opts) : "";
     // 搜索时：在食材分组下也列出名称匹配的中间产物（不必先切到「中间产物」tab）
     if (q && activeGroup !== "__intermediate__" && activeGroup !== "__custom__" && hasIntermediates) {
       const matched = filterRecipesPool(pickerIntermediates, recipeCatMatch, recipeTextMatch);
       if (matched.length) html += recipeGrid(matched, selected);
     }
-    return html;
+    return html || '<p class="modal-hint">没有匹配的食材</p>';
   }
 
   function updateRecipeFilterBarVisibility(): void {
@@ -410,75 +420,151 @@ export function openIngredientMultiPicker(
     updateRecipeFilterBarVisibility();
   }
 
+  const bodyHtml = `${filterBar}
+     <div class="modal-scroll" id="ing-pick-container">${buildFiltered()}</div>`;
+
+  const bind = (): void => {
+    const panel = document.querySelector(".modal-panel");
+    if (panel) {
+      panel.classList.add("wide");
+      // 定高面板：列表区撑满剩余空间（约 8 行卡片），见 .modal-panel.ing-pick 样式
+      panel.classList.add("ing-pick");
+    }
+    // 分组 tab 与分类 chips 各自独立高亮/过滤（data-group / data-cat）
+    document.getElementById("ing-pick-search")?.addEventListener("input", applyFilter);
+    document.querySelectorAll(".ing-group-btn[data-group]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".ing-group-btn[data-group]").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        // 已选展示全部勾选。清掉分类高亮，避免「水果」仍亮着却列出了肉类。
+        if ((btn as HTMLElement).dataset.group === "__selected__") {
+          document.querySelectorAll(".ing-group-btn[data-cat]").forEach((b) => b.classList.remove("active"));
+          document.querySelector('.ing-group-btn[data-cat=""]')?.classList.add("active");
+        }
+        applyFilter();
+      });
+    });
+    document.querySelectorAll(".ing-group-btn[data-cat]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".ing-group-btn[data-cat]").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        // 已选不按分类收窄。点分类时回到「全部」来源，让分类真正生效。
+        const groupBtn = document.querySelector<HTMLElement>(".ing-group-btn.active[data-group]");
+        if (groupBtn?.dataset.group === "__selected__") {
+          document.querySelectorAll(".ing-group-btn[data-group]").forEach((b) => b.classList.remove("active"));
+          document.querySelector('.ing-group-btn[data-group=""]')?.classList.add("active");
+        }
+        applyFilter();
+      });
+    });
+
+    const modalRoot = document.querySelector(".modal-panel");
+    if (utensilFiltersOn && modalRoot) {
+      bindUtensilRecipeFilterBar(modalRoot, recipeFilterState, applyFilter);
+      updateRecipeFilterBarVisibility();
+    }
+    syncPickCards(document.getElementById("ing-pick-container") ?? document);
+
+    // 勾选即时同步进 state（事件委托挂在容器上——applyFilter 只替换 innerHTML，
+    // 容器与监听器存活；单选 radio 换选时先清空再写入唯一值）。
+    const syncSelectedFromInput = (t: EventTarget | null) => {
+      const el = t as HTMLInputElement | null;
+      if (!el || (el.type !== "checkbox" && el.type !== "radio")) return;
+      if (opts?.single) {
+        if (el.type === "radio" && el.checked) {
+          selected.clear();
+          selected.add(el.value);
+        }
+      } else if (el.checked) {
+        selected.add(el.value);
+      } else {
+        selected.delete(el.value);
+      }
+      const selBtn = document.querySelector<HTMLButtonElement>('.ing-group-btn[data-group="__selected__"]');
+      if (selBtn) selBtn.textContent = `✓ 已选 (${selected.size})`;
+    };
+    document.getElementById("ing-pick-container")?.addEventListener("change", (e) => {
+      syncSelectedFromInput(e.target);
+    });
+
+    const fillBtn = document.getElementById("ing-fill-level") as HTMLButtonElement | null;
+    if (fillBtn) fillBtn.addEventListener("click", async () => {
+      if (fillBtn.disabled) return;
+      const note = document.getElementById("ing-fill-note");
+      fillBtn.disabled = true;
+      if (note) note.textContent = "计算中…";
+      try {
+        const ids = await levelRequiredSpawnerIngredientIds();
+        let added = 0;
+        let already = 0;
+        let skipped = 0;
+        for (const id of ids) {
+          const exact = ingredients.find((i) => i.id === id);
+          const lower = id.toLowerCase();
+          const hits = exact ? [exact] : ingredients.filter((i) => i.id.toLowerCase() === lower);
+          const ing = hits.find((i) => (i.group ?? "core") === "core") ?? hits[0];
+          if (!ing || opts?.isDisabled?.(ing)) {
+            skipped++;
+            continue;
+          }
+          if (selected.has(ing.guid)) already++;
+          else {
+            selected.add(ing.guid);
+            added++;
+          }
+        }
+        if (note) {
+          note.textContent = ids.length
+            ? `本关叶食材 ${ids.length} 项：新增 ${added}，已有 ${already}${skipped ? `，无法生成 ${skipped}` : ""}`
+            : "本关未找到已保存的菜谱（先在菜谱页保存）";
+        }
+        document.querySelectorAll(".ing-group-btn[data-group]").forEach((b) => b.classList.remove("active"));
+        document.querySelector('.ing-group-btn[data-group="__selected__"]')?.classList.add("active");
+        document.querySelectorAll(".ing-group-btn[data-cat]").forEach((b) => b.classList.remove("active"));
+        document.querySelector('.ing-group-btn[data-cat=""]')?.classList.add("active");
+        const selBtn = document.querySelector<HTMLButtonElement>('.ing-group-btn[data-group="__selected__"]');
+        if (selBtn) selBtn.textContent = `✓ 已选 (${selected.size})`;
+        applyFilter();
+      } finally {
+        fillBtn.disabled = false;
+      }
+    });
+  };
+
+  return {
+    bodyHtml,
+    bind,
+    getSelected: () => (opts?.single ? [...selected].slice(-1) : [...selected]),
+  };
+}
+
+export function openIngredientMultiPicker(
+  title: string,
+  hint: string,
+  ingredients: IngredientEntry[],
+  selectedGuids: string[],
+  onSave: (guids: string[]) => void,
+  intermediates?: RecipeEntry[],
+  opts?: IngredientPickerOptions
+) {
+  const session = createIngredientPickerSession(ingredients, selectedGuids, intermediates, opts);
   openModal(
     title,
     `<p class="modal-hint">${hint}</p>
-     ${filterBar}
-     <div class="modal-scroll" id="ing-pick-container">${buildFiltered()}</div>`,
+     ${session.bodyHtml}`,
     `${cancelBtnHtml()}${opts?.single ? `\n     ${modalBtnHtml("清除设置", "modal-btn", { "data-clear": "" })}` : ""}
      ${primaryBtnHtml()}`
   );
-
-  const panel = document.querySelector(".modal-panel");
-  if (panel) {
-    panel.classList.add("wide");
-    // 定高面板：列表区撑满剩余空间（约 8 行卡片），见 .modal-panel.ing-pick 样式
-    panel.classList.add("ing-pick");
-  }
-  // 分组 tab 与分类 chips 各自独立高亮/过滤（data-group / data-cat）
-  document.getElementById("ing-pick-search")?.addEventListener("input", applyFilter);
-  document.querySelectorAll(".ing-group-btn[data-group]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".ing-group-btn[data-group]").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      applyFilter();
-    });
-  });
-  document.querySelectorAll(".ing-group-btn[data-cat]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".ing-group-btn[data-cat]").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      applyFilter();
-    });
-  });
-
-  const modalRoot = document.querySelector(".modal-panel");
-  if (utensilFiltersOn && modalRoot) {
-    bindUtensilRecipeFilterBar(modalRoot, recipeFilterState, applyFilter);
-    updateRecipeFilterBarVisibility();
-  }
+  session.bind();
 
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-clear]")?.addEventListener("click", () => {
     onSave([]);
     closeModal();
   });
-
-  // 勾选即时同步进 state（事件委托挂在容器上——applyFilter 只替换 innerHTML，
-  // 容器与监听器存活；单选 radio 换选时先清空再写入唯一值）。
-  const syncSelectedFromInput = (t: EventTarget | null) => {
-    const el = t as HTMLInputElement | null;
-    if (!el || (el.type !== "checkbox" && el.type !== "radio")) return;
-    if (opts?.single) {
-      if (el.type === "radio" && el.checked) {
-        selected.clear();
-        selected.add(el.value);
-      }
-    } else if (el.checked) {
-      selected.add(el.value);
-    } else {
-      selected.delete(el.value);
-    }
-    const selBtn = document.querySelector<HTMLButtonElement>('.ing-group-btn[data-group="__selected__"]');
-    if (selBtn) selBtn.textContent = `✓ 已选 (${selected.size})`;
-  };
-  document.getElementById("ing-pick-container")?.addEventListener("change", (e) => {
-    syncSelectedFromInput(e.target);
-  });
-
   // 确定从 state 收集（而非当前过滤视图的 DOM），跨分组/分类/搜索的勾选全部保留。
   document.querySelector("[data-ok]")?.addEventListener("click", () => {
-    onSave(opts?.single ? [...selected].slice(-1) : [...selected]);
+    onSave(session.getSelected());
     closeModal();
   });
 }

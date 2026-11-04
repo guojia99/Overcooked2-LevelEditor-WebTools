@@ -1,0 +1,74 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: mat_the_pass_scrolling_01
+  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+  m_ShaderKeywords: _DIFFUSEPREVIEW_ON _EMISSION _NORMALMAP
+  m_LightmapFlags: 1
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+      _MainTex:
+        m_Texture: {fileID: 2800000, guid: 0cd365362b3611f73d2e3ab32dab02da, type: 3}
+        m_Scale: {x: 1.0, y: 1.0}
+        m_Offset: {x: 0.0, y: 0.0}
+    m_Floats:
+      _Alpha_Threshold: 0
+      _Brightness: 0
+      _BumpScale: 1
+      _Cutoff: 0.5
+      _DetailNormalMapScale: 1
+      _DetailPreview: 0
+      _DiffusePreview: 1
+      _DstBlend: 0
+      _GlossMapScale: 1
+      _Glossiness: 0.141
+      _GlossyReflections: 1
+      _Metallic: 0.45
+      _Mode: 0
+      _OcclusionStrength: 1
+      _Parallax: 0.02
+      _PreviewAO: 0
+      _PreviewEmission: 0
+      _ReflectionCubemap_Preivew: 0
+      _RimIntensity: 1.3
+      _RimPower: 1
+      _RimPower_copy: 0.5
+      _RimPreview: 0
+      _Roughness: 0.56
+      _ScreenspaceDetail: 0
+      _SmoothnessTextureChannel: 0
+      _SpecularHighlights: 1
+      _Speed: 0.1
+      _SrcBlend: 1
+      _UVSec: 0
+      _UseMetallicTexture: 0
+      _UseRoughnessTexture: 0
+      _WorldUVMultipllier: 0
+      _WorldUVRotator: 0
+      _ZWrite: 1
+      _alpha_multiplier: 0
+      _scroll_speed: -0.5
+    m_Colors:
+      _Color: {r: 1, g: 1, b: 1, a: 1}
+      _ColourMultiplier: {r: 0.9333334, g: 0.9529412, b: 0.9568628, a: 1}
+      _EmissionColor: {r: 0.32352942, g: 0.0791433, b: 0.0071366853, a: 1}
+      _EmissionColour: {r: 1, g: 1, b: 1, a: 1}
+      _MaskColor: {r: 0.1397059, g: 0.1397059, b: 0.1397059, a: 1}
+      _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+      _highlight_colour: {r: 0.9117647, g: 0.8719588, b: 0.7843858, a: 1}
+      _node_6281: {r: 0.9632353, g: 0.9227911, b: 0.8357483, a: 1}
+      _node_8633: {r: 1, g: 0.8482759, b: 0, a: 1}
+      _node_918: {r: 0.6588235, g: 0.6235294, b: 0.5411765, a: 1}
+      _node_9884: {r: 1, g: 0.9580122, b: 0.8676471, a: 1}
+      _node_9905: {r: 0.9117647, g: 0.8719588, b: 0.7843858, a: 1}

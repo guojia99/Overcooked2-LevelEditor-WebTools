@@ -78,6 +78,8 @@ const NEEDS_STUB_PREFAB_IDS = new Set([
   "custom_utensil_dirty_tray",
   "custom_utensil_dirty_tray_stack",
   "custom_counter_ingredient_splitter",
+  // commonW5 可上菜传送带站：ConveyorServe| 运行时（服务端把物品送上上菜台）
+  "web_conveyor_station_serve",
 ]);
 
 /** 道具是否需要 CustomStub runtime（needsStub 标签）。 */
@@ -131,7 +133,8 @@ const FOOTPRINT_OVERRIDES = {
   custom_counter_ingredient_splitter: { cellsX: 1, cellsZ: 1 },
   Pushable_Object: { cellsX: 2, cellsZ: 2 },
   web_backpack_storage_01: { cellsX: 1, cellsZ: 1 },
-  // DLC 大件：大莲花压力开关 2×2；火锅灶台铺满 2×2（大锅 2×2 锅沿外架其上）
+  // 压力开关默认 2×2（2.4m×2.4m）；大莲花压力开关同为 2×2；火锅灶台铺满 2×2（大锅 2×2 锅沿外架其上）
+  PressureSwitch: { cellsX: 2, cellsZ: 2 },
   cooking_region_floorburner: { cellsX: 2, cellsZ: 2 },
   web_cooking_region_floorburner: { cellsX: 2, cellsZ: 2 },
   web_dlc10_cooking_region_floorburner: { cellsX: 2, cellsZ: 2 },
@@ -315,6 +318,7 @@ const DEFAULT_PARENT = {
   counters: "Design/Counters",
   utensils: "Design/Utensils",
   mechanisms: "Design/Counters",
+  "mechanisms/doors": "Art/Scenery",
   Player: "Design/Chefs",
 };
 
@@ -331,6 +335,7 @@ const CORE_PALETTE = [
   { key: "utensils/tools", labelZh: "核心 · 工具 / 其他", labelEn: "Tools & misc" },
   { key: "mechanisms/joystick", labelZh: "核心 · 摇杆", labelEn: "Joystick & marker light" },
   { key: "mechanisms", labelZh: "核心 · 机关", labelEn: "Mechanisms" },
+  { key: "mechanisms/doors", labelZh: "核心 · 门 / 自动门", labelEn: "Doors & automatic doors" },
   { key: "surface", labelZh: "核心 · 空气墙/斜坡", labelEn: "Air walls & slopes" },
   { key: "Player", labelZh: "核心 · 厨师出生点", labelEn: "Chef spawns" },
 ];
@@ -903,6 +908,10 @@ function categorize(assetPath) {
   rel = rel.replace(/^(?:core|dlc\d+)\//, "");
   const seg = rel.split("/");
   const id = seg[seg.length - 1].replace(/\.prefab$/, "");
+  // DLC5 露营自动门：功能门归核心层「门 / 自动门」，默认父级保持 Art/Scenery。
+  if (id === "p_dlc5_door_01") {
+    return { category: "mechanisms/doors", theme: null };
+  }
   // 上游 common04 自定义模板 / 模块分料机（没有 prefabs/ 层级）。
   if (assetPath.includes("/common04/custom_counter/")) {
     return { category: id.includes("sink") ? "counters/sinks" : "counters/prep", theme: null };
@@ -924,6 +933,10 @@ function categorize(assetPath) {
   // 茶杯 / 茶杯堆（commonW5/prefabs/teacups/）：盘杯器具组。
   if (assetPath.includes("/commonW5/prefabs/teacups/")) {
     return { category: "utensils/plates", theme: null };
+  }
+  // 可上菜传送带站（commonW5/prefabs/mechanisms/）：机关组，与传送带站同组。
+  if (assetPath.includes("/commonW5/prefabs/mechanisms/")) {
+    return { category: "mechanisms", theme: null };
   }
   // 洗茶杯水槽 / 茶杯回收台（commonW5/prefabs/counters/）。
   if (assetPath.includes("/commonW5/prefabs/counters/")) {
@@ -965,7 +978,8 @@ function layoutMetaFor(id, category) {
   }
   const surf = surfaceMeta(id);
   if (FLOOR_LAYERED_SURFACE_IDS.has(id)) {
-    return { layoutTier: "floor", ...surf };
+    // 压力开关（含 DLC13 莲花）是核心层机关：仍按表面物铺地，但归核心层编辑/保存。
+    return { layoutTier: "core", ...surf };
   }
   const meta = { layoutTier: "core", ...surf };
   const stack = UTENSIL_STACK[id];
@@ -973,7 +987,7 @@ function layoutMetaFor(id, category) {
   return meta;
 }
 
-/** 特殊地板：压力开关（含莲花压力开关）铺在地板上，归入地板层。 */
+/** 特殊表面机关：压力开关（含莲花压力开关）铺在地板上，但归核心层编辑/保存。 */
 const FLOOR_LAYERED_SURFACE_IDS = new Set([
   "PressureSwitch",
   "dlc13_lotuspressureswitch_large",
@@ -1184,10 +1198,11 @@ function buildPaletteGroups(byCategory) {
   }
 
   // Floor / background surfaces (aggregated across all categories/themes).
+  // 压力开关（FLOOR_LAYERED_SURFACE_IDS）留在核心「机关」分组，不并入地板/背景组。
   const surfaceItems = [];
   for (const key of Object.keys(byCategory)) {
     for (const it of byCategory[key]) {
-      if (it.surfaceTier) surfaceItems.push(it);
+      if (it.surfaceTier && !FLOOR_LAYERED_SURFACE_IDS.has(it.id)) surfaceItems.push(it);
     }
   }
   if (surfaceItems.length > 0) {
@@ -1648,6 +1663,7 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
       const finalHasStep = isCookStep(finalStep);
       const compResult = [];
       const compPlain = [];
+      const customMixSubIds = [];
       const badgeSteps = {};
       const mainIngs = [];
       const keepBoxes = [];
@@ -1678,6 +1694,7 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
             continue;
           }
           const subStep = subCook || (sub.mixing ? "MixingBowl" : "");
+          if (sub.isCustom && sub.mixing && !subCook) customMixSubIds.push(compId);
           if (!subStep) {
             for (const ing of sub.ingredients) compPlain.push(ing);
             continue;
@@ -1707,6 +1724,10 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
           }
         }
         for (const ing of compPlain) mainIngs.push(ing);
+        // 终锅只有自定义 Mixed 节点时不单独成框（镜像 recipeGroups.ts）。
+        if (mainIngs.length > 0) {
+          for (const id of customMixSubIds) mainIngs.push(id);
+        }
         compResult.push(...keepBoxes);
         if (mainIngs.length) {
           compResult.push({
@@ -1771,7 +1792,7 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
   const cakeLike = type === "cake" || type === "pudding";
   if (type === "sushi") {
     for (const ing of ingredients) {
-      prep.set(ing, ing === "SushiRiceSO" || ing === "RiceSO" ? "Steamer" : "");
+      prep.set(ing, ing === "SushiRiceSO" || ing === "RiceSO" ? "Pot" : "");
     }
   } else if (type === "burrito") {
     for (const ing of ingredients) {
@@ -2413,6 +2434,10 @@ function scanSwitchMaterials(dictionary, idToRow) {
       if (!guid || !seen.add(guid)) continue;
       const fields = parseUnityAsset(file);
       if (fields.scriptGuid !== SCRIPT_GUID.PseudoPrefabSO) continue;
+      // 只收真正的材质 SO：同目录混有 Switch.asset / PressureSwitch.asset
+      // （指向 prefab），选中会让宿主 LoadAsset<Material> 失败并触发重入。
+      const materialAssetPath = (fields.assetPath || "").replace(/\\/g, "/");
+      if (!/\.mat$/i.test(materialAssetPath)) continue;
       const id = path.basename(file, ".asset");
       const dict = dictionary.get(id);
       const swZh = SWITCH_MATERIAL_NAMES_ZH[id];
@@ -2423,6 +2448,7 @@ function scanSwitchMaterials(dictionary, idToRow) {
         guid,
         id,
         assetPath: toAssetPath(file),
+        materialAssetPath,
         nameZh: displayZh,
         nameEn,
       });
@@ -2551,7 +2577,7 @@ function main() {
     for (const it of grouped.values()) items.push(it);
   }
   // commonW5 热水器 / 茶杯 / 茶杯堆（完整本地功能 prefab）。
-  for (const sub of ["kettle", "teacups", "counters"]) {
+  for (const sub of ["kettle", "teacups", "counters", "mechanisms"]) {
     const dir = path.join(repoRoot, "Assets/commonW5/prefabs", sub);
     if (fs.existsSync(dir)) walkPrefabs(dir, `Assets/commonW5/prefabs/${sub}`, items, measuredFootprints);
   }
@@ -2703,10 +2729,11 @@ function main() {
   }
 
   // Floor/background surface items belong ONLY to the floor palette, not their decor group.
+  // 压力开关例外：留在核心「机关」分组。
   const surfaceItems = [];
   for (const key of Object.keys(byCategory)) {
     byCategory[key] = byCategory[key].filter((it) => {
-      if (it.surfaceTier) {
+      if (it.surfaceTier && !FLOOR_LAYERED_SURFACE_IDS.has(it.id)) {
         surfaceItems.push(it);
         return false;
       }

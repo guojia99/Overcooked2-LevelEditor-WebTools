@@ -1,0 +1,132 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: mat_dlc07_goo_01_baked
+  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+  m_ShaderKeywords: 
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BubbleMask:
+        m_Texture: {fileID: 2800000, guid: 42c4861384909a6a17b16ebd8d6848be, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Bubbles:
+        m_Texture: {fileID: 2800000, guid: ecfbc7eeba9fcd487c84f3ac04462f72, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Cubemap:
+        m_Texture: {fileID: 8900000, guid: 96607da2dcc954238ea87e11d3cb1944, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailAlbedoMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParallaxMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Waves:
+        m_Texture: {fileID: 2800000, guid: 195cdefb6a0aacff84b5a901d7aafdf8, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - _BubbleScale: 0.11
+    - _BubbleSpeed: 0.03
+    - _BumpScale: 1
+    - _Cutoff: 0.5
+    - _DetailNormalMapScale: 1
+    - _DetailScale: 0.95
+    - _DistortionScale: 0.23
+    - _DistortionSpeed: 0.1
+    - _DistortionStrength: 0.327
+    - _DstBlend: 0
+    - _Gloss: 0.467
+    - _GlossMapScale: 1
+    - _Glossiness: 0.5
+    - _GlossyReflections: 1
+    - _Metal: 0.442
+    - _Metallic: 0
+    - _Mode: 0
+    - _OcclusionStrength: 1
+    - _Parallax: 0.02
+    - _Scale: 2.16
+    - _SmoothnessTextureChannel: 0
+    - _SpecularHighlights: 1
+    - _Speed: 0.1
+    - _SpeedU: 0.1
+    - _SpeedV: 0.1
+    - _SrcBlend: 1
+    - _UVSec: 0
+    - _WavesScale: 0.15
+    - _WavesSpeedU: 0.05
+    - _WavesSpeedV: 0.05
+    - _ZWrite: 1
+    - _max: 0.05
+    - _min: 0
+    - _node_1192: 1.58
+    - _node_1243: 1.35
+    - _node_1330: 0.53
+    - _node_1803: 1.44
+    - _node_1924: 0
+    - _node_2205: -1.98
+    - _node_2634: 0.21
+    - _node_3411: 0
+    - _node_4903: 2.33
+    - _node_5231: 0.003
+    - _node_6443: 0.05
+    - _node_6668: 9.22
+    - _node_7839: 1.47
+    - _node_9149: 0.87
+    - _node_9457: 0.86
+    m_Colors:
+    - _BubbleColour: {r: 0.43742397, g: 1, b: 0.051470578, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Colour: {r: 0, g: 0.85294116, b: 0.041176543, a: 1}
+    - _Colour1: {r: 0.16561863, g: 0.33823532, b: 0, a: 1}
+    - _Colour2: {r: 0, g: 0.28676468, b: 0.025710002, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _node_4660: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    - _node_7489: {r: 1, g: 0, b: 0, a: 1}
+    - _node_8741: {r: 0.737931, g: 1, b: 0, a: 1}
+    - _node_9741: {r: 1, g: 0, b: 0, a: 1}

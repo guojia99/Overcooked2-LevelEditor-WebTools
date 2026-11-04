@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114096038827637246}
   - component: {fileID: 114967938430519454}
   m_Layer: 0
-  m_Name: surfboard_01_mm_mat_dlc2_surfboard_02_c1e00447
+  m_Name: surfboard_01_mm_mat_dlc2_surfboard_02
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

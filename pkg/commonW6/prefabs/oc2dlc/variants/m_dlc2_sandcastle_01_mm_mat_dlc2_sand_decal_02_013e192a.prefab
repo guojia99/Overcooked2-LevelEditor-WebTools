@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114096038827637246}
   - component: {fileID: 114967938430519454}
   m_Layer: 0
-  m_Name: m_dlc2_sandcastle_01_mm_mat_dlc2_sand_decal_02_013e192a
+  m_Name: m_dlc2_sandcastle_01_mm_mat_dlc2_sand_decal_02
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

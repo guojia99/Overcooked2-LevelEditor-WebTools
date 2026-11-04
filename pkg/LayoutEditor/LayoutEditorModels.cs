@@ -104,7 +104,7 @@ public class LayoutConveyorStubDto
 [Serializable]
 public class LayoutSpeedControlDto
 {
-    public bool enabled = true;
+    public bool enabled;
     /** 速度档位（每按一次按钮切下一档，尾档回卷首档；负值=反向）。≥2 档才有意义。 */
     public float[] levels;
 }
@@ -304,6 +304,10 @@ public class LayoutSwitchStubDto
     public bool startEnabled = true;
     public string activeMaterialGuid;
     public string inactiveMaterialGuid;
+    /** 未按下颜色（hex，纯色覆盖；空=不覆盖）。 */
+    public string idleColor;
+    /** 按下颜色（hex，纯色覆盖；空=不覆盖）。 */
+    public string pressedColor;
 }
 
 /// <summary>开关 → 目标对象的联动（断头台/果汁机/酱料机的按钮触发）。
@@ -356,6 +360,7 @@ public class WebAssetsManifestDto
     public WebAssetCategoryDto audio;
     public WebAssetCategoryDto counterSkins;
     public WebAssetCategoryDto decor;
+    public WebAssetCategoryDto foodIcons;
 }
 
 [Serializable]
@@ -375,7 +380,7 @@ public class WebAssetExportStartDto
 {
     /** 强制重导（装饰默认只补缺失视图）。 */
     public bool force;
-    /** 可选类别：audio / counter-icons / counter-3d / decor；空 = 全部。 */
+    /** 可选类别：audio / counter-icons / counter-3d / decor / food-icons；空 = 全部。 */
     public List<string> categories;
 }
 
@@ -395,6 +400,10 @@ public class LayoutPressureSwitchStubDto
 {
     public string occupiedMaterialGuid;
     public string unoccupiedMaterialGuid;
+    /** 未受压颜色（hex，纯色覆盖；空=不覆盖）。 */
+    public string idleColor;
+    /** 受压颜色（hex，纯色覆盖；空=不覆盖）。 */
+    public string pressedColor;
 }
 
 /// <summary>按钮/压力开关 → 动画组联动（ButtonLinkBakery 烘焙为 Design/Button Logic
@@ -403,7 +412,7 @@ public class LayoutPressureSwitchStubDto
 ///  lockUntilFinished：组运行期间忽略按压（组完成后才接受下一次）；
 ///  共控/共轭按钮（sharedSourceIds）：多个按钮共用同一条 link，任一按压推进同一
 ///  动画组序列，运行期同锁、完成后同解锁（「同时开/关」）；
-///  互锁对（pairId，一对一，各方最多 2 组）：按下时本方各组同时启动，
+///  互锁对（pairId，一对一，各方最多 4 组）：按下时本方各组同时启动，
 ///  全部完成后对方按钮抬起、本方按下（反之亦然）——两按钮中始终只有一个可按。</summary>
 [Serializable]
 public class LayoutButtonLinkDto
@@ -841,6 +850,19 @@ public class AnimGroupMemberGroupDto
 }
 
 [Serializable]
+public class AnimGroupDoorMotionDto
+{
+    /** 门 item instanceId ("u:xxx"/"new:xxx")。 */
+    public string instanceId;
+    /** 开门方向：cw / ccw。 */
+    public string direction;
+    /** 开门角度（度）。 */
+    public float angleDegrees;
+    /** 开门时长（秒）；关门使用同角度/时长、反方向。 */
+    public float durationSeconds;
+}
+
+[Serializable]
 public class AnimGroupDto
 {
     public string id;
@@ -856,8 +878,9 @@ public class AnimGroupDto
     public string triggerMode;
     /** 按钮组的节点推进语义：timeline = 每次按压整组按时间轴连播（一组=一个节点）；
      *  press = 组内每个事件一个节点，每次按压只推进一个事件（节点环控制器，
-     *  用于「同一物体往返翻转」等一个成员进不了两个组的场景）。缺省 = timeline。
-     *  仅 triggerMode == "button" 时生效。 */
+     *  用于「同一物体往返翻转」等一个成员进不了两个组的场景）；
+     *  hold = 压力开关按住式：事件 1 = 站上、事件 2 = 离开，Enter/Exit 直连组根
+     *  Animator（仅支持两个 rotate 事件）。缺省 = timeline。仅 triggerMode == "button" 时生效。 */
     public string advanceMode;
     /** Unity instance ids ("u:xxx"/"new:xxx") of the items driven by this group. */
     public string[] itemInstanceIds;
@@ -892,6 +915,8 @@ public class AnimGroupDto
     public bool applyRootMotion;
     public AnimGroupWaypointDto[] waypoints;
     public AnimGroupEventDto[] events;
+    /** 按住式组：单门旋转覆盖（门参数放门自身；缺省沿用 events 的 rotate 默认值）。 */
+    public AnimGroupDoorMotionDto[] doorMotions;
     /** Backend-owned: hierarchy path of the created "Animated Objects" group root. */
     public string groupHierarchyPath;
     /** 分 P 动画角色：缺省/"gameplay" = 普通关卡动画（按钮、自动循环等）；
@@ -1063,15 +1088,37 @@ public class CameraInfoDto
     /** "#rrggbb" — 运行时相机 clear 色（空洞主题无背景 prefab，即游戏背景色）。 */
     public string backgroundColor;
     public float fieldOfView;
+    /** 主相机 MultiplayerCamera.m_minDistance（分屏单目标默认跟随距离，供前端
+     *  画布镜头参考使用；缺省/<=0 时前端用 5）。 */
+    public float minDistance;
     /** 主相机世界位置快照；X/Z 可编辑（positionEdited=true 时写回，Y 永不写）。 */
     public LayoutVector3 position;
     /** 前端出发点位置编辑标记：true 才写回 position.x/z（防旧文档/默认快照误移相机）。 */
     public bool positionEdited;
+    /** 多镜头分屏：按场景内本地厨师数量自动 1/2/3/4 镜头。写回时在 Camera 子物体
+     *  烘焙 SplitScreen|2|C0:...|C1:... tag（与根节点 CameraOffset| 分离）；运行时
+     *  单向生效（原版镜头屏蔽，忽略相机出发点偏移）。 */
+    public bool splitScreen;
+    /** 分屏每镜头参考（按镜头 1..4 顺序）：各自相对玩家的 offset / FOV / 大小 /
+     *  编辑器显示开关。 */
+    public SplitScreenCameraDto[] splitScreenCameras;
     public float pitch;
     public float yaw;
     public float roll;
     public float nearClip;
     public float farClip;
+}
+
+/** 分屏单镜头参考：offset 相对玩家位置（玩家 + offset*size = 相机初始位），
+ *  fieldOfView<=0 = 沿用主相机 FOV，visible=false = 编辑器不画参考且运行时
+ *  不生成该玩家画面。 */
+[Serializable]
+public class SplitScreenCameraDto
+{
+    public bool visible = true;
+    public LayoutVector3 offset;
+    public float fieldOfView;
+    public float size = 1f;
 }
 
 /** Art/Lights 子树中非 prefab instance 的灯光（prefab 灯作为普通 item 往返，不在此列）。 */
@@ -1456,6 +1503,9 @@ public class OptionalPresetsDto
     /** Hotdog 一键填充（按 DLC 两套：可选菜谱+酱料+水煮香肠）。 */
     public string[] hotdogFillGuidsDlc08;
     public string[] hotdogFillGuidsDlc11;
+    /** Web 意面家族（commonW5/pasta）煎寿司鱼/虾中间产物——注册后可单独装盘上菜
+     *  （recipeMatchList optional 通道）。 */
+    public string[] pastaToppingGuids;
 }
 
 [Serializable]

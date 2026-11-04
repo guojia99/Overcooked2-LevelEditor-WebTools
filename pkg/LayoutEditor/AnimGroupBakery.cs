@@ -33,6 +33,13 @@ public static class AnimGroupBakery
     {
         return group != null && group.triggerMode == "button" && group.advanceMode == "press";
     }
+
+    /// <summary>压力开关按住式组：事件 1 = 站上、事件 2 = 离开；Enter/Exit 直连组根
+    ///  Animator（Closed → Open → Closed），不经过按钮 helper。</summary>
+    internal static bool IsHold(AnimGroupDto group)
+    {
+        return group != null && group.triggerMode == "button" && group.advanceMode == "hold";
+    }
     /// <summary>嵌入每组 .controller 的 TextAsset 子资产名：存放本轮烘焙使用的
     /// 原始编排 JSON（AnimGroupDto），回读时优先反序列化它（见
     /// AnimGroupImporter.TryImportFromSource），避免「烘焙→片段分析回读」的
@@ -296,6 +303,30 @@ public static class AnimGroupBakery
             group.waitForFinished = true;
         }
 
+        // 按住式组归一化：由压力开关 Enter/Exit 直接驱动组根 Animator，
+        // 不使用队列开始/结束触发器与循环；只允许两个 rotate 事件。
+        if (IsHold(group))
+        {
+            if (group.loop)
+            {
+                LayoutEditorLog.LogWarning("anim group: 按住式组「" + (group.displayName ?? "?") +
+                    "」不支持整组循环，已忽略");
+                group.loop = false;
+            }
+            group.waitForFinished = false;
+            group.startTrigger = null;
+            group.endTrigger = null;
+            group.startDelay = 0f;
+            foreach (var e in group.events)
+            {
+                if (e == null || (!e.loop && !e.pingpong)) continue;
+                LayoutEditorLog.LogWarning("anim group: 按住式组「" + (group.displayName ?? "?") +
+                    "」的事件 " + e.triggerName + " loop/pingpong 不支持，已按单次播放烘焙");
+                e.loop = false;
+                e.pingpong = false;
+            }
+        }
+
         // Cross-session fallback: instance ids go stale after a Unity restart /
         // domain reload, which would make every member unresolvable ("没有可解析
         // 的物品") and abort the bake. The importer stamps each member's
@@ -515,6 +546,16 @@ public static class AnimGroupBakery
         if (animEvents.Count == 0)
             return "动画组「" + (group.displayName ?? "?") + "」没有可烘焙事件";
 
+        if (IsHold(group))
+        {
+            if (animEvents.Count != 2 || animEvents[0].type != "rotate" || animEvents[1].type != "rotate")
+                return "按住式动画组「" + (group.displayName ?? "?") +
+                    "」只支持两个 rotate 事件（第 1 个站上开门、第 2 个离开关门）";
+            if (string.IsNullOrEmpty(animEvents[0].triggerName) ||
+                string.IsNullOrEmpty(animEvents[1].triggerName))
+                return "按住式动画组「" + (group.displayName ?? "?") + "」缺少开门/关门触发器名";
+        }
+
         // 时间簇：事件时间区间 [start, start+dur) 与簇区间重叠即并入同一簇，
         // 簇内所有事件烘焙为一个组合 clip（单状态 Animator 的并行 = 曲线合并）。
         // 节点环（press）模式按「相同 startTime = 同一节点」分簇：一按 = 一簇
@@ -548,7 +589,20 @@ public static class AnimGroupBakery
                 "（每按一次翻转 " + (orig.rotateDegrees > 0f ? orig.rotateDegrees : 180f) + "°）");
         }
         List<EventCluster> clusters;
-        if (IsPressAdvance(group))
+        if (IsHold(group))
+        {
+            // 按住式：每个事件固定一个节点（开 / 关），不按时间重叠合并。
+            clusters = new List<EventCluster>();
+            foreach (var e in animEvents)
+            {
+                var c = new EventCluster();
+                c.events.Add(e);
+                c.start = SnapTime(e.startTime);
+                c.end = c.start + EventDuration(e, wpById);
+                clusters.Add(c);
+            }
+        }
+        else if (IsPressAdvance(group))
         {
             clusters = new List<EventCluster>();
             foreach (var e in animEvents)
@@ -578,7 +632,11 @@ public static class AnimGroupBakery
         }
         var queueTriggers = new List<string>();
         var queueDelays = new List<float>();
-        if (IsPressAdvance(group))
+        if (IsHold(group))
+        {
+            // 按住式不使用 TriggerQueue：Enter/Exit 直接驱动组根 Animator。
+        }
+        else if (IsPressAdvance(group))
         {
             // 节点环：队列只携带共享推进触发名，每次按压（BLGo 启动队列）只发一次；
             // 推进到哪个节点由 Animator 当前 Idle 状态决定（见 BuildController）。
@@ -785,6 +843,39 @@ public static class AnimGroupBakery
                 .ToArray();
         }
 
+        // 纯旋转/等待组没有 move 事件，上面的 firstWp 分支不会写 memberOffsets；
+        // 若源 JSON 里没有成员的 hierarchyPath，AnimGroupImporter.TryImportFromSource
+        // 将无法解析成员并退化为片段分析（丢失 advanceMode="hold"/"press"）。
+        // 这里给每个存活非静态成员补一条零偏移 + 路径，保证源数据无损回读。
+        {
+            var offsets = new List<AnimGroupMemberOffsetDto>(
+                group.memberOffsets == null ? new AnimGroupMemberOffsetDto[0] : group.memberOffsets);
+            var have = new HashSet<string>();
+            for (int i = 0; i < offsets.Count; i++)
+            {
+                var o = offsets[i];
+                if (o != null && !string.IsNullOrEmpty(o.instanceId))
+                    have.Add(o.instanceId);
+            }
+            for (int i = 0; i < members.Count; i++)
+            {
+                var go = members[i];
+                if (go == null) continue;
+                var id = "u:" + go.GetInstanceID();
+                if (staticSet.Contains(id) || have.Contains(id)) continue;
+                offsets.Add(new AnimGroupMemberOffsetDto
+                {
+                    instanceId = id,
+                    x = 0f,
+                    z = 0f,
+                    displayName = go.name,
+                    hierarchyPath = LayoutEditorHierarchy.GetHierarchyPath(go.transform)
+                });
+                have.Add(id);
+            }
+            group.memberOffsets = offsets.ToArray();
+        }
+
         // Bake clips + controller.
         var key = BuildAssetKey(sceneName, group);
         var controllerPath = animDir + "/" + key + ".controller";
@@ -793,6 +884,13 @@ public static class AnimGroupBakery
         {
             if (!DeleteAssetIfExists(animDir + "/" + key + "_s" + i + ".anim"))
                 break;
+        }
+
+        var doorMotions = new Dictionary<string, AnimGroupDoorMotionDto>(StringComparer.Ordinal);
+        foreach (var dm in group.doorMotions ?? new AnimGroupDoorMotionDto[0])
+        {
+            if (dm == null || string.IsNullOrEmpty(dm.instanceId)) continue;
+            doorMotions[dm.instanceId] = dm;
         }
 
         var clips = new Dictionary<string, AnimationClip>();
@@ -814,6 +912,7 @@ public static class AnimGroupBakery
         // 旋转事件的角度跨事件累积（非循环）：第 N 个旋转从前面所有旋转的终态
         // 继续（same rule as the preview 的 rotY 叠加）。
         float rotAccum = 0f;
+        int clusterSeq = 0;
         foreach (var cluster in clusters)
         {
             var head = cluster.events[0];
@@ -845,8 +944,20 @@ public static class AnimGroupBakery
                 }
                 else if (evt.type == "rotate")
                 {
-                    var rclip = BuildRotateClip(key, "s" + clipIndex++, members, groupRoot, evt,
-                        rotAccum, finishedTrigger, staticSet, animDir, usedAssets);
+                    AnimationClip rclip;
+                    if (IsHold(group))
+                    {
+                        // 按住式：开/关都以第一个 rotate（开门）为默认参数；
+                        // close=true 时从开门终态反向转回 0（绝不使用关门事件自身的
+                        // 方向/角度，避免开门/关门事件方向不一致时跳 180°）。
+                        rclip = BuildHoldRotateClip(key, "s" + clipIndex++, members, groupRoot,
+                            animEvents[0], doorMotions, clusterSeq == 1, staticSet, animDir, usedAssets);
+                    }
+                    else
+                    {
+                        rclip = BuildRotateClip(key, "s" + clipIndex++, members, groupRoot, evt,
+                            rotAccum, finishedTrigger, staticSet, animDir, usedAssets);
+                    }
                     if (rclip != null) clips[evt.triggerName] = rclip;
                 }
                 else
@@ -918,6 +1029,7 @@ public static class AnimGroupBakery
                     rotAccum += (ce.rotateDirection == "ccw" ? -1f : 1f) * rd;
                 }
             }
+            clusterSeq++;
         }
         if (clips.Count == 0)
             return "动画组「" + (group.displayName ?? "?") + "」：所有事件都没有可烘焙内容";
@@ -1050,6 +1162,13 @@ public static class AnimGroupBakery
             queueTriggers.Add(clusters[ci].events[0].triggerName);
             queueDelays.Add(Mathf.Max(0f, clusters[ci].start - prevClusterStart));
             prevClusterStart = clusters[ci].start;
+        }
+
+        var doorMotions = new Dictionary<string, AnimGroupDoorMotionDto>(StringComparer.Ordinal);
+        foreach (var dm in group.doorMotions ?? new AnimGroupDoorMotionDto[0])
+        {
+            if (dm == null || string.IsNullOrEmpty(dm.instanceId)) continue;
+            doorMotions[dm.instanceId] = dm;
         }
 
         var clips = new Dictionary<string, AnimationClip>();
@@ -1798,9 +1917,81 @@ public static class AnimGroupBakery
         return clip;
     }
 
+    private class HoldRotateSpec
+    {
+        public GameObject go;
+        public string path;
+        public float from;
+        public float delta;
+        public float dur;
+    }
+
+    /// <summary>按住式门组：每扇门可独立配置方向/角度/时长；同一 clip 内按成员
+    ///  各自的曲线烘焙（长度取最慢门）。close=true 时从各自开门终态反向转回 0，
+    ///  默认参数始终取开门事件（不使用关门事件的方向/角度，避免跳 180°）。
+    ///  只写 m_LocalRotation：门模型原点已在格子左上角，旋转轴即该角。evt 应传开门事件。</summary>
+    private static AnimationClip BuildHoldRotateClip(string key, string suffix,
+        List<GameObject> members, Transform groupRoot, AnimGroupEventDto evt,
+        Dictionary<string, AnimGroupDoorMotionDto> doorMotions, bool close,
+        HashSet<string> staticSet, string animDir, HashSet<string> usedAssets)
+    {
+        float defaultDeg = evt.rotateDegrees > 0f ? Mathf.Min(360f, evt.rotateDegrees) : 180f;
+        float defaultDir = evt.rotateDirection == "ccw" ? -1f : 1f;
+        float defaultDur = Mathf.Max(0.1f, evt.rotateSeconds > 0f ? evt.rotateSeconds : 2f);
+        float maxDur = defaultDur;
+        var specs = new List<HoldRotateSpec>();
+        foreach (var go in members)
+        {
+            if (go == null) continue;
+            var id = "u:" + go.GetInstanceID();
+            var path = GetChildPath(go.transform, groupRoot);
+            if (string.IsNullOrEmpty(path)) continue;
+            float deg = defaultDeg;
+            float dir = defaultDir;
+            float dur = defaultDur;
+            AnimGroupDoorMotionDto dm = null;
+            if (doorMotions != null && doorMotions.TryGetValue(id, out dm) && dm != null)
+            {
+                if (dm.angleDegrees > 0f) deg = Mathf.Min(360f, dm.angleDegrees);
+                if (dm.durationSeconds > 0f) dur = Mathf.Max(0.1f, dm.durationSeconds);
+                if (dm.direction == "ccw") dir = -1f;
+                else if (dm.direction == "cw") dir = 1f;
+            }
+            bool isStatic = staticSet.Contains(id);
+            float openAngle = dir * deg;
+            var spec = new HoldRotateSpec
+            {
+                go = go,
+                path = path,
+                from = isStatic ? 0f : (close ? openAngle : 0f),
+                delta = isStatic ? 0f : (close ? -openAngle : openAngle),
+                dur = dur
+            };
+            if (dur > maxDur) maxDur = dur;
+            specs.Add(spec);
+        }
+        if (specs.Count == 0) return null;
+
+        var clip = new AnimationClip();
+        clip.name = key + "_" + suffix;
+        clip.legacy = false;
+        clip.frameRate = 60f;
+        for (int i = 0; i < specs.Count; i++)
+        {
+            var sp = specs[i];
+            WriteRotationCurves(clip, sp.path, sp.go.transform.localRotation,
+                sp.from, sp.delta, 0f, sp.dur, maxDur);
+        }
+        var path2 = animDir + "/" + key + "_" + suffix + ".anim";
+        AssetDatabase.CreateAsset(clip, path2);
+        usedAssets.Add(path2);
+        return clip;
+    }
+
     /// <summary>写一个成员的自身 Y 轴旋转曲线：localRotation = baseRot *
     /// AngleAxis(from + delta·k, up)，区间 [t0, t0+dur]，每 ≤90° 一个关键帧保证
-    /// 圆弧精确（四元数分量线性插值 + 归一化在 ≤90° 内误差可忽略）。</summary>
+    /// 圆弧精确（四元数分量线性插值 + 归一化在 ≤90° 内误差可忽略）。
+    /// 四元数符号按「短弧 + 尽量 w>=0」归一（见 NormalizeRotationHemisphere）。</summary>
     private static void WriteRotationCurves(AnimationClip clip, string path, Quaternion baseRot,
         float fromDeg, float deltaDeg, float t0, float dur, float clipLen)
     {
@@ -1809,11 +2000,18 @@ public static class AnimGroupBakery
         var cz = new AnimationCurve();
         var cw = new AnimationCurve();
         int steps = Mathf.Max(1, Mathf.CeilToInt(Mathf.Abs(deltaDeg) / 90f));
+        var keys = new Quaternion[steps + 1];
+        for (int i = 0; i <= steps; i++)
+        {
+            float k = (float)i / steps;
+            keys[i] = baseRot * Quaternion.AngleAxis(fromDeg + deltaDeg * k, Vector3.up);
+        }
+        NormalizeRotationHemisphere(keys);
         for (int i = 0; i <= steps; i++)
         {
             float k = (float)i / steps;
             float t = Mathf.Min(t0 + dur * k, clipLen);
-            var q = baseRot * Quaternion.AngleAxis(fromDeg + deltaDeg * k, Vector3.up);
+            var q = keys[i];
             cx.AddKey(new Keyframe(t, q.x));
             cy.AddKey(new Keyframe(t, q.y));
             cz.AddKey(new Keyframe(t, q.z));
@@ -1835,6 +2033,60 @@ public static class AnimGroupBakery
             EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalRotation.z"), cz);
         AnimationUtility.SetEditorCurve(clip,
             EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalRotation.w"), cw);
+    }
+
+    /// <summary>四元数 w 视为「近零（≈Y=180°）」的阈值。</summary>
+    private const float RotationNearZeroW = 1e-4f;
+
+    private static Quaternion NegateRotation(Quaternion q)
+    {
+        return new Quaternion(-q.x, -q.y, -q.z, -q.w);
+    }
+
+    private static float RotationDot(Quaternion a, Quaternion b)
+    {
+        return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+    }
+
+    /// <summary>
+    /// 关键帧四元数符号归一，保证运行时走短弧：
+    ///  - Y=180° 基准的 w≈0，轴半球有两个等价表示。若盲目把首键翻到 w>=0，
+    ///    会把轴也翻过去；此时 ccw 的下一键会落进 w<0 半球，Unity 播放时走进
+    ///    270° 长弧（「转到一半被拉回开局角」的 180° 传送带事故）。
+    ///    近零首键改为只把 w 的符号置正（不翻轴），并按后续键朝向决定是否需要
+    ///    整段取反（cw 情况）。
+    ///  - 其余键逐键保证 dot(prev, cur) > 0（同半球短弧）。
+    /// </summary>
+    private static void NormalizeRotationHemisphere(Quaternion[] keys)
+    {
+        if (keys == null || keys.Length == 0)
+            return;
+
+        if (Mathf.Abs(keys[0].w) < RotationNearZeroW)
+        {
+            var probe = keys.Length > 1 ? keys[1] : keys[0];
+            // cw（下一键朝 w<0）：整段取反后两端都在 w>=0 半球；ccw 则保留原轴。
+            if (probe.w < 0f && RotationDot(keys[0], probe) >= 0f)
+            {
+                for (int i = 0; i < keys.Length; i++)
+                    keys[i] = NegateRotation(keys[i]);
+            }
+            // 只修正近零 w 的符号，保持轴不翻（轴向才是旋转方向的决定因素）。
+            if (keys[0].w < 0f)
+                keys[0] = new Quaternion(keys[0].x, keys[0].y, keys[0].z, -keys[0].w);
+        }
+        else if (keys[0].w < 0f)
+        {
+            keys[0] = NegateRotation(keys[0]);
+        }
+
+        var prev = keys[0];
+        for (int i = 1; i < keys.Length; i++)
+        {
+            if (RotationDot(prev, keys[i]) < 0f)
+                keys[i] = NegateRotation(keys[i]);
+            prev = keys[i];
+        }
     }
 
     /// <summary>并行时间簇的组合 clip：移动（XZ 路线）+ 升降（Y）+ 旋转
@@ -2524,6 +2776,9 @@ public static class AnimGroupBakery
 
         var sm = controller.layers[0].stateMachine;
 
+        if (IsHold(group))
+            return BuildHoldController(controllerPath, group, animEvents, clips, usedAssets, controller, sm);
+
         // ---- 节点环（press 推进）拓扑：Idle_0 --BLPress--> Node_0 --exit--> Idle_1
         // --BLPress--> Node_1 --exit--> ... -- 环回 Idle_0。全部节点共用同一触发名，
         // 每次按压（ButtonLink 的 BLGo 启动队列发一次 BLPress）只推进一个节点；
@@ -2681,6 +2936,104 @@ public static class AnimGroupBakery
                 tOut.hasFixedDuration = true;
             }
         }
+
+        return controller;
+    }
+
+    /// <summary>按住式（压力开关）控制器：Closed --Open--> Open --exit--> Idle_Open
+    /// --Close--> Close --exit--> Idle_Closed。Idle 定持 clip 锁住开门/关门终态；
+    /// Open/Close 中途收到反向触发器可直接打断，保证站上/离开的即时响应。</summary>
+    private static AnimatorController BuildHoldController(string controllerPath, AnimGroupDto group,
+        List<AnimGroupEventDto> animEvents, Dictionary<string, AnimationClip> clips,
+        HashSet<string> usedAssets, AnimatorController controller, AnimatorStateMachine sm)
+    {
+        var openEvt = animEvents[0];
+        var closeEvt = animEvents[1];
+        AnimationClip openClip, closeClip;
+        if (!clips.TryGetValue(openEvt.triggerName, out openClip) || openClip == null)
+            return null;
+        if (!clips.TryGetValue(closeEvt.triggerName, out closeClip) || closeClip == null)
+            return null;
+
+        var basePath = controllerPath.Substring(0,
+            controllerPath.Length - ".controller".Length);
+        var idleClosedPath = basePath + "_hold_closed.anim";
+        var idleOpenPath = basePath + "_hold_open.anim";
+        var idleClosedClip = BuildIdleHoldClip(openClip, false, idleClosedPath);
+        var idleOpenClip = BuildIdleHoldClip(openClip, true, idleOpenPath);
+        usedAssets.Add(idleClosedPath);
+        usedAssets.Add(idleOpenPath);
+
+        var idleClosed = sm.AddState("Idle_Closed");
+        idleClosed.motion = idleClosedClip;
+        idleClosed.writeDefaultValues = false;
+        var openState = sm.AddState(openEvt.triggerName);
+        openState.motion = openClip;
+        openState.writeDefaultValues = false;
+        var idleOpen = sm.AddState("Idle_Open");
+        idleOpen.motion = idleOpenClip;
+        idleOpen.writeDefaultValues = false;
+        var closeState = sm.AddState(closeEvt.triggerName);
+        closeState.motion = closeClip;
+        closeState.writeDefaultValues = false;
+        sm.defaultState = idleClosed;
+
+        var tOpenIn = idleClosed.AddTransition(openState);
+        tOpenIn.hasExitTime = false;
+        tOpenIn.exitTime = 0f;
+        tOpenIn.duration = 0.1f;
+        tOpenIn.hasFixedDuration = true;
+        tOpenIn.AddCondition(AnimatorConditionMode.If, 0f, openEvt.triggerName);
+
+        var tOpenOut = openState.AddTransition(idleOpen);
+        tOpenOut.hasExitTime = true;
+        tOpenOut.exitTime = 1f;
+        tOpenOut.duration = 0f;
+        tOpenOut.hasFixedDuration = true;
+
+        var tCloseIn = idleOpen.AddTransition(closeState);
+        tCloseIn.hasExitTime = false;
+        tCloseIn.exitTime = 0f;
+        tCloseIn.duration = 0.1f;
+        tCloseIn.hasFixedDuration = true;
+        tCloseIn.AddCondition(AnimatorConditionMode.If, 0f, closeEvt.triggerName);
+
+        var tCloseOut = closeState.AddTransition(idleClosed);
+        tCloseOut.hasExitTime = true;
+        tCloseOut.exitTime = 1f;
+        tCloseOut.duration = 0f;
+        tCloseOut.hasFixedDuration = true;
+
+        // 半途站上/离开：开门/关门状态下收到反向触发器直接打断。
+        var tOpenInterrupt = openState.AddTransition(closeState);
+        tOpenInterrupt.hasExitTime = false;
+        tOpenInterrupt.exitTime = 0f;
+        tOpenInterrupt.duration = 0.1f;
+        tOpenInterrupt.hasFixedDuration = true;
+        tOpenInterrupt.AddCondition(AnimatorConditionMode.If, 0f, closeEvt.triggerName);
+
+        var tCloseInterrupt = closeState.AddTransition(openState);
+        tCloseInterrupt.hasExitTime = false;
+        tCloseInterrupt.exitTime = 0f;
+        tCloseInterrupt.duration = 0.1f;
+        tCloseInterrupt.hasFixedDuration = true;
+        tCloseInterrupt.AddCondition(AnimatorConditionMode.If, 0f, openEvt.triggerName);
+
+        // 稳态下收到「同向」触发器（压力开关重复 Enter/Exit）时自转移消费掉，
+        // 避免触发器残留到下一次状态切换造成误开门/误关门。
+        var tClosedSelf = idleClosed.AddTransition(idleClosed);
+        tClosedSelf.hasExitTime = false;
+        tClosedSelf.exitTime = 0f;
+        tClosedSelf.duration = 0f;
+        tClosedSelf.hasFixedDuration = true;
+        tClosedSelf.AddCondition(AnimatorConditionMode.If, 0f, closeEvt.triggerName);
+
+        var tOpenSelf = idleOpen.AddTransition(idleOpen);
+        tOpenSelf.hasExitTime = false;
+        tOpenSelf.exitTime = 0f;
+        tOpenSelf.duration = 0f;
+        tOpenSelf.hasFixedDuration = true;
+        tOpenSelf.AddCondition(AnimatorConditionMode.If, 0f, openEvt.triggerName);
 
         return controller;
     }

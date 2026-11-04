@@ -14,8 +14,9 @@ using LevelEditorStub;
 ///    --Done_i--> Ready_{i+1}；支持 loop（A-B-C-A）和 pingpong（A-B-C-B-A）；
 ///  - 运行期锁定（lockUntilFinished）：Run_i 无 Advance 出口且挂 ClearTriggerDuringState，
 ///    组运行期间的按压被忽略且不会锁存（"动画组完成后才可再按"）；
-///  - 互锁对（pairId 一对一，每方至多 2 组）：AReady→ARun→(两组均完成的 AND 门)→BReady→BRun→…→
-///    AReady 状态环；ARun 进入时同时启动 A 方各组，全部完成后对方才可按，反之亦然。
+///  - 互锁对（pairId 一对一，每方至多 4 组）：AReady→ARun→(前两组完成的 AND 门)→BReady→BRun→…→
+///    AReady 状态环；ARun 进入时同时启动 A 方各组。双方绑定同一组集合（共享环，
+///    如传送带阵 ×4）时完成门只听第一个 BLDone，避免同帧多完成信号被换状态清掉。
 ///    （注意与「共轭按钮」sharedSourceIds 区分：共轭 = 多按钮共用一条 link、同按同解锁；
 ///     互锁 = 两条 link 共享 pairId、一对一轮换抬起。）
 /// 场景是唯一事实源：ImportFromScene 从 helper 接线重建文档数据（按钮 stub 的
@@ -30,8 +31,9 @@ public static class ButtonLinkBakery
     /// <summary>无操作 trigger：压力开关的 Exit 事件必须指向有效参数，否则宿主
     ///  PseudoPrefabPressureSwitch.Setup 会装一个空名 TriggerOnAnimator。参数存在但无过渡消费。</summary>
     public const string NoopTrigger = "BLNoop";
-    /// <summary>互锁模式下单个按钮最多绑定的动画组数。</summary>
-    public const int PairGroupLimit = 2;
+    /// <summary>互锁模式下单个按钮最多绑定的动画组数。
+    ///  4 = 「传送带阵 ×4 + 互锁双按钮」每站独立节点环。</summary>
+    public const int PairGroupLimit = 4;
 
     private const string ImportedSeqMarker = "scene:BtnLogic:";
     private const string ImportedPairMarker = "scene:BtnPair:";
@@ -226,6 +228,20 @@ public static class ButtonLinkBakery
                     continue;
                 }
                 boundGroupOwner[gname] = isPair ? link.pairId : link.sourceId;
+                if (g.advanceMode == "hold")
+                {
+                    // 按住式：压力开关 Enter/Exit 直连组根 Animator，不经过 helper；
+                    // 队列开始/结束触发器与锁定语义全部不适用。
+                    if (count != 1 || isPair || !string.IsNullOrEmpty(link.pairId))
+                        LayoutEditorLog.LogWarning("button link: 按住式动画组「" + gname +
+                            "」只能一对一绑定压力开关，已忽略多余的分组/配对配置");
+                    if (g.loop) g.loop = false;
+                    g.startDelay = 0f;
+                    g.startTrigger = null;
+                    g.endTrigger = null;
+                    g.waitForFinished = false;
+                    continue;
+                }
                 g.startTrigger = GoTrigger(trigBase, side, i);
                 g.endTrigger = DoneTrigger(trigBase, side, i);
                 // 完成回报必须等 clip 真正播完：waitForFinished=false 时队列不等
@@ -494,11 +510,71 @@ public static class ButtonLinkBakery
         return roots;
     }
 
+    private static bool IsHoldLink(LayoutButtonLinkDto link, Dictionary<string, AnimGroupDto> byName)
+    {
+        if (link == null || link.groupNames == null) return false;
+        for (int i = 0; i < link.groupNames.Length; i++)
+        {
+            AnimGroupDto g;
+            if (string.IsNullOrEmpty(link.groupNames[i]) || !byName.TryGetValue(link.groupNames[i], out g))
+                continue;
+            if (g != null && g.advanceMode == "hold") return true;
+        }
+        return false;
+    }
+
+    /// <summary>压力开关按住式直连：Enter/Exit 写进压力开关 stub 的 animatorToTrigger 通道，
+    ///  不创建 Design/Button Logic helper。事件 1 = 站上开门，事件 2 = 离开关门。</summary>
+    private static string BakeHold(LayoutButtonLinkDto link,
+        Dictionary<string, AnimGroupDto> byName, Dictionary<string, GameObject> createdObjects,
+        HashSet<string> boundGroups)
+    {
+        if (link.groupNames == null || link.groupNames.Length != 1)
+            return "按住式门联动：只能绑定一个动画组";
+        var sourceGo = ResolveObject(link.sourceId, createdObjects);
+        if (sourceGo == null)
+            return "按住式门联动：找不到触发源 " + link.sourceId;
+        var ps = sourceGo.GetComponent<PseudoPrefabPressureSwitchStub>();
+        if (ps == null)
+            return "按住式门联动：触发源必须是压力开关（" + sourceGo.name + "）";
+
+        var groups = new List<AnimGroupDto>();
+        var roots = ResolveGroupRoots(link, 1, byName, boundGroups, groups, null);
+        if (roots.Count != 1 || roots[0] == null || groups.Count != 1 || groups[0] == null)
+            return "按住式门联动：动画组「" + link.groupNames[0] + "」无法绑定（不存在/未烘焙/已被其他联动占用）";
+        var group = groups[0];
+        var anim = roots[0].GetComponent<Animator>();
+        if (anim == null)
+            return "按住式门联动：组根 " + roots[0].name + " 缺少 Animator";
+
+        var evs = new List<AnimGroupEventDto>();
+        foreach (var e in group.events == null ? new AnimGroupEventDto[0] : group.events)
+        {
+            if (e == null) continue;
+            evs.Add(e);
+        }
+        evs.Sort(delegate(AnimGroupEventDto a, AnimGroupEventDto b) { return a.startTime.CompareTo(b.startTime); });
+        if (evs.Count != 2 || evs[0].type != "rotate" || evs[1].type != "rotate")
+            return "按住式门联动：动画组「" + group.displayName + "」需要两个 rotate 事件（站上开 / 离开关）";
+        if (string.IsNullOrEmpty(evs[0].triggerName) || string.IsNullOrEmpty(evs[1].triggerName))
+            return "按住式门联动：动画组「" + group.displayName + "」缺少开门/关门触发器名";
+
+        Undo.RecordObject(ps, "Layout Editor Pressure Hold Door");
+        ps.triggerOnAnimatorEnter = evs[0].triggerName;
+        ps.triggerOnAnimatorExit = evs[1].triggerName;
+        ps.animatorToTrigger = anim;
+        EditorUtility.SetDirty(ps);
+        return null;
+    }
+
     private static string BakeSequence(Scene scene, LayoutButtonLinkDto link,
         Dictionary<string, AnimGroupDto> byName, HashSet<string> boundGroups,
         string animDir, string sceneName, Dictionary<string, GameObject> createdObjects,
         HashSet<string> usedHelpers, HashSet<string> usedAssets)
     {
+        if (IsHoldLink(link, byName))
+            return BakeHold(link, byName, createdObjects, boundGroups);
+
         var helperName = HelperNameForSeq(link);
         var sourceGo = ResolveObject(link.sourceId, createdObjects);
         if (sourceGo == null)
@@ -665,10 +741,15 @@ public static class ButtonLinkBakery
         for (int i = 0; i < rootsB.Count; i++)
             if (rootsB[i] == null) return "互锁按钮：动画组「" + linkB.groupNames[i] + "」无法绑定（不存在/未烘焙/已被占用）";
 
-        // 共享环模式：双方绑【同一组集合】（如传送带阵 ×4 + 互锁双按钮）——
-        // ARun/BRun 分发同一组触发（A 侧名），节点环按按压交替推进（A 恒 +90°、
+        // 共享环模式：双方绑【同一组集合】（如传送带阵 ×4 + 互锁双按钮，每站独立组）——
+        // ARun/BRun 分发同一批组触发（A 侧名），各站节点环按按压交替推进（A 恒 +90°、
         // B 恒 −90°），完成信号复用 A 侧 BLDone（BRun 出口同名）。
         bool sharedGroups = nA > 0 && nA == nB && SameGroupSet(linkA, nA, linkB, nB);
+        if (!sharedGroups && (nA > 2 || nB > 2))
+        {
+            LayoutEditorLog.LogWarning("button link: 互锁非共享环超过 2 组时，完成门只等待前 2 组" +
+                "（其余组仍会启动）。传送带阵请让双方绑定同一组集合。");
+        }
 
         var helper = EnsureHelper(helperName);
         if (helper == null)
@@ -718,8 +799,25 @@ public static class ButtonLinkBakery
         var pulseClipB = pulseB
             ? BuildPulseClip(controllerPath, doneB[0], animDir, usedAssets, "_B")
             : null;
-        var controller = BuildPairController(controllerPath, helperName, namesA, goA, doneA,
-            namesB, goB, doneB, aStartsUp, pulseClipA, pulseClipB);
+        // 共享环多组（四站同时转、时长一致）：完成门只听第一个 BLDone，与同按模式
+        // BuildSimultaneousController 相同。多组 AND 在同帧完成时，relay 换状态会
+        // ResetTrigger 掉尚未被过渡消费的完成信号，按钮永久锁死。
+        var gateDoneA = doneA;
+        var gateDoneB = doneB;
+        if (sharedGroups && doneA.Length > 1)
+        {
+            gateDoneA = new string[] { doneA[0] };
+            gateDoneB = new string[] { doneB[0] };
+        }
+        var controller = BuildPairController(controllerPath, helperName, namesA, goA, gateDoneA,
+            namesB, goB, gateDoneB, aStartsUp, pulseClipA, pulseClipB);
+        // 状态机只消费第一个完成信号，但各组仍会投递自己的 BLDone。参数必须都在，
+        // 否则 TriggerOnAnimator / ResetTrigger 对缺失参数报错。
+        if (controller != null && sharedGroups && doneA.Length > 1)
+        {
+            for (int i = 1; i < doneA.Length; i++)
+                AddParamIfMissing(controller, doneA[i]);
+        }
         if (controller == null)
             return "互锁按钮：controller 创建失败 " + controllerPath;
         usedAssets.Add(controllerPath);
@@ -1429,7 +1527,6 @@ public static class ButtonLinkBakery
         var result = new List<LayoutButtonLinkDto>();
         if (!scene.IsValid()) return result;
         var root = LayoutEditorHierarchy.FindByPath(ButtonLogicRootPath);
-        if (root == null) return result;
 
         // startTrigger → 动画组（由 PrepareGroups 覆写为 BLGo_* 名，随 AnimGroupImporter 回导）
         var groupByStartTrigger = new Dictionary<string, AnimGroupDto>(StringComparer.Ordinal);
@@ -1444,21 +1541,89 @@ public static class ButtonLinkBakery
             if (g != null && !string.IsNullOrEmpty(g.displayName))
                 groupNames.Add(g.displayName);
 
-        for (int i = 0; i < root.childCount; i++)
+        if (root != null)
         {
-            var helper = root.GetChild(i);
-            var anim = helper.GetComponent<Animator>();
-            var ctrl = anim != null ? anim.runtimeAnimatorController as AnimatorController : null;
-            var sm = ctrl != null && ctrl.layers.Length > 0 ? ctrl.layers[0].stateMachine : null;
+            for (int i = 0; i < root.childCount; i++)
+            {
+                var helper = root.GetChild(i);
+                var anim = helper.GetComponent<Animator>();
+                var ctrl = anim != null ? anim.runtimeAnimatorController as AnimatorController : null;
+                var sm = ctrl != null && ctrl.layers.Length > 0 ? ctrl.layers[0].stateMachine : null;
 
-            var name = helper.name;
-            if (name.StartsWith(HelperPairPrefix, StringComparison.Ordinal))
-                ImportPair(result, name, helper.gameObject, anim, sm, groupByStartTrigger, groupNames, items);
-            else if (name.StartsWith(HelperSeqPrefix, StringComparison.Ordinal) ||
-                     name.StartsWith(HelperSeqNoLockPrefix, StringComparison.Ordinal))
-                ImportSequence(result, name, helper.gameObject, anim, sm, groupByStartTrigger, groupNames, items);
+                var name = helper.name;
+                if (name.StartsWith(HelperPairPrefix, StringComparison.Ordinal))
+                    ImportPair(result, name, helper.gameObject, anim, sm, groupByStartTrigger, groupNames, items);
+                else if (name.StartsWith(HelperSeqPrefix, StringComparison.Ordinal) ||
+                         name.StartsWith(HelperSeqNoLockPrefix, StringComparison.Ordinal))
+                    ImportSequence(result, name, helper.gameObject, anim, sm, groupByStartTrigger, groupNames, items);
+            }
         }
+
+        // 按住式：没有 helper，接线全部在压力开关 stub 上（场景即真相）。
+        ImportHoldLinks(result, groups, items);
         return result;
+    }
+
+    /// <summary>回读压力开关按住式直连：stub.animatorToTrigger → hold 组根 Animator，
+    ///  Enter/Exit 触发名与组事件匹配则重建 buttonLink。</summary>
+    private static void ImportHoldLinks(List<LayoutButtonLinkDto> result,
+        List<AnimGroupDto> groups, List<LayoutItemDto> items)
+    {
+        if (groups == null || items == null) return;
+        var existing = new HashSet<string>(StringComparer.Ordinal);
+        for (int i = 0; i < result.Count; i++)
+        {
+            var l = result[i];
+            if (l == null || l.groupNames == null) continue;
+            for (int j = 0; j < l.groupNames.Length; j++)
+                existing.Add((l.sourceId ?? "") + "|" + (l.groupNames[j] ?? ""));
+        }
+        var boundHoldGroups = new HashSet<string>(StringComparer.Ordinal);
+
+        for (int ii = 0; ii < items.Count; ii++)
+        {
+            var item = items[ii];
+            if (item == null || string.IsNullOrEmpty(item.instanceId)) continue;
+            if (!string.Equals(item.stubKind, "PressureSwitch", StringComparison.Ordinal)) continue;
+            var go = ResolveObject(item.instanceId, null);
+            if (go == null) continue;
+            var ps = go.GetComponent<PseudoPrefabPressureSwitchStub>();
+            if (ps == null || ps.animatorToTrigger == null) continue;
+
+            for (int gi = 0; gi < groups.Count; gi++)
+            {
+                var g = groups[gi];
+                if (g == null || g.advanceMode != "hold" || string.IsNullOrEmpty(g.displayName)) continue;
+                if (boundHoldGroups.Contains(g.displayName)) continue;
+                var root = ResolveGroupRoot(g);
+                if (root == null) continue;
+                var anim = root.GetComponent<Animator>();
+                if (anim == null || anim != ps.animatorToTrigger) continue;
+
+                var evs = new List<AnimGroupEventDto>();
+                foreach (var e in g.events == null ? new AnimGroupEventDto[0] : g.events)
+                    if (e != null) evs.Add(e);
+                evs.Sort(delegate(AnimGroupEventDto a, AnimGroupEventDto b) { return a.startTime.CompareTo(b.startTime); });
+                if (evs.Count != 2) continue;
+                if (ps.triggerOnAnimatorEnter != evs[0].triggerName ||
+                    ps.triggerOnAnimatorExit != evs[1].triggerName)
+                    continue;
+
+                var key = item.instanceId + "|" + g.displayName;
+                if (existing.Contains(key)) continue;
+                existing.Add(key);
+                boundHoldGroups.Add(g.displayName);
+                result.Add(new LayoutButtonLinkDto
+                {
+                    id = ImportedSeqMarker + "hold:" + g.displayName + ":" + item.instanceId,
+                    sourceId = item.instanceId,
+                    groupNames = new string[] { g.displayName },
+                    sequenceMode = "loop",
+                    lockUntilFinished = false
+                });
+                break;
+            }
+        }
     }
 
     /// <summary>helper 的组接线条目（重建顺序用）。</summary>

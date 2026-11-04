@@ -179,6 +179,23 @@ public static class LayoutEditorRecipeKnowledge
         if (ingredients == null || ingredients.Length == 0)
             return new RecipeCookingGroupDto[0];
 
+        // Web 意面家族（commonW5/pasta）：煮意面(Pot)+煎寿司鱼/虾(FryingPan) 的
+        // 分步组成无法从扁平 ingredients 推断，按 id 显式给出（鲜鱼=鱼、鲜虾=虾、
+        // 海鲜=鱼+虾），与 gen-commonw5-pasta.mjs 的 composition 一一对应。
+        if (recipe != null &&
+            (recipe.id == "Web_Seafood_Pasta" || recipe.id == "Web_Fish_Pasta" || recipe.id == "Web_Prawn_Pasta"))
+        {
+            var pastaGroups = new List<RecipeCookingGroupDto>
+            {
+                new RecipeCookingGroupDto { step = "Pot", utensils = UtensilsForStep("Pot"), ingredients = new[] { "PastaSO" } },
+            };
+            if (recipe.id != "Web_Prawn_Pasta")
+                pastaGroups.Add(new RecipeCookingGroupDto { step = "FryingPan", utensils = UtensilsForStep("FryingPan"), ingredients = new[] { "SushiFishSO" } });
+            if (recipe.id != "Web_Fish_Pasta")
+                pastaGroups.Add(new RecipeCookingGroupDto { step = "FryingPan", utensils = UtensilsForStep("FryingPan"), ingredients = new[] { "SushiPrawnSO" } });
+            return pastaGroups.ToArray();
+        }
+
         if (intermediate)
         {
             var step = IsCookStep(finalStep) ? finalStep : "";
@@ -258,6 +275,7 @@ public static class LayoutEditorRecipeKnowledge
                 bool finalHasStep = IsCookStep(finalStep);
                 var compResult = new List<RecipeCookingGroupDto>();
                 var compPlain = new List<string>();
+                var customMixSubIds = new List<string>();
                 // subGroups: key "step::compId" → List<string>（可继续追加）；
                 // subOrder 记录分组顺序，最终统一转成 DTO。
                 var subGroups = new Dictionary<string, List<string>>(StringComparer.Ordinal);
@@ -281,6 +299,8 @@ public static class LayoutEditorRecipeKnowledge
                             continue;
                         }
                         var subStep = subCook != "" ? subCook : (sub.mixing ? "MixingBowl" : "");
+                        if (sub.isCustom && sub.mixing && subCook == "")
+                            customMixSubIds.Add(compId);
                         if (subStep == "")
                         {
                             foreach (var ing in sub.ingredients)
@@ -333,6 +353,13 @@ public static class LayoutEditorRecipeKnowledge
                     }
                     foreach (var ing in compPlain)
                         mainIngs.Add(ing);
+                    // 终锅只有自定义 Mixed 节点时不单独成框（节点无食材图标，会变成空白炸篮/蒸笼）。
+                    // 留空标记，前端 mergeFinalMarkers 把终锅图标并到搅拌框。已有其他食材时仍放入节点。
+                    if (mainIngs.Count > 0)
+                    {
+                        foreach (var customMixSubId in customMixSubIds)
+                            mainIngs.Add(customMixSubId);
+                    }
 
                     compResult.AddRange(keepBoxes);
                     if (mainIngs.Count > 0)
@@ -461,7 +488,7 @@ public static class LayoutEditorRecipeKnowledge
         if (type == "sushi")
         {
             foreach (var ing in ingredients)
-                prep[ing] = (ing == "SushiRiceSO" || ing == "RiceSO") ? "Steamer" : "";
+                prep[ing] = (ing == "SushiRiceSO" || ing == "RiceSO") ? "Pot" : "";
         }
         else if (type == "burrito")
         {
@@ -825,11 +852,11 @@ public static class LayoutEditorRecipeKnowledge
         Put(d, "Steamed_Meat_SO", "Steamer", "FlourSO", "MeatSO");
         Put(d, "Steamed_Prawns_SO", "Steamer", "FlourSO", "PrawnSO");
 
-        Put(d, "Sushi_PlainFish_SO", "Steamer", "SeaweedSO", "SushiRiceSO", "SushiFishSO");
-        Put(d, "Sushi_PlainPrawn_SO", "Steamer", "SeaweedSO", "SushiRiceSO", "SushiPrawnSO");
-        Put(d, "Sushi_Cucumber_SO", "Steamer", "SeaweedSO", "SushiRiceSO", "CucumberSO");
-        Put(d, "Sushi_Fish_SO", "Steamer", "SeaweedSO", "SushiRiceSO", "SushiFishSO");
-        Put(d, "Sushi_All_SO", "Steamer", "SeaweedSO", "SushiRiceSO", "SushiFishSO", "CucumberSO");
+        Put(d, "Sushi_PlainFish_SO", "Pot", "SeaweedSO", "SushiRiceSO", "SushiFishSO");
+        Put(d, "Sushi_PlainPrawn_SO", "Pot", "SeaweedSO", "SushiRiceSO", "SushiPrawnSO");
+        Put(d, "Sushi_Cucumber_SO", "Pot", "SeaweedSO", "SushiRiceSO", "CucumberSO");
+        Put(d, "Sushi_Fish_SO", "Pot", "SeaweedSO", "SushiRiceSO", "SushiFishSO");
+        Put(d, "Sushi_All_SO", "Pot", "SeaweedSO", "SushiRiceSO", "SushiFishSO", "CucumberSO");
 
         return d;
     }
@@ -907,15 +934,26 @@ public static class LayoutEditorRecipeKnowledge
         cookingStepCount = cooks;
     }
 
+    private static List<ScriptableObject> BuildTraversalEntries(CustomRecipeSO so)
+    {
+        var entries = new List<ScriptableObject>();
+        if (so.compositionSOs != null)
+            entries.AddRange(so.compositionSOs);
+        var optionalBurger = so as CustomRecipeOptionalBurgerSO;
+        var optionalPizza = so as CustomRecipeOptionalPizzaSO;
+        if (optionalBurger == null && optionalPizza == null && so.optionalSOs != null)
+            entries.AddRange(so.optionalSOs);
+        return entries;
+    }
+
     private static void CollectStats(CustomRecipeSO so, ref int ings, ref int cooks, HashSet<UnityEngine.Object> seen)
     {
         if (so == null || !seen.Add(so))
             return;
         if (so.cookingStepSO != null && IsCookStep(CustomCookingStep(so)))
             cooks++;
-        if (so.compositionSOs == null)
-            return;
-        foreach (var c in so.compositionSOs)
+        var entries = BuildTraversalEntries(so);
+        foreach (var c in entries)
         {
             if (c == null)
                 continue;
@@ -957,9 +995,8 @@ public static class LayoutEditorRecipeKnowledge
     {
         if (so == null || !seen.Add(so))
             return;
-        if (so.compositionSOs == null)
-            return;
-        foreach (var c in so.compositionSOs)
+        var entries = BuildTraversalEntries(so);
+        foreach (var c in entries)
         {
             if (c == null)
                 continue;

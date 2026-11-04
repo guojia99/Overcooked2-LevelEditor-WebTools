@@ -827,6 +827,7 @@ public static class LayoutEditorCatalogApi
         // 否则 no-match 走 Sludge 表现。只增不删（汉堡同步的整体替换可能清掉
         // score=0 条目，此处在其后补回）。
         SyncMilkTeaIntermediate(info, recipes);
+        SyncCustomSubRecipeOptionals(info, recipes);
 
         // DLC 匹配表自动补全（必须在 EnsureWebDependencies 之前：后者靠读
         // includeRecipeMatchLists 注册 bundle 依赖，晚了就漏包）。
@@ -841,6 +842,7 @@ public static class LayoutEditorCatalogApi
         // 烤盘/火锅：按当前菜谱同步 allowedIngredientSOs（覆盖，不保留旧菜谱遗留项）。
         LayoutEditorRoastTrayFill.SyncRoastTrayIngredients(info);
         LayoutEditorHotPotFill.SyncHotPotIngredients(info);
+        LayoutEditorSteamerFill.SyncSteamerIngredients(info);
 
         EditorUtility.SetDirty(info);
 
@@ -1218,6 +1220,39 @@ public static class LayoutEditorCatalogApi
             }
         }
 
+        // Web 意面家族（commonW5/pasta）：煎寿司鱼/虾中间产物预设——注册进
+        // optionalRecipeMatchListItems 后，煎好的鱼/虾可单独装盘上菜
+        // （GameUtils.GetOrderPlatingPrefab 命中其 m_platingPrefab）。
+        var pastaToppingGuids = new List<string>();
+        var pastaZh = new Dictionary<string, string>
+        {
+            { "Web_Seafood_Pasta_FishNode", "煎寿司鱼（意面料）" },
+            { "Web_Seafood_Pasta_PrawnNode", "煎寿司虾（意面料）" },
+            { "Web_Seafood_Pasta_ToppingsCombo", "意面拼盘（鱼/虾组合装盘）" },
+        };
+        var pastaOrderDefDir = LayoutEditorLevelAdminApi.CommonW5RecipesDir + "/pasta/orderdefinitions";
+        if (LayoutEditorLevelAdminApi.AssetFolderExists(pastaOrderDefDir))
+        {
+            foreach (var asset in LayoutEditorLevelAdminApi.ScanAssetsByScript(
+                         pastaOrderDefDir,
+                         LayoutEditorLevelAdminApi.CustomRecipeScriptGuid))
+            {
+                var id = Path.GetFileNameWithoutExtension(asset.assetPath);
+                string zh;
+                if (!pastaZh.TryGetValue(id, out zh))
+                    continue;
+                items.Add(new OptionalPresetItemDto
+                {
+                    guid = asset.guid,
+                    id = id,
+                    group = CommonW5Group,
+                    kind = "pasta-optional",
+                    nameZh = zh
+                });
+                pastaToppingGuids.Add(asset.guid);
+            }
+        }
+
         return new OptionalPresetsDto
         {
             items = items.ToArray(),
@@ -1225,6 +1260,7 @@ public static class LayoutEditorCatalogApi
             pizzaMushroomGuids = new[] { PizzaOptionalGuids[2] },
             hotdogFillGuidsDlc08 = hot08Guids.ToArray(),
             hotdogFillGuidsDlc11 = hot11Guids.ToArray(),
+            pastaToppingGuids = pastaToppingGuids.ToArray(),
         };
     }
 
@@ -1365,6 +1401,50 @@ public static class LayoutEditorCatalogApi
         merged.Add(inter);
         info.optionalRecipeMatchListItems = merged.ToArray();
         LayoutEditorLog.Log("[MilkTea] 已自动加入热水中间产物到 optionalRecipeMatchListItems（杯中清水显示）");
+    }
+
+    /// <summary>所选菜谱树中的 0 分自定义搅拌子菜谱（面团/面糊等）幂等注入
+    /// optionalRecipeMatchListItems：搅拌锅需要这些节点进入关卡 RecipeMatchList，
+    /// 否则自定义搅拌中间产物只能停留在编辑端展示，运行时无法产出/被下一步锅具识别。</summary>
+    private static void SyncCustomSubRecipeOptionals(LevelInfoSO info, System.Collections.Generic.List<ScriptableObject> recipes)
+    {
+        if (info == null || recipes == null)
+            return;
+        var subs = new HashSet<ScriptableObject>();
+        for (int i = 0; i < recipes.Count; i++)
+        {
+            var recipe = recipes[i] as CustomRecipeSO;
+            if (recipe != null)
+                AddNestedCustomSubRecipes(recipe, subs);
+        }
+        if (subs.Count == 0)
+            return;
+
+        var oldItems = info.optionalRecipeMatchListItems ?? new ScriptableObject[0];
+        var merged = new System.Collections.Generic.List<ScriptableObject>(oldItems);
+        var seen = new HashSet<ScriptableObject>();
+        for (int i = 0; i < merged.Count; i++)
+        {
+            if (merged[i] != null)
+                seen.Add(merged[i]);
+        }
+        var added = 0;
+        foreach (var sub in subs)
+        {
+            var custom = sub as CustomRecipeSO;
+            if (custom == null || custom.score > 0 || custom.type != CustomRecipeSO.RecipeType.Mixed)
+                continue;
+            if (seen.Add(sub))
+            {
+                merged.Add(sub);
+                added++;
+            }
+        }
+        if (added == 0)
+            return;
+        info.optionalRecipeMatchListItems = merged.ToArray();
+        LayoutEditorLog.Log("[Optional] 保存菜谱自动同步：加入自定义搅拌中间产物 " + added
+            + " 条到 optionalRecipeMatchListItems");
     }
 
     internal static bool IsAutoManagedBurgerOptionalItem(ScriptableObject so)
@@ -1990,10 +2070,19 @@ public static class LayoutEditorCatalogApi
 
     private static string[] DirectCompositionIds(CustomRecipeSO so)
     {
-        if (so == null || so.compositionSOs == null)
+        if (so == null)
+            return null;
+        var entries = new List<ScriptableObject>();
+        if (so.compositionSOs != null)
+            entries.AddRange(so.compositionSOs);
+        var optionalBurger = so as CustomRecipeOptionalBurgerSO;
+        var optionalPizza = so as CustomRecipeOptionalPizzaSO;
+        if (optionalBurger == null && optionalPizza == null && so.optionalSOs != null)
+            entries.AddRange(so.optionalSOs);
+        if (entries.Count == 0)
             return null;
         var ids = new List<string>();
-        foreach (var c in so.compositionSOs)
+        foreach (var c in entries)
         {
             if (c == null)
                 continue;
@@ -2001,6 +2090,24 @@ public static class LayoutEditorCatalogApi
             if (string.IsNullOrEmpty(cp))
                 continue;
             var fileId = Path.GetFileNameWithoutExtension(cp);
+            var official = c as PseudoPrefabSORecipe;
+            if (official != null)
+            {
+                string step;
+                string[] ings;
+                if (LayoutEditorRecipeKnowledge.TryGetOriginal(fileId, out step, out ings) ||
+                    LayoutEditorRecipeKnowledge.TryGetOriginal(official.prefabName + "_SO", out step, out ings) ||
+                    LayoutEditorRecipeKnowledge.TryGetOriginal(official.prefabName, out step, out ings))
+                {
+                    if (ings != null)
+                    {
+                        foreach (var ing in ings)
+                            if (!string.IsNullOrEmpty(ing))
+                                ids.Add(ing);
+                    }
+                    continue;
+                }
+            }
             // 子菜谱保留菜谱 id；食材 SO 规范化为目录 id（对齐 CustomIngredients，
             // DLC11_Cucumber → dlc11_cucumber），前端按 id 解析中文名与工序分组。
             var pseudo = c as PseudoPrefabSO;

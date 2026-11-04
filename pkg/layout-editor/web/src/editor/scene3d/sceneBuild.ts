@@ -17,7 +17,8 @@ import {
   itemCategoryOf,
   floorCategoryOf,
   categoryVisible,
-  hideBackgroundContentOnFloorLayer
+  hideBackgroundContentOnFloorLayer,
+  isPressureSwitchSurfaceCat
 } from "../catalog";
 import { itemInHeightFilter, floorInHeightFilter } from "../floorHeight";
 import { isSurfaceItem } from "../../floorColors";
@@ -47,6 +48,9 @@ export function itemVisible3D(it: Parameters<typeof itemCategoryOf>[0] & { local
   // 分 P：与 2D 一致，仅当前 P 参与渲染（参考层叠显仅 2D 提供）。
   if (!itemInCurrentPart(it as { partId?: string })) return false;
   if (hideBackgroundContentOnFloorLayer(it)) return false;
+  const cat = catalogItemForGuidOrPath(it.prefabGuid, it.prefabAssetPath);
+  // 压力开关（表面机关）已归核心层，不在地板/背景层渲染。
+  if (isFloorLikeLayer(S.currentLayer) && isPressureSwitchSurfaceCat(cat)) return false;
   if (!categoryVisible(itemCategoryOf(it))) return false;
   if (isItemHiddenBySceneGroup(it as EditorItem)) return false;
   return itemInHeightFilter(it as never);
@@ -58,7 +62,9 @@ export function itemPickable3D(it: Parameters<typeof isActiveItemLayer>[0]): boo
   // 地板层/背景层：表面物件可选，普通物件只作为参照。
   if (isFloorLikeLayer(S.currentLayer)) {
     if (hideBackgroundContentOnFloorLayer(it)) return false;
-    return isSurfaceItem(cat);
+    if (!isSurfaceItem(cat)) return false;
+    // 压力开关已归核心层，不在地板/背景层拾取。
+    return !isPressureSwitchSurfaceCat(cat);
   }
   if (S.currentLayer === "anim") return true;
   return isActiveItemLayer(it);

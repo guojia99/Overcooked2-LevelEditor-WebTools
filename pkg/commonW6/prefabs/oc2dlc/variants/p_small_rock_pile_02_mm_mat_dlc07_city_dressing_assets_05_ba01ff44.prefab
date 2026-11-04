@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114096038827637246}
   - component: {fileID: 114967938430519454}
   m_Layer: 0
-  m_Name: p_small_rock_pile_02_mm_mat_dlc07_city_dressing_assets_05_ba01ff44
+  m_Name: p_small_rock_pile_02_mm_mat_dlc07_city_dressing_assets_05
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

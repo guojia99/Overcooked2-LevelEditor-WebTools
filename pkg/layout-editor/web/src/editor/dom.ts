@@ -62,7 +62,7 @@ export function buildLayoutDom(): void {
       <button id="btn-level-config" type="button" title="分数、环境（天花板/分 P）、音频与关卡截图">📊 关卡配置</button>
       <button id="btn-camera-light" type="button" title="修改游戏相机背景色、FOV 与出发点位置">🎥 相机</button>
       <button id="btn-tools-history" type="button" title="关卡工具、工作量推测与最近 15 次写回历史">🧰 工具与历史</button>
-      <button id="btn-web-assets-export" type="button" title="导出音频 / 桌台图标与 3D / 装饰双视图与高清详情到 exports/（Web 前端经后端接口读取）">🌐 导出web预览资源依赖</button>
+      <button id="btn-web-assets-export" type="button" title="导出音频 / 桌台图标与 3D / 装饰双视图与高清详情 / 菜谱与食材原图到 exports/（Web 前端经后端接口读取）">🌐 导出web预览资源依赖</button>
       <button id="btn-part-level" type="button" class="hidden" title="分 P 管理：阶段 / 退场去向 / 转场节奏与清理">🔀 分P管理</button>
     </div>
     <div class="part-bar hidden" id="part-bar"></div>
@@ -101,6 +101,9 @@ export function buildLayoutDom(): void {
           <label><input type="checkbox" data-vcat="background" checked /> 🌊 背景 / 水面</label>
           <div class="vis-note">关闭的类别将不显示、也不可点选（仅影响当前层）</div>
         </div>
+      </div>
+      <div class="grid-align-wrap">
+        <button type="button" id="btn-grid-align" title="一键把当前层全部物件对齐到最近的格子、填满整格（如 1×1 中心落 6.00/-1.20 整格点而非 6.60/-1.80 半格位；可 Ctrl+Z 撤回）">🧭 一键对齐</button>
       </div>
       <div class="vis-wrap config-wrap">
         <button type="button" id="btn-view-config" title="吸附、网格、桌台皮肤、相机视野、坐标系、重叠与自动中间产物">显示配置</button>

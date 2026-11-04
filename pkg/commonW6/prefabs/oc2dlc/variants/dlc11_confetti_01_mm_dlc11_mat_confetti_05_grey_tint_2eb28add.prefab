@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114096038827637246}
   - component: {fileID: 114967938430519454}
   m_Layer: 0
-  m_Name: dlc11_confetti_01_mm_dlc11_mat_confetti_05_grey_tint_2eb28add
+  m_Name: dlc11_confetti_01_mm_dlc11_mat_confetti_05_grey_tint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

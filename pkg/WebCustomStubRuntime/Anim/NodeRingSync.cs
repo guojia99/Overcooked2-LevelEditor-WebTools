@@ -186,7 +186,11 @@ namespace CustomStub
 
         /// <summary>对账补步：落后且停在 Idle → 瞬跳终态。正在播放/过渡中不补
         /// （等播完；Mecanim 的 Trigger 锁存通常会把迟到事件自然追平，真正丢的
-        /// 步在回到 Idle 后由这里闭合）。</summary>
+        /// 步在回到 Idle 后由这里闭合）。
+        /// 权威步在 ApplyServerEvent 入队时就计数，SetTrigger 要等
+        /// ClientTimedQueue.UpdateSynchronising 才发生。入队和执行之间若抢先
+        /// Play 下一格，随后的 BLPress 会从错误的 Idle 再走一节点（开局第一次
+        /// 按压：转到新朝向后立刻播返回动画）。尚未 SetTrigger 的步不补。</summary>
         private void Audit()
         {
             int deficit = m_authoritativeSteps - m_localSteps;
@@ -201,6 +205,9 @@ namespace CustomStub
                 }
                 return;
             }
+            int notYetFired = m_authoritativeSteps - m_triggerFires;
+            if (notYetFired > 0 && deficit <= notYetFired)
+                return;
             if (Time.realtimeSinceStartup - m_lastAuditTime < AuditInterval)
                 return;
             if (m_animator.IsInTransition(0))

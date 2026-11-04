@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7c45801d396cac93dced065fd1beb5c, type: 3}
+  m_Name: Web_Pasta_Clone_FriedSushiFish
+  m_EditorClassIdentifier:
+  m_orderGuiDescription: []
+  m_platingStep: {fileID: 0}
+  m_platingPrefab: {fileID: 0}
+  m_uID: 58323102
+  m_composition:
+  - {fileID: 11400000, guid: 8c3c5480d4d7fdfaa3e5bcc122acf38b, type: 2}
+  m_optional: []
+  m_cookingStep: {fileID: 11400000, guid: 3c03447ee9f1c433ca0347daf0cd9a00, type: 2}
+  m_progress: 1

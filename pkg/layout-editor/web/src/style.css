@@ -11256,6 +11256,13 @@ body.manage-bg {
   position: relative;
 }
 
+/* 🧭 一键网格对齐（图层显示右侧） */
+.grid-align-wrap {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .view-config-popover {
   min-width: 240px;
   max-height: min(70vh, 320px);
@@ -11791,6 +11798,142 @@ body.manage-bg {
   background: var(--ui-bg-input);
   color: var(--ui-text);
   color-scheme: var(--ui-color-scheme);
+}
+
+/* 分屏镜头 tabs / 单镜头面板 */
+.cl-split-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 6px;
+}
+
+.cl-split-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--ui-border-strong);
+  background: var(--ui-bg-btn);
+  color: var(--ui-text);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background var(--ui-transition-fast), border-color var(--ui-transition-fast), color var(--ui-transition-fast);
+}
+
+.cl-split-tab:hover {
+  background: var(--ui-bg-hover);
+  border-color: var(--ui-border-focus);
+}
+
+.cl-split-tab.active {
+  background: var(--ui-accent-action);
+  border-color: var(--ui-accent-action);
+  color: var(--ui-text-inverse);
+}
+
+.cl-split-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22) inset;
+}
+
+.cl-split-panel {
+  display: none;
+  padding: 10px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-bg-elevated);
+}
+
+.cl-split-panel.active {
+  display: block;
+}
+
+.cl-split-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.cl-split-reset {
+  border: 1px solid var(--ui-border-strong);
+  background: var(--ui-bg-btn);
+  color: var(--ui-text-muted);
+  border-radius: var(--ui-radius-sm);
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.cl-split-reset:hover {
+  background: var(--ui-bg-hover);
+  color: var(--ui-text);
+}
+
+.cl-split-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 10px;
+}
+
+.cl-split-grid > label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--ui-text-muted);
+  min-width: 0;
+}
+
+.cl-split-grid input[type="number"] {
+  width: 100%;
+  padding: 5px 6px;
+  border-radius: var(--ui-radius-sm);
+  border: 1px solid var(--ui-border-strong);
+  background: var(--ui-bg-input);
+  color: var(--ui-text);
+  color-scheme: var(--ui-color-scheme);
+}
+
+.cl-split-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cl-split-inline input[type="number"] {
+  width: 72px;
+}
+
+.cl-split-inline .muted {
+  font-size: 10px;
+}
+
+.cl-split-size {
+  grid-column: span 2;
+}
+
+.cl-split-size input[type="range"] {
+  flex: 1;
+  accent-color: var(--ui-accent-action);
+}
+
+.cl-split-size code {
+  min-width: 34px;
+  text-align: right;
+  font-size: 11px;
+  color: var(--ui-text-muted);
+}
+
+@media (max-width: 640px) {
+  .cl-split-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .cl-cam-snap {

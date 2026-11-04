@@ -1,0 +1,84 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: mat_dlc2_sand_17
+  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+  m_ShaderKeywords:
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+      _Detail:
+        m_Texture: {fileID: 2800000, guid: 56194260316575d59b0dd30838a2a749, type: 3}
+        m_Scale: {x: 1.33, y: 2.32}
+        m_Offset: {x: 0, y: 0}
+      _Noise:
+        m_Texture: {fileID: 2800000, guid: fff38a7389665a337cdd55f07241d57e, type: 3}
+        m_Scale: {x: 0.5, y: 0.5}
+        m_Offset: {x: 0, y: 0}
+      _NormalMap:
+        m_Texture: {fileID: 2800000, guid: c0f91616454a046e5347b2e5f11d866a, type: 3}
+        m_Scale: {x: 10, y: 10}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+      _Blend: -7.86
+      _BlendHeight: 6.67
+      _BlendHeight_copy: 7.06
+      _BlendPosition: 2.6
+      _BlendRotation: 1
+      _BlendWidth: 0.3
+      _BlendWidth_copy: 0.02
+      _BumpScale: 1
+      _Cutoff: 0.5
+      _DetailNormalMapScale: 1
+      _DetailRotate: 33.5
+      _DetailRotation: 0.35
+      _DetailTile: 0.158
+      _DstBlend: 0
+      _Gloss: 0
+      _GlossMapScale: 1
+      _Glossiness: 0.5
+      _GlossyReflections: 1
+      _Metal: 0
+      _Metallic: 0.01
+      _Mode: 0
+      _NormalMapRotate: 2.51
+      _NormalMapeScale: 0.208
+      _OcclusionStrength: 1
+      _Parallax: 0.02
+      _Position: -11.6
+      _Roughness: 0.04
+      _SandDuneIntensity: 0
+      _SandDuneRotator: 6.3
+      _SmoothnessTextureChannel: 0
+      _SpecularHighlights: 1
+      _SrcBlend: 1
+      _UVSec: 0
+      _Width: -0.1
+      _WorldUVMultipllier: 0.34
+      _WorldUVRotator: 1.23
+      _ZWrite: 1
+      _node_3218: 0.648
+      _node_3405: 0
+      _node_4393: 0
+      _node_5279: 0.496
+      _node_5502: 0
+      _node_6640: 0
+    m_Colors:
+      _BlendColour: {r: 0.78431374, g: 1, b: 0.92156863, a: 1}
+      _Color: {r: 1, g: 1, b: 1, a: 1}
+      _Diffuse: {r: 0.33823532, g: 0.29707077, b: 0.18901385, a: 1}
+      _DiffuseBlend: {r: 1, g: 0.91705877, b: 0.6544118, a: 1}
+      _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+      _MaskColor: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 1}
+      _node_1295: {r: 0.42647058, g: 0.33897057, b: 0.053308822, a: 1}

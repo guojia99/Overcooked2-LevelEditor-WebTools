@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114096038827637246}
   - component: {fileID: 114967938430519454}
   m_Layer: 0
-  m_Name: m_raft_rock_02_mm_mat_dlc2_rocks_03_5f3a53ab
+  m_Name: m_raft_rock_02_mm_mat_dlc2_rocks_03
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

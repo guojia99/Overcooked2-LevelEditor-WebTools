@@ -30,7 +30,9 @@ export function normalizeCustomRecipeCard(r: CustomRecipeSummary): RecipeEntry {
     type: "custom",
     category: r.category,
     subcategory: r.subcategory ?? "",
-    // 不携带 cookingGroups：由 recipeCard.computeCardGroups 统一走前端推导
-    cookingGroups: undefined,
+    cookingGroups:
+      r.id === "Web_Seafood_Pasta" || r.id === "Web_Fish_Pasta" || r.id === "Web_Prawn_Pasta"
+        ? r.cookingGroups
+        : undefined,
   } as RecipeEntry;
 }

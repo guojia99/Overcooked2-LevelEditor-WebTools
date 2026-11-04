@@ -2316,6 +2316,50 @@ namespace CustomStub
             get { return typeof(HarmonyPatches).GetMethod("ServerPrepHandlePlacementPostfix", BF); }
         }
 
+        // ============ 可上菜传送带：非盘子无效上菜拦截（ConveyorServe） ============
+        // 仅当本次 AddItem 来自 ConveyorServe（TransportInProgress）时接管：
+        // 非 ServerPlate 物品跳过宿主 OnItemAdded（原版会 m_plate.GetComponent NRE），
+        // 交给 ConveyorServe.ReportInvalidServe：断小费/连击 + 失败事件 + 次帧消耗。
+        private static bool ServerPlateStationItemAddedPrefix(object __instance, object _iHoldable)
+        {
+            try
+            {
+                if (!ConveyorServe.TransportInProgress)
+                    return true;
+                var station = __instance as MonoBehaviour;
+                if (station == null || _iHoldable == null)
+                    return true;
+
+                var access = _iHoldable.GetType().GetMethod("AccessGameObject",
+                    System.Reflection.BindingFlags.Instance
+                    | System.Reflection.BindingFlags.Public
+                    | System.Reflection.BindingFlags.NonPublic);
+                if (access == null || access.GetParameters().Length != 0)
+                    return true;
+                var item = access.Invoke(_iHoldable, null) as GameObject;
+                if (item == null)
+                    return true;
+
+                var plateType = GameApi.Find("ServerPlate");
+                if (plateType != null && GameApi.GetComponent(item, plateType) != null)
+                    return true;
+
+                ConveyorServe.ReportInvalidServe(station, item);
+                return false;
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("conveyorserve-itemadded",
+                    "[ConveyorServe] OnItemAdded 前缀异常（放行原版）: " + ex.Message);
+                return true;
+            }
+        }
+
+        internal static System.Reflection.MethodInfo ServerPlateStationItemAddedPrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("ServerPlateStationItemAddedPrefix", BF); }
+        }
+
         private const System.Reflection.BindingFlags BF =
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
     }

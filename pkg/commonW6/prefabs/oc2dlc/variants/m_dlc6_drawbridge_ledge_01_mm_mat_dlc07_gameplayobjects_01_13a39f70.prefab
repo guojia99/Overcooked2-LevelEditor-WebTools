@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114096038827637246}
   - component: {fileID: 114967938430519454}
   m_Layer: 0
-  m_Name: m_dlc6_drawbridge_ledge_01_mm_mat_dlc07_gameplayobjects_01_13a39f70
+  m_Name: m_dlc6_drawbridge_ledge_01_mm_mat_dlc07_gameplayobjects_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

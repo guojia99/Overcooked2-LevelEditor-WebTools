@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114096038827637246}
   - component: {fileID: 114967938430519454}
   m_Layer: 0
-  m_Name: m_dlc07_wall_deco_support_03_mm_mat_dlc07_courtyard_bricks_03_c7593061
+  m_Name: m_dlc07_wall_deco_support_03_mm_mat_dlc07_courtyard_bricks_03
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114096038827637246}
   - component: {fileID: 114967938430519454}
   m_Layer: 0
-  m_Name: p_dlc07_keep_stone_block_trip_06_mm_mat_dlc07_courtyard_bricks_03_dadea0f3
+  m_Name: p_dlc07_keep_stone_block_trip_06_mm_mat_dlc07_courtyard_bricks_03
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

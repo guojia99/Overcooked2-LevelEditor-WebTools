@@ -2,9 +2,11 @@ import { DECOR_SOURCE_LIBS, S, type DecorSourceLib } from "./state";
 import { dom } from "./dom";
 import { tidyCatalogNameZh } from "../displayLabels";
 import { hostRuleLabelZh } from "../stacking";
-import { isAmbientBackgroundCat, isWaterBackgroundCat, foodIconImg } from "./catalog";
+import { isAmbientBackgroundCat, isWaterBackgroundCat, foodIconImg, isPressureSwitchSurfaceCat } from "./catalog";
 import { matchBuiltinAnimDecor } from "./builtinAnimDecor";
 import { buildComboPaletteGroup } from "./combos";
+import { batchRandomRotateLotusPressureSwitches } from "./items";
+import { setStatus } from "./status";
 import { variantBaseId, VARIANT_TO_BASE } from "./itemVariants";
 import { escHtml } from "./coords";
 import type { Catalog, CatalogItem } from "../types";
@@ -249,13 +251,28 @@ export function buildPalette(catalog: Catalog, filter: string) {
     if (comboEl) dom.paletteCats.appendChild(comboEl);
   }
 
+  // 莲花压力开关已归核心层：随机朝向按钮随之移到核心调色板。
+  if (S.currentLayer === "items") {
+    const lotusBtn = document.createElement("button");
+    lotusBtn.type = "button";
+    lotusBtn.className = "palette-add-floor";
+    lotusBtn.title = "莲花压力开关随机 0/90/180/270°";
+    lotusBtn.textContent = "🪷 莲花压力开关随机旋转";
+    lotusBtn.addEventListener("click", () => {
+      const n = batchRandomRotateLotusPressureSwitches();
+      setStatus(n > 0 ? `已随机旋转 ${n} 个莲花压力开关（0° / 90° / 180° / 270°）` : "场景中没有莲花压力开关", n > 0);
+    });
+    dom.paletteCats.appendChild(lotusBtn);
+  }
+
   for (const group of groups) {
     if (group.key === "Player") continue;
     // 核心层只显示核心玩法物品（layoutTier=core），装饰层只显示装饰物，
     // 其余一律归入装饰层（地板/背景在地板/背景层调色板）。
     if (S.currentLayer === "decor" ? group.layoutTier !== "decor" : group.layoutTier !== "core") continue;
     const list = (byKey[group.key] ?? []).filter((it) => {
-      if (it.surfaceTier === "floor" || it.surfaceTier === "background") return false;
+      // 压力开关（表面机关）允许出现在核心调色板；其余表面物仍归地板/背景层。
+      if (it.surfaceTier && !isPressureSwitchSurfaceCat(it)) return false;
       // Ambient / weather effects (落雪 BGM…) and water surfaces live on the
       // background layer.
       if (isAmbientBackgroundCat(it)) return false;

@@ -2933,12 +2933,13 @@ export async function openConfigTabsModal(
           parseInt((document.getElementById(`cfg-${t}-${key}`) as HTMLInputElement).value || "0", 10);
         const getFloat = (key: string) =>
           Number((document.getElementById(`cfg-${t}-${key}`) as HTMLInputElement).value || 0);
+        const roundTime = getNum("roundTime");
         return {
           exists: true,
           orderLifeTime: getNum("orderLifeTime"),
           timeBetweenOrders: getNum("timeBetweenOrders"),
           plateReturnTime: getNum("plateReturnTime"),
-          roundTime: getNum("roundTime"),
+          roundTime: roundTime > 0 ? Math.max(30, roundTime) : 240,
           survivalTimeMultiplier: getFloat("survivalTimeMultiplier"),
           oneStarScore: round5(getNum("oneStarScore")),
           twoStarScore: round5(getNum("twoStarScore")),

@@ -23028,6 +23028,11 @@
       "en": "Teacup Return"
     },
     {
+      "id": "web_conveyor_station_serve",
+      "zh": "上菜传送带站",
+      "en": "Serving Conveyor Station"
+    },
+    {
       "id": "HotWaterSO",
       "zh": "热水",
       "en": "Hot Water"

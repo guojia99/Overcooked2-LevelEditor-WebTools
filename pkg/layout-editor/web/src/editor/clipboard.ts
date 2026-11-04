@@ -23,6 +23,7 @@ import { setStatus } from "./status";
 import { updateFloorBar } from "./floorPalette";
 import { closeModal } from "../modals";
 import { isSurfaceItem } from "../floorColors";
+import { isPressureSwitchSurfaceCat } from "./catalog";
 import { publishCrossTabClipboard } from "./crossTabClipboard";
 import {
   selectionCentroid,
@@ -95,7 +96,11 @@ export function copyFloors(): void {
   // 地板层同时选中的地板层物品（压力开关等 surface 物品）随地板一起复制。
   const itemKeys = selectionKeys().filter((k) => {
     const it = S.items.find((i) => i._editorKey === k);
-    return it && isSurfaceItem(S.catalogByGuid.get(it.prefabGuid));
+    if (!it) return false;
+    const cat = S.catalogByGuid.get(it.prefabGuid);
+    if (!isSurfaceItem(cat)) return false;
+    // 压力开关（表面机关）随核心物品复制，不随地板复制。
+    return !isPressureSwitchSurfaceCat(cat);
   });
   if (!keys.length && !itemKeys.length) {
     setStatus("没有选中地板可复制");

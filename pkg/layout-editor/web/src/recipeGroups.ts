@@ -25,6 +25,7 @@ export interface RecipeLike {
   ingredients?: string[];
   /** Direct composition ids for custom recipes (sub-recipe ids and/or ingredient ids). */
   compositionIds?: string[];
+  isCustom?: boolean;
   intermediate?: boolean;
   /** Mixed 类型自定义菜谱：先搅拌（MixingBowl）再烹饪。 */
   mixing?: boolean;
@@ -199,6 +200,7 @@ export function deriveCompositionGroups(
   // 例如「炸薯条+炸鱼排+蘑菇汤」套餐中，炸薯条与炸鱼排即使同为 DeepFatFryer 也分开显示。
   // 子菜谱为 Mixed 类型（mixing）时即使无 cookingStep 也按 MixingBowl 成组（搅拌）。
   const groups: CookingGroup[] = [];
+  const customMixSubIds: string[] = [];
   const subGroups = new Map<string, CookingGroup>();
   // 烹饪类子菜谱按出现次数计数：重复的煎/炸子菜谱（如两块煎肉排 PanfriedBeef）
   // 各自成一锅，不并入同一组（cookOccur 使 key 唯一）。
@@ -230,6 +232,7 @@ export function deriveCompositionGroups(
     const sub = byId.get(compId);
     if (sub && (sub.ingredients ?? []).length > 0) {
       const cookStep = COOK_STEPS.has(sub.cookingStep ?? "") ? sub.cookingStep! : "";
+      if (sub.isCustom && sub.mixing && !cookStep) customMixSubIds.push(compId);
       if (sub.mixing || ((sub.compositionIds ?? []).length > 0 && !(compId && visited?.has(compId)))) {
         // Mixed 搅拌类 或 嵌套组成（子菜谱本身由其他菜谱组成，如 搅拌中间产物 → 烤箱 → 组装菜）：
         // 展开子菜谱自身工序（搅拌组 + 烹饪步骤标记），保留内层步骤图标；
@@ -264,7 +267,7 @@ export function deriveCompositionGroups(
     // 搅拌子菜谱保留为独立搅拌框（CheesePrawn）
     const keepBoxes: CookingGroup[] = [];
     for (const g of groups) {
-      if (g.step === "MixingBowl") {
+      if (g.step === "MixingBowl" || g.step === "Mixer") {
         keepBoxes.push(g);
         continue;
       }
@@ -280,6 +283,12 @@ export function deriveCompositionGroups(
       }
     }
     for (const ing of plain) mainIngs.push(ing);
+    // 终锅只有自定义 Mixed 节点时不单独成框：节点没有食材图标，会显示成搅拌框旁边的空白炸篮/蒸笼。
+    // 留空标记，由 mergeFinalMarkers 把终锅图标并到前面的搅拌框（搅拌炸饼 = 土豆/蛋/面粉 + 搅拌 + 炸篮）。
+    // 终锅里已经有其他食材时仍放入节点。
+    if (mainIngs.length > 0) {
+      for (const id of customMixSubIds) mainIngs.push(id);
+    }
 
     result.push(...keepBoxes);
     if (mainIngs.length > 0) {
@@ -399,7 +408,7 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
   // 蛋糕/布丁同族：全部食材一起搅拌 + 烤箱（与松饼/烧麦同一展示语义）
   const cakeLike = r.type === "cake" || r.type === "pudding";
   if (r.type === "sushi") {
-    for (const ing of ingredients) prep.set(ing, ing === "SushiRiceSO" || ing === "RiceSO" ? "Steamer" : "");
+    for (const ing of ingredients) prep.set(ing, ing === "SushiRiceSO" || ing === "RiceSO" ? "Pot" : "");
   } else if (r.type === "burrito") {
     for (const ing of ingredients) {
       prep.set(ing, ing === "TortillaSO" ? "" : ing === "SushiRiceSO" || ing === "RiceSO" ? "Pot" : "FryingPan");

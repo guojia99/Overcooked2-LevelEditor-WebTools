@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Web 前端资源统一导出（音频 / 桌台图标 / 桌台 3D / 装饰双视图）。
+/// Web 前端资源统一导出（音频 / 桌台图标 / 桌台 3D / 装饰双视图 / 菜谱与食材原图）。
 ///
 /// 产物全部写入 &lt;repo&gt;/exports/（git 忽略），由 LayoutEditorHttpServer 的
 /// /api/web-assets 路由只读提供；不再写入 layout-editor/web/public。
@@ -18,6 +21,7 @@ public static class LayoutEditorWebAssetExporter
     public const string CategoryCounterIcons = "counter-icons";
     public const string CategoryCounter3d = "counter-3d";
     public const string CategoryDecor = "decor";
+    public const string CategoryFoodIcons = "food-icons";
 
     [MenuItem("Layout Editor/素材导出 (Asset Export)/导出全部 Web 依赖 (Audio + Counter + Decor)", false, 4)]
     public static void ExportAllMenu()
@@ -28,7 +32,7 @@ public static class LayoutEditorWebAssetExporter
             EditorUtility.DisplayDialog("Web 资源导出", err, "OK");
             return;
         }
-        EditorUtility.DisplayDialog("Web 资源导出", "已开始导出音频 / 桌台 / 装饰双视图。\n进度请在 Web 关卡管理页「导出 Web 资源」弹窗查看。", "OK");
+        EditorUtility.DisplayDialog("Web 资源导出", "已开始导出音频 / 桌台 / 装饰双视图 / 菜谱与食材原图。\n进度请在 Web 关卡管理页「导出 Web 资源」弹窗查看。", "OK");
     }
 
     [MenuItem("Layout Editor/素材导出 (Asset Export)/强制重导全部 Web 依赖 (Re-export All)", false, 5)]
@@ -108,6 +112,8 @@ public static class LayoutEditorWebAssetExporter
                     RunCounter3d(baseProgress, span, summary, errors);
                 else if (cat == CategoryDecor)
                     RunDecor(force, baseProgress, span, summary, errors);
+                else if (cat == CategoryFoodIcons)
+                    RunFoodIcons(baseProgress, span, summary, errors);
             }
 
             lock (_lock)
@@ -121,7 +127,7 @@ public static class LayoutEditorWebAssetExporter
                 _status.durationMs = (long)((DateTime.UtcNow.Ticks - startedTicks) / TimeSpan.TicksPerMillisecond);
                 _status.summary = summary;
             }
-            Debug.Log("[WebAssetExport] 完成："
+            UnityEngine.Debug.Log("[WebAssetExport] 完成："
                 + "audio=" + summary.audioClips
                 + " counterIcons=" + summary.counterIcons
                 + " counter3d=" + summary.counter3d
@@ -131,7 +137,7 @@ public static class LayoutEditorWebAssetExporter
         }
         catch (Exception ex)
         {
-            Debug.LogError("[WebAssetExport] 导出异常: " + ex);
+            UnityEngine.Debug.LogError("[WebAssetExport] 导出异常: " + ex);
             lock (_lock)
             {
                 _status.status = "error";
@@ -210,6 +216,127 @@ public static class LayoutEditorWebAssetExporter
             errors.Add("装饰物：导出被取消（已写出部分文件）");
     }
 
+    /// <summary>调用 extract-icons.py --food-icons，按原图像素覆盖 exports/food-icons（不放大）。</summary>
+    private static void RunFoodIcons(float baseProgress, float span, WebAssetExportSummary summary, List<string> errors)
+    {
+        SetPhase("food-icons", "正在导出菜谱与食材原图…", baseProgress);
+        string repo = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+        string script = Path.Combine(repo, "layout-editor/scripts/extract-icons.py");
+        if (!File.Exists(script))
+        {
+            summary.foodIconsFailed = 1;
+            errors.Add("菜谱/食材原图：找不到 extract-icons.py");
+            return;
+        }
+
+        string python = FindPython3();
+        var psi = new ProcessStartInfo();
+        psi.FileName = python;
+        psi.Arguments = QuoteArg(script) + " --food-icons";
+        psi.WorkingDirectory = repo;
+        psi.UseShellExecute = false;
+        psi.RedirectStandardOutput = true;
+        psi.RedirectStandardError = true;
+        psi.CreateNoWindow = true;
+
+        string stdout = "";
+        string stderr = "";
+        int exitCode = -1;
+        try
+        {
+            Process proc = Process.Start(psi);
+            if (proc == null)
+            {
+                summary.foodIconsFailed = 1;
+                errors.Add("菜谱/食材原图：无法启动 python3");
+                return;
+            }
+            // 同时读满 stdout/stderr，避免管道缓冲写满后互相卡住。
+            var errBuf = new StringBuilder();
+            var errThread = new System.Threading.Thread(delegate()
+            {
+                errBuf.Append(proc.StandardError.ReadToEnd());
+            });
+            errThread.Start();
+            stdout = proc.StandardOutput.ReadToEnd();
+            errThread.Join();
+            stderr = errBuf.ToString();
+            proc.WaitForExit();
+            exitCode = proc.ExitCode;
+        }
+        catch (Exception ex)
+        {
+            summary.foodIconsFailed = 1;
+            errors.Add("菜谱/食材原图（" + python + "）：" + ex.Message);
+            return;
+        }
+
+        if (exitCode != 0)
+        {
+            summary.foodIconsFailed = 1;
+            string detail = (stderr + "\n" + stdout).Trim();
+            if (detail.Length > 500)
+                detail = detail.Substring(detail.Length - 500);
+            errors.Add("菜谱/食材原图退出码 " + exitCode + (detail.Length == 0 ? "" : "：" + detail));
+            return;
+        }
+
+        string foodRoot = Path.Combine(LayoutEditorPaths.ExportsRoot, "food-icons");
+        summary.foodRecipes = CountPngs(Path.Combine(foodRoot, "recipes"));
+        summary.foodIngredients = CountPngs(Path.Combine(foodRoot, "ingredients"));
+        SetProgress("food-icons", "菜谱与食材原图已写出。", baseProgress + span);
+        if (!string.IsNullOrEmpty(stdout))
+            UnityEngine.Debug.Log("[FoodIcons]\n" + stdout);
+    }
+
+    private static int CountPngs(string dir)
+    {
+        if (!Directory.Exists(dir))
+            return 0;
+        try
+        {
+            return Directory.GetFiles(dir, "*.png").Length;
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    /// <summary>GUI 启动的 Unity PATH 很短，按 PATH 再按常见安装位置找 python3。</summary>
+    private static string FindPython3()
+    {
+        string pathEnv = Environment.GetEnvironmentVariable("PATH");
+        if (!string.IsNullOrEmpty(pathEnv))
+        {
+            string[] parts = pathEnv.Split(Path.PathSeparator);
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (string.IsNullOrEmpty(parts[i])) continue;
+                string candidate = Path.Combine(parts[i], "python3");
+                if (File.Exists(candidate)) return candidate;
+            }
+        }
+        string[] fallbacks = new string[]
+        {
+            "/opt/homebrew/bin/python3",
+            "/usr/local/bin/python3",
+            "/usr/bin/python3",
+        };
+        for (int i = 0; i < fallbacks.Length; i++)
+        {
+            if (File.Exists(fallbacks[i])) return fallbacks[i];
+        }
+        return "python3";
+    }
+
+    private static string QuoteArg(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return "\"\"";
+        return "\"" + path.Replace("\"", "\\\"") + "\"";
+    }
+
     private static List<string> NormalizeCategories(List<string> categories)
     {
         var result = new List<string>();
@@ -219,13 +346,15 @@ public static class LayoutEditorWebAssetExporter
             result.Add(CategoryCounterIcons);
             result.Add(CategoryCounter3d);
             result.Add(CategoryDecor);
+            result.Add(CategoryFoodIcons);
             return result;
         }
         for (int i = 0; i < categories.Count; i++)
         {
             string c = (categories[i] ?? "").Trim().ToLowerInvariant();
             if (c.Length == 0 || result.Contains(c)) continue;
-            if (c == CategoryAudio || c == CategoryCounterIcons || c == CategoryCounter3d || c == CategoryDecor)
+            if (c == CategoryAudio || c == CategoryCounterIcons || c == CategoryCounter3d || c == CategoryDecor
+                || c == CategoryFoodIcons)
                 result.Add(c);
         }
         return result;
@@ -331,6 +460,9 @@ public class WebAssetExportSummary
     public int decorModels;
     public int decorMissing;
     public int decorFailed;
+    public int foodRecipes;
+    public int foodIngredients;
+    public int foodIconsFailed;
 
     public WebAssetExportSummary Clone()
     {
@@ -348,6 +480,9 @@ public class WebAssetExportSummary
         s.decorModels = decorModels;
         s.decorMissing = decorMissing;
         s.decorFailed = decorFailed;
+        s.foodRecipes = foodRecipes;
+        s.foodIngredients = foodIngredients;
+        s.foodIconsFailed = foodIconsFailed;
         return s;
     }
 }

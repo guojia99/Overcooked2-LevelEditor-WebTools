@@ -732,9 +732,12 @@ public static class AnimGroupImporter
         var offsets = new List<AnimGroupMemberOffsetDto>();
         var statics = new List<AnimGroupMemberDto>();
         var memberGos = new List<GameObject>();
+        // 源 JSON 里的 instanceId（跨会话可能是旧 u:/new:）→ 当前存活 id。
+        var sourceIdToLive = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var o in g.memberOffsets ?? new AnimGroupMemberOffsetDto[0])
         {
             if (o == null) continue;
+            var sourceId = o.instanceId;
             var m = ResolveSourceMember(o.instanceId, o.hierarchyPath);
             if (m == null)
             {
@@ -744,6 +747,7 @@ public static class AnimGroupImporter
                 continue;
             }
             o.instanceId = "u:" + m.GetInstanceID();
+            if (!string.IsNullOrEmpty(sourceId)) sourceIdToLive[sourceId] = o.instanceId;
             o.hierarchyPath = LayoutEditorHierarchy.GetHierarchyPath(m.transform);
             if (string.IsNullOrEmpty(o.displayName)) o.displayName = m.name;
             offsets.Add(o);
@@ -760,7 +764,9 @@ public static class AnimGroupImporter
                     (ms.hierarchyPath ?? "?") + ") — dropped");
                 continue;
             }
+            var sourceId = ms.instanceId;
             ms.instanceId = "u:" + m.GetInstanceID();
+            if (!string.IsNullOrEmpty(sourceId)) sourceIdToLive[sourceId] = ms.instanceId;
             ms.hierarchyPath = LayoutEditorHierarchy.GetHierarchyPath(m.transform);
             if (string.IsNullOrEmpty(ms.displayName)) ms.displayName = m.name;
             statics.Add(ms);
@@ -816,6 +822,19 @@ public static class AnimGroupImporter
             }
         }
 
+        if (g.doorMotions != null && g.doorMotions.Length > 0)
+        {
+            var liveMotions = new List<AnimGroupDoorMotionDto>();
+            foreach (var dm in g.doorMotions)
+            {
+                if (dm == null || string.IsNullOrEmpty(dm.instanceId)) continue;
+                string live;
+                if (!sourceIdToLive.TryGetValue(dm.instanceId, out live)) continue;
+                dm.instanceId = live;
+                liveMotions.Add(dm);
+            }
+            g.doorMotions = liveMotions.ToArray();
+        }
         g.memberOffsets = offsets.ToArray();
         g.memberStatic = statics.ToArray();
         g.itemInstanceIds = itemIds.ToArray();

@@ -160,7 +160,7 @@ flowchart LR
 | 文件 | 职责 |
 |---|---|
 | **coords.ts** | 世界↔画布换算、`COORD_ORIGIN_OFFSET {3.5,-1.5}`、吸附摆放、footprint 解析、火锅大锅换算、uuid/escHtml |
-| **render.ts** | `draw()` 总入口：网格/坐标轴/按层绘制/框选/动画覆盖/相机视锥；`computeLevelBounds` |
+| **render.ts** | `draw()` 总入口：网格/坐标轴/按层绘制/框选/动画覆盖/相机视锥；分屏模式**强制**按玩家位置绘制最多 4 个彩色镜头参考（主镜头参考隐藏，玩家处标注镜头编号）；`computeLevelBounds` |
 | **renderItems.ts** | 单物品绘制（footprint 矩形+图标+徽标）、绘制排序、`hitTestAll`、缩放手柄、传送门/开关/终端连线（传送门连线：单向单箭头 / 双向双箭头，门上「入/出/双」角标） |
 | **renderFloors.ts** | 地板绘制（材质色/主题/贴图平铺/图片/着色/空气地板）、接缝、可行走区、击杀面、命中测试 |
 | **labels.ts** | 画布文字/图标标签工具（换行、食材箱食材图） |
@@ -191,9 +191,9 @@ flowchart LR
 | **floorPalette.ts** | 地板/背景层调色板 + 画布底部地板信息条 |
 | **floorEditorModal.ts** | 地板详情弹窗（750 行）：尺寸/材质/着色/图片地板（tile/stretch/warp）/平铺/主题信息 |
 | **palette.ts** | 调色板构建：分组、搜索、双击武装 N 连放、变体家族归并卡片；装饰层左侧调色板「预览：无/小/中/大」四档，以及素材库多选（common01–04、commonW1–W6，空选=全部；与「尺寸」「分组」同行自适应）：卡片显示 Unity 渲染大图 + 占格/高度 + 尺寸徽标 |
-| **combos.ts** | 联合组合定义（一次放置多物品+自动联动）：饮料机/酱料机/断头台/传送门成对/热源+石炉。默认输出食材一律经 `ingredientGuidById()` 解析（别名感知 + 去重），**禁止 `find(i => i.id === id)` 精确匹配** |
+| **combos.ts** | 联合组合定义（一次放置多物品+自动联动）：饮料机/酱料机/断头台/传送门成对/热源+石炉/压力地板+DLC5 自动门（按住式，`advanceMode="hold"`）。默认输出食材一律经 `ingredientGuidById()` 解析（别名感知 + 去重），**禁止 `find(i => i.id === id)` 精确匹配** |
 | **itemVariants.ts** | DLC 换肤变体表：调色板只显示基础版，右键切换变体 |
-| **stubControls.ts** | Stub 参数中枢（1311 行）：`STUB_KIND_BY_PREFAB_ID`、锅具计时、柜台外观/开关材质选择、`wireStubControls`；按钮控速块（`speedControlBlockHtml`/`wireSpeedControl`，步带/传送带共用：档位列表增删改 + 启用开关）、生成器按钮批次块（`ctx-fs-btn/count/cooldown`）；`isButtonPollingStubTarget`（stub 轮询目标判定）并入 `isSwitchLinkTarget` 白名单——步带/传送带（已启用控速）与食材生成器（已启用按钮批次）可作直连目标，触发名自动置空 |
+| **stubControls.ts** | Stub 参数中枢（1311 行）：`STUB_KIND_BY_PREFAB_ID`、锅具计时、柜台外观/开关材质选择、开关/压力开关/莲花压力地板调色（未按下/按下双色，乘法染色并保留原贴图/原材质高光）、`wireStubControls`；按钮控速块（`speedControlBlockHtml`/`wireSpeedControl`，步带/传送带共用：档位列表增删改 + 启用开关）、生成器按钮批次块（`ctx-fs-btn/count/cooldown`）；`isButtonPollingStubTarget`（stub 轮询目标判定）并入 `isSwitchLinkTarget` 白名单——步带/传送带（已启用控速）与食材生成器（已启用按钮批次）可作直连目标，触发名自动置空 |
 | **stubRefs.ts** | 物品间 stub 绑定引用的统一重映射与孤儿清理 |
 | **servingLinks.ts** | 上菜台↔回收台（盘/杯/马克杯/餐盘四类）1 对多绑定 |
 | **teleportalLinks.ts** | 传送门方向模型与配对改写的唯一收口：`teleportalRole`（two/entrance/exit/unbound）、`teleportalEntrancesOf`、`setTeleportalPairDirection`（对级「双向传送」开关）、`releaseExitOnlyPartner`、`computeTeleportalLabels`；方向语义 = 出口指向 + `exitOnly`（出口门回指入口只是防 NRE 的占位） |
@@ -202,8 +202,9 @@ flowchart LR
 | **coaxialControls.ts** | 同轴按钮组右键编辑块（成员/时间窗 0.35~5s/目标机器，挂在开关参数面板）；`cleanOrphanedCoaxialLinks` 在 buttonLinks.ts |
 | **randomTriggerControls.ts** | 随机触发器（3.9.0）：右侧「触发源」Tab 底部节点列表 + 编辑弹窗（输入信号名/冷却/分隔符/源按钮多选/候选表格=权重+信号名+目标三选[自身/物品/RT 节点]+参数模式子表单[固定/候选/随机字符串/随机 N 位整数/数值区间]）；`cleanOrphanedRandomTriggers` 失效引用清理；状态 `S.randomTriggers`（文档级 `randomTriggers`，仅全量写回） |
 | **recipeKnowledge.ts** | 菜谱→道具需求（前端侧）：餐洗链、奶油喷罐/汽水机/饮料机需求判定、中间产物自动分配。**机器可输出食材清单的唯一数据源**（`DRINK/SODA/CONDIMENT_MACHINE_INGREDIENT_IDS` + `dispenserIngredientIds(prefabId)`）——各清单一律写「目录现行 id + common03 正式版 id」两代写法 |
-| **cameraLight.ts** | 相机/灯光弹窗（背景色 + FOV 即时反映） |
+| **cameraLight.ts** | 相机/灯光弹窗（背景色 + FOV 即时反映；「多镜头分屏」复选框 = `cameraInfo.splitScreen`，按厨师数量自动 1/2/3/4 镜头；分屏开启时显示「镜头 1~4」分页独立参考（启用/隐藏、相对玩家 X/Y/Z offset、FOV、大小，含「↺ 默认」重置）并隐藏主镜头「出发点位置」；取消启用 = 编辑器不画参考且运行时该玩家画面不生成，写回 `SplitScreen|2|C0:...|C1:...`；运行时单向、原版镜头屏蔽） |
 | **testLayout.ts** | 测试布局一键生成（30×16 地板 + 全部食材箱/核心道具/菜谱） |
+| **gridAlign.ts** | 一键网格对齐（核心层/地板层，工具栏「图层显示」右侧）：`alignCurrentLayerToGrid()` 对齐当前层全部物件（无视选中状态）；物件对齐到最近的格子、填满整格——角贴可见网格线角（(k+0.5)·CELL 点阵，锚 GridInfo 原点）：奇数跨距中心落整格点（如 6.00/-1.20）、偶数跨距中心落两格之间、<1 格小件中心贴整格点、木筏拼板贴整格点；火锅灶台/大锅 stub 偏移保持；一条 undo 整体可撤回；`syncGridAlignUI`（非核心/地板层置灰）+ `wireGridAlign` |
 
 **序列化与场景 IO**
 
@@ -261,7 +262,7 @@ flowchart LR
 | GET | `/api/grid` | GridInfo |
 | GET | `/api/catalog/floor-materials?levelSet=` / `ingredients` / `questionmarks` / `questionmarks/icon?guid=` | 目录 |
 | GET/POST | `/api/level-recipes` | 关卡菜谱读写 |
-| GET | `/api/level/optional-presets`；POST `/api/level/optional-items`、`/api/level/matchlists`、`/api/recipes/compute-burger-optionals`、`/api/recipes/compute-pizza-optionals` | 可选部件/匹配表 |
+| GET | `/api/level/optional-presets`（含 `pastaToppingGuids`：commonW5 意面料一键填充）；POST `/api/level/optional-items`、`/api/level/matchlists`、`/api/recipes/compute-burger-optionals`、`/api/recipes/compute-pizza-optionals` | 可选部件/匹配表 |
 | POST | `/api/scene/death`、`/api/scene/killplane` | 死亡主题/击杀面 |
 | POST | `/api/level/image-upload`；GET `/api/level/data-file?path=` | 图片地板 |
 | GET | `/api/level/assignment?assetPath=`；POST `/api/level/assignment-save`、`/api/level/assignment-clear` | 菜谱分工配置（汇总页「分工模式」页读写；`assignment~/assignment.json`） |
@@ -294,7 +295,7 @@ flowchart LR
 
 `/catalog.json`（+items.0~12 分块）、`/recipes.json`（+分组文件）、`/ingredients.json`、`/cooking-steps.json`、`/counter-appearances.json`、`/switch-materials.json`、`/bundle-manifest.json`、`/UPDATE_LOG.md`、图标 `/icons/**`——目录 JSON 由 `scripts/build-catalog.mjs` 生成。
 
-**Web 导出产物（不再走静态资源）**：`GET /api/web-assets/manifest`（聚合发现）、`GET /api/web-assets/decor/manifest.json`、`GET /api/web-assets/decor/front|back/<guid>.png`（192 缩略图）与 `GET /api/web-assets/decor/detail/front|back/<guid>.png`（1024/1536/2048 高清详情，查看器按需加载）、`GET /api/web-assets/decor/models/<guid>/model.obj|mtl`（3D 预览，按需加载）、`GET /api/counter-skins/icon/<file>.png` 与 `/api/counter-skins/icons/manifest.json`（桌台图标）、`GET /api/counter-skins/3d/<name>`（桌台 3D）、`GET /api/audio/exports` 与 `/api/audio/stream?path=`（音频）。产物统一在 `<repo>/exports/`（git 忽略），由 Unity 导出器生成；装饰无网格/空壳资源被跳过，前端回退食材/菜谱图标或首字占位。详情面板对装饰物左右并排显示正面/背面，调色板与右键预览默认正面。
+**Web 导出产物（不再走静态资源）**：`GET /api/web-assets/manifest`（聚合发现）、`GET /api/web-assets/decor/manifest.json`、`GET /api/web-assets/decor/front|back/<guid>.png`（192 缩略图）与 `GET /api/web-assets/decor/detail/front|back/<guid>.png`（1024/1536/2048 高清详情，查看器按需加载）、`GET /api/web-assets/decor/models/<guid>/model.obj|mtl`（3D 预览，按需加载）、`GET /api/web-assets/food-icons/manifest.json` 与 `GET /api/web-assets/food-icons/recipes|ingredients/<id>.png`（菜谱/食材订单图标原图，不放大；菜谱页导出卡片与「导出图标」使用，页面列表仍用 `/icons/`）、`GET /api/counter-skins/icon/<file>.png` 与 `/api/counter-skins/icons/manifest.json`（桌台图标）、`GET /api/counter-skins/3d/<name>`（桌台 3D）、`GET /api/audio/exports` 与 `/api/audio/stream?path=`（音频）。产物统一在 `<repo>/exports/`（git 忽略），由 Unity 导出器生成；装饰无网格/空壳资源被跳过，前端回退食材/菜谱图标或首字占位。详情面板对装饰物左右并排显示正面/背面，调色板与右键预览默认正面。
 
 ---
 
@@ -314,7 +315,7 @@ LayoutDocument {
   buttonLinks?: ButtonLinkData   // 按钮→动画组
   buttonEvents?: ButtonEventData // 按钮→事件组
   coaxialLinks?: CoaxialLinkData // 同轴按钮组（≥2 按钮时间窗内集齐→目标广播）
-  cameraInfo?: CameraInfo|null   // 背景色+FOV
+  cameraInfo?: CameraInfo|null   // 背景色+FOV；splitScreen=多镜头分屏；splitScreenCameras[]=每镜头独立参考
   lights?: LightInfo[]           // Art/Lights 非 prefab 灯光
 }
 ```

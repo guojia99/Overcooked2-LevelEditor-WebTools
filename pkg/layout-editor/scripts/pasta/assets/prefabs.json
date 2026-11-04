@@ -1,0 +1,74 @@
+{
+ "plated_pasta_01": {
+  "meshGuid": "4eed097e045103a42a4bbb8249d1e6d9",
+  "materialGuids": [
+   "13afd68d01afbca4096fa03ba93051fb"
+  ],
+  "rendererInfo": {
+   "lightmapIndex": -1,
+   "lightmapScaleOffset": [
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "meshSubmeshCount": 1,
+  "meshSourceName": "m_plated_pasta_01"
+ },
+ "plated_pasta_fish_01": {
+  "meshGuid": "8b97919e028136640b5730f028a0fd8c",
+  "materialGuids": [
+   "e9bff5538b2ede44f981ac64f0cf366f",
+   "2c84b9b702d489a4692e12f6d70a44e8"
+  ],
+  "rendererInfo": {
+   "lightmapIndex": -1,
+   "lightmapScaleOffset": [
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "meshSubmeshCount": 2,
+  "meshSourceName": "m_plated_pasta_fish_01"
+ },
+ "plated_pasta_prawn_01": {
+  "meshGuid": "31053f1c2bfb85c40aa431c6fa27cc62",
+  "materialGuids": [
+   "e9bff5538b2ede44f981ac64f0cf366f",
+   "9d71beb8ce663b64ca255b94fa542b3f"
+  ],
+  "rendererInfo": {
+   "lightmapIndex": -1,
+   "lightmapScaleOffset": [
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "meshSubmeshCount": 2,
+  "meshSourceName": "m_plated_pasta_prawn_01"
+ },
+ "recipe_seafood_pasta_01": {
+  "meshGuid": "a4e275f05a6964e47b32d3977ade58f8",
+  "materialGuids": [
+   "e9bff5538b2ede44f981ac64f0cf366f",
+   "9d71beb8ce663b64ca255b94fa542b3f",
+   "2c84b9b702d489a4692e12f6d70a44e8"
+  ],
+  "rendererInfo": {
+   "lightmapIndex": -1,
+   "lightmapScaleOffset": [
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "meshSubmeshCount": 3,
+  "meshSourceName": "m_recipe_seafood_pasta_01"
+ }
+}

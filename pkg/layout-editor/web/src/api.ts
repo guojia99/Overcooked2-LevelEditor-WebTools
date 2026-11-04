@@ -699,7 +699,7 @@ export async function fetchDepsExportManifest(): Promise<DepsExportManifest> {
 
 // ==================== Web 资源导出（音频 / 桌台 / 装饰双视图） ====================
 
-export type WebAssetCategory = "audio" | "counter-icons" | "counter-3d" | "decor";
+export type WebAssetCategory = "audio" | "counter-icons" | "counter-3d" | "decor" | "food-icons";
 
 export interface WebAssetCategoryInfo {
   available: boolean;
@@ -717,6 +717,8 @@ export interface WebAssetsManifest {
   audio: WebAssetCategoryInfo;
   counterSkins: WebAssetCategoryInfo;
   decor: WebAssetCategoryInfo;
+  /** 菜谱/食材原图。count = 菜谱张数，iconCount = 食材张数。旧桥可能缺此字段。 */
+  foodIcons?: WebAssetCategoryInfo;
 }
 
 export interface WebAssetExportSummary {
@@ -733,6 +735,9 @@ export interface WebAssetExportSummary {
   decorModels: number;
   decorMissing: number;
   decorFailed: number;
+  foodRecipes?: number;
+  foodIngredients?: number;
+  foodIconsFailed?: number;
 }
 
 export interface WebAssetExportStatus {
@@ -1601,7 +1606,12 @@ export function counterSkinIconUrl(file: string): string {
 
 export async function fetchSwitchMaterials(): Promise<SwitchMaterialOption[]> {
   const data = await fetchStaticCatalog<SwitchMaterialCatalog>("switch-materials.json");
-  return data.materials ?? [];
+  // 只保留真正的材质 SO；旧目录缺 materialAssetPath 时按已知 prefab SO id 兜底过滤
+  //（选中非材质会让宿主 LoadAsset<Material> 失败并触发 PseudoPrefab 重入）。
+  return (data.materials ?? []).filter((m) => {
+    if (m.materialAssetPath) return /\.mat$/i.test(m.materialAssetPath);
+    return m.id !== "Switch" && m.id !== "PressureSwitch";
+  });
 }
 
 // ---------- Write-back History（关卡管理「工具与历史」弹窗消费） ----------

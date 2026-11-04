@@ -53,7 +53,7 @@ import {
 } from "../items";
 import { itemLayerOfIt } from "../catalog";
 import { utensilCapacityOrDefault } from "../stubControls";
-import { applyUtensilIngredientFill } from "./utensilManager";
+import { applyUtensilIngredientFill, applyPastaPanModels } from "./utensilManager";
 import { foodGroupLabel, visibleRecipes } from "../../ingredientLabels";
 import {
   groupRecipesByType,
@@ -1123,6 +1123,17 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
         }
       }
     }
+
+    // Web 意面家族：煎锅补挂煎寿司鱼/虾中间产物节点 + 对齐锅内熟物模型
+    // （虾=炸虾饼 FriedShrimpCake 圆形煎制物、鱼=原版煎鱼 prep_fish_sliced_01 的
+    //  PseudoPrefabSO）。models/modelSOs 与 allowedIngredientSOs 按下标对齐，真机
+    //  经场景序列化引用加载；编辑器 Play 另有 PastaOriginalModels 无模型兜底替换。
+    // 放在自动分配中间产物之后：追加型写入保持模型槽对齐不被打乱。
+    {
+      const pastaPans = applyPastaPanModels(recs, recipeById);
+      if (pastaPans > 0)
+        setStatus(`已为 ${pastaPans} 个煎锅挂上煎寿司鱼/虾中间产物与锅内模型（写回后生效）`, true);
+    }
   }
 
   // ---------- 渲染 ----------
@@ -1365,10 +1376,17 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
             else console.warn(`[recipes]   ${g} -> 不在当前目录中（后端可能丢弃该 guid）`);
           }
           const saveNote = await saveLevelRecipes(level!.levelInfoAssetPath, guids);
+          // Web 意面家族：自动把煎寿司鱼/虾中间产物注册进 Optional（单独装盘上菜）
+          let pastaNote = "";
+          try {
+            pastaNote = await autoRegisterPastaToppings(guids);
+          } catch (e) {
+            pastaNote = `；⚠️ 意面料自动注册失败：${(e as Error).message}`;
+          }
           selected.clear();
           for (const g of guids) selected.add(g);
           closeModal();
-          setStatus(`菜谱已覆盖写入 LevelInfo（${guids.length} 道）${saveNote ? `；${saveNote}` : ""}`);
+          setStatus(`菜谱已覆盖写入 LevelInfo（${guids.length} 道）${saveNote ? `；${saveNote}` : ""}${pastaNote}`);
         } catch (e) {
           setStatus((e as Error).message, false);
         }
@@ -1658,6 +1676,71 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       isDlc11 ? presets.hotdogFillGuidsDlc11 : presets.hotdogFillGuidsDlc08,
       isDlc11 ? "已加入 Hotdog（dlc11）可选部件/酱料/煮肠" : "已加入 Hotdog（dlc08）可选部件/酱料/煮肠"
     );
+  };
+
+  /** Web 意面家族：煎寿司鱼/虾中间产物注册进 optional（recipeMatchList），
+   *  注册后煎好的鱼/虾可单独装盘上菜（盘装煎鱼/煎虾视觉）。 */
+  const fillPastaToppings = () => {
+    if (!presets) { setStatus("候选尚未加载完成，稍后再试", false); return; }
+    if (!presets.pastaToppingGuids || presets.pastaToppingGuids.length === 0) {
+      setStatus("当前桥未提供意面料候选（需新版后端）", false);
+      return;
+    }
+    addOptionalGuids(presets.pastaToppingGuids, "已加入意面料（煎寿司鱼/煎寿司虾，可单独装盘上菜）");
+  };
+
+  /** 意面料候选 guid：优先后端 presets，回退当前目录解析（中间产物条目）。 */
+  const pastaToppingGuidList = (): string[] => {
+    const order = [
+      "Web_Seafood_Pasta_FishNode",
+      "Web_Seafood_Pasta_PrawnNode",
+      // 拼盘组合节点必须排在单鱼/单虾之后：GetOrderPlatingPrefab 取首个命中，
+      // [鱼]/[虾] 单独装盘要先命中单节点直连装盘模型，再轮到组合节点（盘体+查找表）
+      "Web_Seafood_Pasta_ToppingsCombo",
+    ];
+    if (presets?.pastaToppingGuids?.length) {
+      const rank = (g: string) => {
+        const i = order.indexOf(byGuid.get(g)?.id ?? "");
+        return i < 0 ? order.length : i;
+      };
+      return [...presets.pastaToppingGuids].sort((a, b) => rank(a) - rank(b));
+    }
+    const out: string[] = [];
+    for (const id of order) {
+      const g = byRecipeId.get(id)?.guid;
+      if (g) out.push(g);
+    }
+    return out;
+  };
+
+  /** 保存菜谱后调用：所选含意面家族时，把煎寿司鱼/虾中间产物并入 Optional 并立即
+   *  写回（只增不删；GameUtils.GetOrderPlatingPrefab 命中其 m_platingPrefab——
+   *  煎好的鱼/虾可单独装盘上菜，不再显示黑色「无匹配菜谱」占位）。返回状态附注。 */
+  const autoRegisterPastaToppings = async (savedGuids: string[]): Promise<string> => {
+    if (!level?.levelInfoAssetPath) return "";
+    const hasPasta = savedGuids.some((g) => {
+      const r = byGuid.get(g);
+      if (!r) return false;
+      const comps = r.compositionIds ?? [];
+      return comps.includes("Web_Seafood_Pasta_FishNode") || comps.includes("Web_Seafood_Pasta_PrawnNode");
+    });
+    if (!hasPasta) return "";
+    const toppings = pastaToppingGuidList();
+    if (toppings.length === 0)
+      return "；⚠️ 意面菜谱已保存，但意面料 guid 解析失败（刷新菜谱目录后重存可补注册）";
+    const known = new Set(optionalItems.map((i) => normalizeGuid(i.guid)));
+    let added = 0;
+    for (const g of toppings) {
+      if (known.has(normalizeGuid(g))) continue;
+      optionalItems.push(resolveOptionalMeta(g));
+      known.add(normalizeGuid(g));
+      added++;
+    }
+    if (added === 0) return "";
+    await saveOptionalItems(level.levelInfoAssetPath, optionalItems.map((i) => i.guid));
+    level.optionalItems = optionalItems.map((i) => ({ ...i }));
+    optionalDirty = false;
+    return `；已自动注册意面料 ${added} 条（煎寿司鱼/虾与鱼虾拼盘可单独装盘上菜）`;
   };
 
   /** 汉堡面包 id 判定：核心 ChoppedBunSO / DLC02_ChoppedBun / DLC8 DLC08_ChoppedBun
@@ -2028,6 +2111,10 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
             <span class="rw-opt-quick-icon">🌭</span>
             <span class="rw-opt-quick-text"><b>Hotdog</b><span class="muted small">dlc08 / dlc11</span></span>
           </button>
+          <button type="button" class="rw-opt-quick-btn" id="rw-opt-fill-pasta" title="加入煎寿司鱼/煎寿司虾（意面料），注册后可单独装盘上菜">
+            <span class="rw-opt-quick-icon">🍝</span>
+            <span class="rw-opt-quick-text"><b>意面料</b><span class="muted small">煎鱼 / 煎虾装盘</span></span>
+          </button>
           <button type="button" class="rw-opt-quick-btn rw-opt-quick-muted" id="rw-opt-clear-legacy-burger" title="移除遗留 _filler / BurgerAssembly">
             <span class="rw-opt-quick-icon">🧹</span>
             <span class="rw-opt-quick-text"><b>清除遗留组装</b><span class="muted small">汉堡历史残留</span></span>
@@ -2057,6 +2144,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       void fillPizzaOptionals();
     });
     document.getElementById("rw-opt-fill-hotdog")?.addEventListener("click", fillHotdogOptionals);
+    document.getElementById("rw-opt-fill-pasta")?.addEventListener("click", fillPastaToppings);
     document.getElementById("rw-opt-toggle-picker")?.addEventListener("click", () => {
       optPickerOpen = !optPickerOpen;
       render();

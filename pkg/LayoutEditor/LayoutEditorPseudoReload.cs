@@ -44,14 +44,37 @@ public static class LayoutEditorPseudoReload
     public static void EnsurePrepareForBuilding()
     {
         ClearCleanPlateStackPreviews();
-        var manager = PseudoPrefabManager.Instance;
-        if (manager == null)
-            return;
-
-        if (!manager.prepareForBuilding)
+        var found = false;
+        var scene = SceneManager.GetActiveScene();
+        if (scene.IsValid())
         {
-            manager.prepareForBuilding = true;
+            var roots = scene.GetRootGameObjects();
+            for (var i = 0; i < roots.Length; i++)
+            {
+                var manager = roots[i] != null ? roots[i].GetComponent<PseudoPrefabManager>() : null;
+                if (manager == null)
+                    continue;
+                found = true;
+                PrepareManager(manager);
+            }
+        }
+        var instance = PseudoPrefabManager.Instance;
+        if (!found && instance != null)
+            PrepareManager(instance);
+    }
+
+    private static void PrepareManager(PseudoPrefabManager manager)
+    {
+        if (manager == null || manager.prepareForBuilding)
+            return;
+        manager.prepareForBuilding = true;
+        try
+        {
             manager.DeInit();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[LayoutEditor] Prepare For Building DeInit 失败: " + ex.Message);
         }
     }
 
@@ -60,18 +83,46 @@ public static class LayoutEditorPseudoReload
     /// 再挂上临时子物体，须在 HUD/tag 烘焙与 SaveScene 之前清理。</summary>
     public static void ForcePrepareForBuildingForExport()
     {
-        var manager = PseudoPrefabManager.Instance;
-        if (manager == null)
-        {
-            Debug.LogWarning("[SetExporter] Prepare For Building：场景无 PseudoPrefabManager，跳过 DeInit");
-            return;
-        }
-        var wasAlready = manager.prepareForBuilding;
         ClearCleanPlateStackPreviews();
+        var prepared = 0;
+        var scene = SceneManager.GetActiveScene();
+        if (scene.IsValid())
+        {
+            var roots = scene.GetRootGameObjects();
+            for (var i = 0; i < roots.Length; i++)
+            {
+                var manager = roots[i] != null ? roots[i].GetComponent<PseudoPrefabManager>() : null;
+                if (manager == null)
+                    continue;
+                ForcePrepareManager(manager);
+                prepared++;
+            }
+        }
+        if (prepared == 0)
+        {
+            var instance = PseudoPrefabManager.Instance;
+            if (instance == null)
+            {
+                Debug.LogWarning("[SetExporter] Prepare For Building：场景无 PseudoPrefabManager，跳过 DeInit");
+                return;
+            }
+            ForcePrepareManager(instance);
+            prepared = 1;
+        }
+        Debug.Log("[SetExporter] Prepare For Building：已 DeInit 清除临时物体（" + prepared + " 个 manager）");
+    }
+
+    private static void ForcePrepareManager(PseudoPrefabManager manager)
+    {
         manager.prepareForBuilding = true;
-        manager.DeInit();
-        Debug.Log("[SetExporter] Prepare For Building：已 DeInit 清除临时物体（进入前 prepareForBuilding="
-            + (wasAlready ? "true" : "false") + "）");
+        try
+        {
+            manager.DeInit();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[SetExporter] Prepare For Building DeInit 失败: " + ex.Message);
+        }
     }
 
     /// <summary>Refresh scene placeholders after layout write-back (avoids full recipe SetupConfig).</summary>
@@ -132,15 +183,19 @@ public static class LayoutEditorPseudoReload
         EnsureCustomBundleDependency(manager);
         // 写回主路径：先把存量派生 stub 提升为派生运行时，再 DeInit/Init。
         LayoutEditorStubIO.PromoteAllDerivedStubsInScene();
+        // 外观材质 SO 先校验：非 .mat 的 SO 会让宿主导入重入并在 Setup 中销毁 child。
+        LayoutEditorSwitchMaterialRepair.SanitizeAllInScene();
         LayoutEditorLog.Log("[dispenser-icon] ReloadPseudoAssetsFull: begin（写回主路径）");
         SafeReinit(manager);
-        // 完整 prefab 的 CleanPlateStack 误挂 PseudoPrefabCleanPlateStack 会 NRE；
-        // 必须在逐对象 ResetChild 之前清理/替换为 CustomStub.CleanPlateStackSeeder。
+        // 茶杯完整 prefab 误挂 PseudoPrefabCleanPlateStack 会 NRE，换成 seeder；
+        // 包装堆被误挂 seeder 时在这里拆掉并补回派生运行时。须在逐对象 ResetChild 之前。
         LayoutEditorStubIO.RepairFullCleanPlateStackRuntimes();
         // 宿主 ResetAllPseudoPrefabs 一旦某个伪 prefab 抛异常，后续对象会被跳过
         // （典型：核心 Switch child 保留旧 bundle 材质 → Scene 视图洋红）。这里
         // 再做一遍逐对象 try/catch 重建，保证写回后所有 child 都拿到新 bundle 资产。
         RepairPseudoPrefabChildren();
+        // 压力开关 m_buttonBit 失效兜底（host Setup 首行 MissingReference）。
+        RepairBrokenPressureSwitchChildren();
         // 写回主路径：载具由 DeInit/Init 整体重建，预览锅随旧载具销毁；域重载/开场景
         // /退 Play 三时机覆盖不到不触发编译的纯 HTTP 写回，须在此重新布防补挂。
         LayoutEditorPushablePotPreview.Arm();
@@ -151,6 +206,101 @@ public static class LayoutEditorPseudoReload
     /// 一个对象失败会中断后续对象；本方法隔离失败，专门保证 bundle 材质伪 prefab
     /// （Switch / 压力开关 / 其他 common01 包装件）在 ReInit 后不残留已卸载材质。
     /// </summary>
+    /// <summary>压力开关 child 的 m_buttonBit 在 bundle 重载时可能变成已销毁引用
+    /// （Setup 首行 MissingReferenceException）。把引用重新指到新 child 的 Pad
+    /// MeshRenderer 并补跑 Setup；无问题返回 false。host 文件只读，自愈落编辑器侧。</summary>
+    public static bool RepairBrokenPressureSwitchChild(PseudoPrefab pseudo)
+    {
+        if (pseudo == null)
+            return false;
+        if (pseudo.GetComponent<PseudoPrefabPressureSwitchStub>() == null)
+            return false;
+
+        // 只修已实例化的 child；不在这里主动 ResetChild（避免再次触发 host 的
+        // 重入/半销毁时序，把一次错误变成两次）。
+        var child = pseudo.childGameObject;
+        if (child == null)
+            return false;
+
+        var cos = child.GetComponent("PressureSwitchCosmeticDecisions");
+        if (cos == null)
+            return false;
+        var t = cos.GetType();
+        var bitField = t.GetField("m_buttonBit",
+            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+        if (bitField == null)
+            return false;
+        var bit = bitField.GetValue(cos) as MeshRenderer;
+        if (bit != null)
+            return false; // 引用正常
+
+        MeshRenderer pad = null;
+        var renderers = child.GetComponentsInChildren<MeshRenderer>(true);
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            var r = renderers[i];
+            if (r == null)
+                continue;
+            if (string.Equals(r.gameObject.name, "Pad", StringComparison.Ordinal))
+            {
+                pad = r;
+                break;
+            }
+        }
+        if (pad == null)
+        {
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                var r = renderers[i];
+                if (r == null)
+                    continue;
+                if (r.gameObject.name.IndexOf("Pad", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    pad = r;
+                    break;
+                }
+            }
+        }
+        if (pad == null)
+            return false;
+
+        bitField.SetValue(cos, pad);
+        try
+        {
+            pseudo.Setup();
+        }
+        catch (Exception ex)
+        {
+            LayoutEditorLog.LogWarning("[pseudo-repair] 压力开关补跑 Setup 失败: "
+                + pseudo.name + " — " + ex.Message);
+        }
+        return true;
+    }
+
+    /// <summary>扫描场景内全部压力开关，修复 m_buttonBit 指向已销毁 Pad 的 child
+    /// （场景打开/域重载后的兜底；正常对象零操作）。</summary>
+    public static int RepairBrokenPressureSwitchChildren()
+    {
+        PseudoPrefab[] all = UnityEngine.Object.FindObjectsOfType<PseudoPrefab>();
+        int repaired = 0;
+        for (int i = 0; i < all.Length; i++)
+        {
+            try
+            {
+                if (RepairBrokenPressureSwitchChild(all[i]))
+                    repaired++;
+            }
+            catch (Exception ex)
+            {
+                LayoutEditorLog.LogWarning("[pseudo-repair] 压力开关自愈异常: "
+                    + (all[i] != null ? all[i].name : "?") + " — " + ex.Message);
+            }
+        }
+        if (repaired > 0)
+            LayoutEditorLog.Log("[pseudo-repair] 压力开关 child 自愈: " + repaired + " 个");
+        return repaired;
+    }
+
     public static int RepairPseudoPrefabChildren()
     {
         // 先提升半损派生 stub，否则逐对象 ResetChild 仍会初始化基类空 Setup。
@@ -170,9 +320,22 @@ public static class LayoutEditorPseudoReload
             }
             catch (Exception ex)
             {
-                failed++;
-                LayoutEditorLog.LogWarning("[pseudo-repair] ResetChild failed: "
-                    + pseudo.name + " — " + ex.Message);
+                // 压力开关宿主的 PressureSwitchCosmeticDecisions.m_buttonBit 在
+                // bundle 重载/重入时可能指向已销毁的 Pad MeshRenderer，Setup 首行
+                // 即抛 MissingReferenceException。这里把 m_buttonBit 重新指到新
+                // child 的 Pad 并补跑 Setup（host 文件不可改，编辑器侧自愈）。
+                if (RepairBrokenPressureSwitchChild(pseudo))
+                {
+                    rebuilt++;
+                    LayoutEditorLog.LogWarning("[pseudo-repair] ResetChild 失败后已修复压力开关 child: "
+                        + pseudo.name + " — " + ex.Message);
+                }
+                else
+                {
+                    failed++;
+                    LayoutEditorLog.LogWarning("[pseudo-repair] ResetChild failed: "
+                        + pseudo.name + " — " + ex.Message);
+                }
             }
         }
         LayoutEditorStubIO.ApplySwitchStartVisualsInActiveScene();
@@ -417,9 +580,18 @@ static class LayoutEditorPseudoMaterialRepairHook
         }
         if (LayoutEditorStubIO.PromoteAllDerivedStubsInScene() > 0 && activeScene.IsValid())
             EditorSceneManager.MarkSceneDirty(activeScene);
+        if (LayoutEditorSwitchMaterialRepair.SanitizeAllInScene() > 0 && activeScene.IsValid())
+            EditorSceneManager.MarkSceneDirty(activeScene);
         LayoutEditorStubIO.RepairFullCleanPlateStackRuntimes();
+        if (activeScene.IsValid() && !string.IsNullOrEmpty(activeScene.path))
+        {
+            var levelInfo = LayoutEditorLevelInfoResolver.ResolveForScene(activeScene.path);
+            if (levelInfo != null)
+                LayoutEditorSteamerFill.SyncSteamerIngredients(levelInfo);
+        }
         LayoutEditorPseudoReload.RepairMissingPseudoMaterials();
         LayoutEditorPseudoReload.RepairMissingSwitchChildren();
+        LayoutEditorPseudoReload.RepairBrokenPressureSwitchChildren();
         LayoutEditorStubIO.ApplySwitchStartVisualsInActiveScene();
     }
 }

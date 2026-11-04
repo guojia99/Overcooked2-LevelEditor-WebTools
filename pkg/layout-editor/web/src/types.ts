@@ -315,11 +315,19 @@ export interface LayoutSwitchStub {
   startEnabled?: boolean;
   activeMaterialGuid?: string;
   inactiveMaterialGuid?: string;
+  /** 未按下颜色（hex，乘法染色；未设置=不覆盖）。 */
+  idleColor?: string;
+  /** 按下颜色（hex，乘法染色；未设置=不覆盖）。 */
+  pressedColor?: string;
 }
 
 export interface LayoutPressureSwitchStub {
   occupiedMaterialGuid?: string;
   unoccupiedMaterialGuid?: string;
+  /** 未受压颜色（hex，乘法染色；未设置=不覆盖）。 */
+  idleColor?: string;
+  /** 受压颜色（hex，乘法染色；未设置=不覆盖）。 */
+  pressedColor?: string;
 }
 
 export interface LayoutMeshWithMaterialStub {
@@ -559,6 +567,14 @@ export interface AnimGroupMemberGroup {
   memberInstanceIds: string[];
 }
 
+/** 按住式门组内的单门旋转覆盖（门参数放门自身；未配置的门沿用组事件默认值）。 */
+export interface AnimGroupDoorMotion {
+  instanceId: string;
+  direction: "cw" | "ccw";
+  angleDegrees: number;
+  durationSeconds: number;
+}
+
 export interface AnimGroup {
   id: string;
   displayName: string;
@@ -579,8 +595,10 @@ export interface AnimGroup {
   triggerMode?: "auto" | "button";
   /** 按钮组的节点推进语义：timeline = 每次按压整组按时间轴连播（一组=一个节点）；
    *  press = 组内每个事件一个节点，每次按压只推进一个事件（节点环控制器，
-   *  用于「同一物体往返翻转」等一个成员进不了两个组的场景）。缺省 = timeline。 */
-  advanceMode?: "timeline" | "press";
+   *  用于「同一物体往返翻转」等一个成员进不了两个组的场景）；
+   *  hold = 压力开关按住式：事件 1 = 站上、事件 2 = 离开，Enter/Exit 直连组根
+   *  Animator（仅支持压力开关 + 两个 rotate 事件）。缺省 = timeline。 */
+  advanceMode?: "timeline" | "press" | "hold";
   /** Unity instance ids ("u:xxx"/"new:xxx") of the items driven by this group. */
   itemInstanceIds: string[];
   /** Unity instance ids of the floor (Plane/Quad) objects driven by this group. */
@@ -610,6 +628,8 @@ export interface AnimGroup {
   applyRootMotion?: boolean;
   waypoints: AnimGroupWaypoint[];
   events: AnimGroupEvent[];
+  /** 按住式组：按门实例覆盖开门方向/角度/时长（缺省沿用 events 的 rotate 默认值）。 */
+  doorMotions?: AnimGroupDoorMotion[];
   /** User-created member groups (organizational containers; baked as sub-roots). */
   memberGroups?: AnimGroupMemberGroup[];
   /** Backend-owned: hierarchy path of the created "Animated Objects" group root. */
@@ -739,6 +759,8 @@ export interface CameraInfo {
   /** "#rrggbb" — 相机 clear 色（空洞主题下即游戏背景色）。 */
   backgroundColor: string;
   fieldOfView: number;
+  /** 主相机 MultiplayerCamera.m_minDistance（分屏单目标默认跟随距离；缺省用 5）。 */
+  minDistance?: number;
   /** 只读：主相机世界位置与欧拉角快照（度）。 */
   position: LayoutVector3;
   pitch: number;
@@ -748,6 +770,22 @@ export interface CameraInfo {
   farClip: number;
   /** 出发点位置是否被编辑过（true 时写回 X/Z，Y 永不写；缺省 false → 后端 no-op）。 */
   positionEdited?: boolean;
+  /** 多镜头分屏：按场景内本地厨师数量自动 1/2/3/4 镜头。
+   *  开启后运行时单向生效（原版镜头屏蔽、忽略「出发点位置」偏移）。 */
+  splitScreen?: boolean;
+  /** 分屏每镜头参考（按镜头 1..4 顺序）：各自相对玩家的 offset / FOV / 大小 / 显示。 */
+  splitScreenCameras?: SplitScreenCameraSetting[];
+}
+
+export interface SplitScreenCameraSetting {
+  /** false = 编辑器不画该参考，且运行时该玩家画面不生成（保留黑框）。 */
+  visible?: boolean;
+  /** 相对玩家位置：玩家 + offset*size = 相机初始位。 */
+  offset?: LayoutVector3;
+  /** <=0 沿用主相机 FOV。 */
+  fieldOfView?: number;
+  /** 相机距离倍率（1=默认，>1 更远，<1 更近）。 */
+  size: number;
 }
 
 /** Art/Lights 子树中非 prefab instance 的灯光（prefab 灯作为普通 item 往返）。 */
@@ -1276,6 +1314,8 @@ export interface OptionalPresets {
   pizzaMushroomGuids: string[];
   hotdogFillGuidsDlc08: string[];
   hotdogFillGuidsDlc11: string[];
+  /** Web 意面家族（commonW5/pasta）煎寿司鱼/虾中间产物——注册后可单独装盘上菜。 */
+  pastaToppingGuids: string[];
 }
 
 // ---------- Level admin (sets / levels / audio) ----------
@@ -1764,6 +1804,8 @@ export interface SwitchMaterialOption {
   guid: string;
   id: string;
   assetPath: string;
+  /** 引用的真实材质资产路径（.mat）；旧目录可能缺省。 */
+  materialAssetPath?: string;
   nameZh: string;
   nameEn: string;
 }

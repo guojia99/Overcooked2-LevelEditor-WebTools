@@ -118,6 +118,17 @@ export function isWaterBackgroundCat(cat: CatalogItem | undefined): boolean {
   return /水面|河流|水域|海平面|海岸|泳池水面/.test(zh);
 }
 
+/** 压力开关（含 DLC13 莲花）——从地板层迁入核心层的表面机关。 */
+const PRESSURE_SWITCH_SURFACE_IDS = new Set([
+  "PressureSwitch",
+  "dlc13_lotuspressureswitch_large",
+  "dlc13_lotuspressureswitch_small",
+]);
+
+export function isPressureSwitchSurfaceCat(cat: CatalogItem | undefined): boolean {
+  return !!cat && cat.surfaceTier === "floor" && PRESSURE_SWITCH_SURFACE_IDS.has(cat.id);
+}
+
 /** Which editor layer a catalog/scene item belongs to: core gameplay items,
  *  decor props, floor surfaces, or background content (water/sky/ambience…). */
 export function itemLayerOf(cat: CatalogItem | undefined): LayerKey {
@@ -188,6 +199,8 @@ export function itemCategoryOf(it: {
 }): VisibilityCategory {
   const cat = catalogItemForGuidOrPath(it.prefabGuid, it.prefabAssetPath);
   if (cat) {
+    // 压力开关（含莲花）按核心物品参与可见性/点选，不再归地板层。
+    if (isPressureSwitchSurfaceCat(cat)) return "items";
     if (isSurfaceItem(cat)) return cat?.surfaceTier === "background" ? "background" : "floors";
     return itemLayerOf(cat) === "background" ? "background" : itemLayerOf(cat) === "decor" ? "decor" : "items";
   }

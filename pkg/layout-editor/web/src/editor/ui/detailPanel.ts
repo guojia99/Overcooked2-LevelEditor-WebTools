@@ -62,6 +62,8 @@ import {
 } from "../servingLinks";
 import {
   stubKindOf,
+  isToggleSwitchItem,
+  isLotusPressureSwitchItem,
   defaultUtensilCapacity,
   utensilTimingKind,
   defaultUtensilTimes
@@ -208,14 +210,20 @@ export function extraStubDetailHtml(item: EditorItem): string {
       const matLookup = new Map(S.switchMaterialsCache.map((m) => [m.guid, m]));
       const activeName = matLookup.get(sw.activeMaterialGuid ?? "")?.nameZh ?? "默认";
       const inactiveName = matLookup.get(sw.inactiveMaterialGuid ?? "")?.nameZh ?? "默认";
-      return `<dt>${stubKindOf(item) === "CannonSwitch" ? "大炮开关" : "开关"}</dt><dd>初始状态：${sw.startEnabled !== false ? "开启" : "关闭"} · 未按下外观：${activeName} · 按下外观：${inactiveName}（右键直接修改）</dd>`;
+      const tint = (c: string | undefined) => c || "默认";
+      const tintTxt = isToggleSwitchItem(item) ? "" : ` · 未按下颜色：${tint(sw.idleColor)} · 按下颜色：${tint(sw.pressedColor)}`;
+      return `<dt>${stubKindOf(item) === "CannonSwitch" ? "大炮开关" : "开关"}</dt><dd>初始状态：${sw.startEnabled !== false ? "开启" : "关闭"} · 未按下外观：${activeName} · 按下外观：${inactiveName}${tintTxt}（右键直接修改）</dd>`;
     }
     case "PressureSwitch": {
       const ps = item.pressureSwitch ?? {};
       const matLookup = new Map(S.switchMaterialsCache.map((m) => [m.guid, m]));
       const occName = matLookup.get(ps.occupiedMaterialGuid ?? "")?.nameZh ?? "默认";
       const unoccName = matLookup.get(ps.unoccupiedMaterialGuid ?? "")?.nameZh ?? "默认";
-      return `<dt>压力开关</dt><dd>按下外观：${occName} · 松开外观：${unoccName}（右键直接修改）</dd>`;
+      const tint = (c: string | undefined) => c || "默认";
+      if (isLotusPressureSwitchItem(item)) {
+        return `<dt>莲花压力地板</dt><dd>未受压颜色：${tint(ps.idleColor)} · 受压颜色：${tint(ps.pressedColor)}（右键直接修改）</dd>`;
+      }
+      return `<dt>压力开关</dt><dd>按下外观：${occName} · 松开外观：${unoccName} · 未受压颜色：${tint(ps.idleColor)} · 受压颜色：${tint(ps.pressedColor)}（右键直接修改）</dd>`;
     }
     case "Terminal": {
       const targetId = item.terminal?.pilotableObjectInstanceId;

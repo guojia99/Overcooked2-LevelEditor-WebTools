@@ -12,7 +12,7 @@ import { S, CELL, isFloorLikeLayer } from "../state";
 import { floorWalkY } from "../floorHeight";
 import { canvasVoidTheme, bgThemeKeyForDeathType } from "../../floorColors";
 import { stubKindOf } from "../stubControls";
-import { collectButtonPartnerEdges, collectCoaxialGroups } from "../renderItems";
+import { collectButtonPartnerEdges, collectCoaxialGroups, collectHoldGroupEdges, isPlayerItem } from "../renderItems";
 import { ORDER } from "./constants";
 import { Scene3DCtx, disposeObject } from "./ctx";
 import { decalMaterial, parseCssColor } from "./materials";
@@ -44,7 +44,7 @@ export function rebuildOverlays(ctx: Scene3DCtx): void {
   }
   addLinks(root);
   addDirectionArrows(root);
-  if (S.showCameraFov) addCameraFrustum(root);
+  if (S.showCameraFov || S.cameraInfo?.splitScreen) addCameraFrustum(root);
   addWorkstationOverlapAlerts(root);
 
   root.traverse((o) => {
@@ -301,6 +301,15 @@ function addLinks(root: THREE.Group): void {
     root.add(arrowHead(a, b, new THREE.Color(0xf9ab00)));
   }
 
+  // 按住式压力门：压力开关 → 门（buttonLink → hold 动画组成员）
+  for (const e of collectHoldGroupEdges()) {
+    const a = linkTop(e.sourceId);
+    const b = linkTop(e.targetId);
+    if (!a || !b) continue;
+    root.add(linkLine(a, b, new THREE.Color(0xf9ab00), 0.55));
+    root.add(arrowHead(a, b, new THREE.Color(0xf9ab00)));
+  }
+
   // 控制终端 → 可驾驶目标（含摇杆组绑定：终端 → 组成员质心）
   for (const tm of S.items) {
     if (stubKindOf(tm) !== "Terminal") continue;
@@ -427,7 +436,8 @@ function addDirectionArrows(root: THREE.Group): void {
   }
 }
 
-/** 游戏相机视锥：直接沿用 2D render.ts 的 Unity 基向量数学。 */
+/** 游戏相机视锥：直接沿用 2D render.ts 的 Unity 基向量数学。
+ *  分屏模式：按玩家位置画最多 4 个镜头参考（隐藏主镜头参考）。 */
 function addCameraFrustum(root: THREE.Group): void {
   const ci = S.cameraInfo;
   if (!ci || !ci.position) return;
@@ -440,11 +450,61 @@ function addCameraFrustum(root: THREE.Group): void {
   const fwd = new THREE.Vector3(sinP * cosT, -sinT, cosP * cosT);
   const right = new THREE.Vector3(cosP, 0, -sinP);
   const up = new THREE.Vector3(sinT * sinP, cosT, sinT * cosP);
-
-  const tanVy = Math.tan((((ci.fieldOfView ?? 60) * Math.PI) / 180) / 2);
-  const tanVh = tanVy * (16 / 9);
-  const origin = new THREE.Vector3(ci.position.x, ci.position.y, ci.position.z);
+  const fov = ci.fieldOfView ?? 60;
   const far = Math.min(60, ci.farClip ?? 60);
+
+  if (ci.splitScreen) {
+    const players = S.items.filter(isPlayerItem).slice(0, 4);
+    if (players.length === 0) return;
+    if (fwd.y >= -1e-4) return;
+    const cfgs = ci.splitScreenCameras ?? [];
+    const palette = [0xe74c3c, 0x3498db, 0x2ecc71, 0xf1c40f];
+    const md = Number(ci.minDistance);
+    const baseDist = Number.isFinite(md) && md > 0 ? md : 5;
+    for (let i = 0; i < players.length; i++) {
+      const p = players[i];
+      const c = cfgs[i];
+      if (c?.visible === false) continue;
+      const raw = Number(c?.size ?? 1);
+      const size = Number.isFinite(raw) ? Math.min(4, Math.max(0.25, raw)) : 1;
+      const off = c?.offset ?? { x: 0, y: 0, z: 0 };
+      const dist = baseDist * size;
+      const origin = new THREE.Vector3(
+        p._wx - fwd.x * dist + off.x,
+        -fwd.y * dist + off.y,
+        p._wz - fwd.z * dist + off.z
+      );
+      const refFov = c?.fieldOfView && c.fieldOfView > 0 ? c.fieldOfView : fov;
+      drawFrustum3D(root, origin, fwd, right, up, refFov, splitViewAspect(players.length, i), far,
+        palette[i % palette.length]);
+    }
+    return;
+  }
+
+  const origin = new THREE.Vector3(ci.position.x, ci.position.y, ci.position.z);
+  drawFrustum3D(root, origin, fwd, right, up, fov, 16 / 9, far, 0x8ab4f8);
+}
+
+function splitViewAspect(count: number, index: number): number {
+  const screen = 16 / 9;
+  if (count === 2) return screen * 0.5;
+  if (count === 3) return index === 0 ? screen * (0.6 / 0.5) : screen;
+  return screen;
+}
+
+function drawFrustum3D(
+  root: THREE.Group,
+  origin: THREE.Vector3,
+  fwd: THREE.Vector3,
+  right: THREE.Vector3,
+  up: THREE.Vector3,
+  fov: number,
+  aspect: number,
+  far: number,
+  color: number
+): void {
+  const tanVy = Math.tan((((fov * Math.PI) / 180) / 2));
+  const tanVh = tanVy * aspect;
 
   const corners: THREE.Vector3[] = [];
   for (const sx of [-1, 1]) {
@@ -469,7 +529,7 @@ function addCameraFrustum(root: THREE.Group): void {
   const geo = new THREE.BufferGeometry().setFromPoints(pts);
   const lines = new THREE.LineSegments(
     geo,
-    new THREE.LineBasicMaterial({ color: 0x8ab4f8, transparent: true, opacity: 0.45, depthWrite: false })
+    new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.45, depthWrite: false })
   );
   lines.renderOrder = ORDER.link;
   root.add(lines);

@@ -95,21 +95,31 @@ BepInEx Chainloader 实例化插件
 | pushable | PushablePot\| tag / 组件 / `pot_01_pushable`/`pushable_object` 名字子串 | KillPlane 补丁 + 实体扫描锚点 + ticker VoidFall/HotPot |
 | hotpot | `large_pot` 名字子串（镜像运行时 IsLargePot） | ticker HotPot |
 | timing | UtensilTiming\| tag / 组件 | UtensilTiming 补丁组 + ticker 分支 |
-| switch | TimedSwitch\|/SwitchReenable\| tag / 组件 | 自愈 + ticker 压相 |
+| switch | TimedSwitch\|/SwitchReenable\|/SwitchTint\| tag / 组件 | 自愈 + ticker 压相（SwitchTint 为自治 MPB 乘法染色，保留原贴图与原材质金属度/高光，不计 ticker 票） |
 | startvisual | PseudoPrefabSwitchStub.startEnabled==false | HealSwitchStartVisuals |
 | blrelay | BLRelay\| tag / ButtonLogicRelay 组件 | 自愈（组件自治） |
 | coaxial | Coaxial\| tag / CoaxialButtonGroup 组件 | 自愈（同轴按钮组，组件自治） |
 | randomtrigger | RandomTrigger\| tag / RandomTrigger 组件 | 自愈（随机触发器，组件自治，不计 ticker 票） |
 | animgrid | Design/Animated Objects 有组根 | HealAnimGridMembers |
-| conveyor | ConveyorDirectionSync\| tag / 组件 | 自愈 |
+| conveyor | ConveyorDirectionSync\| / ConveyorServe\| tag / 组件 | 自愈（含可上菜传送带的末端放菜与非盘子无效上菜补丁） |
 | speedctl | SpeedCtl\| tag / ButtonSpeedControl 组件 | 自愈（按钮控速：步带 m_speed+材质 / 传送带 m_conveySpeed 循环切档，组件自治） |
 | spawnerbatch | SpawnerBatch\| tag / ButtonSpawnerBatch 组件 | 自愈（生成器按钮批次：每按一批 N 个、批次完成后冷却，组件自治；仅服务端驱动生成） |
-| camera / travelator / teleportal / rat / worldmap | 对应 tag / 组件 | 自愈（camera 加注册+按需补丁） |
+| camera / travelator / teleportal / rat / worldmap | 对应 tag / 组件 | 自愈（camera：`CameraOffset\|` 注册+按需补丁；`SplitScreen\|` 分屏驱动：原版镜头屏蔽、按本地厨师数量建 1/2/3/4 镜头、单目标复用 MultiplayerCamera 运镜，互斥 CameraOffset，组件自治不计 ticker 票） |
 | terminal | Terminal.m_pilotableObject==null | ticker TerminalGuard |
 | cannon | SetupCannonStub 根 | ticker CannonGuard + 大炮补丁 |
 | stub | 未知 CustomStub 组件兜底（导出告警） | 核心（保底激活） |
 
 > **新增 stub 类型四处同步**：① `CustomStubTagPrefixes`、② `StubTagFeatureMap`、③ `StubComponentFeatureMap`（均 LayoutEditorSetExporter.cs）、④ 运行时特征消费方（EntryPoint.ProcessScene / StubTicker）。
+
+### 3.3.1 多镜头分屏（SplitScreenCamera，4.1.0）
+
+- 载体：相机 **Camera 子物体**上的 `SplitScreen|2|C0:ox,oy,oz,fov,size,vis|C1:...`（与根节点 `CameraOffset|` 分离，避免同一 tag 字符串互斥覆盖）。每镜头 offset 相对玩家位置，FOV<=0 沿用主相机，size=距离倍率，vis=false=编辑器不画参考且运行时该玩家画面不生成（保留黑框）。
+- 触发：`EntryPoint.HealScene` → `SplitScreenCamera.ActivateFromTag` → 场景根 `SplitScreenCameras` 驱动。
+- 行为：原版相机保留 `Camera`/`AudioListener`/`MainCamera`，`clearFlags=Nothing`、`cullingMask=0`、`depth` 放到分屏相机之后（屏蔽世界画面，`Camera.main`/音频不变；HUD Canvas 转 Overlay）；按本地 `PlayerIDProvider` 数量克隆模板相机（1/2/3/4 镜头），每个相机复用原版 `MultiplayerCamera`，只把 `m_avatars` 限定为单个厨师，`GetIdealLocation` 前后缀把 `m_basePos` 钉在该厨师位置（始终居中）并按 `m_minDistance` 保持主相机默认距离/高度；可选 offset/FOV/size 微调。目标销毁时用最后位置兜底并跳过原方法，避免 MissingReference；`SplitScreen|` 激活时 `CameraAuthoredOffset` 完全跳过。
+- 布局：2P 左右；3P 上方 60% 宽居中 + 下方各 50%（上方左右黑边，背景相机补黑）；4P 2×2。框线用 OnGUI 屏幕空间绘制（玩家固定色），HUD 保持全屏（销毁 `CameraCanvasUpdater`，ScreenSpaceCamera Canvas 重指全屏 UI 相机）。
+- 编辑器参考：分屏模式下画布按场景玩家位置绘制最多 4 个彩色镜头参考，主镜头参考隐藏；相机弹窗隐藏主镜头「出发点位置」，每镜头独立参考（offset/FOV/size/visible）直接写入 tag。
+- 性能/门控：官方关卡 `s_targets` 为空时前缀首行放行；驱动低频轮询 `PlayerIDProvider.s_AllProviders`，不做每帧 `FindObjectsOfType`；tag 为自治组件，不计 ticker 票。
+- 单向：运行时无切回单镜头入口；重新进关仍按 tag 生效。
 
 ### 3.4 日志体系（联机排障）
 

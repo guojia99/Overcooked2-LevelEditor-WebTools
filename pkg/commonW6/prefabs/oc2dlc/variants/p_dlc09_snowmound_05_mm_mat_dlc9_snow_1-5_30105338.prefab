@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114096038827637246}
   - component: {fileID: 114967938430519454}
   m_Layer: 0
-  m_Name: p_dlc09_snowmound_05_mm_mat_dlc9_snow_1-5_30105338
+  m_Name: p_dlc09_snowmound_05_mm_mat_dlc9_snow_1-5
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -316,7 +316,7 @@
       "nameZh": "黄瓜寿司",
       "nameEn": "Cucumber Sushi",
       "assetPath": "Assets/common01/food/Recipes/Sushi_Cucumber_SO.asset",
-      "cookingStep": "Steamer",
+      "cookingStep": "Pot",
       "platingStep": "",
       "ingredients": [
         "SeaweedSO",
@@ -340,10 +340,10 @@
           ]
         },
         {
-          "step": "Steamer",
+          "step": "Pot",
           "utensils": [
             "Cooker",
-            "Steamer"
+            "Pot"
           ],
           "ingredients": [
             "SushiRiceSO"
@@ -830,7 +830,7 @@
       "nameZh": "什锦寿司",
       "nameEn": "Sushi All",
       "assetPath": "Assets/common01/food/Recipes/Sushi_All_SO.asset",
-      "cookingStep": "Steamer",
+      "cookingStep": "Pot",
       "platingStep": "",
       "ingredients": [
         "SeaweedSO",
@@ -856,10 +856,10 @@
           ]
         },
         {
-          "step": "Steamer",
+          "step": "Pot",
           "utensils": [
             "Cooker",
-            "Steamer"
+            "Pot"
           ],
           "ingredients": [
             "SushiRiceSO"
@@ -1200,7 +1200,7 @@
       "nameZh": "鱼生寿司",
       "nameEn": "Sushi Fish",
       "assetPath": "Assets/common01/food/Recipes/Sushi_Fish_SO.asset",
-      "cookingStep": "Steamer",
+      "cookingStep": "Pot",
       "platingStep": "",
       "ingredients": [
         "SeaweedSO",
@@ -1224,10 +1224,10 @@
           ]
         },
         {
-          "step": "Steamer",
+          "step": "Pot",
           "utensils": [
             "Cooker",
-            "Steamer"
+            "Pot"
           ],
           "ingredients": [
             "SushiRiceSO"
@@ -1531,17 +1531,30 @@
       "nameZh": "BoiledPasta",
       "nameEn": "Boiled Pasta",
       "assetPath": "Assets/common03/food/Recipes_Patch/BoiledPasta.asset",
-      "cookingStep": "",
+      "cookingStep": "Pot",
       "platingStep": "",
-      "ingredients": [],
-      "ingredientCount": 0,
-      "cookingStepCount": 0,
+      "ingredients": [
+        "PastaSO"
+      ],
+      "ingredientCount": 1,
+      "cookingStepCount": 1,
       "score": 0,
       "isCustom": false,
       "group": "core",
       "type": "pasta",
       "intermediate": true,
-      "cookingGroups": [],
+      "cookingGroups": [
+        {
+          "step": "Pot",
+          "utensils": [
+            "Cooker",
+            "Pot"
+          ],
+          "ingredients": [
+            "PastaSO"
+          ]
+        }
+      ],
       "icon": false
     },
     {

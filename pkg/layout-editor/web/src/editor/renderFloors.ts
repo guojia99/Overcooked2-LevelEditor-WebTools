@@ -9,7 +9,7 @@ import {
   EditorFloor
 } from "./state";
 import { dom } from "./dom";
-import { categoryVisible, catalogItemForGuidOrPath } from "./catalog";
+import { categoryVisible, catalogItemForGuidOrPath, isPressureSwitchSurfaceCat } from "./catalog";
 import { getFloorImage } from "./iconCaches";
 import { drawLabelInBox } from "./labels";
 import { drawItem } from "./renderItems";
@@ -470,7 +470,9 @@ export function drawSurfaceItems(
     .filter((it) => itemInHeightFilter(it) || isSelected(it._editorKey))
     .filter((it) => {
       const cat = catalogItemForGuidOrPath(it.prefabGuid, it.prefabAssetPath);
-      return (cat?.surfaceTier ?? "floor") === tier;
+      if ((cat?.surfaceTier ?? "floor") !== tier) return false;
+      // 压力开关（表面机关）已归核心层，不在地板/背景层绘制。
+      return !isPressureSwitchSurfaceCat(cat);
     })
     .sort(
       (a, b) =>

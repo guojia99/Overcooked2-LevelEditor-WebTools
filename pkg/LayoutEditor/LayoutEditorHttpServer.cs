@@ -349,6 +349,8 @@ public class LayoutEditorHttpServer
                 rel = "counter-skins/icons/" + path.Substring("/api/counter-skins/icon/".Length);
             else if (path.StartsWith("/api/counter-skins/3d/", StringComparison.Ordinal))
                 rel = "counter-skins/" + path.Substring("/api/counter-skins/3d/".Length);
+            else if (path.StartsWith("/api/web-assets/food-icons/", StringComparison.Ordinal))
+                rel = "food-icons/" + path.Substring("/api/web-assets/food-icons/".Length);
             if (rel == null || rel.Length == 0)
                 return false;
 
@@ -2411,13 +2413,6 @@ public class LayoutEditorHttpServer
 
     /// <summary>写回强校验：按钮控速档位 ≥2 且全非 0；生成器批次参数归一
     /// （batchCount 1~50、triggerTime>0、buttonCooldown≥0）。返回 null=通过。</summary>
-    private static float[] DefaultSpeedControlLevels(float baseSpeed)
-    {
-        if (Mathf.Approximately(baseSpeed, 0f))
-            return new[] { 1f, 2f };
-        return new[] { baseSpeed, baseSpeed * 2f };
-    }
-
     private static string ValidateSpeedControlConfigs(LayoutDocumentDto doc)
     {
         if (doc == null || doc.items == null)
@@ -2447,15 +2442,11 @@ public class LayoutEditorHttpServer
             }
             if (sc != null && sc.enabled)
             {
-                if (sc.levels == null || sc.levels.Length < 2)
+                if (sc.levels == null || sc.levels.Length == 0)
                 {
-                    // 与前端 serialize 一致：启用但档位未落盘时按基准速度补默认两档，避免
-                    // 面板已展示档位、模型仍为 null/[] 时误阻断写回。
-                    var baseSpd = it.travelator != null ? it.travelator.speed
-                        : (it.conveyor != null ? it.conveyor.conveySpeed : 0.5f);
-                    sc.levels = DefaultSpeedControlLevels(baseSpd);
+                    sc.enabled = false;
                 }
-                if (sc.levels == null || sc.levels.Length < 2)
+                else if (sc.levels.Length < 2)
                 {
                     problems.Add(label + "「按钮控速」至少需要 2 个速度档位");
                 }
@@ -2933,7 +2924,7 @@ public class LayoutEditorHttpServer
             WriteJson(response, 200, "{\"ok\":true}");
     }
 
-    /// <summary>/api/web-assets/manifest：聚合 audio / counter-skins / decor 导出可用性与数量。
+    /// <summary>/api/web-assets/manifest：聚合 audio / counter-skins / decor / food-icons 导出可用性与数量。
     ///  只读 exports/ 文件系统；给编辑器 Web 与外部 Web 前端统一的发现入口。</summary>
     private static WebAssetsManifestDto BuildWebAssetsManifest()
     {
@@ -3000,6 +2991,28 @@ public class LayoutEditorHttpServer
                     dto.decor.count = Directory.GetFiles(Path.Combine(decorRoot, "front"), "*.png").Length;
                 if (Directory.Exists(Path.Combine(decorRoot, "back")))
                     dto.decor.backCount = Directory.GetFiles(Path.Combine(decorRoot, "back"), "*.png").Length;
+            }
+            catch { }
+        }
+
+        string foodRoot = Path.Combine(root, "food-icons");
+        string foodManifest = Path.Combine(foodRoot, "manifest.json");
+        dto.foodIcons = new WebAssetCategoryDto();
+        dto.foodIcons.manifest = "/api/web-assets/food-icons/manifest.json";
+        dto.foodIcons.baseUrl = "/api/web-assets/food-icons/";
+        dto.foodIcons.available = File.Exists(foodManifest);
+        if (dto.foodIcons.available)
+        {
+            dto.foodIcons.version = File.GetLastWriteTimeUtc(foodManifest).Ticks.ToString("x");
+            versionTicks = Math.Max(versionTicks, File.GetLastWriteTimeUtc(foodManifest).Ticks);
+            try
+            {
+                string recDir = Path.Combine(foodRoot, "recipes");
+                string ingDir = Path.Combine(foodRoot, "ingredients");
+                if (Directory.Exists(recDir))
+                    dto.foodIcons.count = Directory.GetFiles(recDir, "*.png").Length;
+                if (Directory.Exists(ingDir))
+                    dto.foodIcons.iconCount = Directory.GetFiles(ingDir, "*.png").Length;
             }
             catch { }
         }

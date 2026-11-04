@@ -344,6 +344,15 @@ public static class SceneLayoutApplier
                 RemapNewIds(group.itemInstanceIds, createdObjects);
                 RemapNewIds(group.floorInstanceIds, createdObjects);
                 RemapNewIds(group.objectInstanceIds, createdObjects);
+                if (group.doorMotions != null)
+                {
+                    var motionIds = new string[group.doorMotions.Length];
+                    for (int mi = 0; mi < group.doorMotions.Length; mi++)
+                        motionIds[mi] = group.doorMotions[mi] == null ? null : group.doorMotions[mi].instanceId;
+                    RemapNewIds(motionIds, createdObjects);
+                    for (int mi = 0; mi < group.doorMotions.Length; mi++)
+                        if (group.doorMotions[mi] != null) group.doorMotions[mi].instanceId = motionIds[mi];
+                }
             }
 
             // 摇杆操控组（groupKind="pilot"）：原版 PilotMovement 刚体驾驶烘焙。
@@ -474,7 +483,54 @@ public static class SceneLayoutApplier
             LayoutEditorLog.LogWarning("[PartLevel] 转场烘焙失败（场景物件已写回）：" + e.Message);
         }
 
-        LayoutEditorPseudoReload.EnsurePrepareForBuilding();
+        // 开关 / 压力地板调色：在全部重挂（动画组/分 P）之后按最终路径重建 helper。
+        // 颜色存 helper 组件 + SwitchTint| tag；运行时/编辑器预览由 CustomStub.SwitchTint 消费。
+        if (only == null || only == "items")
+        {
+            var liveTintPaths = new HashSet<string>();
+            for (int i = 0; i < document.items.Length; i++)
+            {
+                var item = document.items[i];
+                if (item == null) continue;
+                var kindName = item.stubKind;
+                if (string.IsNullOrEmpty(kindName))
+                {
+                    if (item.pressureSwitch != null) kindName = "PressureSwitch";
+                    else if (item.switchStub != null) kindName = "Switch";
+                }
+                if (kindName != "Switch" && kindName != "CannonSwitch" && kindName != "PressureSwitch")
+                    continue;
+                var tintGo = ResolveItemGo(item, createdObjects);
+                if (tintGo == null) continue;
+
+                string idleColor = null;
+                string pressedColor = null;
+                if (kindName == "PressureSwitch" && item.pressureSwitch != null)
+                {
+                    idleColor = item.pressureSwitch.idleColor;
+                    pressedColor = item.pressureSwitch.pressedColor;
+                }
+                else if (item.switchStub != null)
+                {
+                    idleColor = item.switchStub.idleColor;
+                    pressedColor = item.switchStub.pressedColor;
+                }
+                LayoutEditorStubIO.ApplySwitchTint(tintGo, idleColor, pressedColor);
+                if (!string.IsNullOrEmpty(idleColor) || !string.IsNullOrEmpty(pressedColor))
+                    liveTintPaths.Add(LayoutEditorHierarchy.GetHierarchyPath(tintGo.transform));
+            }
+            if (only == null)
+                LayoutEditorStubIO.CleanupSwitchTintHelpers(liveTintPaths);
+            LayoutEditorStubIO.InvalidateSwitchTintCache();
+        }
+
+        var steamerLevelInfo = LayoutEditorLevelInfoResolver.ResolveForScene(document.sceneAssetPath);
+        if (steamerLevelInfo != null)
+            LayoutEditorSteamerFill.SyncSteamerIngredients(steamerLevelInfo);
+        LayoutEditorPseudoReload.ForcePrepareForBuildingForExport();
+        var removedMissingScripts = LayoutEditorMissingScriptCleanup.RemoveMissingScripts(scene);
+        if (removedMissingScripts > 0)
+            LayoutEditorLog.Log("[Applier] 清理 Missing Script 组件: " + removedMissingScripts);
         EditorSceneManager.MarkSceneDirty(scene);
         if (EditorSceneManager.SaveScene(scene))
             LayoutEditorLayoutMigrations.CommitPending();
@@ -640,6 +696,55 @@ public static class SceneLayoutApplier
                 LayoutEditorStubIO.SetCameraOffsetTag(rig.gameObject, pos.x, pos.z);
             }
             changed = true;
+        }
+        // 多镜头分屏 tag：与当前位置编辑解耦，每次写回都按 doc 状态同步。
+        // 优先挂在 Camera 子物体（相机根上的 CameraOffset| 与 SplitScreen| 共用
+        // 同一个 SpecificPseudoPrefabTag，同物体会互相覆盖）；同时清理旧版可能
+        // 落在根节点的 SplitScreen|。
+        var rigRoot = SceneLayoutExporter.FindCameraRigRoot(cam);
+        LayoutEditorStubIO.ClearSplitScreenTag(cam.gameObject);
+        if (rigRoot != null && rigRoot != cam.gameObject)
+            LayoutEditorStubIO.ClearSplitScreenTag(rigRoot);
+        if (info.splitScreen)
+        {
+            var hasAnyOffset = false;
+            if (info.splitScreenCameras != null)
+            {
+                for (int i = 0; i < info.splitScreenCameras.Length; i++)
+                {
+                    if (info.splitScreenCameras[i] != null && info.splitScreenCameras[i].offset != null)
+                    {
+                        hasAnyOffset = true;
+                        break;
+                    }
+                }
+            }
+            if (!hasAnyOffset)
+            {
+                // 没有逐镜头 offset（旧文档/MCP 精简写回）：只写 SplitScreen|1，
+                // 让运行时按“主相机相对玩家平均位置”生成默认偏移。
+                LayoutEditorStubIO.SetSplitScreenTag(cam.gameObject);
+            }
+            else
+            {
+                var cameras = new SplitScreenCameraDto[4];
+                for (int i = 0; i < cameras.Length; i++)
+                {
+                    var src = info.splitScreenCameras != null && i < info.splitScreenCameras.Length
+                        ? info.splitScreenCameras[i]
+                        : null;
+                    cameras[i] = new SplitScreenCameraDto
+                    {
+                        visible = src == null || src.visible,
+                        offset = src != null && src.offset != null
+                            ? new LayoutVector3 { x = src.offset.x, y = src.offset.y, z = src.offset.z }
+                            : new LayoutVector3(),
+                        fieldOfView = src != null ? src.fieldOfView : 0f,
+                        size = src != null && src.size > 0f ? Mathf.Clamp(src.size, 0.25f, 4f) : 1f
+                    };
+                }
+                LayoutEditorStubIO.SetSplitScreenTag(cam.gameObject, cameras);
+            }
         }
         if (changed)
             EditorUtility.SetDirty(cam);

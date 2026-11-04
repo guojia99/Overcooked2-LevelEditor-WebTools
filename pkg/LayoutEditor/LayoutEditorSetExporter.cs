@@ -122,9 +122,9 @@ public static class LayoutEditorSetExporter
     private static readonly string[] CustomStubTagPrefixes =
     {
         "RandomCrate|", "WebBackpack|", "WebKillerGhost|", "TimedSwitch|", "PushablePot|", "SwitchReenable|", "WorldMapDressing|",
-        "UtensilTiming|", "CameraOffset|", "TravelatorReverse|", "TeleportalExitOnly|", "RatHeist|",
-        "ConveyorDirectionSync|", "BLRelay|", "Coaxial|", "RandomTrigger|", "SpeedCtl|", "SpawnerBatch|", "Kettle|",
-        "DirtyTeacup|",
+        "UtensilTiming|", "CameraOffset|", "SplitScreen|", "TravelatorReverse|", "TeleportalExitOnly|", "RatHeist|",
+        "ConveyorDirectionSync|", "ConveyorServe|", "BLRelay|", "Coaxial|", "RandomTrigger|", "SpeedCtl|", "SpawnerBatch|", "Kettle|",
+        "DirtyTeacup|", "SwitchTint|",
     };
 
     /// <summary>tag 前缀 → 清单特征（v3.5.0 stub_levels.txt 数据源之一）。
@@ -142,10 +142,12 @@ public static class LayoutEditorSetExporter
         { "WorldMapDressing|", "worldmap" },
         { "UtensilTiming|", "timing" },
         { "CameraOffset|", "camera" },
+        { "SplitScreen|", "camera" },
         { "TravelatorReverse|", "travelator" },
         { "TeleportalExitOnly|", "teleportal" },
         { "RatHeist|", "rat" },
         { "ConveyorDirectionSync|", "conveyor" },
+        { "ConveyorServe|", "conveyor" },
         { "BLRelay|", "blrelay" },
         { "Coaxial|", "coaxial" },
         { "RandomTrigger|", "randomtrigger" },
@@ -153,6 +155,7 @@ public static class LayoutEditorSetExporter
         { "SpawnerBatch|", "spawnerbatch" },
         { "Kettle|", "kettle" },
         { "DirtyTeacup|", "stub" },
+        { "SwitchTint|", "switch" },
     };
 
     /// <summary>CustomStub 命名空间组件名 → 清单特征（双通道兜底：tag 缺失/旧格式时
@@ -172,6 +175,7 @@ public static class LayoutEditorSetExporter
         { "TeleportalExitOnly", "teleportal" },
         { "RatHeist", "rat" },
         { "ConveyorDirectionSync", "conveyor" },
+        { "ConveyorServe", "conveyor" },
         { "ButtonLogicRelay", "blrelay" },
         { "CoaxialButtonGroup", "coaxial" },
         { "RandomTrigger", "randomtrigger" },
@@ -181,6 +185,8 @@ public static class LayoutEditorSetExporter
         { "SwitchStartVisual", "startvisual" },
         { "AnimPilotFloorMarker", "terminal" },
         { "Kettle", "kettle" },
+        // 开关/压力地板调色（MPB 预览 + Play/真机状态切换）。
+        { "SwitchTint", "switch" },
         // 完整 prefab（common04 克隆）CleanPlateStack 的服务端补盘/编辑预览初始化。
         // 不需要独立运行时特征；归入 stub 核心即可。
         { "CleanPlateStackSeeder", "stub" },
@@ -996,6 +1002,7 @@ public static class LayoutEditorSetExporter
                 }
                 if (scene.isDirty || retagged > 0)
                 {
+                    LayoutEditorMissingScriptCleanup.RemoveMissingScripts(scene);
                     if (!EditorSceneManager.SaveScene(scene))
                         throw new Exception("SaveScene 失败（Console 可能有 Could not extract GUID / Broken PPtr）："
                             + scenePath);
@@ -1692,14 +1699,6 @@ public static class LayoutEditorSetExporter
                 Debug.LogWarning("[SetExporter] 未找到 commonw2 bundle（" + commonW2Abs + "）。");
         }
 
-        // 上游 common04：自定义食材/锅具/工作台模板与 supplies。存在构建产物即分发。
-        var common04Abs = AbsPath(BundlesRoot) + "/common04";
-        if (File.Exists(common04Abs))
-            entries.Add(new LayoutEditorZipWriter.ZipEntrySource(depDir + "common04", common04Abs));
-        else if (AssetDatabase.IsValidFolder("Assets/common04"))
-            Debug.LogWarning("[SetExporter] 未找到 common04 bundle（" + common04Abs
-                + "）——自定义食材/锅具/工作台的 supplies 可能缺失。");
-
         // commonW3 及以后为可选扩展包：只要构建产物存在就自动分发，Loader 会按数字顺序读取。
         try
         {
@@ -1804,11 +1803,6 @@ public static class LayoutEditorSetExporter
         AddManifestEntry(entries, depDir + "commonW2",
             "汉堡菜谱素材（依赖包通用，无条件携带；导出时删旧重打）",
             "ok", File.Exists(w2Abs) ? new FileInfo(w2Abs).Length : 0);
-        var c04Abs = AbsPath(BundlesRoot) + "/common04";
-        AddManifestEntry(entries, depDir + "common04",
-            "上游通用素材（自定义食材/锅具/工作台模板与 supplies；存在构建产物即携带）",
-            File.Exists(c04Abs) ? "ok" : "missing",
-            File.Exists(c04Abs) ? new FileInfo(c04Abs).Length : 0);
 
         // commonW3+：按源目录 Assets/commonW<数字> 判定（存在即导出时重建并携带）。
         try

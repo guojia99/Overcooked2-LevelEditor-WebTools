@@ -254,9 +254,14 @@ public static class LayoutEditorAllIngredientsFill
     {
         if (recipe == null || !seen.Add(recipe))
             return;
-        if (recipe.compositionSOs == null)
-            return;
-        foreach (ScriptableObject comp in recipe.compositionSOs)
+        var entries = new List<ScriptableObject>();
+        if (recipe.compositionSOs != null)
+            entries.AddRange(recipe.compositionSOs);
+        var optionalBurger = recipe as CustomRecipeOptionalBurgerSO;
+        var optionalPizza = recipe as CustomRecipeOptionalPizzaSO;
+        if (optionalBurger == null && optionalPizza == null && recipe.optionalSOs != null)
+            entries.AddRange(recipe.optionalSOs);
+        foreach (ScriptableObject comp in entries)
         {
             if (comp == null)
                 continue;

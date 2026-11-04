@@ -48,8 +48,9 @@ export function linkBindingGroup(groupName: string): ButtonLink | undefined {
   return S.buttonLinks.find((l) => l.groupNames.includes(groupName));
 }
 
-/** 互锁模式下单个按钮最多绑定的动画组数（两组同时启动、全部完成后翻转）。 */
-export const PAIR_GROUP_LIMIT = 2;
+/** 互锁模式下单个按钮最多绑定的动画组数（同时启动、完成后翻转）。
+ *  与 ButtonLinkBakery.PairGroupLimit 对齐；传送带阵 ×4 需要 4。 */
+export const PAIR_GROUP_LIMIT = 4;
 
 /**
  * 清理失效联动：源物品被删、动画组被删/改名、配对另一方缺失。
@@ -196,10 +197,15 @@ export function buttonLinkSummaryText(item: EditorItem): string {
   if (!link) return "— 未配置 —";
   const mode = buttonPartnerMode(item);
   const n = link.groupNames.length;
+  const hold = link.groupNames.some(
+    (gname) => S.animControls.find((g) => g.displayName === gname)?.advanceMode === "hold"
+  );
   const parts: string[] = [];
   if (mode === "conjugate") parts.push("共轭配对");
   else if (mode === "interlock") parts.push("互锁配对");
-  if (n > 0) {
+  if (hold && n === 1) {
+    parts.push("按住式 · 站上开 / 离开关");
+  } else if (n > 0) {
     parts.push(
       `已绑 ${n} 组 · ${link.simultaneous ? "同按" : link.sequenceMode === "pingpong" ? "往返" : "循环"}`
     );
@@ -285,10 +291,12 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
         .map((n, i) => {
           const g = S.animControls.find((gr) => gr.displayName === n);
           const press = g?.advanceMode === "press";
+          const hold = g?.advanceMode === "hold";
           const advSel = g
-            ? `<select class="trig-select blm-adv" data-bl-adv="${escHtml(n)}" title="整组连播：一按播完整组（组内事件按时间轴连播）&#10;逐节点：一按只推进一个事件节点，相同开始时间的事件并行，末尾环回第一个节点&#10;单个旋转事件自动往返：按一次转过去、再按转回">
-                <option value="timeline"${press ? "" : " selected"}>▶ 整组连播</option>
+            ? `<select class="trig-select blm-adv" data-bl-adv="${escHtml(n)}" title="整组连播：一按播完整组（组内事件按时间轴连播）&#10;逐节点：一按只推进一个事件节点，相同开始时间的事件并行，末尾环回第一个节点&#10;按住式：压力开关站上/离开直接驱动组根 Animator（仅两个 rotate 事件）">
+                <option value="timeline"${!press && !hold ? " selected" : ""}>▶ 整组连播</option>
                 <option value="press"${press ? " selected" : ""}>⏭ 逐节点</option>
+                <option value="hold"${hold ? " selected" : ""}>🦶 按住式</option>
               </select>`
             : "";
           return `<div class="trig-step"><span class="trig-step-idx">${i + 1}</span>
@@ -304,8 +312,18 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
         sel.addEventListener("change", () => {
           const g = S.animControls.find((gr) => gr.displayName === sel.dataset.blAdv);
           if (!g) return;
-          const v = sel.value === "press" ? "press" : "timeline";
+          const v = sel.value === "press" ? "press" : sel.value === "hold" ? "hold" : "timeline";
           if (g.advanceMode === v || (v === "timeline" && !g.advanceMode)) return;
+          if (v === "hold" && stubKindOf(item) !== "PressureSwitch") {
+            setStatus("按住式动画组只能绑定压力开关", false);
+            refresh();
+            return;
+          }
+          if (v === "hold" && (link()?.groupNames.length ?? 0) > 1) {
+            setStatus("按住式动画组只能一对一绑定，请先移除其它动画组", false);
+            refresh();
+            return;
+          }
           pushHistory();
           g.advanceMode = v;
           if (v === "press") {
@@ -316,6 +334,15 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
               evt.pingpong = false;
             }
             setStatus(`「${g.displayName}」已切换为逐节点：每按一次推进一个事件节点（相同开始时间并行）`);
+          } else if (v === "hold") {
+            g.loop = false;
+            g.waitForFinished = false;
+            g.triggerMode = "button";
+            for (const evt of g.events) {
+              evt.loop = false;
+              evt.pingpong = false;
+            }
+            setStatus(`「${g.displayName}」已切换为按住式：需要两个 rotate 事件，且只能绑定压力开关`);
           } else {
             setStatus(`「${g.displayName}」已切换为整组连播：每按一次播完整组`);
           }
@@ -377,13 +404,15 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
     // 添加处理里已自动打标）；特效组（shake/flash）宿主在相机/灯、不在
     // Design/Animated Objects 下，无法走 ButtonLink 绑定，排除；摇杆组
     //（pilot）是玩家驾驶刚体、无 TriggerQueue 队列语义，同样排除。
+    const sourceIsPressure = stubKindOf(item) === "PressureSwitch";
     const opt = S.animControls
       .filter((g) => g.groupKind !== "fx" && g.groupKind !== "pilot")
+      .filter((g) => sourceIsPressure || g.advanceMode !== "hold")
       .filter((g) => !mine.has(g.displayName))
       .map((g) => {
         const boundBy = linkBindingGroup(g.displayName);
         // 互锁共享环：组被【本对 partner】绑定时允许本侧同绑（ARun/BRun 分发
-        // 同一组、交替推进，如「传送带阵 ×4 + 互锁双按钮」）。
+        // 同一组集合、交替推进，如「传送带阵 ×4 + 互锁双按钮」每站一组）。
         const partnerShared = !!(l?.pairId && boundBy && boundBy.pairId === l.pairId);
         const disabled = (boundBy && !partnerShared) || limitReached ? "disabled" : "";
         const suffix = boundBy
@@ -392,9 +421,11 @@ export function renderButtonLinkSection(host: HTMLElement, item: EditorItem, opt
             : "（已被其他按钮绑定）"
           : limitReached
             ? `（互锁模式最多 ${PAIR_GROUP_LIMIT} 组）`
-            : g.triggerMode === "button"
-              ? ""
-              : "（自动组 · 绑定后转为按钮触发）";
+            : g.advanceMode === "hold"
+              ? "（按住式 · 仅压力开关）"
+              : g.triggerMode === "button"
+                ? ""
+                : "（自动组 · 绑定后转为按钮触发）";
         return `<option value="${escHtml(g.displayName)}" ${disabled}>${escHtml(g.displayName)}${suffix}</option>`;
       })
       .join("");

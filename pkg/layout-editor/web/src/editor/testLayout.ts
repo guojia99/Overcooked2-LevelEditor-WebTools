@@ -41,10 +41,10 @@ const SWITCH_COMBOS = [
 ];
 
 /** 测试布局额外使用的组合（传送门互配，避免裸传送门无出口 NRE）。 */
-const TEST_COMBOS = ["teleportal_pair"];
+const TEST_COMBOS = ["teleportal_pair", "pressure_door_hold"];
 
 /** 组合自动带出、不再单独放置的道具。 */
-const COMBO_AUTO_PARTS = new Set(["Switch"]);
+const COMBO_AUTO_PARTS = new Set(["Switch", "PressureSwitch", "p_dlc5_door_01"]);
 
 /** 不参与平铺的道具（食材箱单独处理；Player/空气墙不可平铺）。 */
 const SKIP_IDS = new Set(["Player", "AirWall", "Dispenser", "Backpack"]);
@@ -209,6 +209,8 @@ export async function runTestLayout(): Promise<void> {
     roll: S.cameraInfo?.roll ?? 0,
     nearClip: S.cameraInfo?.nearClip ?? 0.3,
     farClip: S.cameraInfo?.farClip ?? 1000,
+    splitScreen: S.cameraInfo?.splitScreen ?? false,
+    splitScreenCameras: S.cameraInfo?.splitScreenCameras,
   };
   if (!S.cameraPosOrigin) S.cameraPosOrigin = { x: 0, y: 0, z: 0 };
 

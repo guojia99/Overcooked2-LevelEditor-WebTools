@@ -4,6 +4,321 @@
   "itemCount": 200,
   "items": [
     {
+      "id": "exterior_road_crossing_01",
+      "guid": "cc5a9ddc2f27c7645917e9da46164756",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/exterior_road_crossing_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 5.329070200563396e-16
+      },
+      "height": 0,
+      "layoutTier": "decor",
+      "nameZh": "人行横道",
+      "nameEn": "exterior road crossing 1",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
+    {
+      "id": "exterior_road_stop_01",
+      "guid": "65a84de13f119124ab1b70351c1dc3a2",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/exterior_road_stop_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 5.329070200563396e-16
+      },
+      "height": 0,
+      "layoutTier": "decor",
+      "nameZh": "停车标线",
+      "nameEn": "exterior road stop 1",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
+    {
+      "id": "exterior_road_yellow_box_01",
+      "guid": "ff7ac266ec34d5f4aa1d8d5cd3ca76d4",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/exterior_road_yellow_box_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 5.329070200563396e-16
+      },
+      "height": 0,
+      "layoutTier": "decor",
+      "nameZh": "黄色禁停区",
+      "nameEn": "exterior road yellow box 1",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
+    {
+      "id": "exterior_street_bench",
+      "guid": "c6875c7771c813e43b068aaeac3a0b05",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/exterior_street_bench.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1,
+        "sizeY": 0.8716381192207336
+      },
+      "height": 0.872,
+      "baseY": -0.035,
+      "layoutTier": "decor",
+      "nameZh": "室外街道长椅",
+      "nameEn": "exterior street bench",
+      "typeKind": "vegetation",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "exterior_tree_green_01",
+      "guid": "1a9e18f400100cc4a8b49504edd737d2",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/exterior_tree_green_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 3,
+        "sizeY": 3.2490851879119873
+      },
+      "height": 3.249,
+      "baseY": -0.018,
+      "layoutTier": "decor",
+      "nameZh": "绿树",
+      "nameEn": "exterior tree green 1",
+      "typeKind": "vegetation",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "exterior_tree_pink_01",
+      "guid": "43aaaad2a82edc24ca7df3af785f44f6",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/exterior_tree_pink_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 3,
+        "sizeY": 3.2490851879119873
+      },
+      "height": 3.249,
+      "baseY": -0.018,
+      "layoutTier": "decor",
+      "nameZh": "粉花树",
+      "nameEn": "exterior tree pink 1",
+      "typeKind": "vegetation",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "far water edge_99bbe28d",
+      "guid": "99bbe28dc881137ec2bfbd8d497449e8",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/dynamic/far water edge_99bbe28d.prefab",
+      "category": "art",
+      "theme": "dynamic",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "far water edge_99bbe28d",
+      "nameEn": "far water edge_99bbe28d",
+      "typeKind": "water",
+      "usage": "waterscape",
+      "icon": false
+    },
+    {
+      "id": "fence_pillar_01_3872901c",
+      "guid": "3872901c83aeda8bfaec95d354dd7b8d",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/tutorial/fence_pillar_01_3872901c.prefab",
+      "category": "art",
+      "theme": "tutorial",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "fence_pillar_01_3872901c",
+      "nameEn": "fence_pillar_01_3872901c",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "fence_pillar_lantern_01",
+      "guid": "20303abd638b2674598b75dba707a0d8",
+      "assetPath": "Assets/common01/prefabs/art/graveyard/fence_pillar_lantern_01.prefab",
+      "category": "art",
+      "theme": "graveyard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 3.6077895164489746
+      },
+      "height": 3.608,
+      "layoutTier": "decor",
+      "nameZh": "栅栏立柱灯笼 1",
+      "nameEn": "fence pillar lantern 1",
+      "typeKind": "lighting",
+      "usage": "ambience",
+      "icon": false
+    },
+    {
+      "id": "fence_straight_01",
+      "guid": "89e2c45bc22459d43a734dc3e29af5dd",
+      "assetPath": "Assets/common01/prefabs/art/graveyard/fence_straight_01.prefab",
+      "category": "art",
+      "theme": "graveyard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 1.9171124696731567
+      },
+      "height": 1.917,
+      "layoutTier": "decor",
+      "nameZh": "栅栏直 1",
+      "nameEn": "fence straight 1",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "fence_straight_01_37bad5ba",
+      "guid": "37bad5ba01ddf4139c2e0b99967124e9",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/tutorial/fence_straight_01_37bad5ba.prefab",
+      "category": "art",
+      "theme": "tutorial",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "栅栏直 1",
+      "nameEn": "fence straight 1",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "fence_straight_short_01",
+      "guid": "b1638d254074b8a418eba556ed6ac687",
+      "assetPath": "Assets/common01/prefabs/art/graveyard/fence_straight_short_01.prefab",
+      "category": "art",
+      "theme": "graveyard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 1.3846830129623413
+      },
+      "height": 1.385,
+      "baseY": 0.006,
+      "layoutTier": "decor",
+      "nameZh": "栅栏直短 1",
+      "nameEn": "fence straight short 1",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "fire_hazard",
+      "guid": "e616c15ceb3421f4b8992e64dead2764",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/fire_hazard.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "火灾隐患点",
+      "nameEn": "fire hazard",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "Fire_hydrant",
+      "guid": "76ca035e59f2c98499c66aaaefc26a4d",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/Fire_hydrant.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.9755487442016602
+      },
+      "height": 0.976,
+      "layoutTier": "decor",
+      "nameZh": "消防栓",
+      "nameEn": "Fire hydrant",
+      "typeKind": "furniture",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "firehazard",
+      "guid": "23518fb3bedf8b55404ba8d3649a3f1e",
+      "assetPath": "Assets/commonW1/prefabs/core/art/mechanics/firehazard.prefab",
+      "category": "art",
+      "theme": "mechanics",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "火灾危险点",
+      "nameEn": "firehazard",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "flag_01",
+      "guid": "8e111ce32fcf00a4c8bf9b8b0b3794ff",
+      "assetPath": "Assets/common01/prefabs/art/dlc02_beach/flag_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2,
+        "sizeY": 6.210723400115967
+      },
+      "height": 6.211,
+      "baseY": -0.111,
+      "layoutTier": "decor",
+      "nameZh": "旗帜 1",
+      "nameEn": "flag 1",
+      "typeKind": "building",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
       "id": "flag_01",
       "guid": "a69687b7a92ee85408ffa5a3751d8533",
       "assetPath": "Assets/common02/prefabs/art/dlc02_beach/flag_01.prefab",
@@ -155,9 +470,49 @@
       "icon": false
     },
     {
-      "id": "Floor_Confetti_02_b163f115_2db1153d",
-      "guid": "2db1153d11ca50e66f7d328dba5e6116",
-      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Floor_Confetti_02_b163f115_2db1153d.prefab",
+      "id": "floor_carpet_purple_h3_01_c4982f3b",
+      "guid": "c4982f3bf5584275b6d0724411f4db7e",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/city/floor_carpet_purple_h3_01_c4982f3b.prefab",
+      "category": "art",
+      "theme": "city",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "carpet",
+      "nameZh": "floor_carpet_purple_h3_01_c4982f3b",
+      "nameEn": "floor_carpet_purple_h3_01_c4982f3b",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
+    {
+      "id": "floor_carpet_purple_h3_02_0feb732d",
+      "guid": "0feb732d1c8e4a9be44f9c1420d3a45e",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/city/floor_carpet_purple_h3_02_0feb732d.prefab",
+      "category": "art",
+      "theme": "city",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "carpet",
+      "nameZh": "floor_carpet_purple_h3_02_0feb732d",
+      "nameEn": "floor_carpet_purple_h3_02_0feb732d",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
+    {
+      "id": "Floor_Confetti_02_687a83d0",
+      "guid": "687a83d00786ef06e2fb5a9eef7a6dfa",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Floor_Confetti_02_687a83d0.prefab",
       "category": "art",
       "theme": "summer",
       "defaultParent": "Art",
@@ -566,9 +921,9 @@
       "icon": false
     },
     {
-      "id": "Flooring_01_eef4d968_ba59e4d5",
-      "guid": "ba59e4d524381bc03f48965f3d36e953",
-      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Flooring_01_eef4d968_ba59e4d5.prefab",
+      "id": "Flooring_01_44d65c18",
+      "guid": "44d65c18eea17ab9413d126d3f01947e",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Flooring_01_44d65c18.prefab",
       "category": "art",
       "theme": "summer",
       "defaultParent": "Art",
@@ -586,9 +941,9 @@
       "icon": false
     },
     {
-      "id": "Floors_c386ee90_ba7ba2df",
-      "guid": "ba7ba2df5ab908541f4277764b841b59",
-      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Floors_c386ee90_ba7ba2df.prefab",
+      "id": "Floors_189943ac",
+      "guid": "189943ac63dbe239befd92ecf65d5b92",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/summer/Floors_189943ac.prefab",
       "category": "art",
       "theme": "summer",
       "defaultParent": "Art",
@@ -999,6 +1354,24 @@
       "icon": false
     },
     {
+      "id": "grave_brokentiles_02_06fd630d",
+      "guid": "06fd630d1d6076bbbe2173b974819736",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/dynamic/grave_brokentiles_02_06fd630d.prefab",
+      "category": "art",
+      "theme": "dynamic",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "墓地碎砖 2",
+      "nameEn": "grave brokentiles 2",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
+    {
       "id": "grave_brokentiles_03",
       "guid": "477fb9d184637f139d1e0176ea708d42",
       "assetPath": "Assets/commonW1/prefabs/core/art/graveyard/grave_brokentiles_03.prefab",
@@ -1326,6 +1699,24 @@
         "sizeY": 2.93414306640625
       },
       "height": 2.934,
+      "layoutTier": "decor",
+      "nameZh": "墓地栅栏立柱 1",
+      "nameEn": "grave fence pillar 1",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "grave_fence_pillar_01_dcf5c7b5",
+      "guid": "dcf5c7b554d08ec008705c5273f17153",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/tutorial/grave_fence_pillar_01_dcf5c7b5.prefab",
+      "category": "art",
+      "theme": "tutorial",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
       "layoutTier": "decor",
       "nameZh": "墓地栅栏立柱 1",
       "nameEn": "grave fence pillar 1",
@@ -2688,9 +3079,9 @@
       "icon": false
     },
     {
-      "id": "h9_pool_water_01_e51d0576_f33f6b84",
-      "guid": "f33f6b84c7b6741bc605dfe4fd4f7e43",
-      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/city/h9_pool_water_01_e51d0576_f33f6b84.prefab",
+      "id": "h9_pool_water_01_43dc3a39",
+      "guid": "43dc3a39d0cf3eff90a2e95a37a2190c",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/city/h9_pool_water_01_43dc3a39.prefab",
       "category": "art",
       "theme": "city",
       "defaultParent": "Art",
@@ -3002,9 +3393,9 @@
       "icon": false
     },
     {
-      "id": "Ice_StraightB 15_9ec1bbcb_c21e65aa",
-      "guid": "c21e65aa85e0f3536a9de80d4d544cd0",
-      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/campsite/Ice_StraightB 15_9ec1bbcb_c21e65aa.prefab",
+      "id": "Ice_StraightB 15_45f1ee5d",
+      "guid": "45f1ee5d886dfd3565deceb59d4cd852",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/campsite/Ice_StraightB 15_45f1ee5d.prefab",
       "category": "art",
       "theme": "campsite",
       "defaultParent": "Art",
@@ -3757,424 +4148,6 @@
       "nameEn": "lantern suspended 1",
       "typeKind": "lighting",
       "usage": "ambience",
-      "icon": false
-    },
-    {
-      "id": "Large Water_6f20a89c_ff2bcb64",
-      "guid": "ff2bcb64e207b3184dc5a1542b86237d",
-      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/wonderland/Large Water_6f20a89c_ff2bcb64.prefab",
-      "category": "art",
-      "theme": "wonderland",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "大水面",
-      "nameEn": "Large Water",
-      "typeKind": "water",
-      "usage": "waterscape",
-      "icon": false
-    },
-    {
-      "id": "large_stall_dressed_01",
-      "guid": "1e3c0eea9a1dfbc8bc0f218c6c35c7e6",
-      "assetPath": "Assets/common03/prefabs/art/dlc03_christmas/large_stall_dressed_01.prefab",
-      "category": "art",
-      "theme": "dlc03_christmas",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 9,
-        "cellsZ": 6,
-        "sizeY": 4.7024383544921875
-      },
-      "height": 4.702,
-      "baseY": 2.131,
-      "layoutTier": "decor",
-      "nameZh": "大摊位装扮 1",
-      "nameEn": "large stall dressed 1",
-      "typeKind": "building",
-      "usage": "landmark",
-      "icon": false
-    },
-    {
-      "id": "LifeBuoyPillar",
-      "guid": "0e9c8217cbf0674459ffe85a76f16f10",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/LifeBuoyPillar.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 3.082324266433716
-      },
-      "height": 3.082,
-      "baseY": -0.742,
-      "layoutTier": "decor",
-      "nameZh": "救生圈柱",
-      "nameEn": "LifeBuoyPillar",
-      "typeKind": "building",
-      "usage": "enclosure",
-      "icon": false
-    },
-    {
-      "id": "LifeBuoyPillar 1",
-      "guid": "68d5e4a857cab524595915199f4d4b90",
-      "assetPath": "Assets/common03/prefabs/art/dlc11_summer/LifeBuoyPillar 1.prefab",
-      "category": "art",
-      "theme": "dlc11_summer",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 3.082324266433716
-      },
-      "height": 3.082,
-      "baseY": -0.742,
-      "layoutTier": "decor",
-      "nameZh": "救生圈柱 1",
-      "nameEn": "LifeBuoyPillar 1",
-      "typeKind": "building",
-      "usage": "enclosure",
-      "icon": false
-    },
-    {
-      "id": "lift",
-      "guid": "12bb02690ad4014c191e6a985d76afc4",
-      "assetPath": "Assets/commonW1/prefabs/core/art/landscapemechanism/lift.prefab",
-      "category": "art",
-      "theme": "landscapemechanism",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 2
-      },
-      "height": 2,
-      "baseY": -2,
-      "layoutTier": "decor",
-      "nameZh": "升降台",
-      "nameEn": "lift",
-      "typeKind": "building",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "lights",
-      "guid": "004a2257ff4666408cde90bda6d0587f",
-      "assetPath": "Assets/commonW2/prefabs/dlc02/art/dlc02_beach/lights.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "灯串",
-      "nameEn": "lights",
-      "typeKind": "lighting",
-      "usage": "ambience",
-      "icon": false
-    },
-    {
-      "id": "longbench_01",
-      "guid": "0f287ba0fdbdec31267febd9b7e765d0",
-      "assetPath": "Assets/common03/prefabs/art/dlc03_christmas/longbench_01.prefab",
-      "category": "art",
-      "theme": "dlc03_christmas",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 1,
-        "sizeY": 0.4329531788825989
-      },
-      "height": 0.433,
-      "baseY": -0.338,
-      "layoutTier": "decor",
-      "nameZh": "长椅 1",
-      "nameEn": "longbench 1",
-      "typeKind": "furniture",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "longtable_01",
-      "guid": "ccab2a03e87151ed8234ccfa9cc623e1",
-      "assetPath": "Assets/common03/prefabs/art/dlc03_christmas/longtable_01.prefab",
-      "category": "art",
-      "theme": "dlc03_christmas",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 2,
-        "sizeY": 0.7931891679763794
-      },
-      "height": 0.793,
-      "baseY": -0.007,
-      "layoutTier": "decor",
-      "nameZh": "长桌 1",
-      "nameEn": "longtable 1",
-      "typeKind": "furniture",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "m_airballoon_balloon_01",
-      "guid": "87847002cb382ebda48f0fb5c816e386",
-      "assetPath": "Assets/commonW1/prefabs/core/art/meshes/m_airballoon_balloon_01.prefab",
-      "category": "art",
-      "theme": "meshes",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 9,
-        "cellsZ": 9,
-        "sizeY": 13.37716293334961
-      },
-      "height": 13.377,
-      "baseY": -6.689,
-      "layoutTier": "decor",
-      "nameZh": "热气球·气球 1",
-      "nameEn": "airballoon balloon 1",
-      "typeKind": "building",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "m_airballoon_bridge_end_01",
-      "guid": "2b374fdf8ed0b2b946f8c2e9a30dd5c8",
-      "assetPath": "Assets/commonW1/prefabs/core/art/meshes/m_airballoon_bridge_end_01.prefab",
-      "category": "art",
-      "theme": "meshes",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.40393370389938354
-      },
-      "height": 0.404,
-      "baseY": -0.202,
-      "layoutTier": "decor",
-      "nameZh": "热气球·桥尽头 1",
-      "nameEn": "airballoon bridge end 1",
-      "typeKind": "building",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "m_airballoon_floorboard_broken_01",
-      "guid": "31e6363728f178ea17c08262670236b4",
-      "assetPath": "Assets/commonW1/prefabs/core/art/meshes/m_airballoon_floorboard_broken_01.prefab",
-      "category": "art",
-      "theme": "meshes",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 2,
-        "sizeY": 0.12995833158493042
-      },
-      "height": 0.13,
-      "baseY": -0.065,
-      "layoutTier": "floor",
-      "surfaceTier": "floor",
-      "surfaceKind": "solid",
-      "nameZh": "热气球破损地板 1",
-      "nameEn": "airballoon floorboard broken 1",
-      "typeKind": "ground",
-      "usage": "flooring",
-      "icon": false
-    },
-    {
-      "id": "m_airballoon_floorboard_broken_02",
-      "guid": "f578fabbe49064c46320b9790f5797c6",
-      "assetPath": "Assets/commonW1/prefabs/core/art/meshes/m_airballoon_floorboard_broken_02.prefab",
-      "category": "art",
-      "theme": "meshes",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 2,
-        "sizeY": 0.1298089176416397
-      },
-      "height": 0.13,
-      "layoutTier": "floor",
-      "surfaceTier": "floor",
-      "surfaceKind": "solid",
-      "nameZh": "热气球破损地板 2",
-      "nameEn": "airballoon floorboard broken 2",
-      "typeKind": "ground",
-      "usage": "flooring",
-      "icon": false
-    },
-    {
-      "id": "m_airballoon_floorboard_broken_03",
-      "guid": "cb1f14c7eb6e51a10c3f33143d495800",
-      "assetPath": "Assets/commonW1/prefabs/core/art/meshes/m_airballoon_floorboard_broken_03.prefab",
-      "category": "art",
-      "theme": "meshes",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 3,
-        "sizeY": 0.13019809126853943
-      },
-      "height": 0.13,
-      "layoutTier": "floor",
-      "surfaceTier": "floor",
-      "surfaceKind": "solid",
-      "nameZh": "热气球破损地板 3",
-      "nameEn": "airballoon floorboard broken 3",
-      "typeKind": "ground",
-      "usage": "flooring",
-      "icon": false
-    },
-    {
-      "id": "m_airballoon_roof_03",
-      "guid": "443998759cd69061f0e3d744444ca433",
-      "assetPath": "Assets/common03/prefabs/art/dlc11_summer/m_airballoon_roof_03.prefab",
-      "category": "art",
-      "theme": "dlc11_summer",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 0.30000004172325134
-      },
-      "height": 0.3,
-      "baseY": -0.15,
-      "layoutTier": "decor",
-      "nameZh": "热气球·屋顶 3",
-      "nameEn": "airballoon roof 3",
-      "typeKind": "building",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "m_airballoon_roof_04",
-      "guid": "7f9f7c0b8c8ab41ccae76c4b07b0cd09",
-      "assetPath": "Assets/common03/prefabs/art/dlc11_summer/m_airballoon_roof_04.prefab",
-      "category": "art",
-      "theme": "dlc11_summer",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 0.115546815097332
-      },
-      "height": 0.116,
-      "baseY": -0.058,
-      "layoutTier": "decor",
-      "nameZh": "热气球·屋顶 4",
-      "nameEn": "airballoon roof 4",
-      "typeKind": "building",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "m_airballoon_roof_05",
-      "guid": "e2bfce8df869581d5b7debfab427070b",
-      "assetPath": "Assets/common03/prefabs/art/dlc11_summer/m_airballoon_roof_05.prefab",
-      "category": "art",
-      "theme": "dlc11_summer",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 0.1750161349773407
-      },
-      "height": 0.175,
-      "baseY": -0.088,
-      "layoutTier": "decor",
-      "nameZh": "热气球·屋顶 5",
-      "nameEn": "airballoon roof 5",
-      "typeKind": "building",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "m_airballoon_rope_2units_01",
-      "guid": "809deccc0e79ccefc5570e593e41949e",
-      "assetPath": "Assets/commonW1/prefabs/core/art/meshes/m_airballoon_rope_2units_01.prefab",
-      "category": "art",
-      "theme": "meshes",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1,
-        "sizeY": 0.08093251287937164
-      },
-      "height": 0.081,
-      "baseY": -0.04,
-      "layoutTier": "decor",
-      "nameZh": "热气球·绳 2格 1",
-      "nameEn": "airballoon rope 2units 1",
-      "typeKind": "building",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "m_airballoon_rope_bottom_01",
-      "guid": "b3e63d6d46088c4593544a7b80630c19",
-      "assetPath": "Assets/commonW1/prefabs/core/art/meshes/m_airballoon_rope_bottom_01.prefab",
-      "category": "art",
-      "theme": "meshes",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.4850442409515381
-      },
-      "height": 0.485,
-      "baseY": -0.243,
-      "layoutTier": "decor",
-      "nameZh": "热气球·绳底部 1",
-      "nameEn": "airballoon rope bottom 1",
-      "typeKind": "building",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "m_airballoon_rope_bottom_03",
-      "guid": "6445ee7a2e149e55f25c0be6ba3fe831",
-      "assetPath": "Assets/commonW1/prefabs/core/art/meshes/m_airballoon_rope_bottom_03.prefab",
-      "category": "art",
-      "theme": "meshes",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.8133716583251953
-      },
-      "height": 1.813,
-      "baseY": -0.915,
-      "layoutTier": "decor",
-      "nameZh": "热气球·绳底部 3",
-      "nameEn": "airballoon rope bottom 3",
-      "typeKind": "building",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "m_airballoon_rope_top_02",
-      "guid": "fce7bc6f9731790450b9214144058330",
-      "assetPath": "Assets/commonW1/prefabs/core/art/meshes/m_airballoon_rope_top_02.prefab",
-      "category": "art",
-      "theme": "meshes",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.6555963158607483
-      },
-      "height": 0.656,
-      "baseY": -0.328,
-      "layoutTier": "decor",
-      "nameZh": "热气球·绳顶部 2",
-      "nameEn": "airballoon rope top 2",
-      "typeKind": "building",
-      "usage": "dressing",
       "icon": false
     }
   ]

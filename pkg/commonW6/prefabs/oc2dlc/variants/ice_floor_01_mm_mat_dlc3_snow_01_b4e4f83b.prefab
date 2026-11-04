@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114096038827637246}
   - component: {fileID: 114967938430519454}
   m_Layer: 0
-  m_Name: ice_floor_01_mm_mat_dlc3_snow_01_b4e4f83b
+  m_Name: ice_floor_01_mm_mat_dlc3_snow_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

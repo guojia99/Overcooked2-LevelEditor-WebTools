@@ -135,7 +135,10 @@ export function computeCardGroups(r: RecipeWithGroups, opts: RlCardOptions = {})
   const compIds = r.compositionIds ?? [];
   const all = opts.allRecipes ?? [];
   let groups: CookingGroup[];
-  if (r.cookingGroups && !r.isCustom) {
+  // Web 意面家族（commonW5/pasta）：后端 RecipeKnowledge 按 id 显式给出分步
+  // cookingGroups（煮意面+煎鱼/虾），自定义菜谱中仅这三位信任后端数据。
+  const isPastaFamily = r.id === "Web_Seafood_Pasta" || r.id === "Web_Fish_Pasta" || r.id === "Web_Prawn_Pasta";
+  if (r.cookingGroups && (!r.isCustom || isPastaFamily)) {
     groups = normalizeCookingGroups(r, r.cookingGroups);
   } else if (r.isCustom && r.mixing) {
     // Mixed 类型自定义菜谱：先搅拌（MixingBowl）再烹饪（最终步骤标记），

@@ -2,7 +2,7 @@ import {
   S,
   EditorItem
 } from "./state";
-import { setPilotTerminalBinding } from "./animControl";
+import { setPilotTerminalBinding, openAnimGroupEditorById } from "./animControl";
 import { dom } from "./dom";
 import {
   prefabIdFromPath,
@@ -75,6 +75,15 @@ import {
 } from "./buttonLinks";
 import { coaxialCtxHtml, wireCoaxialCtx } from "./coaxialControls";
 import {
+  isDoorItem,
+  holdGroupsOfSwitch,
+  holdGroupsOfDoor,
+  doorMotionOf,
+  setDoorMotion,
+  createPressureDoorHoldLink,
+  removeDoorFromHoldGroup
+} from "./pressureDoor";
+import {
   buttonEventSummaryText,
   eventLinkOfSource,
   cleanOrphanedButtonEvents
@@ -127,6 +136,7 @@ export const STUB_KIND_BY_PREFAB_ID: Record<string, string> = {
   dlc11_condiment_dispenser: "Dispenser",
   AttachingFoodSpawner: "AttachingFoodSpawner",
   ConveyorStation: "Conveyor",
+  web_conveyor_station_serve: "Conveyor",
   Teleportal: "Teleportal",
   RatHeist: "RatHeist",
   Pot: "CookingUtensil",
@@ -544,48 +554,190 @@ export function counterAppearanceHtml(item: EditorItem): string {
     <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">写回 Unity 时会重建关卡 dependencies（覆盖），并合并外观所需 bundle</div></div>`;
 }
 
+export function isToggleSwitchItem(item: { prefabAssetPath?: string }): boolean {
+  return (prefabIdFromPath(item.prefabAssetPath) ?? "").toLowerCase() === "toggleswitch";
+}
+
+function pickerColor(hex: string | undefined): string {
+  return /^#[0-9a-fA-F]{6}$/.test(hex ?? "") ? (hex as string) : "#ffffff";
+}
+
+/** 开关/压力开关/压力地板的调色行（乘法染色；空=不覆盖）。 */
+function switchColorRowsHtml(
+  prefix: "sw" | "ps",
+  idleLabel: string,
+  pressedLabel: string,
+  idleColor: string | undefined,
+  pressedColor: string | undefined
+): string {
+  return `<div class="ctx-stub-row" style="font-size:11px;color:#8a909a;margin-top:6px">调色（乘法染色，保留原贴图与高光；未设置=不覆盖）</div>
+    <label class="ctx-stub-row">${idleLabel} <input type="color" class="ctx-color-input" id="ctx-${prefix}-idle-color" value="${pickerColor(idleColor)}"/>
+      <button type="button" class="ctx-btn" id="ctx-${prefix}-idle-clear">默认</button></label>
+    <label class="ctx-stub-row">${pressedLabel} <input type="color" class="ctx-color-input" id="ctx-${prefix}-pressed-color" value="${pickerColor(pressedColor)}"/>
+      <button type="button" class="ctx-btn" id="ctx-${prefix}-pressed-clear">默认</button></label>`;
+}
+
 export function switchMaterialHtml(item: EditorItem): string {
-  if (!S.switchMaterialsCache.length) return "";
   const mats = S.switchMaterialsCache;
   const sw = item.switchStub ?? {};
-  const activeOpts = ['<option value="">— 默认 —</option>']
-    .concat(
-      mats.map(
-        (m) => `<option value="${m.guid}" ${(sw.activeMaterialGuid ?? "") === m.guid ? "selected" : ""}>${escHtml(m.nameZh || m.id)}</option>`
-      )
-    )
-    .join("");
-  const inactiveOpts = ['<option value="">— 默认 —</option>']
-    .concat(
-      mats.map(
-        (m) => `<option value="${m.guid}" ${(sw.inactiveMaterialGuid ?? "") === m.guid ? "selected" : ""}>${escHtml(m.nameZh || m.id)}</option>`
-      )
-    )
-    .join("");
-  return `<label class="ctx-stub-row">未按下外观 <select id="ctx-sw-active" class="ctx-input">${activeOpts}</select></label>
-    <label class="ctx-stub-row">按下外观 <select id="ctx-sw-inactive" class="ctx-input">${inactiveOpts}</select></label>`;
+  // 拨动开关（ToggleSwitch）暂不支持外观/调色：保持原样，不注入无效控件。
+  if (isToggleSwitchItem(item)) return "";
+  const matHtml = !mats.length
+    ? ""
+    : (() => {
+        const activeOpts = ['<option value="">— 默认 —</option>']
+          .concat(
+            mats.map(
+              (m) => `<option value="${m.guid}" ${(sw.activeMaterialGuid ?? "") === m.guid ? "selected" : ""}>${escHtml(m.nameZh || m.id)}</option>`
+            )
+          )
+          .join("");
+        const inactiveOpts = ['<option value="">— 默认 —</option>']
+          .concat(
+            mats.map(
+              (m) => `<option value="${m.guid}" ${(sw.inactiveMaterialGuid ?? "") === m.guid ? "selected" : ""}>${escHtml(m.nameZh || m.id)}</option>`
+            )
+          )
+          .join("");
+        return `<label class="ctx-stub-row">未按下外观 <select id="ctx-sw-active" class="ctx-input">${activeOpts}</select></label>
+          <label class="ctx-stub-row">按下外观 <select id="ctx-sw-inactive" class="ctx-input">${inactiveOpts}</select></label>`;
+      })();
+  return matHtml + switchColorRowsHtml("sw", "未按下颜色", "按下颜色", sw.idleColor, sw.pressedColor);
 }
 
 export function pressureSwitchMaterialHtml(item: EditorItem): string {
-  if (!S.switchMaterialsCache.length) return "";
   const mats = S.switchMaterialsCache;
   const ps = item.pressureSwitch ?? {};
-  const occOpts = ['<option value="">— 默认 —</option>']
-    .concat(
-      mats.map(
-        (m) => `<option value="${m.guid}" ${(ps.occupiedMaterialGuid ?? "") === m.guid ? "selected" : ""}>${escHtml(m.nameZh || m.id)}</option>`
-      )
-    )
+  const isLotus = isLotusPressureSwitchItem(item);
+  const matHtml = isLotus || !mats.length
+    ? ""
+    : (() => {
+        const occOpts = ['<option value="">— 默认 —</option>']
+          .concat(
+            mats.map(
+              (m) => `<option value="${m.guid}" ${(ps.occupiedMaterialGuid ?? "") === m.guid ? "selected" : ""}>${escHtml(m.nameZh || m.id)}</option>`
+            )
+          )
+          .join("");
+        const unoccOpts = ['<option value="">— 默认 —</option>']
+          .concat(
+            mats.map(
+              (m) => `<option value="${m.guid}" ${(ps.unoccupiedMaterialGuid ?? "") === m.guid ? "selected" : ""}>${escHtml(m.nameZh || m.id)}</option>`
+            )
+          )
+          .join("");
+        return `<label class="ctx-stub-row">按下外观 <select id="ctx-ps-occ" class="ctx-input">${occOpts}</select></label>
+          <label class="ctx-stub-row">松开外观 <select id="ctx-ps-unocc" class="ctx-input">${unoccOpts}</select></label>`;
+      })();
+  const lotusHint = isLotus
+    ? '<div class="ctx-stub-row" style="font-size:11px;color:#8a909a">莲花压力地板是动画机关，外观由调色控制；踩上/离开时颜色随 Animator 状态切换。</div>'
+    : "";
+  return lotusHint + matHtml + switchColorRowsHtml("ps", "未受压颜色", "受压颜色", ps.idleColor, ps.pressedColor);
+}
+
+function doorControlsHtml(item: EditorItem): string {
+  const groups = holdGroupsOfDoor(item.instanceId ?? "");
+  const motion = doorMotionOf(item);
+  const rows = groups
+    .map((g) => {
+      const link = S.buttonLinks.find((l) => l.groupNames.includes(g.displayName));
+      const sw = link ? S.items.find((i) => i.instanceId === link.sourceId) : undefined;
+      const otherDoors = g.itemInstanceIds.filter(
+        (id) => id !== item.instanceId && S.items.some((i) => i.instanceId === id)
+      ).length;
+      return `<div class="ctx-stub-row">· ${escHtml(g.displayName)}${sw ? ` ← ${escHtml(itemLabel(sw))}` : ""}${otherDoors ? ` · 同组另 ${otherDoors} 扇门（各自独立参数）` : ""}</div>`;
+    })
     .join("");
-  const unoccOpts = ['<option value="">— 默认 —</option>']
-    .concat(
-      mats.map(
-        (m) => `<option value="${m.guid}" ${(ps.unoccupiedMaterialGuid ?? "") === m.guid ? "selected" : ""}>${escHtml(m.nameZh || m.id)}</option>`
-      )
-    )
-    .join("");
-  return `<label class="ctx-stub-row">按下外观 <select id="ctx-ps-occ" class="ctx-input">${occOpts}</select></label>
-    <label class="ctx-stub-row">松开外观 <select id="ctx-ps-unocc" class="ctx-input">${unoccOpts}</select></label>`;
+  return `<div class="ctx-stub ctx-stub-door"><div class="ctx-stub-title">门 · 旋转参数</div>
+    <p class="ctx-stub-hint">门不强制吸附格心；模型根/旋转轴即摆放点（可放在格子左上角 0,0）。默认顺时针。</p>
+    <label class="ctx-stub-row">开门方向 <select id="ctx-door-dir" class="ctx-input">
+      <option value="cw"${motion.direction === "cw" ? " selected" : ""}>↻ 顺时针（默认）</option>
+      <option value="ccw"${motion.direction === "ccw" ? " selected" : ""}>↺ 逆时针</option>
+    </select></label>
+    <label class="ctx-stub-row">开门角度 <input type="number" id="ctx-door-angle" class="ctx-input" min="1" max="360" step="1" value="${motion.angleDegrees}"/> °</label>
+    <label class="ctx-stub-row">开门时长 <input type="number" id="ctx-door-dur" class="ctx-input" min="0.1" max="10" step="0.1" value="${motion.durationSeconds}"/> 秒</label>
+    <p class="ctx-stub-hint">${groups.length ? "修改会同步到该门所在的按住式动画组，全量写回后生效。" : "尚未联动：参数保留到本次会话，下次创建联动时使用。"}</p>
+    ${groups.length ? `<div class="ctx-stub-section-title ctx-stub-section-gap">联动组</div>${rows}` : ""}</div>`;
+}
+
+function wireDoorControls(item: EditorItem): void {
+  const apply = () => {
+    const dirEl = document.getElementById("ctx-door-dir") as HTMLSelectElement | null;
+    const angleEl = document.getElementById("ctx-door-angle") as HTMLInputElement | null;
+    const durEl = document.getElementById("ctx-door-dur") as HTMLInputElement | null;
+    const current = doorMotionOf(item);
+    const angle = parseFloat(angleEl?.value ?? "");
+    const dur = parseFloat(durEl?.value ?? "");
+    const motion = {
+      direction: (dirEl?.value === "ccw" ? "ccw" : "cw") as "cw" | "ccw",
+      angleDegrees: Number.isFinite(angle)
+        ? Math.min(360, Math.max(1, angle))
+        : current.angleDegrees,
+      durationSeconds: Number.isFinite(dur)
+        ? Math.min(10, Math.max(0.1, dur))
+        : current.durationSeconds,
+    };
+    pushHistory();
+    setDoorMotion(item, motion);
+    setStatus("已更新门旋转参数（全量写回后生效）");
+    refreshContextStub(item);
+    draw();
+  };
+  document.getElementById("ctx-door-dir")?.addEventListener("change", apply);
+  document.getElementById("ctx-door-angle")?.addEventListener("change", apply);
+  document.getElementById("ctx-door-dur")?.addEventListener("change", apply);
+}
+
+function pressureSwitchLinkPanelHtml(item: EditorItem): string {
+  const groups = holdGroupsOfSwitch(item.instanceId ?? "");
+  const linkedDoorIds = new Set<string>();
+  for (const g of groups) for (const id of g.itemInstanceIds) linkedDoorIds.add(id);
+
+  const d2 = (it: EditorItem) => {
+    const dx = (it._wx ?? 0) - (item._wx ?? 0);
+    const dz = (it._wz ?? 0) - (item._wz ?? 0);
+    return dx * dx + dz * dz;
+  };
+  const doors = S.items
+    .filter((it) => it !== item && isDoorItem(it) && !linkedDoorIds.has(it.instanceId ?? ""))
+    .sort((a, b) => d2(a) - d2(b));
+  const doorOpts = doors.length
+    ? doors
+        .map(
+          (d) =>
+            `<option value="${escHtml(d.instanceId ?? "")}">${escHtml(itemLabel(d))}</option>`
+        )
+        .join("")
+    : '<option value="">— 场景中没有可联动的门 —</option>';
+
+  const groupRows = groups.length
+    ? groups
+        .map((g) => {
+          const members = g.itemInstanceIds
+            .map((id) => S.items.find((i) => i.instanceId === id))
+            .filter((i): i is EditorItem => !!i);
+          const memberHtml = members
+            .map(
+              (m) =>
+                `<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 10px 2px 0">${escHtml(itemLabel(m))}` +
+                `<button type="button" class="ctx-btn" data-ps-door-unlink="${escHtml(g.id)}|${escHtml(m.instanceId ?? "")}">移除</button></span>`
+            )
+            .join("");
+          return `<div class="ctx-stub-row" style="display:flex;align-items:center;gap:6px">
+            <span style="flex:1;font-weight:600">${escHtml(g.displayName)}</span>
+            <button type="button" class="ctx-btn" data-ps-door-edit="${escHtml(g.id)}">编辑动画组</button>
+          </div>
+          <div class="ctx-stub-row" style="display:block;font-size:11px;color:#8a909a">${memberHtml || "（无成员）"}</div>`;
+        })
+        .join("")
+    : '<div class="ctx-stub-hint">尚未联动任何门。</div>';
+
+  return `<div class="ctx-stub-section-title">按住式门联动</div>
+    <p class="ctx-stub-hint">站上压力板 → 门打开并保持；离开 → 门关闭。选择场景中的门即可一键创建/追加按住式动画组（含 DLC / 主题自动门）。</p>
+    <label class="ctx-stub-row"><select id="ctx-ps-door" class="ctx-input" ${doors.length ? "" : "disabled"}>${doorOpts}</select>
+      <button type="button" class="ctx-btn" id="ctx-ps-door-add" ${doors.length ? "" : "disabled"}>联动</button></label>
+    <div id="ctx-ps-door-links" class="switch-link-host">${groupRows}</div>
+    <p class="ctx-stub-hint">开门方向 / 角度 / 时长在「门的右键参数」里设置（默认顺时针）；写回后门扇自动带 Walls 碰撞（关闭挡人、打开让路），联动随全量写回保存。</p>`;
 }
 
 function switchEventsPanelHtml(item: EditorItem): string {
@@ -710,6 +862,7 @@ export function stubControlsHtml(item: EditorItem): string {
       <label class="ctx-stub-row"><input type="checkbox" id="ctx-ts-starton" ${ts.startOn !== false ? "checked" : ""}/> 初始为开启</label>
       <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">开局自动循环：关闭期锅具不加热、火焰熄灭；相同设置的多台灶台自动同步</div></div>`;
   }
+  if (!kind && isDoorItem(item)) return doorControlsHtml(item);
   switch (kind) {
     case "Dispenser": {
       const stype = specialDispenserType(item);
@@ -796,11 +949,12 @@ export function stubControlsHtml(item: EditorItem): string {
     case "AttachingFoodSpawner": {
       const fs = item.foodSpawner ?? {};
       const btnOn = !!fs.startByButton;
+      const ingN = (fs.attachmentPrefabGuids ?? []).length;
       return `<div class="ctx-stub"><div class="ctx-stub-title">食材生成器参数</div>
         <label class="ctx-stub-row"><input type="checkbox" id="ctx-fs-order" ${fs.spawnInOrder !== false ? "checked" : ""}/> 按顺序生成</label>
         <label class="ctx-stub-row"><input type="checkbox" id="ctx-fs-start" ${fs.triggerAtStart !== false ? "checked" : ""} ${btnOn ? "disabled" : ""}/> 开局触发${btnOn ? "（按钮模式下不适用）" : ""}</label>
         <label class="ctx-stub-row">触发间隔 <input type="number" id="ctx-fs-time" class="ctx-input" step="0.5" min="0" value="${fs.triggerTime ?? 5}"/> 秒</label>
-        <button type="button" class="ctx-btn" id="ctx-fs-ings">食材列表…</button>
+        <button type="button" class="ctx-btn" id="ctx-fs-ings">食材列表${ingN > 0 ? `（${ingN} 种）` : ""}…</button>
         <div class="ctx-stub-title" style="margin-top:6px">按钮触发</div>
         <label class="ctx-stub-row"><input type="checkbox" id="ctx-fs-btn" ${btnOn ? "checked" : ""}/> 按钮触发批次送出</label>
         <div id="ctx-fs-btn-body" ${btnOn ? "" : `style="display:none"`}>
@@ -833,9 +987,13 @@ export function stubControlsHtml(item: EditorItem): string {
     }
     case "Conveyor": {
       const sp = item.conveyor?.conveySpeed ?? 0.5;
+      const serveHint = prefabIdFromPath(item.prefabAssetPath) === "web_conveyor_station_serve"
+        ? `<div class="ctx-stub-row" style="font-size:11px;color:#8a909a">可上菜：运动方向末端的上菜台会接住物品；盘子正常上菜，非盘子按无效上菜处理并断小费</div>`
+        : "";
       return `<div class="ctx-stub"><div class="ctx-stub-title">传送带参数</div>
         <label class="ctx-stub-row">速度 <input type="number" id="ctx-cv-speed" class="ctx-input" step="0.1" value="${sp}"/>（负值反向）</label>
-        ${speedControlBlockHtml("cv", item.conveyor?.speedControl, sp)}</div>`;
+        ${speedControlBlockHtml("cv", item.conveyor?.speedControl, sp)}
+        ${serveHint}</div>`;
     }
     case "Teleportal": {
       const tp = item.teleportal ?? {};
@@ -952,8 +1110,11 @@ export function stubControlsHtml(item: EditorItem): string {
       const isCannon = kind === "CannonSwitch";
       const sw = item.switchStub ?? {};
       const matHtml = switchMaterialHtml(item);
+      const toggleHint = isToggleSwitchItem(item)
+        ? '<div class="ctx-stub-row" style="font-size:11px;color:#8a909a">拨动开关暂不支持外观/调色（保持预制件默认外观）</div>'
+        : "";
       const basicPanel = `<label class="ctx-stub-row"><input type="checkbox" id="ctx-sw-start" ${sw.startEnabled !== false ? "checked" : ""}/> 初始开启</label>
-        ${matHtml}`;
+        ${matHtml}${toggleHint}`;
       const tabs = isCannon
         ? [{ id: "basic", label: "基础" }, { id: "link", label: "联动" }]
         : [
@@ -981,9 +1142,14 @@ export function stubControlsHtml(item: EditorItem): string {
       const basicPanel =
         matHtml || '<div class="ctx-stub-row">此物件无用户可配置参数，配置内置于预制件中</div>';
       return `<div class="ctx-stub ctx-stub-switch"><div class="ctx-stub-title">压力开关参数</div>
-        ${switchTabBarHtml([{ id: "basic", label: "基础" }, { id: "events", label: "事件" }])}
+        ${switchTabBarHtml([
+          { id: "basic", label: "基础" },
+          { id: "link", label: "联动" },
+          { id: "events", label: "事件" },
+        ])}
         <div class="ctx-sw-panels">
           ${switchPanelHtml("basic", true, basicPanel)}
+          ${switchPanelHtml("link", false, pressureSwitchLinkPanelHtml(item))}
           ${switchPanelHtml("events", false, switchEventsPanelHtml(item))}
         </div></div>`;
     }
@@ -1156,7 +1322,6 @@ function filterSpeedLevels(levels: number[]): number[] {
   return levels.filter((v) => isFinite(v) && v !== 0).slice(0, 8);
 }
 
-/** 写回归一：启用态档位不足时按基准速度补默认档（与面板展示一致）。 */
 /** 清除误挂在 Player 等非步带/传送带上的按钮控速（历史脏数据 / instanceId 漂移）。 */
 export function stripMisplacedSpeedControl(item: {
   stubKind?: string;
@@ -1172,15 +1337,33 @@ export function stripMisplacedSpeedControl(item: {
   }
 }
 
+/** 清掉 Unity GET 的 null 占位对象（enabled=true, levels=[]）与不足 2 档的残配置。 */
+export function stripUnconfiguredSpeedControl(item: {
+  travelator?: { speedControl?: LayoutSpeedControl };
+  conveyor?: { speedControl?: LayoutSpeedControl };
+}): void {
+  if (
+    item.travelator?.speedControl &&
+    filterSpeedLevels(item.travelator.speedControl.levels ?? []).length < 2
+  ) {
+    delete item.travelator.speedControl;
+  }
+  if (
+    item.conveyor?.speedControl &&
+    filterSpeedLevels(item.conveyor.speedControl.levels ?? []).length < 2
+  ) {
+    delete item.conveyor.speedControl;
+  }
+}
+
+/** 写回归一：启用但有效档位不足 2 个 → 视为未配置丢弃；停用配置原样保留。 */
 export function normalizeSpeedControlForDoc(
-  sc: LayoutSpeedControl,
-  baseSpeed: number
+  sc: LayoutSpeedControl
 ): LayoutSpeedControl | undefined {
   if (sc.enabled === false) {
     return { enabled: false, levels: sc.levels ?? [] };
   }
-  let levels = filterSpeedLevels(sc.levels ?? []);
-  if (levels.length < 2) levels = filterSpeedLevels(defaultSpeedLevels(baseSpeed));
+  const levels = filterSpeedLevels(sc.levels ?? []);
   if (levels.length < 2) return undefined;
   return { enabled: true, levels };
 }
@@ -1196,8 +1379,9 @@ function readSpeedLevelsFromDom(prefix: string): number[] {
 
 /** 按钮控速块（步带/传送带共用；prefix = cv|tv）。 */
 function speedControlBlockHtml(prefix: string, sc: LayoutSpeedControl | undefined, baseSpeed: number): string {
-  const on = !!sc && sc.enabled !== false;
-  const levels = sc?.levels?.length ? sc.levels : defaultSpeedLevels(baseSpeed);
+  const validLevels = filterSpeedLevels(sc?.levels ?? []);
+  const on = !!sc && sc.enabled !== false && validLevels.length >= 2;
+  const levels = validLevels.length >= 2 ? validLevels : defaultSpeedLevels(baseSpeed);
   const rows = levels
     .map(
       (lv, i) => `<div class="ctx-stub-row"><span style="min-width:3.2em">档 ${i + 1}</span>
@@ -1234,7 +1418,6 @@ function wireSpeedControl(item: EditorItem, prefix: string, baseSpeed: number, l
     const levels = fromDom.length >= 2 ? fromDom : defaultSpeedLevels(baseSpeed);
     put({ enabled: true, levels: filterSpeedLevels(levels) });
   };
-  persistEnabledFromUi();
   const el = (id: string) => document.getElementById(id);
   el(`${prefix}-spd-on`)?.addEventListener("change", (e) => {
     pushHistory();
@@ -1367,6 +1550,8 @@ export function wireStubControls(item: EditorItem) {
       draw();
     });
   }
+
+  if (!kind && isDoorItem(item)) wireDoorControls(item);
 
   if (kind) {
   switch (kind) {
@@ -1981,6 +2166,28 @@ export function wireStubControls(item: EditorItem) {
         ensure().inactiveMaterialGuid = (e.target as HTMLSelectElement).value || undefined;
         setStatus("已更新开关按下外观（写回后生效）");
       });
+      num("ctx-sw-idle-color")?.addEventListener("change", (e) => {
+        pushHistory();
+        ensure().idleColor = (e.target as HTMLInputElement).value || undefined;
+        setStatus("已更新开关未按下颜色（写回后生效）");
+      });
+      num("ctx-sw-pressed-color")?.addEventListener("change", (e) => {
+        pushHistory();
+        ensure().pressedColor = (e.target as HTMLInputElement).value || undefined;
+        setStatus("已更新开关按下颜色（写回后生效）");
+      });
+      document.getElementById("ctx-sw-idle-clear")?.addEventListener("click", () => {
+        pushHistory();
+        ensure().idleColor = undefined;
+        setStatus("已恢复开关未按下默认颜色（写回后生效）");
+        refreshContextStub(item);
+      });
+      document.getElementById("ctx-sw-pressed-clear")?.addEventListener("click", () => {
+        pushHistory();
+        ensure().pressedColor = undefined;
+        setStatus("已恢复开关按下默认颜色（写回后生效）");
+        refreshContextStub(item);
+      });
 
       // ---- 开关联动（switchLinks，文档级） ----
       const myId = item.instanceId ?? "";
@@ -2096,6 +2303,81 @@ export function wireStubControls(item: EditorItem) {
         pushHistory();
         ensure().unoccupiedMaterialGuid = (e.target as HTMLSelectElement).value || undefined;
         setStatus("已更新压力开关松开外观（写回后生效）");
+      });
+      num("ctx-ps-idle-color")?.addEventListener("change", (e) => {
+        pushHistory();
+        ensure().idleColor = (e.target as HTMLInputElement).value || undefined;
+        setStatus("已更新压力开关未受压颜色（写回后生效）");
+      });
+      num("ctx-ps-pressed-color")?.addEventListener("change", (e) => {
+        pushHistory();
+        ensure().pressedColor = (e.target as HTMLInputElement).value || undefined;
+        setStatus("已更新压力开关受压颜色（写回后生效）");
+      });
+      document.getElementById("ctx-ps-idle-clear")?.addEventListener("click", () => {
+        pushHistory();
+        ensure().idleColor = undefined;
+        setStatus("已恢复压力开关未受压默认颜色（写回后生效）");
+        refreshContextStub(item);
+      });
+      document.getElementById("ctx-ps-pressed-clear")?.addEventListener("click", () => {
+        pushHistory();
+        ensure().pressedColor = undefined;
+        setStatus("已恢复压力开关受压默认颜色（写回后生效）");
+        refreshContextStub(item);
+      });
+
+      // 按住式门联动快捷入口：选门 → 创建/追加动画组并接线。
+      num("ctx-ps-door-add")?.addEventListener("click", () => {
+        const sel = document.getElementById("ctx-ps-door") as HTMLSelectElement | null;
+        const door = S.items.find((i) => i.instanceId === sel?.value);
+        if (!door) {
+          setStatus("请选择要联动的门", false);
+          return;
+        }
+        const swId = item.instanceId ?? "";
+        const existingLink = S.buttonLinks.find((l) => l.sourceId === swId);
+        const hasHold = holdGroupsOfSwitch(swId).length > 0;
+        if (existingLink && (!hasHold ||
+            (existingLink.groupNames?.length ?? 0) !== 1 ||
+            (existingLink.sharedSourceIds?.length ?? 0) > 0 ||
+            !!existingLink.pairId)) {
+          setStatus("该压力开关已有其它按钮联动，请先在触发编排中移除", false);
+          return;
+        }
+        pushHistory();
+        const group = createPressureDoorHoldLink(item, door);
+        if (!group) {
+          setStatus("创建按住式门联动失败", false);
+          draw();
+          return;
+        }
+        setStatus(`已更新按住式门联动「${group.displayName}」：${itemLabel(door)}（全量写回后生效）`);
+        refreshContextStub(item);
+        draw();
+      });
+      document.querySelectorAll<HTMLButtonElement>("[data-ps-door-unlink]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const raw = btn.dataset.psDoorUnlink ?? "";
+          const sep = raw.indexOf("|");
+          if (sep < 0) return;
+          const gid = raw.slice(0, sep);
+          const did = raw.slice(sep + 1);
+          const door = S.items.find((i) => i.instanceId === did);
+          pushHistory();
+          removeDoorFromHoldGroup(gid, did);
+          setStatus(door ? `已移除门联动「${itemLabel(door)}」` : "已移除门联动", true);
+          refreshContextStub(item);
+          draw();
+        });
+      });
+      document.querySelectorAll<HTMLButtonElement>("[data-ps-door-edit]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const gid = btn.dataset.psDoorEdit ?? "";
+          if (!gid) return;
+          hideContextMenu();
+          openAnimGroupEditorById(gid);
+        });
       });
       wireSwitchTabs();
       break;

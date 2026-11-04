@@ -4,7 +4,6 @@ import { dom } from "./dom";
 import { escHtml, normalizeRot } from "./coords";
 import { setStatus } from "./status";
 import { draw } from "./render";
-import { batchRandomRotateLotusPressureSwitches } from "./items";
 import { isThemedFloor, themedFloorPrefabs, effectiveMaterialTiling } from "./floors";
 import { itemLabel } from "./labels";
 import {
@@ -98,12 +97,6 @@ export function refreshAfterHeightFilterChange(): void {
   }
   draw();
 }
-
-const PRESSURE_SWITCH_SURFACE_IDS = new Set([
-  "PressureSwitch",
-  "dlc13_lotuspressureswitch_large",
-  "dlc13_lotuspressureswitch_small",
-]);
 
 function isSandAlienBackground(it: CatalogItem): boolean {
   const id = it.id.toLowerCase();
@@ -351,7 +344,6 @@ export function buildFloorPalette(filter = "", mode: "floor" | "background" = "f
       },
       { key: "conveyor", labelZh: "传送带地面", match: (it) => it.surfaceKind === "conveyor" },
       { key: "ground", labelZh: "大型地面", match: (it) => it.surfaceKind === "ground" },
-      { key: "pressure", labelZh: "压力开关（特殊地板）", match: (it) => PRESSURE_SWITCH_SURFACE_IDS.has(it.id) },
     ];
 
     for (const group of groups) {
@@ -455,8 +447,7 @@ export function updateFloorBar() {
   if (S.currentLayer === "floor") {
     const killToggle = `<label class="fb-check" title="回写 Unity 时把坠落区(KillPlane)扩大到覆盖整关"><input type="checkbox" id="fb-autokill" ${S.autoKillPlane ? "checked" : ""}/> 回写扩大坠落区</label>`;
     const walkToggle = `<label class="fb-check" title="回写时按可见地板重新生成可行走碰撞体"><input type="checkbox" id="fb-autowalk" ${S.autoWalkable ? "checked" : ""}/> 同步可行走到地板</label>`;
-    const lotusRotBtn = `<button type="button" id="fb-lotus-rand-rot" class="fb-btn" title="莲花压力开关随机 0/90/180/270°">🪷 莲花随机旋转</button>`;
-    actions = `${pending}${killToggle}${walkToggle}${lotusRotBtn}`;
+    actions = `${pending}${killToggle}${walkToggle}`;
     hint = `<span class="fb-hint">框选 · 拖动 · 拖角缩放 · 右键地板编辑器 · Del 删除 · Esc 取消放置</span>`;
   } else {
     actions = `${pending}<span class="fb-death-readonly" title="坠落类型由 Unity 场景 KillPlane 决定，在「相机」弹窗中查看相机背景色">坠落类型：<b>${deathLabelZh(S.deathInfo)}</b></span>`;
@@ -476,14 +467,6 @@ export function updateFloorBar() {
   });
   document.getElementById("fb-autowalk")?.addEventListener("change", (e) => {
     S.autoWalkable = (e.target as HTMLInputElement).checked;
-  });
-  document.getElementById("fb-lotus-rand-rot")?.addEventListener("click", () => {
-    const n = batchRandomRotateLotusPressureSwitches();
-    if (n === 0) {
-      setStatus("场景中没有莲花压力开关", false);
-      return;
-    }
-    setStatus(`已随机旋转 ${n} 个莲花压力开关（0° / 90° / 180° / 270°）`);
   });
 }
 

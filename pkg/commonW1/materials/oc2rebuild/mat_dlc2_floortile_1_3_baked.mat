@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: mat_dlc2_floortile_1_3
+  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+  m_ShaderKeywords: _DIFFUSECOLOURTOGGLE_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+      _DetaillMap:
+        m_Texture: {fileID: 2800000, guid: a1767798f1db8070e66420ac5e0e31be, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _Diffuse:
+        m_Texture: {fileID: 2800000, guid: 893c853c5bf493d3170f77f2a1cf9eb9, type: 3}
+        m_Scale: {x: 0.4, y: 0.4}
+        m_Offset: {x: 0, y: 0}
+      _Mask:
+        m_Texture: {fileID: 2800000, guid: 3cc3a86dabe91d528d3e99518697f91f, type: 3}
+        m_Scale: {x: 0.03, y: 0.06}
+        m_Offset: {x: 0.09, y: 0.16}
+      _Normals:
+        m_Texture: {fileID: 2800000, guid: 553a94e874dedd57c03c00a4c4657fdc, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _SandDetailMap:
+        m_Texture: {fileID: 2800000, guid: 56194260316575d59b0dd30838a2a749, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _SandNoise:
+        m_Texture: {fileID: 2800000, guid: fff38a7389665a337cdd55f07241d57e, type: 3}
+        m_Scale: {x: 0.1, y: 0.1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+      _Blend: 1
+      _BlendHeight: 0
+      _BlendWidth: 0.1
+      _BumpScale: 1
+      _Cutoff: 0.5
+      _DetailNormalMapScale: 1
+      _DetailRotate: 0.49
+      _DetailScale: 0.44
+      _DiffuseColourToggle: 1
+      _DstBlend: 0
+      _Gloss: 0.073
+      _GlossMapScale: 1
+      _Glossiness: 0.5
+      _GlossyReflections: 1
+      _Metal: 0
+      _Metallic: 0
+      _Mode: 0
+      _OcclusionStrength: 1
+      _Parallax: 0.02
+      _Roughness: 0.5
+      _SandDetailRotate: 0.39
+      _SandDetailScale: 0.45
+      _SandDetalSpecPower: 1.16
+      _SmoothnessTextureChannel: 0
+      _SpecularHighlights: 1
+      _SrcBlend: 1
+      _UVSec: 0
+      _WorldUVMultipllier: 0.28
+      _WorldUVRotator: 1.54
+      _ZWrite: 1
+      _scroll_speed: 0
+      _world_UV_multiplier: 0
+    m_Colors:
+      _BlendColour: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+      _Color: {r: 1, g: 1, b: 1, a: 1}
+      _Colour: {r: 1, g: 1, b: 1, a: 1}
+      _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+      _MaskColor: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 1}
+      _SandColour: {r: 0.44852942, g: 0.42436957, b: 0.30011895, a: 1}
+      _node_2532: {r: 0.5, g: 0.5, b: 0.5, a: 1}

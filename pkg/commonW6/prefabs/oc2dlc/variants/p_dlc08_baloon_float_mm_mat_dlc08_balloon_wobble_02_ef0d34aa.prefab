@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114096038827637246}
   - component: {fileID: 114967938430519454}
   m_Layer: 0
-  m_Name: p_dlc08_baloon_float_mm_mat_dlc08_balloon_wobble_02_ef0d34aa
+  m_Name: p_dlc08_baloon_float_mm_mat_dlc08_balloon_wobble_02
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -68,6 +68,7 @@ app.innerHTML = `
     <h1 class="m-title">📖 菜谱清单列表</h1>
     <span style="flex: 1"></span>
     ${mBtnHtml("🖼 导出图片", "default", { id: "rl-export", title: "把当前筛选出的菜谱合成一张 PNG 长图（重置筛选即导出全部）" })}
+    ${mBtnHtml("导出图标", "default", { id: "rl-export-icons", title: "下载当前筛选结果的菜谱或食材图标原图（多张打包为 zip；未导出原图时回退页面图标）" })}
     ${exportScaleSelectHtml("rl-export-scale")}
     <label class="rl-tool-check" title="显示面糊、炸物部件、自选披萨部件等半成品">
       <input type="checkbox" id="rl-intermediates"> 含半成品
@@ -114,6 +115,59 @@ let scoreFilter: "all" | "other" | number = "all";
 let showIntermediate = false;
 let view: "recipes" | "ingredients" = "recipes";
 let showReskinReps = true;
+
+/** exports/food-icons 清单。null = 还没跑过「菜谱与食材原图」导出。 */
+let foodIconIndex: { recipes: Set<string>; ingredients: Set<string> } | null = null;
+
+async function loadFoodIconIndex(): Promise<void> {
+  try {
+    const r = await fetch("/api/web-assets/food-icons/manifest.json", { cache: "no-store" });
+    if (!r.ok) {
+      foodIconIndex = null;
+      return;
+    }
+    const data = (await r.json()) as {
+      recipes?: Record<string, { w?: number; h?: number }>;
+      ingredients?: Record<string, { w?: number; h?: number }>;
+    };
+    foodIconIndex = {
+      recipes: new Set(Object.keys(data.recipes ?? {})),
+      ingredients: new Set(Object.keys(data.ingredients ?? {})),
+    };
+  } catch {
+    foodIconIndex = null;
+  }
+}
+
+function hdRecipeUrl(id: string): string | null {
+  if (!foodIconIndex || !foodIconIndex.recipes.has(id)) return null;
+  return `/api/web-assets/food-icons/recipes/${encodeURIComponent(id)}.png`;
+}
+
+function hdIngredientUrl(id: string): string | null {
+  if (!foodIconIndex || !foodIconIndex.ingredients.has(id)) return null;
+  return `/api/web-assets/food-icons/ingredients/${encodeURIComponent(id)}.png`;
+}
+
+/** 离屏导出前把成品图和食材角标换成原图。页面上正在显示的 img 不动。 */
+function upgradeExportImages(root: HTMLElement): void {
+  if (!foodIconIndex) return;
+  root.querySelectorAll<HTMLElement>(".rl-card").forEach((card) => {
+    const id = card.dataset.id;
+    if (!id) return;
+    const hd = hdRecipeUrl(id);
+    const img = card.querySelector<HTMLImageElement>(".rl-product > img");
+    if (img && hd) img.src = hd;
+  });
+  root.querySelectorAll<HTMLImageElement>("img").forEach((img) => {
+    const src = img.getAttribute("src") || "";
+    const m = src.match(/\/icons\/ingredients\/([^/?#]+)\.png$/);
+    if (!m) return;
+    const id = decodeURIComponent(m[1]);
+    const hd = hdIngredientUrl(id);
+    if (hd) img.src = hd;
+  });
+}
 
 /** 标准分数档位（其他 = 不在这些值内）。 */
 const STANDARD_SCORES = [20, 40, 60, 80, 100, 120];
@@ -237,6 +291,16 @@ function visible(): RecipeWithGroups[] {
   return out;
 }
 
+function visibleIngredients(): IngredientEntry[] {
+  const q = query.trim().toLowerCase();
+  const list = ingredients.filter((i) => {
+    if (q && !`${i.nameZh} ${i.nameEn ?? ""} ${i.id}`.toLowerCase().includes(q)) return false;
+    if (groupFilter !== "all" && (i.group ?? "core") !== groupFilter) return false;
+    return true;
+  });
+  return showReskinReps ? dedupReskins(list) : list;
+}
+
 function ingredientCard(i: IngredientEntry): string {
   const badge =
     i.group && i.group !== "core" ? ` <span class="pc-badge">${esc(foodGroupLabel(i.group))}</span>` : "";
@@ -249,13 +313,7 @@ function ingredientCard(i: IngredientEntry): string {
 }
 
 function renderIngredients(): string {
-  const q = query.trim().toLowerCase();
-  const list = ingredients.filter((i) => {
-    if (q && !`${i.nameZh} ${i.nameEn ?? ""} ${i.id}`.toLowerCase().includes(q)) return false;
-    if (groupFilter !== "all" && (i.group ?? "core") !== groupFilter) return false;
-    return true;
-  });
-  const deduped = showReskinReps ? dedupReskins(list) : list;
+  const deduped = visibleIngredients();
   if (deduped.length === 0) return '<div class="rl-empty">没有匹配的食材，试试调整搜索或筛选条件</div>';
   const groups = new Map<string, IngredientEntry[]>();
   for (const i of deduped) {
@@ -400,6 +458,7 @@ function wire(): void {
     });
   });
   document.getElementById("rl-export")!.addEventListener("click", () => void exportAll());
+  document.getElementById("rl-export-icons")!.addEventListener("click", () => void exportIcons());
   // 点击菜谱卡片 → 详情弹窗（食材清单视图的 .rl-ing-card 不响应）
   document.getElementById("rl-content")!.addEventListener("click", (e) => {
     const cardEl = (e.target as HTMLElement).closest<HTMLElement>(".rl-card");
@@ -449,6 +508,7 @@ async function exportAll(): Promise<void> {
     `;
     const host = stage.querySelector("[data-export-host]")!;
     for (const child of Array.from(content.children)) host.appendChild(child.cloneNode(true));
+    upgradeExportImages(stage);
     await waitForImages(stage);
     const scale = resolveExportScale();
     const used = await exportNodePng(stage, `${title}_${count}个_${date}.png`, { scale });
@@ -601,12 +661,15 @@ function openRecipeDetail(r: RecipeWithGroups): void {
     </div>`;
   const footer = `
     ${cancelBtnHtml("关闭")}
+    ${modalBtnHtml("下载图标", "modal-btn", { "data-download-icon": "" })}
     ${modalBtnHtml("🖼 下载菜谱图片", "modal-btn primary", { "data-download": "" })}`;
 
   const root = openModal(`📖 ${esc(r.nameZh)}`, body, footer);
   root.querySelector<HTMLButtonElement>("[data-cancel]")?.addEventListener("click", () => closeModal());
   const dl = root.querySelector<HTMLButtonElement>("[data-download]");
   dl?.addEventListener("click", () => void downloadRecipeCard(r, dl));
+  const dlIcon = root.querySelector<HTMLButtonElement>("[data-download-icon]");
+  dlIcon?.addEventListener("click", () => void downloadRecipeIcon(r, dlIcon));
 }
 
 /** 把单张菜谱卡片渲染成 PNG 下载（离屏克隆 + 等图加载，与整页导出同引擎）。 */
@@ -638,6 +701,7 @@ async function downloadRecipeCard(r: RecipeWithGroups, btn: HTMLButtonElement): 
     const cardW = sample ? Math.ceil(sample.getBoundingClientRect().width) : 300;
     stage = createOffscreenStage(cardW + 48, "sum-page");
     stage.innerHTML = `<div class="rl-grid">${cardHtml}</div>`;
+    upgradeExportImages(stage);
     await waitForImages(stage);
     const date = new Date().toISOString().slice(0, 10);
     await exportNodePng(stage, `${r.nameZh || r.id}_${date}.png`, { scale: resolveExportScale() });
@@ -650,8 +714,194 @@ async function downloadRecipeCard(r: RecipeWithGroups, btn: HTMLButtonElement): 
   }
 }
 
+/** 下载单道菜的图标原图。没有 exports 原图时回退页面图标，并在状态栏说明。 */
+async function downloadRecipeIcon(r: RecipeWithGroups, btn: HTMLButtonElement): Promise<void> {
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "正在下载…";
+  try {
+    const hd = hdRecipeUrl(r.id);
+    const url = hd ?? recipeIconUrlOf(r);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("图标不存在");
+    const data = new Uint8Array(await res.arrayBuffer());
+    const used = new Set<string>();
+    const name = iconDownloadName(r.nameZh || r.id, r.id, used);
+    downloadBlob(new Blob([toArrayBuffer(data)], { type: "image/png" }), name);
+    setStatus(hd ? `已下载图标 ${name}` : "尚未导出原图，已用页面图标");
+  } catch (e) {
+    setStatus(e instanceof Error ? e.message : String(e), false);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+}
+
+/** 当前筛选的菜谱或食材图标。一张直接下 PNG，多张打成不压缩 zip。 */
+async function exportIcons(): Promise<void> {
+  const btn = document.getElementById("rl-export-icons") as HTMLButtonElement | null;
+  const isIngredients = view === "ingredients";
+  const items = isIngredients ? visibleIngredients() : visible();
+  if (items.length === 0) {
+    setStatus(isIngredients ? "没有可导出的食材" : "没有可导出的菜谱", false);
+    return;
+  }
+  if (btn) btn.disabled = true;
+  setStatus(foodIconIndex ? "正在打包图标…" : "尚未导出原图，使用页面图标…");
+  try {
+    const used = new Set<string>();
+    const files: { name: string; data: Uint8Array }[] = [];
+    let fallback = 0;
+    for (const it of items) {
+      const hd = isIngredients ? hdIngredientUrl(it.id) : hdRecipeUrl(it.id);
+      const url = hd
+        ?? (isIngredients
+          ? `/icons/ingredients/${encodeURIComponent(it.id)}.png`
+          : recipeIconUrlOf(it));
+      if (!hd) fallback++;
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = new Uint8Array(await res.arrayBuffer());
+      files.push({ name: iconDownloadName(it.nameZh || it.id, it.id, used), data });
+    }
+    if (files.length === 0) {
+      setStatus("没有可下载的图标", false);
+      return;
+    }
+    const date = new Date().toISOString().slice(0, 10);
+    if (files.length === 1) {
+      downloadBlob(new Blob([toArrayBuffer(files[0].data)], { type: "image/png" }), files[0].name);
+    } else {
+      const title = isIngredients ? "食材图标" : "菜谱图标";
+      downloadBlob(
+        new Blob([toArrayBuffer(storeZip(files))], { type: "application/zip" }),
+        `${title}_${files.length}个_${date}.zip`,
+      );
+    }
+    const note = !foodIconIndex || fallback > 0 ? "（尚未导出原图的条目已用页面图标）" : "";
+    setStatus(`已导出 ${files.length} 个图标${note}`);
+  } catch (e) {
+    setStatus(e instanceof Error ? e.message : String(e), false);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function iconDownloadName(name: string, id: string, used: Set<string>): string {
+  const cleaned = (name || id).replace(/[\\/:*?"<>|]/g, "_").trim() || id;
+  let file = `${cleaned}.png`;
+  if (used.has(file)) file = `${cleaned}_${id}.png`;
+  used.add(file);
+  return file;
+}
+
+function toArrayBuffer(data: Uint8Array): ArrayBuffer {
+  const copy = new ArrayBuffer(data.byteLength);
+  new Uint8Array(copy).set(data);
+  return copy;
+}
+
+function downloadBlob(blob: Blob, filename: string): void {
+  const a = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+
+function crc32(data: Uint8Array): number {
+  let c = 0xffffffff;
+  for (let i = 0; i < data.length; i++) c = CRC_TABLE[(c ^ data[i]) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+/** STORE（不压缩）zip。PNG 本身已压缩，再 deflate 没有收益。文件名按 UTF-8 写入。 */
+function storeZip(files: { name: string; data: Uint8Array }[]): Uint8Array {
+  const enc = new TextEncoder();
+  const locals: Uint8Array[] = [];
+  const centrals: Uint8Array[] = [];
+  let offset = 0;
+  for (const f of files) {
+    const name = enc.encode(f.name);
+    const crc = crc32(f.data);
+    const local = new DataView(new ArrayBuffer(30));
+    local.setUint32(0, 0x04034b50, true);
+    local.setUint16(4, 20, true);
+    local.setUint16(6, 0x0800, true);
+    local.setUint16(8, 0, true);
+    local.setUint16(10, 0, true);
+    local.setUint16(12, 0, true);
+    local.setUint32(14, crc, true);
+    local.setUint32(18, f.data.length, true);
+    local.setUint32(22, f.data.length, true);
+    local.setUint16(26, name.length, true);
+    local.setUint16(28, 0, true);
+    const localBytes = new Uint8Array(30 + name.length + f.data.length);
+    localBytes.set(new Uint8Array(local.buffer), 0);
+    localBytes.set(name, 30);
+    localBytes.set(f.data, 30 + name.length);
+    locals.push(localBytes);
+
+    const central = new DataView(new ArrayBuffer(46));
+    central.setUint32(0, 0x02014b50, true);
+    central.setUint16(4, 20, true);
+    central.setUint16(6, 20, true);
+    central.setUint16(8, 0x0800, true);
+    central.setUint16(10, 0, true);
+    central.setUint16(12, 0, true);
+    central.setUint16(14, 0, true);
+    central.setUint32(16, crc, true);
+    central.setUint32(20, f.data.length, true);
+    central.setUint32(24, f.data.length, true);
+    central.setUint16(28, name.length, true);
+    central.setUint16(30, 0, true);
+    central.setUint16(32, 0, true);
+    central.setUint16(34, 0, true);
+    central.setUint16(36, 0, true);
+    central.setUint32(38, 0, true);
+    central.setUint32(42, offset, true);
+    const centralBytes = new Uint8Array(46 + name.length);
+    centralBytes.set(new Uint8Array(central.buffer), 0);
+    centralBytes.set(name, 46);
+    centrals.push(centralBytes);
+    offset += localBytes.length;
+  }
+  let centralSize = 0;
+  for (const c of centrals) centralSize += c.length;
+  const eocd = new DataView(new ArrayBuffer(22));
+  eocd.setUint32(0, 0x06054b50, true);
+  eocd.setUint16(8, files.length, true);
+  eocd.setUint16(10, files.length, true);
+  eocd.setUint32(12, centralSize, true);
+  eocd.setUint32(16, offset, true);
+  const out = new Uint8Array(offset + centralSize + 22);
+  let p = 0;
+  for (const b of locals) {
+    out.set(b, p);
+    p += b.length;
+  }
+  for (const b of centrals) {
+    out.set(b, p);
+    p += b.length;
+  }
+  out.set(new Uint8Array(eocd.buffer), p);
+  return out;
+}
+
 async function init(): Promise<void> {
   try {
+    await loadFoodIconIndex();
 
     const [recs, ings] = await Promise.all([
       api.fetchRecipeCatalog(""),

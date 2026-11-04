@@ -1696,6 +1696,24 @@
       "icon": false
     },
     {
+      "id": "appleidle",
+      "guid": "521e63c60ce6f8ccd56e7e014fcd1050",
+      "assetPath": "Assets/commonW1/prefabs/dlc07/art/hordenpc/appleidle.prefab",
+      "category": "art",
+      "theme": "hordenpc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "appleidle",
+      "nameEn": "appleidle",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
       "id": "background_balloon_01",
       "guid": "3c1cdd404e14d9b4e881f05bce8cb120",
       "assetPath": "Assets/common01/prefabs/art/air_balloon/background_balloon_01.prefab",
@@ -2482,6 +2500,24 @@
       "layoutTier": "decor",
       "nameZh": "蝴蝶结 4",
       "nameEn": "bow 4",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "breadidle",
+      "guid": "8bfcff1bcb7c2ec3c375d76f6b13c45b",
+      "assetPath": "Assets/commonW1/prefabs/dlc07/art/hordenpc/breadidle.prefab",
+      "category": "art",
+      "theme": "hordenpc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "breadidle",
+      "nameEn": "breadidle",
       "typeKind": "other",
       "usage": "dressing",
       "icon": false
@@ -3406,6 +3442,24 @@
       "icon": false
     },
     {
+      "id": "chilliidle",
+      "guid": "b55044b489832c673bd6de9ec078a054",
+      "assetPath": "Assets/commonW1/prefabs/dlc07/art/hordenpc/chilliidle.prefab",
+      "category": "art",
+      "theme": "hordenpc",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "chilliidle",
+      "nameEn": "chilliidle",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
       "id": "city_bridge",
       "guid": "80fd2b0435bc568c96eff732e2e3b05e",
       "assetPath": "Assets/commonW1/prefabs/core/art/city_sushi/city_bridge.prefab",
@@ -3999,87 +4053,21 @@
       "icon": false
     },
     {
-      "id": "cobble_01",
-      "guid": "d4c402175d59d2fb971cee8c27199b93",
-      "assetPath": "Assets/common03/prefabs/art/dlc03_christmas/cobble_01.prefab",
+      "id": "close water edge_abb2a10f",
+      "guid": "abb2a10f28d18d4927a195f03b82f0a9",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/dynamic/close water edge_abb2a10f.prefab",
       "category": "art",
-      "theme": "dlc03_christmas",
+      "theme": "dynamic",
       "defaultParent": "Art",
       "footprint": {
         "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.24155543744564056
+        "cellsZ": 1
       },
-      "height": 0.242,
-      "baseY": -0.121,
       "layoutTier": "decor",
-      "nameZh": "卵石 1",
-      "nameEn": "cobble 1",
-      "typeKind": "ground",
-      "usage": "flooring",
-      "icon": false
-    },
-    {
-      "id": "cobble_02",
-      "guid": "4b2644b98bc5314108f2a9ef18c68f83",
-      "assetPath": "Assets/common03/prefabs/art/dlc03_christmas/cobble_02.prefab",
-      "category": "art",
-      "theme": "dlc03_christmas",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.24155543744564056
-      },
-      "height": 0.242,
-      "baseY": -0.121,
-      "layoutTier": "decor",
-      "nameZh": "卵石 2",
-      "nameEn": "cobble 2",
-      "typeKind": "ground",
-      "usage": "flooring",
-      "icon": false
-    },
-    {
-      "id": "cobble_03",
-      "guid": "e4d9f132de8f285cffe5cf8400b3077a",
-      "assetPath": "Assets/common03/prefabs/art/dlc03_christmas/cobble_03.prefab",
-      "category": "art",
-      "theme": "dlc03_christmas",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.22883281111717224
-      },
-      "height": 0.229,
-      "baseY": -0.114,
-      "layoutTier": "decor",
-      "nameZh": "卵石 3",
-      "nameEn": "cobble 3",
-      "typeKind": "ground",
-      "usage": "flooring",
-      "icon": false
-    },
-    {
-      "id": "cobble_tiled_01",
-      "guid": "9375bfbff2a009b6a54f43818961bd55",
-      "assetPath": "Assets/common03/prefabs/art/dlc03_christmas/cobble_tiled_01.prefab",
-      "category": "art",
-      "theme": "dlc03_christmas",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.26368018984794617
-      },
-      "height": 0.264,
-      "baseY": -0.098,
-      "layoutTier": "decor",
-      "nameZh": "卵石铺砖 1",
-      "nameEn": "cobble tiled 1",
-      "typeKind": "ground",
-      "usage": "flooring",
+      "nameZh": "close water edge_abb2a10f",
+      "nameEn": "close water edge_abb2a10f",
+      "typeKind": "water",
+      "usage": "waterscape",
       "icon": false
     }
   ]

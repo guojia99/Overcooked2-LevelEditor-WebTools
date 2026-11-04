@@ -43,7 +43,8 @@ public static class LayoutEditorCatalogLookup
         { "dlc08_workstation_01_tray_sink_circus", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
         { "dlc08_workstation_02_tray_sink_circus", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
         { "dlc08_workstation_03_tray_sink_circus", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
-        // DLC 大件：大莲花压力开关 2×2；火锅灶台铺满 2×2（大锅 2×2 锅沿外架其上）
+        // 压力开关默认 2×2（2.4m×2.4m）；大莲花压力开关同为 2×2；火锅灶台铺满 2×2（大锅 2×2 锅沿外架其上）
+        { "PressureSwitch", new LayoutFootprint { cellsX = 2, cellsZ = 2 } },
         { "cooking_region_floorburner", new LayoutFootprint { cellsX = 2, cellsZ = 2 } },
         { "web_cooking_region_floorburner", new LayoutFootprint { cellsX = 2, cellsZ = 2 } },
         { "web_dlc10_cooking_region_floorburner", new LayoutFootprint { cellsX = 2, cellsZ = 2 } },

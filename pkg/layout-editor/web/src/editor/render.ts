@@ -37,7 +37,8 @@ import {
 import {
   drawItem,
   itemDrawCompare,
-  drawWorkstationOverlapAlertOutlines
+  drawWorkstationOverlapAlertOutlines,
+  isPlayerItem
 } from "./renderItems";
 import {
   drawFloorPlanes,
@@ -49,7 +50,7 @@ import {
 } from "./renderFloors";
 import { drawAnimControlOverlay, previewMemberPositions, previewFxState } from "./animControl";
 import { floorInHeightFilter, itemInHeightFilter } from "./floorHeight";
-import { drawTeleportalLinks, drawSwitchLinks, drawTerminalLinks, drawMarkerLightLinks, drawButtonPartnerLinks, drawCoaxialLinks, drawBurnerFocusedMarkers } from "./renderItems";
+import { drawTeleportalLinks, drawSwitchLinks, drawHoldGroupLinks, drawTerminalLinks, drawMarkerLightLinks, drawButtonPartnerLinks, drawCoaxialLinks, drawBurnerFocusedMarkers } from "./renderItems";
 import { drawSceneLights } from "./renderLights";
 import { drawServingLinks } from "./servingLinks";
 import {
@@ -625,6 +626,7 @@ export function draw() {
     drawReferenceOverlay(previewPos);
     drawTeleportalLinks();
     drawSwitchLinks();
+    drawHoldGroupLinks();
     drawButtonPartnerLinks();
     drawCoaxialLinks();
     drawTerminalLinks();
@@ -641,7 +643,7 @@ export function draw() {
   }
 
   drawSceneLights();
-  if (S.showCameraFov) drawCameraFrustum();
+  if (S.showCameraFov || S.cameraInfo?.splitScreen) drawCameraFrustum();
 
   if (S.showCoords) drawCoordAxes();
 
@@ -668,8 +670,8 @@ function isHexColor(hex: string | undefined): hex is string {
   return !!hex && /^#[0-9a-fA-F]{6}$/.test(hex);
 }
 
-/** 游戏相机视野范围估算：FOV 视锥四条边线与地面 y=0 的交点连成四边形（16:9）。
- *  相机 transform 来自导出快照；运行时镜头会跟随玩家推拉，此处为静态近似。 */
+/** 游戏相机视野范围估算：FOV 视锥四条边线与地面 y=0 的交点连成四边形。
+ *  非分屏：单主镜头参考；分屏：按场景玩家位置绘制最多 4 个镜头参考，主镜头参考隐藏。 */
 export function drawCameraFrustum(): void {
   const cam = S.cameraInfo;
   if (!cam || !cam.position) return;
@@ -690,13 +692,70 @@ export function drawCameraFrustum(): void {
   const fwd = { x: sinP * cosT, y: -sinT, z: cosP * cosT };
   const right = { x: cosP, y: 0, z: -sinP };
   const up = { x: sinT * sinP, y: cosT, z: sinT * cosP };
+  if (fwd.y >= -1e-4) return; // 相机没朝下看，视野与地面无交线
 
+  if (cam.splitScreen) {
+    const players = S.items.filter(isPlayerItem).slice(0, 4);
+    if (players.length === 0) return; // 分屏模式下不再画主镜头参考
+
+    const cfgs = cam.splitScreenCameras ?? [];
+    const palette = [
+      { fill: "rgba(231,76,60,0.06)", stroke: "rgba(231,76,60,0.85)" },
+      { fill: "rgba(52,152,219,0.06)", stroke: "rgba(52,152,219,0.85)" },
+      { fill: "rgba(46,204,113,0.06)", stroke: "rgba(46,204,113,0.85)" },
+      { fill: "rgba(241,196,15,0.06)", stroke: "rgba(241,196,15,0.85)" },
+    ];
+    // 分屏单目标默认跟随距离 = 主相机 m_minDistance（与运行时 MultiplayerCamera
+    // 单目标一致：相机位 = 厨师位 - minDistance*forward）。
+    const md = Number(cam.minDistance);
+    const baseDist = Number.isFinite(md) && md > 0 ? md : 5;
+    for (let i = 0; i < players.length; i++) {
+      const p = players[i];
+      const c = cfgs[i];
+      if (c?.visible === false) continue;
+      const raw = Number(c?.size ?? 1);
+      const size = Number.isFinite(raw) ? Math.min(4, Math.max(0.25, raw)) : 1;
+      const off = c?.offset ?? { x: 0, y: 0, z: 0 };
+      const dist = baseDist * size;
+      const origin = {
+        x: p._wx - fwd.x * dist + off.x,
+        y: -fwd.y * dist + off.y,
+        z: p._wz - fwd.z * dist + off.z,
+      };
+      const refFov = c?.fieldOfView && c.fieldOfView > 0 ? c.fieldOfView : fov;
+      drawFrustumReference(origin, fwd, right, up, refFov, splitViewAspect(players.length, i), palette[i % palette.length],
+        `🎥 镜头 ${i + 1} · ${size.toFixed(2)}×`, `镜头 ${i + 1}`);
+    }
+    return;
+  }
+
+  drawFrustumReference(cam.position, fwd, right, up, fov, 16 / 9,
+    { fill: "rgba(94,234,212,0.07)", stroke: "rgba(94,234,212,0.8)" },
+    `🎥 相机 FOV ${fov}° · 16:9（静态估算，运行时随玩家推拉）`);
+}
+
+/** 分屏 viewport 的宽高比（屏幕按 16:9 估算）：2P 左右半宽；3P 上 60% 宽/半高、下两半宽半高；4P 2×2。 */
+function splitViewAspect(count: number, index: number): number {
+  const screen = 16 / 9;
+  if (count === 2) return screen * 0.5;
+  if (count === 3) return index === 0 ? screen * (0.6 / 0.5) : screen;
+  return screen; // 1P 全屏 / 4P 2×2（半宽半高）
+}
+
+function drawFrustumReference(
+  P: { x: number; y: number; z: number },
+  fwd: { x: number; y: number; z: number },
+  right: { x: number; y: number; z: number },
+  up: { x: number; y: number; z: number },
+  fov: number,
+  aspect: number,
+  palette: { fill: string; stroke: string },
+  label: string,
+  targetLabel?: string
+): void {
   const vy = ((fov / 2) * Math.PI) / 180;
   const tanVy = Math.tan(vy);
-  const tanVh = tanVy * (16 / 9);
-
-  const P = cam.position;
-  if (fwd.y >= -1e-4) return; // 相机没朝下看，视野与地面无交线
+  const tanVh = tanVy * aspect;
 
   const corners: { x: number; z: number }[] = [];
   // 周长顺序（左上 → 左下 → 右下 → 右上）避免自交四边形。
@@ -720,18 +779,19 @@ export function drawCameraFrustum(): void {
   ctx.moveTo(pts[0].x, pts[0].y);
   for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
   ctx.closePath();
-  ctx.fillStyle = "rgba(94,234,212,0.07)";
+  ctx.fillStyle = palette.fill;
   ctx.fill();
 
   ctx.setLineDash([6, 4]);
-  ctx.strokeStyle = "rgba(94,234,212,0.8)";
+  ctx.strokeStyle = palette.stroke;
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
   // 视线中心线：相机位置 → 注视点。
   const camC = worldToCanvas(P.x, P.z);
   const tgtC = worldToCanvas(target.x, target.z);
-  ctx.strokeStyle = "rgba(94,234,212,0.45)";
+  ctx.strokeStyle = palette.stroke;
+  ctx.globalAlpha = 0.55;
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(camC.x, camC.y);
@@ -740,23 +800,31 @@ export function drawCameraFrustum(): void {
   ctx.setLineDash([]);
 
   // 注视点十字。
-  ctx.strokeStyle = "rgba(94,234,212,0.7)";
   ctx.beginPath();
   ctx.moveTo(tgtC.x - 6, tgtC.y);
   ctx.lineTo(tgtC.x + 6, tgtC.y);
   ctx.moveTo(tgtC.x, tgtC.y - 6);
   ctx.lineTo(tgtC.x, tgtC.y + 6);
   ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  if (targetLabel) {
+    ctx.font = "bold 11px sans-serif";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    ctx.fillStyle = palette.stroke;
+    ctx.fillText(targetLabel, tgtC.x + 8, tgtC.y - 8);
+  }
 
   // 相机位置标记。
-  ctx.fillStyle = "rgba(94,234,212,0.95)";
+  ctx.fillStyle = palette.stroke;
   ctx.beginPath();
   ctx.arc(camC.x, camC.y, 4, 0, Math.PI * 2);
   ctx.fill();
   ctx.font = "11px sans-serif";
   ctx.textAlign = "left";
   ctx.textBaseline = "bottom";
-  ctx.fillText(`🎥 相机 FOV ${fov}° · 16:9（静态估算，运行时随玩家推拉）`, camC.x + 8, camC.y - 4);
+  ctx.fillText(label, camC.x + 8, camC.y - 4);
 
   ctx.restore();
 }

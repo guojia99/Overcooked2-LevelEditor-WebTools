@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114096038827637246}
   - component: {fileID: 114967938430519454}
   m_Layer: 0
-  m_Name: quad_tile_3x1_01_mm_mat_dlc2_sand_11_97de4eb0
+  m_Name: quad_tile_3x1_01_mm_mat_dlc2_sand_11
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

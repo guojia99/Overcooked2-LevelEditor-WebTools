@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T03:29:30.119Z",
+  "generatedAt": "2026-11-03T06:40:44.764Z",
   "schemaVersion": 10,
   "typeNames": {
     "Counter": "普通桌台",
@@ -371,7 +371,9 @@
         "nameEn": "Jungle Counter",
         "theme": "Jungle",
         "themeName": "丛林",
-        "bundleName": ""
+        "bundleName": "",
+        "color": "#b38241",
+        "icon": "Counter_Jungle"
       },
       {
         "guid": "ed1a45aa0a655484fb5d8c08b112bb7e",
@@ -645,7 +647,9 @@
         "nameEn": "Anniversary Counter",
         "theme": "Anniversary",
         "themeName": "生日",
-        "bundleName": ""
+        "bundleName": "",
+        "color": "#734d4a",
+        "icon": "Counter_Anniversary"
       }
     ],
     "CounterCorner": [

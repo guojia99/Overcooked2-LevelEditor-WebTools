@@ -331,6 +331,11 @@ export function cleanOrphanedAnimControls(): void {
     g.itemInstanceIds = g.itemInstanceIds.filter(
       (id) => liveIds.has(id) || id.startsWith("new:")
     );
+    if (g.doorMotions) {
+      const liveMemberIds = new Set(g.itemInstanceIds);
+      g.doorMotions = g.doorMotions.filter((m) => liveMemberIds.has(m.instanceId));
+      if (g.doorMotions.length === 0) delete g.doorMotions;
+    }
     // 空气地板（airFloor）保留在组里：其碰撞盒对象（Col_AirFloor）是场景对象，
     // Unity 端会被动画组烘焙 reparent + 动画，碰撞随岛移动。
     g.floorInstanceIds = g.floorInstanceIds.filter(
@@ -1329,7 +1334,13 @@ function previewPositions(group: AnimGroup, t: number): Map<string, PreviewPose>
   const baseWp =
     firstMove?.waypointIds?.map((id) => group.waypoints.find((w) => w.id === id)).filter(Boolean)[0] ??
     group.waypoints[0];
-  const basePos = baseWp ? { x: baseWp.x, z: baseWp.z } : { x: 0, z: 0 };
+  let basePos = baseWp ? { x: baseWp.x, z: baseWp.z } : { x: 0, z: 0 };
+  // 纯旋转组（按住式门）没有路点：预览以首个成员的实际位置为基准，
+  // 否则会在世界原点演示旋转。
+  if (!baseWp && group.advanceMode === "hold" && memberIds.length > 0) {
+    const firstItem = S.items.find((i) => i.instanceId === memberIds[0]);
+    if (firstItem) basePos = { x: firstItem._wx, z: firstItem._wz };
+  }
 
   const place = (id: string, p: { x: number; z: number } | null | undefined, yMode: "base" | "relative" = "base", y = 0) => {
     if (!p) return;
@@ -1778,7 +1789,7 @@ function groupCardHtml(g: AnimGroup): string {
       : "";
   const pilotChip = pilot ? `<span class="mgc-chip chip-floor">🎮 摇杆组</span>` : "";
   const triggerChip = !pilot && g.triggerMode === "button"
-    ? `<span class="mgc-chip chip-floor">按钮触发${g.advanceMode === "press" ? " · 逐节点" : ""}</span>`
+    ? `<span class="mgc-chip chip-floor">按钮触发${g.advanceMode === "press" ? " · 逐节点" : g.advanceMode === "hold" ? " · 按住式" : ""}</span>`
     : "";
   return `<div class="anim-group-card${S.activeAnimGroupId === g.id ? " active" : ""}" data-group-id="${g.id}">
     <div class="mgc-color" style="background:${col}"></div>
@@ -2876,6 +2887,9 @@ function renderTimelineTab(
   if (group.triggerMode === "button" && group.advanceMode === "press") {
     warnHtml += `<div class="anim-tl-warn">🔘 节点环模式：相同开始时间的事件合并为一个节点（并行播放，如旋转+移动一次按压同时完成），不同开始时间 = 不同节点；按钮每按一次推进一个节点，末尾环回第一个节点。只有单个旋转事件时自动往返（按一次转、再按转回）。循环 / 往返不生效。</div>`;
   }
+  if (group.triggerMode === "button" && group.advanceMode === "hold") {
+    warnHtml += `<div class="anim-tl-warn">🦶 按住式：只支持两个 rotate 事件——第 1 个 = 站上压力开关（开门），第 2 个 = 离开（关门）。时间轴只用于预览，游戏内按事件顺序切换 Closed/Open 状态；不能绑定普通按钮。</div>`;
+  }
   if (moveOverlap) {
     warnHtml += fxGrp
       ? `<div class="anim-tl-warn">⚠ 特效事件时间重叠：重叠时只有最先开始的那个生效（其余被忽略），请错开时间 —— 间隔即节奏。</div>`
@@ -3112,18 +3126,21 @@ function renderSettingsTab(group: AnimGroup): string {
     : "";
   const isBtn = group.triggerMode === "button";
   const isPress = isBtn && group.advanceMode === "press";
+  const isHold = isBtn && group.advanceMode === "hold";
   const advanceField = isBtn
     ? `<label>按钮推进方式<select class="group-advance-mode">
-        <option value="timeline"${isPress ? "" : " selected"}>整组连播（一组 = 一个节点）</option>
+        <option value="timeline"${!isPress && !isHold ? " selected" : ""}>整组连播（一组 = 一个节点）</option>
         <option value="press"${isPress ? " selected" : ""}>逐节点推进（每按一次 = 下一个节点）</option>
+        <option value="hold"${isHold ? " selected" : ""}>压力开关按住（站上开 / 离开关）</option>
       </select></label>
-      <div class="sub anim-wp-hint">逐节点用于「往返翻转 / 分步移动」（如传送带 +180°/−180°、工作台逐段挪位）：相同开始时间的事件合并为一个节点（旋转+移动并行），每按一次推进一个节点，末尾环回；只有单个旋转事件时自动往返（按一次转、再按转回）。每次按压的完成回报等待当前节点播完。</div>`
+      <div class="sub anim-wp-hint">逐节点用于「往返翻转 / 分步移动」（如传送带 +180°/−180°、工作台逐段挪位）：相同开始时间的事件合并为一个节点（旋转+移动并行），每按一次推进一个节点，末尾环回；只有单个旋转事件时自动往返（按一次转、再按转回）。每次按压的完成回报等待当前节点播完。</div>
+      ${isHold ? '<div class="sub anim-wp-hint" style="color:#e8b35a">按住式：只支持两个 rotate 事件（第 1 个站上开门、第 2 个离开关门），且只能绑定压力开关；进入/离开由压力开关 Enter/Exit 直接驱动组根 Animator，启动/结束触发器与循环设置不生效。注意：第 2 个事件的方向/角度/时长不参与烘焙，关门始终从开门终态反向归位。每扇门的独立方向/角度/时长在门右键「门 · 旋转参数」里设置；门不强制吸附格心，模型根/旋转轴即摆放点（可放格子左上角 0,0）；第 1 个 rotate 只是未单独配置门的默认值。</div>' : ""}`
     : "";
   return `<div class="anim-section">
     ${sectionTitle("⚙", "组设置", "", "#8b93a3")}
     <div class="anim-settings-grid">
       <label>启动延迟 (秒)<input type="number" class="group-start-delay" value="${group.startDelay}" step="0.1" min="0" /></label>
-      <label class="check"><input type="checkbox" class="group-loop"${group.loop ? " checked" : ""}${isPress ? " disabled" : ""} /> 循环整个序列${isPress ? "（逐节点模式不支持）" : ""}</label>
+      <label class="check"><input type="checkbox" class="group-loop"${group.loop ? " checked" : ""}${isPress || isHold ? " disabled" : ""} /> 循环整个序列${isPress ? "（逐节点模式不支持）" : isHold ? "（按住式不支持）" : ""}</label>
       <label class="group-loop-delay-wrap"${group.loop && !isPress ? "" : ' style="display:none"'}>循环间隔 (秒)<input type="number" class="group-loop-delay" value="${group.loopDelay}" step="0.1" min="0" /></label>
       ${advanceField}
     </div>
@@ -3132,7 +3149,7 @@ function renderSettingsTab(group: AnimGroup): string {
     ${sectionTitle("🔀", "触发器 / 动画（TriggerQueue · Animator）", "", "#4f8fd6")}
     ${boundHint}
     <div class="anim-settings-grid">
-      <label class="check"><input type="checkbox" class="group-wait-finished"${group.waitForFinished ? " checked" : ""} /> 等待动画播完再触发下一事件</label>
+      <label class="check"><input type="checkbox" class="group-wait-finished"${group.waitForFinished ? " checked" : ""}${isHold ? " disabled" : ""} /> 等待动画播完再触发下一事件</label>
       <div class="sub anim-wp-hint">勾选后：每个移动事件播完（到达终点）才触发下一事件；循环片段不会发送完成信号。</div>
       <label>启动触发器（空 = 开局自动 / 延迟启动）${triggerSelectHtml("group-start-trigger", group.startTrigger, [["Start", "启动（= 自动启动）"], ["RoundStart", "回合开始"], ["GameStart", "游戏开始"]], "（空 · 开局自动 / 延迟启动）")}</label>
       <label>取消触发器（收到后中止队列）${triggerSelectHtml("group-cancel-trigger", group.cancelTrigger, [["StopMoving", "停止移动"], ["Stop", "停止"], ["Cancel", "取消"]], "（无）")}</label>
@@ -3970,7 +3987,7 @@ function wireGroupEditor(body: HTMLElement, group: AnimGroup): void {
   });
   body.querySelector<HTMLSelectElement>(".group-advance-mode")?.addEventListener("change", (e) => {
     const sel = e.target as HTMLSelectElement;
-    const v = sel.value === "press" ? "press" : "timeline";
+    const v = sel.value === "press" ? "press" : sel.value === "hold" ? "hold" : "timeline";
     if (group.advanceMode === v || (v === "timeline" && !group.advanceMode)) return;
     pushHistory();
     group.advanceMode = v;
@@ -3981,6 +3998,15 @@ function wireGroupEditor(body: HTMLElement, group: AnimGroup): void {
         evt.loop = false;
         evt.pingpong = false;
       }
+    } else if (v === "hold") {
+      group.loop = false;
+      group.waitForFinished = false;
+      group.triggerMode = "button";
+      for (const evt of group.events) {
+        evt.loop = false;
+        evt.pingpong = false;
+      }
+      setStatus("已切换为按住式：请保持两个 rotate 事件，并绑定压力开关（第 1 个站上、第 2 个离开）");
     }
     S.dirty = true;
     refresh();

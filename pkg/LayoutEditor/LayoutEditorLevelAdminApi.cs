@@ -2086,7 +2086,7 @@ public static class LayoutEditorLevelAdminApi
         c.timeBetweenOrders = d.timeBetweenOrders;
         c.plateReturnTime = d.plateReturnTime;
         c.survivalTimeMultiplier = d.survivalTimeMultiplier;
-        c.roundTime = d.roundTime;
+        c.roundTime = d.roundTime > 0 ? d.roundTime : 240;
         c.m_OneStarScore = d.oneStarScore;
         c.m_TwoStarScore = d.twoStarScore;
         c.m_ThreeStarScore = d.threeStarScore;
@@ -4568,11 +4568,6 @@ public static class LayoutEditorLevelAdminApi
             so.model = model;
             so.modelSO = null;
         }
-
-        // 组装定义子类（OptionalBurger/OptionalPizza）的 optionalSOs 是核心数据，
-        // 通用编辑表单不展示该字段，此处不能清空（由汉堡工作台等专用入口管理）。
-        if (!(so is CustomRecipeOptionalBurgerSO) && !(so is CustomRecipeOptionalPizzaSO))
-            so.optionalSOs = new ScriptableObject[0];
 
         EditorUtility.SetDirty(so);
 

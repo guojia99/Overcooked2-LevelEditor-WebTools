@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114096038827637246}
   - component: {fileID: 114967938430519454}
   m_Layer: 0
-  m_Name: dlc11_wall_brick_window_03_mm_mat_city_wall_01_ebb0b5b7
+  m_Name: dlc11_wall_brick_window_03_mm_mat_city_wall_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

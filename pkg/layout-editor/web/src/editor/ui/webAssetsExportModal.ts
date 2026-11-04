@@ -19,6 +19,7 @@ export function openWebAssetsExportModal(): void {
     { id: "counter-icons", label: "桌台图标", hint: "材质缩略图 → exports/counter-skins/icons" },
     { id: "counter-3d", label: "桌台 3D", hint: "俯视图 + OBJ/MTL → exports/counter-skins" },
     { id: "decor", label: "装饰双视图 + 高清详情 + 3D 模型", hint: "192 正/背缩略图 + 1024/1536/2048 详情图 + OBJ/MTL 3D → exports/decor " },
+    { id: "food-icons", label: "菜谱与食材原图", hint: "订单图标原图像素（不放大）→ exports/food-icons" },
   ];
   const catRows = CATS.map(
     (c) => `<label class="modal-check inline" style="display:flex;gap:8px;align-items:flex-start;margin:4px 0">
@@ -71,7 +72,11 @@ export function openWebAssetsExportModal(): void {
       currentEl.innerHTML =
         line("音频", m.audio, " 个音频") +
         line("桌台 3D", m.counterSkins, " 个模型") +
-        `<div class="muted" style="font-size:11px">桌台图标：${m.counterSkins.iconCount ?? 0} 个；装饰：${m.decor.count ?? 0} 正 / ${m.decor.backCount ?? 0} 背</div>`;
+        `<div class="muted" style="font-size:11px">桌台图标：${m.counterSkins.iconCount ?? 0} 个；装饰：${m.decor.count ?? 0} 正 / ${m.decor.backCount ?? 0} 背</div>` +
+        (m.foodIcons
+          ? line("菜谱与食材原图", m.foodIcons, " 张菜谱") +
+            `<div class="muted" style="font-size:11px">食材原图：${m.foodIcons.iconCount ?? 0} 张</div>`
+          : `<div class="muted" style="font-size:11px">菜谱与食材原图：尚未导出</div>`);
     } catch (e) {
       currentEl.textContent = `读取失败：${(e as Error).message}`;
     }
@@ -132,7 +137,8 @@ export function openWebAssetsExportModal(): void {
           `✅ 导出完成（${secs}s）\n` +
             `音频 ${s.audioClips}（失败 ${s.audioFailed}） · 桌台图标 ${s.counterIcons}（失败 ${s.counterIconsFailed}） · ` +
             `桌台 3D ${s.counter3d}（失败 ${s.counter3dFailed}） · ` +
-            `装饰 ${s.decorFront} 正 / ${s.decorBack} 背 · 详情 ${s.decorDetailFront ?? 0} 正 / ${s.decorDetailBack ?? 0} 背 · 3D ${s.decorModels ?? 0}（缺失 ${s.decorMissing}，失败 ${s.decorFailed}）`,
+            `装饰 ${s.decorFront} 正 / ${s.decorBack} 背 · 详情 ${s.decorDetailFront ?? 0} 正 / ${s.decorDetailBack ?? 0} 背 · 3D ${s.decorModels ?? 0}（缺失 ${s.decorMissing}，失败 ${s.decorFailed}） · ` +
+            `菜谱原图 ${s.foodRecipes ?? 0} · 食材原图 ${s.foodIngredients ?? 0}（失败 ${s.foodIconsFailed ?? 0}）`,
           1
         );
         if (okBtn) {

@@ -54,12 +54,26 @@ namespace CustomStub
         private static bool s_patched;
         private static bool s_patchFailed;
         private static bool s_postfixWarned;
+        /// <summary>多镜头分屏激活时，原版相机偏移完全不参与（每个分屏镜头直接
+        /// 以对应玩家为中心）。由 SplitScreenCamera 自愈时置位。</summary>
+        private static bool s_splitScreenActive;
+
+        internal static void SetSplitScreenActive(bool active)
+        {
+            s_splitScreenActive = active;
+            if (!active)
+                return;
+            // 分屏优先：清掉已注册的偏移，后续 CameraOffset| tag 也不再登记。
+            s_authored.Clear();
+            s_offsets.Clear();
+            s_activeCount = 0;
+        }
 
         /// <summary>场景自愈入口：相机根节点（带 tag 的物体）+ 摆放位 XZ。
         /// 幂等（同实例重复注册覆盖同值并重算偏移）。</summary>
         internal static void RegisterFromTag(GameObject rigRoot, float x, float z)
         {
-            if (rigRoot == null)
+            if (rigRoot == null || s_splitScreenActive)
                 return;
             EnsurePatches();
             var cam = GameApi.GetComponent(rigRoot, GameApi.MultiplayerCameraType);
@@ -84,6 +98,7 @@ namespace CustomStub
             s_authored.Clear();
             s_offsets.Clear();
             s_activeCount = 0;
+            s_splitScreenActive = false;
         }
 
         /// <summary>按需安装 GetIdealLocation postfix（首个 CameraOffset| tag 自愈时触发），
@@ -122,7 +137,7 @@ namespace CustomStub
         /// 相机的场景零字典操作；异常 once-flag 上报后放行原结果（原版行为兜底）。</summary>
         private static void IdealLocationPostfix(object __instance, ref Vector3 __result)
         {
-            if (s_activeCount == 0)
+            if (s_splitScreenActive || s_activeCount == 0)
                 return;
             try
             {

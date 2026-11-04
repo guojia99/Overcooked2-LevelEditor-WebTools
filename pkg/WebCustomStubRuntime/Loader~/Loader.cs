@@ -38,6 +38,12 @@ namespace OC2LevelRuntimeLoader
     /// 场景自愈（RandomCrate| 等 tag）统一收编于 CustomStub.EntryPoint（本 loader 不再
     /// 自行 HealScene），loader 只负责程序集/依赖加载 + 每次场景加载幂等补扫。
     ///
+    /// v4.1.0（2026-11-04 多镜头分屏·版本对齐）：**loader 逻辑零变更**，
+    ///     仅与 CustomStub 运行时 SSOT（StubVersion 4.1.0）对齐——新增
+    ///     SplitScreenCamera（SplitScreen|1 tag 自愈）。
+    /// v4.0.10（2026-11-04 传送带方向刷新·版本对齐）：**loader 逻辑零变更**，
+    ///     仅与 CustomStub 运行时 SSOT（StubVersion 4.0.10）对齐——修复在
+    ///     ConveyorDirectionSync（同步器就绪门禁，修开局 NRE）。
     /// v4.0.0（2026-10-28 commonW5 版本门控断点）：**loader 逻辑零变更**，仅与
     ///     CustomStub 运行时 SSOT（StubVersion 4.0.0）对齐——本版运行时主内容是
     ///     commonW5 增量库（BGM/桌台皮肤/食材/卷饼/茶杯链路，详见 StubVersion.cs
@@ -223,7 +229,7 @@ namespace OC2LevelRuntimeLoader
     {
         public const string PluginGuid = "oc2.oc2diylevelruntimewloader";
         public const string PluginName = "OC2DIYLevelRuntimeWLoader";
-        public const string PluginVersion = "4.0.0";
+        public const string PluginVersion = "4.1.0";
 
         /// <summary>统一运行时 bundle 文件名（依赖包内，固定；不与关卡目录下的
         /// *_custom_runtime 混淆，也绝不叫裸 runtime）。</summary>

@@ -1,0 +1,243 @@
+{
+ "13afd68d01afbca4096fa03ba93051fb": {
+  "name": "mat_plated_pasta_01",
+  "shaderGuid": "a4f5cb0444b0230478401b1a24debcb5",
+  "texEnvs": {
+   "_DiffuseMap": "91631f284e3089e40899a7e340de34b8"
+  },
+  "floats": {
+   "_Brightness": 0.0,
+   "_BumpScale": 1.0,
+   "_Cutoff": 0.5,
+   "_DetailNormalMapScale": 1.0,
+   "_DstBlend": 0.0,
+   "_GlossMapScale": 1.0,
+   "_Glossiness": 0.5,
+   "_GlossyReflections": 1.0,
+   "_Metallic": 0.2,
+   "_Mode": 0.0,
+   "_OcclusionStrength": 1.0,
+   "_Parallax": 0.02,
+   "_RimIntensity": 0.31,
+   "_RimPower": -0.27,
+   "_Roughness": 0.47,
+   "_SmoothnessTextureChannel": 0.0,
+   "_SpecularHighlights": 1.0,
+   "_SrcBlend": 1.0,
+   "_UVSec": 0.0,
+   "_ZWrite": 1.0
+  },
+  "colors": {
+   "_Color": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "_EmissionColor": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "_MaskColor": [
+    0.051470578,
+    0.011030154,
+    0.005298441,
+    1.0
+   ],
+   "_highlight_colour": [
+    0.8088235,
+    0.5431258,
+    0.3389922,
+    1.0
+   ]
+  },
+  "sourceRel": "Models/Plated/Materials/mat_plated_pasta_01.mat"
+ },
+ "e9bff5538b2ede44f981ac64f0cf366f": {
+  "name": "mat_plated_pasta_04",
+  "shaderGuid": "a4f5cb0444b0230478401b1a24debcb5",
+  "texEnvs": {
+   "_DiffuseMap": "3abf5715297dbc740b4056882f100cf1"
+  },
+  "floats": {
+   "_Brightness": 0.0,
+   "_BumpScale": 1.0,
+   "_Cutoff": 0.5,
+   "_DetailNormalMapScale": 1.0,
+   "_DstBlend": 0.0,
+   "_GlossMapScale": 1.0,
+   "_Glossiness": 0.5,
+   "_GlossyReflections": 1.0,
+   "_Metallic": 0.2,
+   "_Mode": 0.0,
+   "_OcclusionStrength": 1.0,
+   "_Parallax": 0.02,
+   "_RimIntensity": 0.31,
+   "_RimPower": -0.27,
+   "_Roughness": 0.47,
+   "_SmoothnessTextureChannel": 0.0,
+   "_SpecularHighlights": 1.0,
+   "_SrcBlend": 1.0,
+   "_UVSec": 0.0,
+   "_ZWrite": 1.0
+  },
+  "colors": {
+   "_Color": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "_EmissionColor": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "_MaskColor": [
+    0.09558821,
+    0.00351427,
+    0.00351427,
+    1.0
+   ],
+   "_highlight_colour": [
+    0.5588235,
+    0.38213667,
+    0.38213667,
+    1.0
+   ]
+  },
+  "sourceRel": "Models/Plated/Materials/mat_plated_pasta_04.mat"
+ },
+ "2c84b9b702d489a4692e12f6d70a44e8": {
+  "name": "mat_plated_fish_sliced_01",
+  "shaderGuid": "68e6273b1bb53d6428595914805f38b9",
+  "texEnvs": {
+   "_DiffuseMap": "f65c19adf268e6542966748a034994ce"
+  },
+  "floats": {
+   "_Brightness": 0.0,
+   "_BumpScale": 1.0,
+   "_Cutoff": 0.5,
+   "_DetailNormalMapScale": 1.0,
+   "_DstBlend": 0.0,
+   "_GlossMapScale": 1.0,
+   "_Glossiness": 0.5,
+   "_GlossyReflections": 1.0,
+   "_Metallic": 0.0,
+   "_Mode": 0.0,
+   "_OcclusionStrength": 1.0,
+   "_Parallax": 0.02,
+   "_RimIntensity": 0.78,
+   "_RimPower": 1.57,
+   "_Roughness": 0.4,
+   "_SmoothnessTextureChannel": 0.0,
+   "_SpecularHighlights": 1.0,
+   "_SrcBlend": 1.0,
+   "_UVSec": 0.0,
+   "_ZWrite": 1.0
+  },
+  "colors": {
+   "_Color": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "_EmissionColor": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "_MaskColor": [
+    0.5019608,
+    0.5019608,
+    0.5019608,
+    1.0
+   ],
+   "_highlight_colour": [
+    0.9117647,
+    0.8719588,
+    0.7843858,
+    1.0
+   ]
+  },
+  "sourceRel": "Models/Plated/Materials/mat_plated_fish_sliced_01.mat"
+ },
+ "9d71beb8ce663b64ca255b94fa542b3f": {
+  "name": "mat_ingredients_prawn_fried_01",
+  "shaderGuid": "78b85fba88168ff4e92bfe8923507d20",
+  "texEnvs": {
+   "_DiffuseMap": "175e1e6d91e48404aa54431c43bfef1c"
+  },
+  "floats": {
+   "_Brightness": 0.18,
+   "_Brightness_Power": 2.0,
+   "_BumpScale": 1.0,
+   "_Cutoff": 0.5,
+   "_DetailNormalMapScale": 1.0,
+   "_DetailPreview": 0.0,
+   "_DiffusePreview": 0.0,
+   "_DstBlend": 0.0,
+   "_GlossMapScale": 1.0,
+   "_Glossiness": 0.5,
+   "_GlossyReflections": 1.0,
+   "_Metallic": 0.0,
+   "_Mode": 0.0,
+   "_OcclusionStrength": 1.0,
+   "_Parallax": 0.02,
+   "_PreviewAO": 1.0,
+   "_PreviewEmission": 1.0,
+   "_ReflectionCubemap_Preivew": 0.0,
+   "_RimIntensity": 0.56,
+   "_RimPower": -0.15,
+   "_RimPreview": 1.0,
+   "_Roughness": 0.7,
+   "_SmoothnessTextureChannel": 0.0,
+   "_SpecularHighlights": 1.0,
+   "_SrcBlend": 1.0,
+   "_UVSec": 0.0,
+   "_UseMetallicTexture": 0.0,
+   "_UseRoughnessTexture": 0.0,
+   "_WorldUVMultipllier": 0.0,
+   "_WorldUVRotator": 0.0,
+   "_ZWrite": 1.0
+  },
+  "colors": {
+   "_Color": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "_EmissionColor": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "_EmissionColour": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "_MaskColor": [
+    0.33088237,
+    0.13302414,
+    0.004865922,
+    1.0
+   ],
+   "_highlight_colour": [
+    0.9338235,
+    0.16479237,
+    0.16479237,
+    1.0
+   ]
+  },
+  "sourceRel": "Models/Ingredients/Meshes/Materials/mat_ingredients_prawn_fried_01.mat"
+ }
+}

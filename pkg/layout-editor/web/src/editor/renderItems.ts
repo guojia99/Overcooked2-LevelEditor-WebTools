@@ -833,6 +833,63 @@ export function drawCoaxialLinks() {
   }
 }
 
+/** 按住式压力门联动边：buttonLink → hold 动画组 → 成员门。 */
+export interface HoldGroupEdge {
+  sourceId: string;
+  targetId: string;
+}
+
+export function collectHoldGroupEdges(): HoldGroupEdge[] {
+  const edges: HoldGroupEdge[] = [];
+  const seen = new Set<string>();
+  for (const l of S.buttonLinks) {
+    for (const gname of l.groupNames ?? []) {
+      const g = S.animControls.find((x) => x.displayName === gname);
+      if (!g || g.advanceMode !== "hold") continue;
+      for (const mid of g.itemInstanceIds) {
+        if (!S.items.some((i) => i.instanceId === mid)) continue;
+        const key = `${l.sourceId}|${mid}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        edges.push({ sourceId: l.sourceId, targetId: mid });
+      }
+    }
+  }
+  return edges;
+}
+
+/** 按住式压力门连线：压力开关 → 门（橙色虚线 + 箭头，与开关直连同视觉）。 */
+export function drawHoldGroupLinks() {
+  const byInst = new Map(S.items.map((i) => [i.instanceId, i]));
+  for (const e of collectHoldGroupEdges()) {
+    const sw = byInst.get(e.sourceId);
+    const target = byInst.get(e.targetId);
+    if (!sw || !target) continue;
+    const a = worldToCanvas(sw._wx, sw._wz);
+    const b = worldToCanvas(target._wx, target._wz);
+    dom.ctx.save();
+    dom.ctx.strokeStyle = "#f9ab00";
+    dom.ctx.globalAlpha = 0.5;
+    dom.ctx.lineWidth = 1.5;
+    dom.ctx.setLineDash([6, 4]);
+    dom.ctx.beginPath();
+    dom.ctx.moveTo(a.x, a.y);
+    dom.ctx.lineTo(b.x, b.y);
+    dom.ctx.stroke();
+    dom.ctx.setLineDash([]);
+    const rad = Math.atan2(b.y - a.y, b.x - a.x);
+    const ah = 8 * Math.max(0.6, S.scale);
+    dom.ctx.fillStyle = "#f9ab00";
+    dom.ctx.beginPath();
+    dom.ctx.moveTo(b.x, b.y);
+    dom.ctx.lineTo(b.x - Math.cos(rad - 0.45) * ah, b.y - Math.sin(rad - 0.45) * ah);
+    dom.ctx.lineTo(b.x - Math.cos(rad + 0.45) * ah, b.y - Math.sin(rad + 0.45) * ah);
+    dom.ctx.closePath();
+    dom.ctx.fill();
+    dom.ctx.restore();
+  }
+}
+
 /** 开关联动连线（switchLinks：开关 → 断头台/果汁机/酱料机等目标），橙色虚线 + 箭头指向目标。 */
 export function drawSwitchLinks() {
   const byInst = new Map(S.items.map((i) => [i.instanceId, i]));
@@ -1057,6 +1114,10 @@ export function isConveyorItem(item: EditorItem): boolean {
   return item.stubKind === "Conveyor" || prefabIdFromPath(item.prefabAssetPath) === "ConveyorStation";
 }
 
+export function isServeConveyorItem(item: EditorItem): boolean {
+  return prefabIdFromPath(item.prefabAssetPath) === "web_conveyor_station_serve";
+}
+
 export function isPlayerItem(item: EditorItem): boolean {
   return item.stubKind === "Player" || prefabIdFromPath(item.prefabAssetPath) === "Player";
 }
@@ -1088,6 +1149,7 @@ export const PARAM_BADGE_TYPES: { match: (it: EditorItem) => boolean; type: stri
   { match: isFoodSpawnerItem, type: "生成器", color: "#9be88a" },
   { match: (it) => stubKindOf(it) === "Travelator" && it.travelator?.timedReverse?.enabled === true, type: "定时步道", color: "#e8704b" },
   { match: (it) => stubKindOf(it) === "Travelator", type: "移动板", color: "#c792ea" },
+  { match: isServeConveyorItem, type: "可上菜", color: "#f0b84e" },
   { match: isConveyorItem, type: "传送带", color: "#e8d24e" },
   { match: (it) => stubKindOf(it) === "Flamethrower", type: "喷火器", color: "#e85b5b" },
   { match: (it) => stubKindOf(it) === "Burner", type: "燃烧弹射器", color: "#d97742" },

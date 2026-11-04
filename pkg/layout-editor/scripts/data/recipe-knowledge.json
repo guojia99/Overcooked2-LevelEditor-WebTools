@@ -599,7 +599,7 @@
     },
     {
       "id": "Sushi_All_SO",
-      "step": "Steamer",
+      "step": "Pot",
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
@@ -609,7 +609,7 @@
     },
     {
       "id": "Sushi_Cucumber_SO",
-      "step": "Steamer",
+      "step": "Pot",
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
@@ -618,7 +618,7 @@
     },
     {
       "id": "Sushi_Fish_SO",
-      "step": "Steamer",
+      "step": "Pot",
       "ingredients": [
         "SeaweedSO",
         "SushiRiceSO",
@@ -2910,6 +2910,34 @@
         "rootbeer"
       ],
       "plating": "Glass"
+    },
+    {
+      "id": "BoiledPasta",
+      "step": "Pot",
+      "ingredients": [
+        "PastaSO"
+      ]
+    },
+    {
+      "id": "Web_Seafood_Pasta_BoiledWrapper",
+      "step": "Pot",
+      "ingredients": [
+        "PastaSO"
+      ]
+    },
+    {
+      "id": "Web_Seafood_Pasta_FishNode",
+      "step": "FryingPan",
+      "ingredients": [
+        "SushiFishSO"
+      ]
+    },
+    {
+      "id": "Web_Seafood_Pasta_PrawnNode",
+      "step": "FryingPan",
+      "ingredients": [
+        "SushiPrawnSO"
+      ]
     }
   ]
 }

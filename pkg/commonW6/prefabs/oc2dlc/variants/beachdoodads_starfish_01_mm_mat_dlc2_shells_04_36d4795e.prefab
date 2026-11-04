@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114096038827637246}
   - component: {fileID: 114967938430519454}
   m_Layer: 0
-  m_Name: beachdoodads_starfish_01_mm_mat_dlc2_shells_04_36d4795e
+  m_Name: beachdoodads_starfish_01_mm_mat_dlc2_shells_04
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

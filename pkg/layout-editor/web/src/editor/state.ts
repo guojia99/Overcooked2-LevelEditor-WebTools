@@ -24,12 +24,21 @@ import type {
   WalkableRect
 } from "../types";
 
+/** 门自身保存的旋转参数（写回后由按住式动画组承载）。 */
+export interface DoorMotion {
+  direction: "cw" | "ccw";
+  angleDegrees: number;
+  durationSeconds: number;
+}
+
 export type EditorItem = LayoutItem & {
   _editorKey: string;
   _wx: number;
   _wz: number;
   _parentWx: number;
   _parentWz: number;
+  /** 门参数：默认顺时针 90° / 0.5s；联动后由动画组同步。 */
+  doorMotion?: DoorMotion;
 };
 
 export type EditorFloor = FloorObject & {
@@ -239,6 +248,8 @@ export const FOOTPRINT_BY_ID: Record<string, { cellsX: number; cellsZ: number }>
   SinkMug: { cellsX: 2, cellsZ: 1 },
   SinkTray: { cellsX: 2, cellsZ: 1 },
   Pushable_Object: { cellsX: 2, cellsZ: 2 },
+  // 压力开关默认 2×2（2.4m×2.4m）
+  PressureSwitch: { cellsX: 2, cellsZ: 2 },
   utensil_large_pot_01: { cellsX: 2, cellsZ: 2 },
   cooking_region_floorburner: { cellsX: 2, cellsZ: 2 },
   pushable_object: { cellsX: 2, cellsZ: 2 },

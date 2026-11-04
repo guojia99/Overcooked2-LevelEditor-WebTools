@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114096038827637246}
   - component: {fileID: 114967938430519454}
   m_Layer: 0
-  m_Name: planks_end_01_mm_mat_dlc2_planks_16_94e0c5c1
+  m_Name: planks_end_01_mm_mat_dlc2_planks_16
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -1326,6 +1326,45 @@ namespace CustomStub
                     null, Type.EmptyTypes, null)
                 : null;
         });
+        // ---- 多镜头分屏（SplitScreenCamera；vanilla 类型均反射） ----
+        /// <summary>分屏镜头复用主相机 MultiplayerCamera，只把 m_avatars 限定为
+        /// 单个厨师（默认跟随/高度比例与原版主相机一致）。</summary>
+        public static readonly MethodInfo MultiplayerCameraSetupAvatarsMethod = Safe(delegate
+        {
+            return MultiplayerCameraType != null
+                ? MultiplayerCameraType.GetMethod("SetupAvatars",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly FieldInfo MultiplayerCameraAvatarsField = Field(MultiplayerCameraType, "m_avatars");
+        public static readonly FieldInfo MultiplayerCameraBasePosField = Field(MultiplayerCameraType, "m_basePos");
+        public static readonly FieldInfo MultiplayerCameraGradientLimitField =
+            Field(MultiplayerCameraType, "m_gradientLimit");
+        public static readonly FieldInfo MultiplayerCameraTimeToMaxField =
+            Field(MultiplayerCameraType, "m_timeToMax");
+        public static readonly Type PlayerIDProviderType = Find("PlayerIDProvider");
+        public static readonly FieldInfo PlayerIDProviderAllProvidersField = Safe(delegate
+        {
+            return PlayerIDProviderType != null
+                ? PlayerIDProviderType.GetField("s_AllProviders",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+                : null;
+        });
+        public static readonly MethodInfo PlayerIDProviderGetIDMethod = Safe(delegate
+        {
+            return PlayerIDProviderType != null
+                ? PlayerIDProviderType.GetMethod("GetID",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        public static readonly Type FixedAspectRatioCameraType = Find("FixedAspectRatioCamera");
+        public static readonly Type CameraCanvasUpdaterType = Find("CameraCanvasUpdater");
+        public static readonly Type CameraAudioListenerType = Find("CameraAudioListener");
+        public static readonly Type CameraShakerType = Find("CameraShaker");
+        public static readonly Type CanvasCameraAssignmentType = Find("CanvasCameraAssignment");
+        public static readonly Type PostProcessingBehaviourType = Find("PostProcessingBehaviour");
 
         // ---- Harmony 目标：触发区占用联机同步 + fallPad 清理（TriggerZoneOccupancySync；
         // 接替 Assembly-CSharp-Patch ServerTriggerZone/ClientTriggerZone 源码覆盖补丁。
