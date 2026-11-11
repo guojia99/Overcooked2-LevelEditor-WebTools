@@ -68,11 +68,21 @@
     },
     {
       "name": "oc2_get_level_recipe_context",
+      "description": "catalog.recipes 排除 Web_SauceSalad_Optional_ 内部锚点，保留 optional 登记；saladSubgroups 的 non_dlc11_official 独占剧情食材沙拉及其酱扩展，其余的 mustard_only/ketchup_only/both_sauces/no_sauce 互斥，official 为可交叉来源组；按菜谱 id 去重计数。",
       "category": "recipes",
       "sideEffect": "read",
       "estimatedMs": 10000,
       "deadlineMs": 30000,
       "safeToRetry": true
+    },
+    {
+      "name": "oc2_salad_sauce_bundles",
+      "description": "operation=build/status；build 需 confirm=true，仅构建两个 Windows bundle。状态持久化 Library/SaladSauceBundleBuild/result.json；HTTP 超时先读状态，勿盲重试。无场景或 LevelInfo 保存，无发布包。",
+      "category": "dependencies",
+      "sideEffect": "build",
+      "estimatedMs": 300000,
+      "deadlineMs": 1800000,
+      "safeToRetry": false
     },
     {
       "name": "oc2_analyze_level_dependencies",

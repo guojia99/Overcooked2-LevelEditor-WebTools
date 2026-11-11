@@ -142,7 +142,7 @@ namespace CustomStub
         /// 权威掷骰）。纯自治组件（事件驱动 + 可选低频轮询协程），不计入 ticker
         /// 激活票数（TeleportalExitOnly 同款豁免），自愈挂载走 tag
         /// RandomTrigger|I:..|C:..|S:..|N:..|E:..（%,;&gt;|/@ 转义）。
-        ///  v19（4.1.0）：多镜头分屏 SplitScreenCamera（SplitScreen|1 tag 自愈；
+        ///  v19（4.0.0.11（原 4.1.0））：多镜头分屏 SplitScreenCamera（SplitScreen|1 tag 自愈；
         ///  原版镜头屏蔽、按本地厨师数量自动 1/2/3/4 镜头、单目标复用
         ///  MultiplayerCamera 运镜；分屏时忽略 CameraOffset|）。</summary>
         public const string Version = "v19(" + StubVersion.Value + ")";
@@ -219,6 +219,7 @@ namespace CustomStub
         private static string[] s_manifest;
         private static bool s_manifestProbed;
         private static bool s_scenePathWarned;
+        private static readonly HashSet<string> s_manifestMissReported = new HashSet<string>();
         private static readonly string[] NoFeatures = new string[0];
         /// <summary>当前场景的清单特征（无约束模式恒 null = 全部允许）。</summary>
         private static string[] s_activeFeatures = NoFeatures;
@@ -354,6 +355,10 @@ namespace CustomStub
         /// <summary>按当前场景特征刷新 ticker 子系统开关（缓存 bool，Update 零分配）。</summary>
         private static void RefreshFeatureFlags()
         {
+            // Play has no manifest; selected recipes supply this feature's gate.
+            var saladManager = s_activeFeatures == null
+                ? UnityEngine.Object.FindObjectOfType<PseudoPrefabManagerStub>() : null;
+            SaladSauceRuntime.SetSceneActive(s_activeFeatures, saladManager == null ? null : saladManager.levelInfo);
             s_fHotPot = HasFeature("hotpot") || HasFeature("pushable");
             s_fVoidFall = HasFeature("pushable");
             s_fTiming = HasFeature("timing");
@@ -524,6 +529,11 @@ namespace CustomStub
                 EnsurePlatePortionPatches();
                 EnsurePseudoPrefabDispenserSetupPatches();
                 RecipeWidgetTileFollowInstaller.Install();
+                // 屏幕点探针（2026-11-08 真机排障，仅 Verbose）：原生
+                // "Screen position out of view frustum" 类错误无托管堆栈——
+                // 探针把越界相机调用的调用方堆栈报到日志（只观察不拦截）。
+                if (StubLog.Verbose)
+                    ScreenPointProbe.EnsureInstalled();
                 InstallRuntimeModules();
                 if (Type.GetType("LevelEditorStub.SetupCustomPrefabStub, LevelEditorStub") == null)
                     StubLog.LogWarn("[CustomStub] 当前 LevelEditorStub.dll 较旧（缺 SetupCustomPrefabStub）——"
@@ -1656,6 +1666,37 @@ namespace CustomStub
             }
         }
 
+        private static bool s_orderSequencePatched;
+
+        /// <summary>订单顺序补丁（4.0.0.18（原 4.7.0））：RoundData.GetNextRecipe 前缀接管出单
+        /// 序列。按需安装（场景激活 OrderSequenceDirector 成功才装），幂等；
+        /// 前缀首行静态放行（Director.Active=false 零开销），安装失败 = 原版随机。</summary>
+        internal static void EnsureOrderSequencePatches()
+        {
+            if (s_orderSequencePatched)
+                return;
+            try
+            {
+                var target = GameApi.RoundDataGetNextRecipeMethod;
+                var prefixMethod = HarmonyPatches.RoundDataGetNextRecipePrefixMethod;
+                if (target == null || prefixMethod == null)
+                {
+                    StubLog.LogWarn("[CustomStub] RoundData.GetNextRecipe 反射/前缀缺失，"
+                        + "订单顺序接管未装（维持原版随机出单）");
+                    return;
+                }
+                var harmony = new Harmony(HarmonyId + ".orderseq");
+                harmony.Patch(target, new HarmonyMethod(prefixMethod));
+                s_orderSequencePatched = true;
+                StubLog.Log("[CustomStub] 订单顺序补丁已装（按需）: "
+                    + target.DeclaringType.Name + "." + target.Name);
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] 订单顺序补丁安装失败（维持原版随机出单）: " + ex);
+            }
+        }
+
         private static void OnSceneLoadedHeal(Scene scene, LoadSceneMode mode)
         {
             s_tickWarned.Clear();
@@ -1698,6 +1739,7 @@ namespace CustomStub
                 BeginProbe();
                 HealScene(scene);
                 ResetSceneTickers();
+                OrderSequenceDirector.ActivateFromScene();
                 return;
             }
 
@@ -1721,6 +1763,13 @@ namespace CustomStub
             var lookup = LookupManifestLevel(manifest, set, level, out features);
             if (lookup == LevelMiss)
             {
+                // 诊断：清单未命中＝该关不适用 stub 运行时（未导出特征/导出器漏项/
+                // 关卡不在清单）。Info 只报一次，正常关卡不受影响；出现「进图卡加载」
+                // 时先看这一行，确认是不是「本关该有 stub 但清单漏了」。
+                var missKey = set + "/" + level;
+                if (s_manifestMissReported.Add(missKey))
+                    StubLog.Log("[CustomStub] 关卡未命中 stub 清单，零介入: " + missKey
+                        + "（该关未导出 stub 特征，或导出器漏扫；如本关应有自定义玩法请重新导出该集）");
                 StubLog.Dbg("[CustomStub] 关卡未命中 stub 清单，零介入: " + set + "/" + level);
                 s_activeFeatures = NoFeatures;
                 RefreshFeatureFlags();
@@ -1738,6 +1787,7 @@ namespace CustomStub
                 BeginProbe();
                 HealScene(scene);
                 ResetSceneTickers();
+                OrderSequenceDirector.ActivateFromScene();
                 return;
             }
 
@@ -1750,6 +1800,7 @@ namespace CustomStub
                 EnsureAnimPilotFloorPatches();
             HealScene(scene);
             ResetSceneTickers();
+            OrderSequenceDirector.ActivateFromScene();
         }
 
         private static void ResetSceneTickers()
@@ -1765,6 +1816,8 @@ namespace CustomStub
             RatHeist.OnSceneChanged();
             UpstreamPseudoHeal.OnSceneChanged();
             NetDiagnostics.OnSceneChanged();
+            ScreenPointProbe.OnSceneChanged();
+            OrderSequenceDirector.OnSceneChanged();
         }
 
         /// <summary>场景自愈：按 tag 载体补挂缺失组件并还原参数（组件为权威，
@@ -1800,11 +1853,14 @@ namespace CustomStub
                     // 传送门单向是「自带低频协程、不用 ticker」的自治组件：不计入
                     // 激活票数，否则只放单向门的关卡会白跑全套 HotPot/VoidFall 扫描
                     // （v12 三态门控的同一条性能约定）。RandomTrigger 同款豁免
-                    //（事件驱动 + 可选低频轮询，零 ticker 零补丁）。
+                    //（事件驱动 + 可选低频轮询，零 ticker 零补丁）。订单顺序
+                    // OrderSeq| 同款（纯数据组件 + 按需冷补丁，激活走
+                    // ProcessScene 末尾 ActivateFromScene，不经 ticker）。
                     if (!tag.prefabTag.StartsWith(TeleportalExitOnly.TagPrefix, StringComparison.Ordinal)
                         && !tag.prefabTag.StartsWith(RandomTrigger.TagPrefix, StringComparison.Ordinal)
                         && !tag.prefabTag.StartsWith(SwitchTint.TagPrefix, StringComparison.Ordinal)
-                        && !tag.prefabTag.StartsWith(SplitScreenCamera.TagPrefix, StringComparison.Ordinal))
+                        && !tag.prefabTag.StartsWith(SplitScreenCamera.TagPrefix, StringComparison.Ordinal)
+                        && !tag.prefabTag.StartsWith(OrderSequenceSettings.TagPrefix, StringComparison.Ordinal))
                         tickerTags++;
                     if (tag.prefabTag.StartsWith(UtensilTimingConfig.TagPrefix, StringComparison.Ordinal))
                         sawUtensilTiming = true;
@@ -1856,6 +1912,11 @@ namespace CustomStub
                 // Design/Pilot Objects 下各组直系成员补挂 AnimGridMemberSync（零配置、
                 // 免 tag；编辑器烘焙件在场则跳过）。真机 Missing Script 须运行时补挂。
                 HealAnimGridMembers();
+                // fade 淡入淡出驱动器（4.0.0.15（原 4.3.0））：动画组成员补挂 FadeDriver（幂等、
+                // 惰性——alpha 恒 1 零开销；fade clip 绑定其字段才生效）。真机
+                // 场景序列化件是 Missing Script，运行时补挂（AnimGridMemberSync
+                // 同模式；运行时无法枚举曲线绑定，故不判定全挂）。
+                HealFadeDrivers();
                 // 节点环步数对账校正器（3.6.0 联机丢步修复）：Design/Animated Objects
                 // 组根补挂 NodeRingSync（免 tag，组件内按 BLPress 参数判定是否节点环）。
                 HealNodeRingSync();
@@ -1921,8 +1982,9 @@ namespace CustomStub
                 || prefabTag.StartsWith(ButtonSpawnerBatch.TagPrefix, StringComparison.Ordinal)
                  || prefabTag.StartsWith(WebBackpackStorage.TagPrefix, StringComparison.Ordinal)
                  || prefabTag.StartsWith(WebKillerGhost.TagPrefix, StringComparison.Ordinal)
-                 || prefabTag.StartsWith(Kettle.TagPrefix, StringComparison.Ordinal)
-                 || prefabTag.StartsWith(SwitchTint.TagPrefix, StringComparison.Ordinal);
+                  || prefabTag.StartsWith(Kettle.TagPrefix, StringComparison.Ordinal)
+                  || prefabTag.StartsWith(SwitchTint.TagPrefix, StringComparison.Ordinal)
+                  || prefabTag.StartsWith(OrderSequenceSettings.TagPrefix, StringComparison.Ordinal);
         }
 
         /// <summary>统计对象上 CustomStub 命名空间组件数（自愈前后对比用）。</summary>
@@ -1974,6 +2036,19 @@ namespace CustomStub
             if (prefabTag.StartsWith(WebKillerGhost.TagPrefix, StringComparison.Ordinal))
             {
                 HealWebKillerGhost(go, prefabTag);
+                return;
+            }
+            if (prefabTag.StartsWith(OrderSequenceSettings.TagPrefix, StringComparison.Ordinal))
+            {
+                if (HasStubComponentNamed(go, "OrderSequenceSettings"))
+                    return;
+                // 纯数据组件（无生命周期逻辑），tag 可无损重建（uID 全标量编码）；
+                // disabled→Parse→enable 仍是统一竞态范式
+                var seq = go.AddComponent<OrderSequenceSettings>();
+                seq.enabled = false;
+                ParseOrderSeq(prefabTag.Substring(OrderSequenceSettings.TagPrefix.Length), seq);
+                seq.enabled = true;
+                StubLog.Dbg("[CustomStub] 自愈 OrderSequenceSettings: " + go.name);
                 return;
             }
             if (prefabTag.StartsWith(TimedCookingSwitch.TagPrefix, StringComparison.Ordinal))
@@ -2227,6 +2302,40 @@ namespace CustomStub
         private static bool IsPilotFloorRigMember(Transform member)
         {
             return member != null && member.name == PilotFloorWalkBoxName;
+        }
+
+        /// <summary>fade 淡入淡出驱动器补挂（4.0.0.15（原 4.3.0））：Design/Animated Objects 下
+        /// 各组直系成员挂 FadeDriver（幂等按组件名判重；FadeDriver 惰性——无
+        /// fade 曲线绑定的成员 alpha 恒 1，Update 零开销）。</summary>
+        private static void HealFadeDrivers()
+        {
+            try
+            {
+                var container = GameObject.Find("Design/Animated Objects");
+                if (container == null)
+                    return;
+                int healed = 0;
+                var containerTr = container.transform;
+                for (int g = 0; g < containerTr.childCount; g++)
+                {
+                    var groupRoot = containerTr.GetChild(g);
+                    for (int m = 0; m < groupRoot.childCount; m++)
+                    {
+                        var member = groupRoot.GetChild(m);
+                        if (HasStubComponentNamed(member.gameObject, "FadeDriver"))
+                            continue;
+                        member.gameObject.AddComponent<FadeDriver>();
+                        healed++;
+                    }
+                }
+                if (healed > 0)
+                    StubLog.Log("[CustomStub] 自愈 FadeDriver × " + healed +
+                        "（fade 淡入淡出驱动，无 fade 事件的成员零开销）");
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] FadeDriver 扫描失败: " + ex.Message);
+            }
         }
 
         /// <summary>组根容器下直系成员 wrapper 补挂 AnimGridMemberSync；skipMember 为 true 时跳过。</summary>
@@ -2887,6 +2996,51 @@ namespace CustomStub
             sw.m_onSeconds = ParseFloat(parts[1], 30f);
             sw.m_offSeconds = ParseFloat(parts[2], 30f);
             sw.m_startOn = parts[3].Trim() == "1";
+        }
+
+        /// <summary>OrderSeq|e=loop|m=0,1|s=3,2|b=0,6|u=101,202,...（4.0.0.18（原 4.7.0） 订单顺序
+        /// 载体；全标量可无损重建，语义见 OrderSequenceSettings 类头）。</summary>
+        private static void ParseOrderSeq(string payload, OrderSequenceSettings seq)
+        {
+            if (string.IsNullOrEmpty(payload) || seq == null)
+                return;
+            var modes = new List<int>();
+            var sizes = new List<int>();
+            var batches = new List<int>();
+            var uids = new List<int>();
+            var end = "loop";
+            var segs = payload.Split('|');
+            for (int i = 0; i < segs.Length; i++)
+            {
+                var seg = segs[i];
+                var eq = seg.IndexOf('=');
+                if (eq <= 0)
+                    continue;
+                var key = seg.Substring(0, eq);
+                var val = seg.Substring(eq + 1);
+                if (key == "e")
+                {
+                    end = val;
+                }
+                else
+                {
+                    var target = key == "m" ? modes : (key == "s" ? sizes : (key == "b" ? batches : (key == "u" ? uids : null)));
+                    if (target == null)
+                        continue;
+                    var items = val.Split(',');
+                    for (int j = 0; j < items.Length; j++)
+                    {
+                        int v;
+                        if (int.TryParse(items[j], NumberStyles.Integer, CultureInfo.InvariantCulture, out v))
+                            target.Add(v);
+                    }
+                }
+            }
+            seq.m_endBehavior = end;
+            seq.m_groupModes = modes.ToArray();
+            seq.m_groupSizes = sizes.ToArray();
+            seq.m_groupBatches = batches.ToArray();
+            seq.m_recipeUids = uids.ToArray();
         }
 
         /// <summary>TravelatorReverse|&lt;1|0&gt;,&lt;fwd&gt;,&lt;back&gt;,&lt;1|0&gt;[,&lt;angle&gt;]

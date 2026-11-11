@@ -230,8 +230,43 @@ public static class SceneFloorExporter
         string matName = null;
         int materialTilingW = 0;
         int materialTilingD = 0;
+        // PBR 覆盖态与 tiling 同通道：编码在烘焙变体材质名后缀 _m<0-100>_s<0-100>
+        // （可叠在 _tilingWxH 之后）。命中 → pbrOverride=true；未覆盖时读材质资产
+        // 实际 _Metallic/_Glossiness 作为前端展示基线（HasProperty 防护非 Standard
+        // shader 的材质）。渲染模式 _rm<0-3> 同理。
+        bool pbrOverride = false;
+        float metallic = 0f;
+        float smoothness = 0f;
+        bool rmOverride = false;
+        int renderMode = 0;
         if (mat != null)
         {
+            float suffixMetallic, suffixSmoothness;
+            if (LayoutEditorFloorMaterialsApi.TryParsePbrSuffix(mat.name, out suffixMetallic, out suffixSmoothness))
+            {
+                pbrOverride = true;
+                metallic = suffixMetallic;
+                smoothness = suffixSmoothness;
+            }
+            else
+            {
+                if (mat.HasProperty("_Metallic"))
+                    metallic = mat.GetFloat("_Metallic");
+                if (mat.HasProperty("_Glossiness"))
+                    smoothness = mat.GetFloat("_Glossiness");
+            }
+
+            int suffixRm;
+            if (LayoutEditorFloorMaterialsApi.TryParseRenderModeSuffix(mat.name, out suffixRm))
+            {
+                rmOverride = true;
+                renderMode = suffixRm;
+            }
+            else if (mat.HasProperty("_Mode"))
+            {
+                renderMode = Mathf.Clamp(Mathf.RoundToInt(mat.GetFloat("_Mode")), 0, 3);
+            }
+
             matPath = AssetDatabase.GetAssetPath(mat);
             if (!string.IsNullOrEmpty(matPath))
             {
@@ -261,7 +296,7 @@ public static class SceneFloorExporter
                 }
                 else
                 {
-                    matName = LayoutEditorFloorMaterialsApi.StripMaterialTilingSuffix(mat.name);
+                    matName = LayoutEditorFloorMaterialsApi.StripFloorVariantSuffixes(mat.name);
                 }
             }
         }
@@ -311,6 +346,11 @@ public static class SceneFloorExporter
             depthCells = depthCells,
             materialTilingW = materialTilingW > 0 ? materialTilingW : widthCells,
             materialTilingD = materialTilingD > 0 ? materialTilingD : depthCells,
+            pbrOverride = pbrOverride,
+            metallic = metallic,
+            smoothness = smoothness,
+            renderModeOverride = rmOverride,
+            renderMode = renderMode,
         });
     }
 

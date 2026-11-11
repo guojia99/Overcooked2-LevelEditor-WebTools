@@ -41,6 +41,8 @@ import type {
   IngredientEntry,
   LayoutDocument,
   LevelAssignmentData,
+  LevelOrderSequence,
+  OrderSequenceResult,
   LevelWorkloadData,
   WorkloadResult,
   LevelDetail,
@@ -837,11 +839,12 @@ export async function createLevel(body: LevelCreateBody): Promise<void> {
   await readApiJson<{ ok?: boolean }>(r);
 }
 
-export async function renameLevel(setName: string, levelId: string, newLevelId: string): Promise<void> {
+/** newSceneName 是场景文件 / sceneName / AssetBundle 后缀，可含 s_。目录名由后端按场景名推导。 */
+export async function renameLevel(setName: string, levelId: string, newSceneName: string): Promise<void> {
   const r = await fetch("/api/level/rename", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ setName, levelId, newLevelId }),
+    body: JSON.stringify({ setName, levelId, newSceneName }),
   });
   await readApiJson<{ ok?: boolean }>(r);
 }
@@ -952,11 +955,54 @@ export async function deleteLevel(setName: string, levelId: string): Promise<voi
   await readApiJson<{ ok?: boolean }>(r);
 }
 
+export async function deleteLevels(setName: string, levelIds: string[]): Promise<void> {
+  const r = await fetch("/api/level/delete-batch", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ setName, levelIds }),
+  });
+  await readApiJson<{ ok?: boolean }>(r);
+}
+
+export interface LevelDeletePreviewItem {
+  levelId: string;
+  paths: string[];
+}
+
+export async function fetchDeletePreviewBatch(
+  setName: string,
+  levelIds: string[]
+): Promise<LevelDeletePreviewItem[]> {
+  const r = await fetch("/api/level/delete-preview-batch", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ setName, levelIds }),
+  });
+  const data = await readApiJson<{ levels?: LevelDeletePreviewItem[] }>(r);
+  return data.levels ?? [];
+}
+
 export async function reorderLevels(setName: string, levelIds: string[]): Promise<void> {
   const r = await fetch("/api/level/reorder", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ setName, levelIds }),
+  });
+  await readApiJson<{ ok?: boolean }>(r);
+}
+
+/** 批量保存关卡分组（仅传发生变化的关卡；group="" 表示取消分组）。 */
+export interface LevelGroupItem {
+  levelId: string;
+  assetPath: string;
+  group: string;
+}
+
+export async function saveLevelGroups(setName: string, items: LevelGroupItem[]): Promise<void> {
+  const r = await fetch("/api/level/group-save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ setName, items }),
   });
   await readApiJson<{ ok?: boolean }>(r);
 }
@@ -1139,6 +1185,41 @@ export async function clearLevelAssignment(assetPath: string): Promise<void> {
     body: JSON.stringify({ assetPath }),
   });
   await readApiJson<AssignmentResult>(r);
+}
+
+// ---------- 订单顺序（order_seq~/order_seq.json；场景载体由写回/导出烘焙） ----------
+
+/** 读取订单顺序配置；未配置或文件缺失返回 null（= 原版随机出单）。 */
+export async function fetchLevelOrderSequence(assetPath: string): Promise<LevelOrderSequence | null> {
+  const q = new URLSearchParams({ assetPath });
+  const r = await fetch(`/api/level/order-sequence?${q}`);
+  const data = await readApiJson<OrderSequenceResult>(r);
+  if (!data.exists || !data.json) return null;
+  try {
+    return JSON.parse(data.json) as LevelOrderSequence;
+  } catch {
+    throw new Error("订单顺序配置解析失败（order_seq.json 不是合法 JSON，可在菜谱管理重新保存覆盖）");
+  }
+}
+
+/** 保存订单顺序配置（后端结构校验：组数/guid/mode/batchSize/endBehavior）。 */
+export async function saveLevelOrderSequence(assetPath: string, data: LevelOrderSequence): Promise<void> {
+  const r = await fetch("/api/level/order-sequence-save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assetPath, json: JSON.stringify(data) }),
+  });
+  await readApiJson<OrderSequenceResult>(r);
+}
+
+/** 清除订单顺序配置（场景载体由下一次写回/导出清理）。 */
+export async function clearLevelOrderSequence(assetPath: string): Promise<void> {
+  const r = await fetch("/api/level/order-sequence-clear", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assetPath }),
+  });
+  await readApiJson<OrderSequenceResult>(r);
 }
 
 export async function fetchLevelWorkload(assetPath: string): Promise<LevelWorkloadData | null> {
@@ -1725,6 +1806,8 @@ export async function deleteCustomContent(setName: string, kind: string, id: str
   await readApiJson<{ ok?: boolean; error?: string }>(r);
 }
 
-export function customContentIconUrl(item: { assetPath: string }): string {
-  return `/api/custom-content/icon?assetPath=${encodeURIComponent(item.assetPath)}`;
+export function customContentIconUrl(item: { assetPath: string; updatedAt?: string }, version?: string | number): string {
+  const v = version ?? item.updatedAt;
+  const suffix = v ? `&v=${encodeURIComponent(String(v))}` : "";
+  return `/api/custom-content/icon?assetPath=${encodeURIComponent(item.assetPath)}${suffix}`;
 }

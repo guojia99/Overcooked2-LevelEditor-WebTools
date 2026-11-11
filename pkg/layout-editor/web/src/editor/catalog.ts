@@ -433,6 +433,124 @@ export function counterAppearanceOptions(item: EditorItem): CounterAppearanceOpt
   return S.counterAppearances?.byType[ct] ?? [];
 }
 
+/** 同一主题多条 SO（common01 反斜杠路径 + common03 正斜杠副本）时，优先能被游戏加载的那条。 */
+function appearanceChoiceScore(o: CounterAppearanceOption): number {
+  let score = 0;
+  if (o.icon) score += 2;
+  if (o.color) score += 1;
+  if (o.assetPath && o.assetPath.indexOf("\\") < 0) score += 4;
+  return score;
+}
+
+/** 每个主题只留一条，供下拉与写回使用。guid 查找仍走完整列表。 */
+export function counterAppearanceChoices(options: CounterAppearanceOption[]): CounterAppearanceOption[] {
+  const best = new Map<string, CounterAppearanceOption>();
+  for (const o of options) {
+    const prev = best.get(o.theme);
+    if (!prev || appearanceChoiceScore(o) > appearanceChoiceScore(prev)) best.set(o.theme, o);
+  }
+  return [...best.values()];
+}
+
+/** 文件名主题不一致时的等价组：普通桌的 Circus 与切菜台的 Circus02 是同一套马戏团 2。 */
+const COUNTER_THEME_ALIASES: string[][] = [
+  ["Circus", "Circus02", "Circus2"],
+  ["Circus01", "Circus1"],
+  ["Circus03", "Circus3"],
+  ["Circus04", "Circus4"],
+  ["Medieval", "Medieval1"],
+];
+
+const MEDIEVAL4_FILE_IDS = ["Counter02SO", "CounterCorner02SO", "ChoppingCounter02SO"];
+
+function isMedieval4Alias(o: CounterAppearanceOption): boolean {
+  if (o.theme === "Medieval4") return true;
+  if (o.theme !== "02") return false;
+  if (MEDIEVAL4_FILE_IDS.indexOf(o.id) >= 0) return true;
+  return /medieval/i.test(`${o.id} ${o.assetPath} ${o.nameEn}`);
+}
+
+/** 按主题取该类型应写入的皮肤。空主题不在这里处理。找不到返回 undefined（调用方跳过）。 */
+export function counterAppearanceForTheme(
+  options: CounterAppearanceOption[],
+  theme: string
+): CounterAppearanceOption | undefined {
+  const choices = counterAppearanceChoices(options);
+  const exact = choices.find((o) => o.theme === theme);
+  if (exact) return exact;
+  for (const group of COUNTER_THEME_ALIASES) {
+    if (group.indexOf(theme) < 0) continue;
+    for (const alt of group) {
+      const hit = choices.find((o) => o.theme === alt);
+      if (hit) return hit;
+    }
+  }
+  // 旧目录把部落 4 标成主题 "02"（Counter02SO）。选「部落 4」时才能落到这些条目。
+  // 反过来不成立：食材箱的 "02" 是另一只箱子，不能在选 "02" 时改成部落桌。
+  if (theme === "Medieval4") {
+    const hit = choices.find((o) => o.theme === "02" && isMedieval4Alias(o));
+    if (hit) return hit;
+  }
+  return undefined;
+}
+
+export function counterDefaultAppearance(
+  options: CounterAppearanceOption[]
+): CounterAppearanceOption | undefined {
+  return counterAppearanceChoices(options).find((o) => !o.theme);
+}
+
+export function isDefaultCounterAppearance(item: EditorItem, options: CounterAppearanceOption[]): boolean {
+  if (item.resetAppearance) return true;
+  const guid = item.pseudoPrefabGuid ?? "";
+  if (!guid) return true;
+  const hit = options.find((o) => o.guid === guid);
+  return !!hit && !hit.theme;
+}
+
+/** 下拉框的 value：默认是 ""；其它主题用该主题的首选 guid，这样重复 SO 也能对上选项。 */
+export function counterAppearanceSelectValue(item: EditorItem, options: CounterAppearanceOption[]): string {
+  if (isDefaultCounterAppearance(item, options)) return "";
+  const guid = item.pseudoPrefabGuid ?? "";
+  const hit = options.find((o) => o.guid === guid);
+  if (!hit) return guid;
+  const choice = counterAppearanceChoices(options).find((o) => o.theme === hit.theme);
+  return choice?.guid ?? guid;
+}
+
+/** guid 为空 = 恢复默认外观。写回靠 resetAppearance 还原预制件皮肤，并带上目录里的默认 SO 作兜底。 */
+export function assignCounterAppearance(
+  item: EditorItem,
+  options: CounterAppearanceOption[],
+  guid: string
+): void {
+  if (!guid) {
+    const def = counterDefaultAppearance(options);
+    item.pseudoPrefabGuid = def ? def.guid : undefined;
+    item.resetAppearance = true;
+    return;
+  }
+  item.pseudoPrefabGuid = guid;
+  item.resetAppearance = undefined;
+}
+
+/** 按主题写入。空主题 = 默认。没有对应皮肤时返回 false，不改物品。 */
+export function assignCounterTheme(
+  item: EditorItem,
+  options: CounterAppearanceOption[],
+  theme: string
+): boolean {
+  if (!theme) {
+    assignCounterAppearance(item, options, "");
+    return true;
+  }
+  const opt = counterAppearanceForTheme(options, theme);
+  if (!opt) return false;
+  item.pseudoPrefabGuid = opt.guid;
+  item.resetAppearance = undefined;
+  return true;
+}
+
 export function catalogItemById(id: string): CatalogItem | undefined {
   for (const it of S.catalogByGuid.values()) if (it.id === id) return it;
   return undefined;

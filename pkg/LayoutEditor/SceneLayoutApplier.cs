@@ -33,6 +33,12 @@ public static class SceneLayoutApplier
     /// </summary>
     public static string Apply(LayoutDocumentDto document, float snapStep, bool syncWalkable, string only)
     {
+        // 必须在开场景、删物件、烘焙、SaveScene 之前拒绝。请求可能在编辑模式入队，
+        // 主线程泵执行时编辑器已经进了 Play。
+        var playBlock = LayoutEditorSafety.PlayModeWriteBlockReason();
+        if (!string.IsNullOrEmpty(playBlock))
+            return playBlock;
+
         LastNewIdRemap = null;
         LayoutEditorLayoutMigrations.BeginApply();
         if (document == null || document.items == null)
@@ -527,6 +533,23 @@ public static class SceneLayoutApplier
         var steamerLevelInfo = LayoutEditorLevelInfoResolver.ResolveForScene(document.sceneAssetPath);
         if (steamerLevelInfo != null)
             LayoutEditorSteamerFill.SyncSteamerIngredients(steamerLevelInfo);
+        // 订单顺序（4.0.0.18（原 4.7.0））：order_seq~/order_seq.json 为权威，写回幂等烘焙/清理
+        // 场景载体（组件 + tag）；失败不吞写回（告警定位）。
+        if (steamerLevelInfo != null)
+        {
+            try
+            {
+                var orderSeqWarn = LayoutEditorOrderSequenceBake.ApplyForOpenScene(steamerLevelInfo);
+                if (orderSeqWarn != null)
+                    LayoutEditorLog.LogWarning("[Applier] " + orderSeqWarn);
+            }
+            catch (System.Exception e)
+            {
+                LayoutEditorLog.LogWarning("[Applier] 订单顺序烘焙失败（其余写回不受影响）: " + e.Message);
+            }
+        }
+        // 分料机 2026-11 字段迁移（outputPrefab -> outputPrefabSO）：必须在 SaveScene 前。
+        LayoutEditorIngredientSplitterMigration.MigrateOpenScene();
         LayoutEditorPseudoReload.ForcePrepareForBuildingForExport();
         var removedMissingScripts = LayoutEditorMissingScriptCleanup.RemoveMissingScripts(scene);
         if (removedMissingScripts > 0)
@@ -746,9 +769,14 @@ public static class SceneLayoutApplier
                 LayoutEditorStubIO.SetSplitScreenTag(cam.gameObject, cameras);
             }
         }
+        // 进场动画：intro=null 不动（旧文档/MCP 精简写回保护，防误清已有配置）；
+        // mode="vanilla" 为显式恢复原版。烘焙/切换/禁用全在 CameraIntroBakery。
+        string introWarning = null;
+        if (info.intro != null)
+            introWarning = CameraIntroBakery.Apply(cam, info.intro);
         if (changed)
             EditorUtility.SetDirty(cam);
-        return null;
+        return introWarning;
     }
 
     /// <summary>写回 Art/Lights 非 prefab 灯光的颜色/强度/范围/启用状态。
@@ -1961,24 +1989,41 @@ public static class SceneLayoutApplier
 
     /// <summary>材质地板：按 tiling 格数烘焙 _MainTex/_BumpMap ST 到材质资产（非 MPB、
     ///  不落场景内嵌实例），与 RotatedImageTexture 同策略，保证 bundle 导出后平铺与
-    ///  Shader 引用在真机可解析。</summary>
+    ///  Shader 引用在真机可解析。覆盖段也在此烘焙（变体名追加后缀，SceneFloorExporter
+    ///  回读覆盖态的通道，与 _tilingWxH 同构）：
+    ///  · PBR（pbrOverride）→ _m&lt;0-100&gt;_s&lt;0-100&gt; + SetFloat _Metallic/_Glossiness
+    ///  · 渲染模式（renderModeOverride）→ _rm&lt;0-3&gt; + ApplyStandardRenderMode 四态配方
+    ///  段顺序固定 &lt;base&gt;[_tilingWxH][_rm#][_m##_s##]。源材质 shader 无 PBR/_Mode
+    ///  属性（模型导入的 legacy shader，commonW1/W2 约半数地板材质）时，变体换内置
+    ///  Standard 重建并拷贝贴图/颜色（与图片/染色地板的 Standard 工厂同策略）。</summary>
     private static Material BakedMaterialFloorMaterial(FloorDto floor, Material source)
     {
         if (source == null) return null;
         int tilingW = EffectiveMaterialTilingW(floor);
         int tilingD = EffectiveMaterialTilingD(floor);
+        bool pbr = floor != null && floor.pbrOverride;
+        bool rmo = floor != null && floor.renderModeOverride;
+        bool sourceSupportsPbr = source.HasProperty("_Metallic") && source.HasProperty("_Glossiness");
+        bool sourceSupportsMode = source.HasProperty("_Mode");
         int tagW, tagH;
         bool hasTag = TryParseFloorSizeTag(source.name, out tagW, out tagH);
-        if (hasTag && tilingW == tagW && tilingD == tagH)
+        bool needTilingVariant = !(hasTag && tilingW == tagW && tilingD == tagH);
+        if (!pbr && !rmo && !needTilingVariant)
             return source;
 
+        var pbrSuffix = pbr
+            ? LayoutEditorFloorMaterialsApi.PbrVariantSuffix(floor.metallic, floor.smoothness)
+            : "";
+        var rmSuffix = rmo
+            ? LayoutEditorFloorMaterialsApi.RenderModeVariantSuffix(floor.renderMode)
+            : "";
         var guidKey = !string.IsNullOrEmpty(floor.materialGuid) ? floor.materialGuid : source.name;
-        var key = guidKey + "|tiling" + tilingW + "x" + tilingD;
+        var key = guidKey + "|tiling" + tilingW + "x" + tilingD + rmSuffix + pbrSuffix;
         Material m;
         if (_materialFloorMats.TryGetValue(key, out m) && m != null)
             return m;
 
-        var assetPath = PersistedFloorMaterialAssetPath(source, tilingW, tilingD);
+        var assetPath = PersistedFloorMaterialAssetPath(source, tilingW, tilingD, needTilingVariant, rmSuffix, pbrSuffix);
         if (!string.IsNullOrEmpty(assetPath))
         {
             m = AssetDatabase.LoadAssetAtPath<Material>(assetPath);
@@ -1989,13 +2034,30 @@ public static class SceneLayoutApplier
             }
         }
 
-        m = new Material(source);
-        m.name = LayoutEditorFloorMaterialsApi.StripMaterialTilingSuffix(source.name)
-            + "_tiling" + tilingW + "x" + tilingD;
-        if (hasTag)
-            ApplyMaterialFloorStScale(m, source, tilingW, tilingD, tagW, tagH);
-        else
-            ApplyMaterialFloorDirectTiling(m, tilingW, tilingD);
+        // legacy shader 换壳：Standard 变体 + 拷贝贴图/颜色，覆盖的浮点/混合态才有落点。
+        // 找不到 Standard（编辑器理论不可达）则退回源材质克隆、覆盖失效。
+        bool needsRebuild = (pbr && !sourceSupportsPbr) || (rmo && !sourceSupportsMode);
+        var stdShader = needsRebuild ? Shader.Find("Standard") : null;
+        m = stdShader != null ? new Material(stdShader) : new Material(source);
+        m.name = LayoutEditorFloorMaterialsApi.StripFloorVariantSuffixes(source.name)
+            + (needTilingVariant ? "_tiling" + tilingW + "x" + tilingD : "")
+            + rmSuffix + pbrSuffix;
+        if (stdShader != null)
+            CopyFloorMaterialSurface(m, source);
+        if (needTilingVariant)
+        {
+            if (hasTag)
+                ApplyMaterialFloorStScale(m, source, tilingW, tilingD, tagW, tagH);
+            else
+                ApplyMaterialFloorDirectTiling(m, tilingW, tilingD);
+        }
+        if (pbr)
+        {
+            m.SetFloat("_Metallic", Mathf.Clamp01(floor.metallic));
+            m.SetFloat("_Glossiness", Mathf.Clamp01(floor.smoothness));
+        }
+        if (rmo)
+            ApplyStandardRenderMode(m, floor.renderMode);
 
         if (!string.IsNullOrEmpty(assetPath))
         {
@@ -2013,16 +2075,95 @@ public static class SceneLayoutApplier
         return m;
     }
 
-    private static string PersistedFloorMaterialAssetPath(Material source, int tilingW, int tilingD)
+    /// <summary>Unity Standard 渲染模式四态配方（与 StandardShaderUtils/材质 Inspector
+    ///  的 Rendering Mode 切换一致）：0=Opaque 1=Cutout 2=Fade 3=Transparent。
+    ///  _Mode/_SrcBlend/_DstBlend/_ZWrite/三个 alpha 关键字/RenderType tag/渲染队列
+    ///  全量显式设置——四态互相切换不留旧状态残留。</summary>
+    private static void ApplyStandardRenderMode(Material m, int mode)
+    {
+        if (m == null)
+            return;
+        if (mode < 0 || mode > 3)
+            mode = 0;
+        if (m.HasProperty("_Mode"))
+            m.SetFloat("_Mode", (float)mode);
+        switch (mode)
+        {
+            case 1: // Cutout
+                m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+                m.SetInt("_ZWrite", 1);
+                m.EnableKeyword("_ALPHATEST_ON");
+                m.DisableKeyword("_ALPHABLEND_ON");
+                m.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                m.SetOverrideTag("RenderType", "TransparentCutout");
+                m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
+                break;
+            case 2: // Fade
+                m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                m.SetInt("_ZWrite", 0);
+                m.DisableKeyword("_ALPHATEST_ON");
+                m.EnableKeyword("_ALPHABLEND_ON");
+                m.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                m.SetOverrideTag("RenderType", "Transparent");
+                m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+                break;
+            case 3: // Transparent（预乘 alpha）
+                m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                m.SetInt("_ZWrite", 0);
+                m.DisableKeyword("_ALPHATEST_ON");
+                m.EnableKeyword("_ALPHABLEND_ON");
+                m.EnableKeyword("_ALPHAPREMULTIPLY_ON");
+                m.SetOverrideTag("RenderType", "Transparent");
+                m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+                break;
+            default: // Opaque
+                m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+                m.SetInt("_ZWrite", 1);
+                m.DisableKeyword("_ALPHATEST_ON");
+                m.DisableKeyword("_ALPHABLEND_ON");
+                m.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                m.SetOverrideTag("RenderType", "Opaque");
+                m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Geometry;
+                break;
+        }
+    }
+
+    /// <summary>legacy → Standard 换壳时拷贝源材质的主色/主贴图/法线（含 ST）。
+    ///  只拷这三样——金属度/光滑度由覆盖值 SetFloat，不拷金属贴图。</summary>
+    private static void CopyFloorMaterialSurface(Material dest, Material source)
+    {
+        if (source.HasProperty("_Color") && dest.HasProperty("_Color"))
+            dest.SetColor("_Color", source.GetColor("_Color"));
+        if (source.HasProperty("_MainTex") && dest.HasProperty("_MainTex"))
+        {
+            dest.SetTexture("_MainTex", source.GetTexture("_MainTex"));
+            dest.SetTextureScale("_MainTex", source.GetTextureScale("_MainTex"));
+            dest.SetTextureOffset("_MainTex", source.GetTextureOffset("_MainTex"));
+        }
+        if (source.HasProperty("_BumpMap") && dest.HasProperty("_BumpMap"))
+        {
+            dest.SetTexture("_BumpMap", source.GetTexture("_BumpMap"));
+            dest.SetTextureScale("_BumpMap", source.GetTextureScale("_BumpMap"));
+            dest.SetTextureOffset("_BumpMap", source.GetTextureOffset("_BumpMap"));
+        }
+    }
+
+    private static string PersistedFloorMaterialAssetPath(Material source, int tilingW, int tilingD,
+        bool includeTiling, string rmSuffix, string pbrSuffix)
     {
         var setName = ResolveLevelSetNameFromActiveScene();
         if (string.IsNullOrEmpty(setName) || source == null)
             return null;
-        var baseName = LayoutEditorFloorMaterialsApi.StripMaterialTilingSuffix(source.name);
+        var baseName = LayoutEditorFloorMaterialsApi.StripFloorVariantSuffixes(source.name);
         if (string.IsNullOrEmpty(baseName))
             baseName = source.name;
         return "Assets/LevelSets/" + setName + "/materials/" + baseName
-            + "_tiling" + tilingW + "x" + tilingD + ".mat";
+            + (includeTiling ? "_tiling" + tilingW + "x" + tilingD : "")
+            + rmSuffix + pbrSuffix + ".mat";
     }
 
     private static string ResolveLevelSetNameFromActiveScene()
@@ -3472,6 +3613,17 @@ public static class LayoutEditorSafety
         LastError = null;
         LayoutEditorPseudoReload.EnsurePrepareForBuilding();
         return true;
+    }
+
+    /// <summary>
+    /// Play 模式（含正在进入或退出）下禁止写回。返回 null 表示可以写；
+    /// 非 null 时应原样返回给调用方，且不得再开场景、写历史或落盘。
+    /// </summary>
+    public static string PlayModeWriteBlockReason()
+    {
+        if (EditorApplication.isPlaying || EditorApplication.isPlayingOrWillChangePlaymode)
+            return "Unity 正在 Play 模式，写回已全部拦截。请先退出 Play 模式后再写回。";
+        return null;
     }
 
     public static bool CheckCanApply()

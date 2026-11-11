@@ -268,18 +268,30 @@ function normalizeFloorMaterialId(name: string): string {
   return name
     .replace(/\s*\(Instance\)$/i, "")
     .replace(/\.mat$/i, "")
+    .replace(/_m\d+_s\d+$/i, "")
+    .replace(/_rm\d+$/i, "")
     .replace(/_tiling\d+x\d+$/i, "")
     .trim();
 }
 
-/** 从烘焙材质名 mat_foo_tiling12x4 解析 tiling 格数。 */
+/** 从烘焙材质名 mat_foo_tiling12x4[_rm#][_m50_s40] 解析 tiling 格数。 */
 export function parseMaterialTilingFromName(materialName: string): { w: number; d: number } | undefined {
-  const m = materialName.match(/_tiling(\d+)x(\d+)$/i);
+  const m = materialName.match(/_tiling(\d+)x(\d+)(?:_rm\d+)?(?:_m\d+_s\d+)?$/i);
   if (!m) return undefined;
   const w = parseInt(m[1], 10);
   const d = parseInt(m[2], 10);
   if (!(w > 0 && d > 0)) return undefined;
   return { w, d };
+}
+
+/** Unity Standard 渲染模式中文标签（0..3）。 */
+export function floorRenderModeLabelZh(mode: number | undefined | null): string {
+  switch (mode) {
+    case 1: return "镂空";
+    case 2: return "渐隐";
+    case 3: return "透明";
+    default: return "不透明";
+  }
 }
 
 /** 场景加载后、catalog 就绪时，把地板材质元数据与 catalog 对齐。 */
@@ -511,7 +523,11 @@ export function floorMatSummary(f: EditorFloor, matchedMat: FloorMaterial | unde
       ? materialDisplayLabel({ id: f.materialName }).zh
       : "无";
   const tilingTxt = tw === f._wCells && td === f._dCells ? `平铺 ${tw}×${td}` : `平铺 ${tw}×${td}（地板 ${f._wCells}×${f._dCells}）`;
-  return `${matName} · ${tilingTxt}`;
+  const pbrTxt = f.pbrOverride
+    ? ` · 金${Math.round((f.metallic ?? 0) * 100)}% 滑${Math.round((f.smoothness ?? 0) * 100)}%`
+    : "";
+  const rmTxt = f.renderModeOverride ? ` · 渲染:${floorRenderModeLabelZh(f.renderMode)}` : "";
+  return `${matName} · ${tilingTxt}${pbrTxt}${rmTxt}`;
 }
 
 export function mergeRaftItemsIntoFloors(): void {

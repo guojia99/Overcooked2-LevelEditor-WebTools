@@ -1,106 +1,103 @@
-# 更新日志
-
-
-## 编辑器（未发布）
-### 2026-11-04
-
-- **多镜头分屏（SplitScreenCamera，运行时 4.1.0）**：相机弹窗新增「多镜头分屏」开关（`cameraInfo.splitScreen`）与**每镜头独立参考**（`cameraInfo.splitScreenCameras[]`：visible / 额外 offset X/Y/Z / FOV / 大小）；写回后在 Camera 子物体烘焙 `SplitScreen|2|C0:ox,oy,oz,fov,size,vis|C1:...` tag（v1 旧 C 段 offset 是基准位，迁移时按 0 忽略，避免双倍偏移）。运行时按场景内**本地厨师数量**自动分镜：单人双厨师 = 2 镜头、2/3/4 人 = 2/3/4 镜头；2 人左右 50/50，3 人上方 60% 宽居中 + 下方各 50%（左右黑边），4 人 2×2。**每个镜头直接克隆原版主相机 MultiplayerCamera，只把 m_avatars 限定为单个厨师**；`GetIdealLocation` 前后缀把 `m_basePos` 钉在厨师位置（始终居中），距离/高度沿用主相机 `m_minDistance`（前端画布参考也按此绘制），跟随平滑调到单玩家跟手；目标销毁时最后位置兜底并跳过原方法（修 MissingReference）。可选 offset/FOV/大小作为额外微调。**原版镜头世界画面屏蔽**（保留 Camera.main/AudioListener，cullingMask=0、clearFlags=Nothing），HUD Canvas 转 Overlay 全屏；分屏相机创建失败/厨师未就绪时自动回退原版相机，绝不留黑屏。每个镜头可单独调 offset/FOV/大小；取消「启用镜头」= 编辑器不画参考且运行时该玩家画面不生成（保留黑框）。**编辑器画布在分屏模式下按每个玩家位置绘制 4 个彩色镜头参考（主镜头参考隐藏，强制显示范围并在玩家处标注镜头编号），相机弹窗改为「镜头 1~4」分页单独调节并隐藏主镜头「出发点位置」**。模式为运行时单向，无切回单镜头入口。导出特征 `camera`；依赖包版本 4.1.0。
-
-### 2026-11-03（二）
-
-- **重写 commonW5 意面家族（v2，修复游戏内三处断裂）**：此前生成资产对原版 bundle 内资产做**直连 guid 引用**（BoiledPasta 节点 / 寿司鱼虾节点 / FryingPan 步骤 / 4 个 plated 模型），这些 guid 工程内不存在，运行时全部解析为 null——①`BoiledWrapper.asset=null` 且 `bundleName=""` 使 `PseudoPrefabManager.LoadAsset → GetAssetBundle("")` 抛 `KeyNotFoundException`，`LevelConfigSetup.SetupConfig` 中断（游戏内订单/食材全部不显示）；②`ComboLookup` 的 `m_prefab` 全 null，盘内组合视觉永远为空（鱼+意面等中间产物不显示）。v2 全部改为仓库既有铁律：原版资产一律经本地 `PseudoPrefabSO`（bundleName+assetPath 懒加载）或 `CustomRecipeSO`（`RecipeHelper` 运行时建真节点）引用；`ComboLookup.m_content` 用带原版 uID 的**本地克隆节点**（游戏匹配按 uID 值比较：`IngredientAssembledNode.IsMatch` 比 `m_uID`、Cooked 节点另比 cookingStep uID+progress），`m_prefab` 用拷贝进 `commonW5` 的 4 个原版 plated 模型（mesh→OBJ 走 kettle 同款导入管线 + 本地 `WebPlatedFood` shader + 本地贴图）。生成脚本 `layout-editor/scripts/gen-commonw5-pasta.mjs`（数据采集 `layout-editor/scripts/pasta/collect_pasta_assets.py`，校验 `validate_pasta.py`）。
-- **意面菜谱语义与新增两道菜**：`Web_Seafood_Pasta`（海鲜意面 80 分）改为**煮意面+煎寿司鱼+煎寿司虾全必选**；新增 `Web_Fish_Pasta`（鲜鱼意面 60 分 = 煮意面+煎鱼）、`Web_Prawn_Pasta`（鲜虾意面 60 分 = 煮意面+煎虾），图标暂用海鲜意面同款占位（guid 固定，后续直接替换 PNG）。中间产物 `Web_Seafood_Pasta_{BoiledWrapper,FishNode,PrawnNode}` 改为 `CustomRecipeSO{type=Cooked}`（score=0，组成 = common01 `PastaSO`/`SushiFishSO`/`SushiPrawnSO` 懒加载 + common02 `Pot`/`FryingPan` 步骤），订单卡 tiles 由 `RecipeHelper` 运行时自动生成；旧 `pseudo_prefab_so/pasta/` 目录删除（`BoiledWrapper` 迁至 `custom_recipes/pasta/orderdefinitions/`，**换用全新确定性 guid**——跨路径搬移复用旧 guid 会与 Unity Library 的 guid→旧路径缓存映射冲突，触发 `Failed to unload` 断言）。
-- **菜谱页 Optional 新增「意面料」一键填充**：`/api/level/optional-presets` 返回 `pastaToppingGuids`（煎寿司鱼/煎寿司虾中间产物），一键注册进关卡 `optionalRecipeMatchListItems`（recipeMatchList optional 通道）后，煎好的鱼/虾可**单独装盘上菜**（`GetOrderPlatingPrefab` 命中其 `m_platingPrefab`，视觉 = 盘装煎鱼/煎虾）。
-
-### 2026-11-03
-
-- **一键网格对齐（核心层 / 地板层）**：工具栏「👁 图层显示」右侧新增「🧭 一键对齐」按钮，点击即把**当前层全部物件**（无视选中状态）对齐到**最近的格子**、填满整格——奇数跨距中心落整格点（如 1×1 食材箱 6.00/-1.20，而非 6.60/-1.80 半格位），偶数跨距中心落两格之间（2×1 水槽与游戏摆法一致），<1 格小件（0.9 格锅/盘/杯）中心直接贴整格点（核心层 = 当前 P 全部核心物品含玩家，地板层 = 全部非背景地板含主题/图片/空气/木筏，木筏按拼板整格点对齐）；火锅灶台/大锅的 stub 偏移自动保持，锅具对齐后仍会吸附回灶台。整批一条 undo 记录可 Ctrl+Z，不受「🧲 吸附格子」开关影响；装饰 / 背景 / 动画 / 灯光层按钮置灰禁用。
-
-- **修复 `Web_Seafood_Pasta` Play 报 `CookedCompositeOrderNode.Convert` NullReferenceException**：自定义鱼/虾 OrderDefinitionNode 的 `m_composition` 误引用了 `SushiFishSO`/`SushiPrawnSO` 包装 SO（`PseudoPrefabSO`），运行时转换为 `OrderDefinitionNode[]` 后为 null；已改引实际 `SushiFish`/`SushiPrawn` OrderDefinitionNode（GUID `183b14d0…` / `20167b8e…`），生成脚本同步修正。
-
-- **修正蒸笼自动填充与寿司米饭锅具**：寿司饭（`SushiRiceSO`）菜谱步骤由 `Steamer` 改为 `Pot`，Web 菜谱卡与自动填充不再把米饭放进蒸笼；旧场景打开/写回时自动移除蒸笼里残留的米饭。蒸笼里的虾面团只在 Web 显示面团本身，面粉/寿司虾仍写入运行时 `allowedIngredientSOs` 供 `CookableContainer` 的 MixedComposite 校验，但导出时隐藏这些技术组成项。
-
-### 2026-11-02
-
-- **新增 commonW5 意面菜谱**：`Web_Seafood_Pasta`（80 分，意面 + 可选寿司鱼/寿司虾），盘内模型按实际可选组合自动切换（意面 / 意面+鱼 / 意面+虾 / 意面+鱼+虾），uID 58323015。三个中间产物包装放在 `pseudo_prefab_so/pasta/`（不进入 Web 菜谱列表），Web 菜谱卡直接显示原材料 `PastaSO` / `SushiFishSO` / `SushiPrawnSO`；包装为本地 `asset` 直引 OrderDefinitionNode，不依赖 `commonW5` bundle 加载。生成脚本 `layout-editor/scripts/gen-commonw5-pasta.mjs`。
-- **新增 commonW5 蒸菜菜谱**：`Web_Steamed_Fish`（Web 蒸鱼 40 分，组成 `SushiFishSO`）与 `Web_Steamed_Prawns`（Web 虾烧麦 80 分，组成 `FlourSO`+`SushiPrawnSO` 的自定义面团中间产物 `Web_Steamed_PrawnPrep`）；寿司、蒸菜、烧麦统一使用 `SushiFishSO` / `SushiPrawnSO` 作为唯一鱼虾。成品模型复用原版 `plated_steamedfish` / `recipe_dimsum_03`，新增共享库分类「蒸菜」，uID 58323012–58323014。生成脚本 `layout-editor/scripts/gen-commonw5-steamed.mjs`。
-- **写回自动 Prepare For Building**：保存场景前由 `LayoutEditorPseudoReload.ForcePrepareForBuildingForExport` 对活动场景所有 `PseudoPrefabManager` 强制 `prepareForBuilding=true` + `DeInit()`，不再弹「先点击 Tools - Toggle Prepare For Building」提示，也不会把临时伪 prefab 子物体写进场景。
-- **修复写回/导出保存场景时的 Missing Script 报错**：转换得到的 Jia 等场景含大量 `m_Script` 为空的旧 MonoBehaviour（如 `lightmapIndex` 残留），`SaveScene` 会刷 `Could not extract GUID / Broken PPtr`。`SceneLayoutApplier` / `LayoutEditorSetExporter` 在保存前调用 `LayoutEditorMissingScriptCleanup` 移除这些空脚本组件，`jia_level_kevin_3` 写回后不再产生该批报错。
-- **修复自定义搅拌子菜谱的终锅输入**：自定义 Mixed 中间产物（如虾烧麦面团）现在会作为终锅组食材显示（蒸笼/煎锅不再留空标记）；自动填充与 `LayoutEditorSteamerFill` 除了写入面团节点，还会把其组成食材（`FlourSO`/`SushiPrawnSO`）写进终锅 `allowedIngredientSOs`——`CookableContainer.AllowItemPlacement` 对 MixedComposite 会逐个检查组成食材，只有面团节点时会被判为不可放入。搅拌碗同步补 `FlourSO`/`SushiPrawnSO`；场景打开/域重载时自动执行，手动放置的蒸笼也能直接放入寿司鱼和虾面团。
-- **修复开关/压力地板调色把原版按钮高光压掉的问题**：`CustomStub.SwitchTint` 现在改为乘法染色（OC2 gloss 写 `_MaskColor`，Standard 写 `_Color`），保留原贴图、法线以及 `_Metallic`/`_Roughness`/`_RimIntensity`/`_Brightness`/`_highlight_colour` 等光照参数——调色后的开关与未调色原版按钮保持同一亮度、金属度、边缘光与高光，避免纯色覆盖/压光造成的过亮或哑光。**依赖包需重新导出一次**才能让真机吃到新运行时。
-- **默认开关外观不再显式写入材质**：外观材质与 prefab 默认一致时导出为空 guid，右键面板显示「— 默认 —」；两个调色都未设置时不生成 `SwitchTint` helper，直接使用原版开关预制体。
-
-### 2026-11-01
-
-- **修复未启用「按钮控速」的传送带/步带写回报错**：Unity GET 会把 null 的 `speedControl` 导出成 `{enabled:true,levels:[]}` 占位对象，旧版右键面板渲染时又自动补默认档位，导致复制出来的传送带全部带上未绑定开关的控速配置并报「部分写回失败」。现在加载/序列化会清理不足 2 档的占位配置，面板不再在渲染时自动启用；后端只烘焙明确启用的目标，未绑定开关改为写回告警（写回成功）。
-- **修复食材生成器附件空槽导致 `PseudoPrefabManager` NRE**：写回 `AttachingFoodSpawner` 的 `attachmentPrefabSOs`/`weights` 改走 `SerializedObject`（数组增长时 Unity 2017 prefab override 会漏写新元素，留下 null 槽触发 `PseudoPrefabManager.LoadAsset` NRE），并过滤无法解析的 guid；导出跳过空槽，避免空附件再次回传。
-- **补齐原版装饰的动画音频接收器**：`flyingpigeon` / `exterior_car_blue_01` 等原版 prefab 的根 Animator 播放含 `AudioTrigger` 事件的剪辑，但根物体没有 `AnimatorAudioComponent`，Play 时刷 `AnimationEvent 'AudioTrigger' has no receiver`。编辑器现在进入 Play 后自动扫描 Animator 控制器剪辑事件，给缺失接收器的物体补挂 `AnimatorAudioComponent`（仅编辑器 Play，不改场景资产/原版 bundle）。
-
-### 2026-10-30
-
-- **压力地板 / 开关调色**：右键「基础」页新增未按下/按下两组颜色（普通开关、大炮开关、压力开关、DLC13 莲花压力地板）。颜色采用乘法染色（保留原贴图与光照/法线明暗）；编辑器场景视图显示未按下色（初始关闭的开关显示按下色），Play/真机按占用/按压状态实时切换。写回在 `Design/Switch Tint Logic` 下生成 `CustomStub.SwitchTint` helper（tag `SwitchTint|T:…|I:…|P:…` 自愈），不改原材质、不生成材质资产。**依赖包需重新导出一次**（运行时版本仍 4.0.0，旧包无 `SwitchTint` 组件时染色不生效、关卡本身不受影响）。
-- **修复压力开关重载 MissingReferenceException**：根因是「外观」下拉曾把 `Switch.asset`/`PressureSwitch.asset`（指向 prefab 的非材质 SO）当材质选中；宿主 `LoadAsset<Material>` 失败会触发 `DeInit/Init` 重入，在 `Setup` 中销毁 child 的 `Pad`。现在外观列表只保留 `.mat`，场景中已有的非材质 SO 自动回落 prefab 默认/标准材质；另加 `Setup` Harmony 前缀与 `[pseudo-repair]` 兜底重连 `m_buttonBit`。真机不经过 LevelEditor 伪 prefab，不受影响。
-- **修复关卡时长 0 导致 Play 报错**：`roundTime=0` 会让 `Value/GetTimeLimit()` 产生 NaN，`ProgressBarUI.UpdateFill` 写 `SubImage.localScale` 报错；关卡配置保存/路由层现在把非法时长兜底为 240s，运行时 `LevelConfigSetup` 也做同样兜底，并修正 `jia_level_1_6` 的 1P~4P 配置。
-- **新增 commonW5「上菜传送带站」**：调色板「核心 · 机关」新增 `web_conveyor_station_serve`（传送带站拷贝，独立 tag `ConveyorServe|`）。可识别运动方向末端的上菜台并把物品送上去：盘子正常上菜；非盘子视为无效上菜，断小费/连击并消耗物品。编辑端写回/导出自动维护 `CustomStub.ConveyorServe` 组件与 tag（与方向同步组合时 `ConveyorServe|dir`），运行时按需安装 Harmony 前缀；普通传送带行为不变。
-- **压力开关移入核心层**：`PressureSwitch` 与 DLC13 莲花压力开关（大/小）从地板层移到核心「机关」分组，仍按表面物铺地；`PressureSwitch` 默认占地修正为 2×2（2.4m×2.4m），大莲花同为 2×2，小莲花保持 1×1；写回改用「仅核心物品」或全量。
-- **DLC5 自动门移入核心层**：`p_dlc5_door_01` 从装饰层移到核心「门 / 自动门」分组，默认父级 `Art/Scenery`。
-- **新增联合组合「压力地板 + DLC5 自动门」**：按住式联动——站上压力板门打开并保持，离开后关闭；动画组固定两个 rotate 事件（站上开 / 离开关），压力开关 Enter/Exit 直连门组根 Animator，不经过按钮 helper。
-- **压力开关「联动」快捷页**：右键压力开关 →「联动」→ 选择场景中的任意门（DLC / 主题自动门）即可一键创建或追加按住式动画组；已联动门可单独移除，也可直接打开动画组编辑。画布与 3D 视图新增压力板→门橙色连线。
-- **门旋转参数放到门自身**：右键门 →「门 · 旋转参数」，可设开门方向（默认顺时针）、角度、时长；门不强制吸附格心，模型根/旋转轴即摆放点（可放格子左上角 0,0）。参数以单门覆盖写入按住式动画组（`doorMotions`），同一压力开关绑定多扇门时互不影响。关门始终从开门终态反向归位（修复关门跳 180°）。
-- **门扇碰撞**：写回时对门 prefab 自动烘焙 `BoxCollider`（Walls 层，尺寸优先取 `exports/decor/models/<guid>/model.obj` 实测 AABB，DLC5 门有精确兜底），碰撞体随动画组旋转——关门挡住门洞、开门旋到侧面让路。
-- 按住式组新增回读保障：纯旋转组也会写入成员 `hierarchyPath`，重新加载/导出后不会退化为片段分析丢失 `advanceMode="hold"`。
-
-
-## Web 资源导出（未发布）
-### 2026-10-29
-#### 重大更新
-- **Web 导出产物统一迁移到 `exports/`**：音频、桌台图标/3D、装饰物不再写入 `layout-editor/web/public`，改由后端接口读取。
-- **装饰物双视图 + 高清详情 + 3D**：导出正面/背面 192×192 缩略图（`exports/decor/front|back/`）、高清详情图（`exports/decor/detail/front|back/`，默认 1024，大件按包围盒 ≥5m 用 1536、≥12m 用 2048）与 3D 模型（`exports/decor/models/<guid>/model.obj|mtl` + 共享贴图）。详情面板左右并排展示；选中装饰物时画布右上角预览也并排显示；双视图、高清详情与 3D 统一在一个预览弹窗：默认正面，点击「3D」页签才请求并渲染模型；图片/模型请求期间显示加载动画与进度条。右键装饰物只有一个「🖼 预览」按钮（独立一行），卡片仍提供 🔍 / 🧊 快捷入口。
-- **一键导出 Web 资源**：关卡编辑器顶栏「🌐 导出web预览资源依赖」可按类别导出/强制重导，长任务轮询状态；Unity Bridge 与菜单也提供入口。
-- **移除旧静态地址**：`/icons/decor-preview/*`、`/audio-exports.json` 不再提供；桌台图标改走 `/api/counter-skins/icon/*`。
-- **导出稳定性**：安全实例化移除编辑态运行时组件，消除 `SetupCustomPrefab.Awake` NRE 与 `Camera.targetTexture` 渲染纹理告警；两个超大 Timeline prefab（`Timeline_DynamicStage_04` / `Timeline_Tutorial_01`）因 Unity 2017 克隆断言，保留既有正/背预览、不参与强制重导。
-
-#### 接口
-- 新增 `GET /api/web-assets/manifest`、`GET /api/web-assets/decor/manifest.json`、`GET /api/web-assets/decor/front|back/<guid>.png`
-- 新增 `GET /api/counter-skins/icon/<file>.png`、`GET /api/counter-skins/icons/manifest.json`
-- 新增 `POST /api/web-assets/export`、`GET /api/web-assets/export/status`
-- `GET /api/audio/exports` / `/api/audio/stream` 数据源改为 `exports/audio/`
+﻿# 更新日志
 
 ## v0.11.0
-### 2026-10-28
+### 2026-11-13
 #### 重大更新
-- 新增commonW5
-- 预适配GUA v0.11
+- 新增commonW5、commonW6
+- 适配GUA v0.11
   - 本版本与v0.10 存在部分不兼容
+  - 依赖包需重新导出
+  - 运行时版本随依赖包升级
 
 #### 新增commonW5
-- 感谢派大星老师、rw老师提供的相关资源材料、文档!!!
+> 感谢派大星老师、rw老师提供的相关资源材料、文档!!!
 - 新增OC1 Music、好吃 Music
-- 新增rw卷饼菜谱
-- 新增好吃的茶叶、辣椒
+- 新增食材菜谱
+  - 新增rw卷饼菜谱
+  - 新增好吃的茶叶、辣椒
+  - 新增四种好吃的奶茶
+  - 新增Web统一日料
+    - 统一使用寿司虾、寿司鱼、寿司米作为蒸菜、寿司等原材料
+  - 新增意面菜谱
+- 新增烧水壶、茶杯、茶杯水槽等工作台
 - 新增一些装饰桌台
+- 新增上菜传送带站
+- 新增三明治工作台
+  - toast 底层 + 夹心 + 酱料 + 容量/分数/装盘模型
+
+#### 新增commonW6
+- 新增了一些未补充的装饰和桌面皮肤
 
 #### 功能
 - 支持装饰物预览
+  - 支持双视图
+  - 支持3D模型预览
+- 支持压力地板、开关调色
+- 支持压力地板和门进行联动
+  - 后续会支持更多的门控
+- 新增一键对齐核心层网格
+- 支持更多动画
+  - 隐身、显型
+  - 缩放、放大
+  - 弹跳
+  - 翻转、倾斜
+  - 公转、自转
+  - 晃动(缓慢动)
+- 支持开局进场动画切换
+  - 推近进场、俯冲进场、左/右环绕进场 等
+- 优化相机UI
+- 支持多镜头分镜(实验版本)
+- 支持菜谱订单自定义顺序
+- 地板支持Metallic、Smoothness参数调节
+- 支持一键对齐核心层、地板层网格
+- 支持一键导出 Web 预览资源
+- 关卡管理新增分组
+- 菜谱管理分组支持一键全选 / 取消全选（分类与类型两级）
+
 
 #### 适配
 - 适配GUA最新代码
 - 支持各种自定义
-  - 自定义锅具、食材、桌台等
+  - 自定义锅具、食材、桌台、三明治、分料机可选输出等
+- IngredientSplitter 字段迁移（outputPrefab → outputPrefabSO） 
+  - 旧场景 / 模板打开、写回、导出时自动迁移
+- Web 导出产物统一迁移到 exports/
+  - 移除旧静态地址，桌台图标改走新接口
+
 
 #### 修复
 - 修复安装器无法自动安装commonW3后面的其他commonW*
 - 修复汇总页web菜谱归纳为未分类的问题
 - 修复可移动火锅无烧糊画面的问题
-- 修复菜谱清单中 FriedChicken 缺少图标与「煎」步骤的问题（Recipes_Patch 未纳入菜谱知识库扫描，Bridge 也硬编码了空步骤）
+- 修复前置强制判定文件夹名称的bug
+- 修复打包时和写回时部分情况会无法触发 Prepare For Building
+- 修复写回时Play时的检查
+- 修复寿司误入蒸笼的问题
+- 修正蒸笼自动填充与寿司米饭锅具
+- 修复自定义搅拌子菜谱的终锅输入
+  - 面团组成食材写入终锅，蒸笼/煎锅不再留空标记
+- 修复未启用「按钮控速」的传送带 / 步带写回报错
+- 修复食材生成器附件空槽导致的报错
+- 补齐原版装饰的动画音频接收器
+- 修复压力开关重载报错（外观下拉误选非材质 SO）
+- 修复关卡时长 0 导致 Play 报错
+  - 非法时长兜底为240
+- 修复写回 / 导出保存场景时的 Missing Script 报错
+- 修复热水器联动开关接水后未复位（真机按钮按一次永久变红、无法再次按压；Play 与真机行为一致）
+  - 多壶共用一开关时，任一壶接走水即回绿；其余仍热的壶再次按压会被忽略，不会丢水
+- debugLog 2.0.1：Unity 原生良性错误不再刷屏，按模式限流
 
+## v0.10.1
+### 2026-10-19
+#### 功能
+- 新增unity控制台日志捕捉
 
-## v0.10
+## v0.10 
 ### 2026-10-13
 #### 重大变更
 - 新增 commonW4
 - 新增 Web 背包，支持放入、取出
-- 前置依赖升级至 v3.10.x
+- 前置依赖升级至 v3.10.x 
 - 支持分P管理功能
 #### AI
 - 支持 AI MCP 接口，便于 AI 接入与扩展

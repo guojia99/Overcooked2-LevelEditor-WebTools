@@ -1,0 +1,573 @@
+{
+  "generator": "layout-editor/scripts/prepare-salad-sauce-models.py",
+  "blender": "5.2.0 LTS",
+  "target_triangles": 5000,
+  "target_span_m": 0.65,
+  "orientation_convention": "Unity XZ: angle from +X toward +Z; PCA major axis modulo 180",
+  "plate_reference": {
+    "prefab": "bundle47:assets/prefabs/shared_kitchen/equipment_plate_01.prefab",
+    "prefab_path_id": 1769425459023946890,
+    "mesh_bundle": "bundle39",
+    "mesh": "m_sk_plate_02",
+    "mesh_path_id": -7177850975923356518,
+    "mesh_center": [
+      0.0,
+      0.06428328156471252,
+      0.0
+    ],
+    "mesh_size": [
+      0.9979296922683716,
+      0.16373351216316223,
+      0.9979287981987
+    ],
+    "mesh_child_position": [
+      -0.0,
+      0.0010000000474974513,
+      0.0
+    ],
+    "mesh_child_scale": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "mesh_child_rotation_xyzw": [
+      0.0,
+      -0.0,
+      -0.0,
+      1.0
+    ],
+    "food_attach_point": [
+      0.0,
+      0.08433008939027786,
+      0.0
+    ],
+    "preview_plate": "dimension-matched neutral proxy; not the original plate mesh"
+  },
+  "models": [
+    {
+      "name": "SaladKetchup",
+      "source": "/Users/guojia/Desktop/oc2_editor/backup_rebuild_20260917_132624/酱料/黄芥末.fbx",
+      "source_bytes": 105624268,
+      "source_sha256": "e03c8e9f8f56dea86aadfc21621cc325a0955178b9e11f10598c8952d54a6a1d",
+      "source_triangles": 1496755,
+      "source_world_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          7.549790126404332e-08,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          7.549790126404332e-08,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pca_eigenvalues": [
+        0.00026005586088574743,
+        0.043556894452906295,
+        0.07909713174112853
+      ],
+      "source_world_thin_normal": [
+        0.10587472827596532,
+        -0.9859170457902049,
+        0.1294531603816824
+      ],
+      "source_world_major_axis": [
+        0.9428700344298343,
+        0.1408925808123601,
+        0.30190292950932995
+      ],
+      "source_projection_frame_columns": [
+        [
+          0.9428700344298343,
+          0.31589023423773865,
+          0.10587472827596532
+        ],
+        [
+          0.1408925808123601,
+          -0.09009361515860953,
+          -0.9859170457902049
+        ],
+        [
+          0.30190292950932995,
+          -0.9445086026187791,
+          0.1294531603816824
+        ]
+      ],
+      "pca_thickness_and_spans": [
+        1.0715017999448242,
+        0.7613549642223676,
+        0.08538094676106156
+      ],
+      "uniform_scale_before_decimation": 0.6126349778147427,
+      "post_decimation_uniform_scale": 1.0222274834050475,
+      "post_decimation_angle_correction_degrees": -3.828251878644842,
+      "removed_degenerate_faces": 0,
+      "removed_invalid_or_duplicate_faces": 1,
+      "quality_metrics": {
+        "source_vertex_samples": 15275,
+        "source_to_reduced_surface_p95_m": 0.00038577473605982954,
+        "source_to_reduced_surface_max_m": 0.0017977197421714664,
+        "outer_footprint_support_max_error_m": 0.0005519164901600648,
+        "outer_footprint_directions": 180,
+        "limitation": "one-way sampled surface error and convex outer footprint; not visual or full bidirectional Hausdorff proof"
+      },
+      "target_angle": 88.0,
+      "baked_offset_xz": [
+        -0.022,
+        0.012
+      ],
+      "triangles": 4999,
+      "fbx": "Assets/commonW3/custom_recipes/salad/models/SaladKetchup.fbx",
+      "guid": "411a720f617e99c233ac2b6339d9d614",
+      "mesh_name": "SaladKetchup",
+      "requested_legacy_mesh_file_id": 4300000,
+      "mesh_file_id_status": "seeded in Unity2017 recycle-name map; verify after actual Unity import",
+      "material": "Assets/commonW3/custom_recipes/salad/models/SaladKetchup.mat",
+      "material_guid": "786ed75bcc62773c584185cd38cebe64",
+      "source_albedo_mean_decoded_rgb": [
+        0.970867395401001,
+        0.12298852205276489,
+        0.03023625910282135
+      ],
+      "source_images": [
+        {
+          "name": "texture_pbr_20250901.png",
+          "size": [
+            4096,
+            4096
+          ],
+          "packed_bytes": 10470690,
+          "packed_sha256": "84a0f06ede6d5c34e233830a536170192403ec95209cc966466926447bdfae88"
+        },
+        {
+          "name": "texture_pbr_20250901_normal.png",
+          "size": [
+            4096,
+            4096
+          ],
+          "packed_bytes": 3649215,
+          "packed_sha256": "1f40f17fcd6fc927a400ae761332cd9834cba251a28b71fb1be1b5c5e1c1664d"
+        },
+        {
+          "name": "texture_pbr_20250901_roughness.png",
+          "size": [
+            4096,
+            4096
+          ],
+          "packed_bytes": 2269346,
+          "packed_sha256": "b94a71e41ce4f7721060e6b30d5e196bce3543e2f2265e9bdf59ce60f56b78b1"
+        },
+        {
+          "name": "texture_pbr_20250901_metallic.png",
+          "size": [
+            4096,
+            4096
+          ],
+          "packed_bytes": 3589583,
+          "packed_sha256": "4240266acc760eba05779fc455c165826f1f983ae4ec0883c98a83f6dc357734"
+        }
+      ],
+      "textures": [
+        {
+          "path": "Assets/commonW3/custom_recipes/salad/models/SaladKetchup_Albedo.png",
+          "guid": "6086fa8d8ad66f6202c2cb5371764871",
+          "bytes": 1094310,
+          "sha256": "1221a315607a25af47ba2e75f0277319506cd90d6bcab7fe559d4a985567ec2a",
+          "size": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "path": "Assets/commonW3/custom_recipes/salad/models/SaladKetchup_Normal.png",
+          "guid": "801bd0e1262369953292f4e000425e17",
+          "bytes": 123665,
+          "sha256": "0ce9453a1f5eceed7c375f704afd9dee010dee6976a750abaf04fb219135c963",
+          "size": [
+            512,
+            512
+          ]
+        },
+        {
+          "path": "Assets/commonW3/custom_recipes/salad/models/SaladKetchup_MetallicSmoothness.png",
+          "guid": "1456f919a81983a772411ee9275228b0",
+          "bytes": 263827,
+          "sha256": "3d7eb746fa301f5a829bc2ea87be21be473fb8c22d0863f9380316e8cec968b6",
+          "size": [
+            512,
+            512
+          ]
+        }
+      ],
+      "integration_local_position": [
+        0,
+        0,
+        0
+      ],
+      "integration_local_rotation": [
+        0,
+        0,
+        0
+      ],
+      "integration_local_scale": [
+        1,
+        1,
+        1
+      ],
+      "fbx_bytes": 212140,
+      "texture_bytes": 1481802,
+      "geometry_and_texture_bytes": 1693942
+    },
+    {
+      "name": "SaladMustard",
+      "source": "/Users/guojia/Desktop/oc2_editor/backup_rebuild_20260917_132624/酱料/番茄.fbx",
+      "source_bytes": 102790700,
+      "source_sha256": "3aae53437eb29c8dc81ebc6a533ea179ac48f9f030c5eaf69a07dbc4a24fac95",
+      "source_triangles": 1499998,
+      "source_world_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          7.549790126404332e-08,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          7.549790126404332e-08,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pca_eigenvalues": [
+        0.00021890993887524433,
+        0.041176010426512824,
+        0.0693063230811225
+      ],
+      "source_world_thin_normal": [
+        0.011241164192515356,
+        -0.7238353989870346,
+        0.6898811139615848
+      ],
+      "source_world_major_axis": [
+        0.6606457865962019,
+        0.5232757829361793,
+        0.5382653617363968
+      ],
+      "source_projection_frame_columns": [
+        [
+          0.6606457865962019,
+          0.7506136029144972,
+          0.011241164192515356
+        ],
+        [
+          0.5232757829361793,
+          -0.4497163218805927,
+          -0.7238353989870346
+        ],
+        [
+          0.5382653617363968,
+          -0.48408103552391774,
+          0.6898811139615848
+        ]
+      ],
+      "pca_thickness_and_spans": [
+        1.0409308820627363,
+        0.7906338725813802,
+        0.07347492669601835
+      ],
+      "uniform_scale_before_decimation": 0.6744041383533753,
+      "post_decimation_uniform_scale": 0.9858032687238978,
+      "post_decimation_angle_correction_degrees": 2.239668509028959,
+      "removed_degenerate_faces": 0,
+      "removed_invalid_or_duplicate_faces": 0,
+      "quality_metrics": {
+        "source_vertex_samples": 15001,
+        "source_to_reduced_surface_p95_m": 0.0002689999237190932,
+        "source_to_reduced_surface_max_m": 0.0006365522858686745,
+        "outer_footprint_support_max_error_m": 0.00037098929150630733,
+        "outer_footprint_directions": 180,
+        "limitation": "one-way sampled surface error and convex outer footprint; not visual or full bidirectional Hausdorff proof"
+      },
+      "target_angle": 55.0,
+      "baked_offset_xz": [
+        0.022,
+        -0.012
+      ],
+      "triangles": 5000,
+      "fbx": "Assets/commonW3/custom_recipes/salad/models/SaladMustard.fbx",
+      "guid": "16b4e8484a448068ded8810659321541",
+      "mesh_name": "SaladMustard",
+      "requested_legacy_mesh_file_id": 4300000,
+      "mesh_file_id_status": "seeded in Unity2017 recycle-name map; verify after actual Unity import",
+      "material": "Assets/commonW3/custom_recipes/salad/models/SaladMustard.mat",
+      "material_guid": "1c7df48c2d165c7eb0c4727ca9eb5992",
+      "source_albedo_mean_decoded_rgb": [
+        0.9955784678459167,
+        0.6116183400154114,
+        0.038029346615076065
+      ],
+      "source_images": [
+        {
+          "name": "texture_pbr_20250901.png",
+          "size": [
+            4096,
+            4096
+          ],
+          "packed_bytes": 9004215,
+          "packed_sha256": "f941472f1e675715f10ecc822ee03b05e8de43862cc4d53500349babc43e978b"
+        },
+        {
+          "name": "texture_pbr_20250901_normal.png",
+          "size": [
+            4096,
+            4096
+          ],
+          "packed_bytes": 3153558,
+          "packed_sha256": "802bf7d90590565f9d7c4912099377b7684055114a1f26a1b659fa5af773c8fb"
+        },
+        {
+          "name": "texture_pbr_20250901_roughness.png",
+          "size": [
+            4096,
+            4096
+          ],
+          "packed_bytes": 2324774,
+          "packed_sha256": "4831141a4c3bb8ba8b9a9d0fd586b8e1d08a8cb873e8f56d37e65b74c7ba8d52"
+        },
+        {
+          "name": "texture_pbr_20250901_metallic.png",
+          "size": [
+            4096,
+            4096
+          ],
+          "packed_bytes": 2412321,
+          "packed_sha256": "4e6044edbd787a040bfaa3f244ae4706f8aeb0199496c3d7cc01adad2b3196fb"
+        }
+      ],
+      "textures": [
+        {
+          "path": "Assets/commonW3/custom_recipes/salad/models/SaladMustard_Albedo.png",
+          "guid": "dfb192c8e5a2c7ae17ed15f44417ae87",
+          "bytes": 1014162,
+          "sha256": "f2cc61b1727055c8391816a8265a93f5e1e67eb12245ec21a70820545e13290e",
+          "size": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "path": "Assets/commonW3/custom_recipes/salad/models/SaladMustard_Normal.png",
+          "guid": "cd7f23b3463a71a7bde7ab5ccfc01ac3",
+          "bytes": 125066,
+          "sha256": "16effc7daabb320e6657482bf33024ea6305209e8a1124b5c65c366c08551a90",
+          "size": [
+            512,
+            512
+          ]
+        },
+        {
+          "path": "Assets/commonW3/custom_recipes/salad/models/SaladMustard_MetallicSmoothness.png",
+          "guid": "afb13ea80cfb5f854a068837533fb5b5",
+          "bytes": 221751,
+          "sha256": "de9ac256de3ce8b77332d83a956baf5b2dce2445aab2cd6dc8c9f1ea30479b9d",
+          "size": [
+            512,
+            512
+          ]
+        }
+      ],
+      "integration_local_position": [
+        0,
+        0.006,
+        0
+      ],
+      "integration_local_rotation": [
+        0,
+        0,
+        0
+      ],
+      "integration_local_scale": [
+        1,
+        1,
+        1
+      ],
+      "fbx_bytes": 205916,
+      "texture_bytes": 1360979,
+      "geometry_and_texture_bytes": 1566895
+    }
+  ],
+  "visual_review": {
+    "status": "not visually confirmed",
+    "reason": "image analysis requests timed out; current conversation cannot directly read image attachments",
+    "preview_material": "FBX portable albedo with uniform roughness; Unity Standard material additionally uses normal and metallic/smoothness maps"
+  },
+  "source_filename_color_discrepancy": "Original filenames are reversed relative to embedded albedo: 番茄.fbx is yellow/orange; 黄芥末.fbx is red. Output names follow actual embedded color; sources are not modified.",
+  "validation": [
+    {
+      "fbx": "Assets/commonW3/custom_recipes/salad/models/SaladKetchup.fbx",
+      "bytes": 212140,
+      "sha256": "2099f35cf91f854615f2dab577821d581b6849ff007c1b9eebf215260aa6f180",
+      "triangles": 4999,
+      "vertices": 2549,
+      "material_slots": 1,
+      "uv_layers": 1,
+      "unity_bounds": {
+        "min": [
+          -0.2623654901981354,
+          -1.9841542345785907e-09,
+          -0.3129999947612259
+        ],
+        "max": [
+          0.21836550533771515,
+          0.05349585147432095,
+          0.337000011134928
+        ],
+        "size": [
+          0.4807309955358505,
+          0.053495853458475184,
+          0.6500000058961539
+        ]
+      },
+      "principal_angle_from_positive_x_degrees": 87.99999999867948,
+      "texture_links": [
+        {
+          "name": "texture_pbr_20250901.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "exists": true
+        }
+      ],
+      "raw_fbx": {
+        "version": 7400,
+        "mesh_count": 1,
+        "local_bounds": {
+          "min": [
+            -0.2623654901981354,
+            0.0,
+            -0.31299999356269836
+          ],
+          "max": [
+            0.21836550533771515,
+            0.0534958690404892,
+            0.3370000123977661
+          ],
+          "size": [
+            0.4807309955358505,
+            0.0534958690404892,
+            0.6500000059604645
+          ]
+        },
+        "faces": 4999,
+        "all_triangles": true,
+        "has_tangents": false,
+        "embedded_texture_bytes": 0,
+        "animation_objects": 0
+      },
+      "uv_finite": true,
+      "max_horizontal_radius_m": 0.35742918065917234,
+      "passed": true
+    },
+    {
+      "fbx": "Assets/commonW3/custom_recipes/salad/models/SaladMustard.fbx",
+      "bytes": 205916,
+      "sha256": "c9f495c7d43dfd340b0a0b2112e77f12ed8367cf1c0f45a7eba35256cac75fcf",
+      "triangles": 5000,
+      "vertices": 2512,
+      "material_slots": 1,
+      "uv_layers": 1,
+      "unity_bounds": {
+        "min": [
+          -0.271855890750885,
+          1.0799164776615924e-08,
+          -0.33700001336590873
+        ],
+        "max": [
+          0.31585589051246643,
+          0.04880258431292416,
+          0.3129999916748983
+        ],
+        "size": [
+          0.5877117812633514,
+          0.048802573513759384,
+          0.650000005040807
+        ]
+      },
+      "principal_angle_from_positive_x_degrees": 55.000000115797185,
+      "texture_links": [
+        {
+          "name": "texture_pbr_20250901.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "exists": true
+        }
+      ],
+      "raw_fbx": {
+        "version": 7400,
+        "mesh_count": 1,
+        "local_bounds": {
+          "min": [
+            -0.271855890750885,
+            0.0,
+            -0.3370000123977661
+          ],
+          "max": [
+            0.31585589051246643,
+            0.04880259931087494,
+            0.31299999356269836
+          ],
+          "size": [
+            0.5877117812633514,
+            0.04880259931087494,
+            0.6500000059604645
+          ]
+        },
+        "faces": 5000,
+        "all_triangles": true,
+        "has_tangents": false,
+        "embedded_texture_bytes": 0,
+        "animation_objects": 0
+      },
+      "uv_finite": true,
+      "max_horizontal_radius_m": 0.37431693605752747,
+      "passed": true
+    }
+  ],
+  "generator_sha256": "cea763b3dd24f809e3bb9ef2800aa0570c2977685ecf7e8869e4cdb9382a8c82",
+  "previews": [
+    "layout-editor/reports/salad-sauce-models/combined-top.png",
+    "layout-editor/reports/salad-sauce-models/combined-oblique.png",
+    "layout-editor/reports/salad-sauce-models/ketchup-top.png",
+    "layout-editor/reports/salad-sauce-models/mustard-top.png"
+  ]
+}

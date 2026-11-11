@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿// Run with node layout-editor/scripts/build-catalog.mjs.
 /**
  * Scans common01/common02 assets and 使用手册.md for Chinese names.
  * Outputs (layout-editor/web/public/, synced to web/dist/):
@@ -39,7 +39,7 @@ const DIST_DIR = path.join(repoRoot, "layout-editor/web/dist");
  * item.ratHeist，写回会静默丢参数，靠版本告警拦旧桥。
  * v8（2026-10-08）：燃烧弹射器波次（item.burner.waves）——旧桥不认识 waves 字段，
  * 写回会静默丢落点/时序，靠版本告警拦旧桥。 */
-const SCHEMA_VERSION = 10;
+const SCHEMA_VERSION = 11;
 
 /**
  * CustomStub 依赖道具（needsStub=true）：游戏侧需要关卡集携带 Stub_<set> runtime
@@ -98,6 +98,7 @@ const SCRIPT_GUID = {
   PseudoPrefabSORecipe: "753d9e70603f6a140b05f30f176ec2dd",
   CustomRecipeSO: "83fb008bcc8e793429b02c178c430815",
   CustomRecipeOptionalPizzaSO: "60297950c88d0d646ac0eca5dc831262",
+  CustomRecipeOptionalSandwichSO: "1dceb690bde9e10439e48644df81e9c9",
 };
 
 const FOOTPRINT_OVERRIDES = {
@@ -1335,7 +1336,7 @@ function parseRefGuid(line) {
 function parseUnityAsset(filePath) {
   const text = fs.readFileSync(filePath, "utf8");
   const lines = text.split("\n");
-  const out = { compositionGuids: [], optionalGuids: [] };
+  const out = { compositionGuids: [], optionalGuids: [], sauceGuids: [] };
   let listTarget = null;
   for (const line of lines) {
     const trimmed = line.trim();
@@ -1357,6 +1358,7 @@ function parseUnityAsset(filePath) {
       else if (key === "platingStepSO") out.platingStepGuid = parseRefGuid(value);
       else if (key === "compositionSOs") listTarget = out.compositionGuids;
       else if (key === "optionalSOs") listTarget = out.optionalGuids;
+      else if (key === "sauceSOs") listTarget = out.sauceGuids;
     } else if (listTarget && trimmed.startsWith("- ")) {
       const guid = parseRefGuid(trimmed);
       if (guid) listTarget.push(guid);
@@ -1469,6 +1471,7 @@ function lookupName(dictionary, idToRow, id) {
 /** "core" / "custom" / "dlcXX" / "levelset" from an asset path.
  *  common03 通用内容按 dlc 子目录归 dlcXX，无 dlc 目录则归 core（无 web 分组）。 */
 function foodGroupOf(assetPath) {
+  if (assetPath.includes("/commonW3/")) return "commonw3";
   // commonW5 增量库（卷饼菜谱 / Web 食材）独立分组。
   if (assetPath.includes("/commonW5/")) return "commonw5";
   if (assetPath.includes("/custom_recipes/")) return "levelset";
@@ -1597,7 +1600,7 @@ const STEP_UTENSILS = {
  *  Rules (evaluated in order):
  *  - 半成品：直接按自身烹饪步骤成组。
  *  - 煎锅中间产物覆盖：汉堡肉排 → FryingPan，面包胚/生菜保持生。
- *  - 寿司：只有寿司米蒸，其余不处理。
+ *  - 寿司：只有寿司米煮（Pot），鱼/虾/海苔生食，不进蒸笼。
  *  - 卷饼：米饭煮，卷饼皮不处理，其余煎。
  *  - 棉花糖饼干：只有棉花糖烤，其余不处理。
  *  - 意面：意面煮，其余食材各自煎（分开成组）。
@@ -1791,6 +1794,7 @@ function computeCookingGroups(recipe, allRecipes, cookSteps) {
   let finalMarkerStep = "";
   const cakeLike = type === "cake" || type === "pudding";
   if (type === "sushi") {
+    // 实际菜谱：寿司米进煮锅（BoiledSushiRice = Pot），鱼/虾/海苔生食，不进蒸笼。
     for (const ing of ingredients) {
       prep.set(ing, ing === "SushiRiceSO" || ing === "RiceSO" ? "Pot" : "");
     }
@@ -1929,6 +1933,21 @@ function loadAudioKnowledge() {
   }
 }
 
+// Mirrors recipeGroups.ts / LayoutEditorRecipeKnowledge.ComputeSaladSubgroups.
+function deriveSaladSubgroups(r) {
+  if (r.type !== "salad" || r.group === "levelset" ||
+      (r.assetPath ?? "").replace(/\\/g, "/").startsWith("Assets/LevelSets/")) return [];
+  const ingredients = r.ingredients ?? [];
+  const leaves = ingredients.filter((id) => !["mustard", "DLC08_Mustard", "dlc11_mustard", "ketchup", "DLC08_Ketchup", "dlc11_ketchup"].includes(id));
+  if (leaves.length > 0 && leaves.every((id) => ["LettuceSO", "TomatoSO", "CucumberSO"].includes(id)))
+    return ["non_dlc11_official"];
+  const mustard = ingredients.some((id) => ["mustard", "DLC08_Mustard", "dlc11_mustard"].includes(id));
+  const ketchup = ingredients.some((id) => ["ketchup", "DLC08_Ketchup", "dlc11_ketchup"].includes(id));
+  const groups = [mustard ? (ketchup ? "both_sauces" : "mustard_only") : (ketchup ? "ketchup_only" : "no_sauce")];
+  if (r.isCustom === false) groups.push("official");
+  return groups;
+}
+
 function scanRecipes(dictionary, idToRow, guidIndex, knowledge, ingredientIds) {
   // 通用内容（common03）菜谱 guid 稳定（.meta 随库提交），静态 json 即权威来源；
   // 不扫关卡集 custom_web 旧拷贝（机制已废弃）。
@@ -1940,6 +1959,7 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge, ingredientIds) {
     // 上游剧情菜谱/模型库（knowledge 未收录时按原资产回退展示）。
     "Assets/common03/food/Recipes_Patch",
     "Assets/commonW1/pseudo_prefab_so/dlc11/food",
+    "Assets/commonW3/custom_recipes/salad",
   ];
   const customByGuid = new Map();
   const originalByGuid = new Map();
@@ -1949,7 +1969,8 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge, ingredientIds) {
       const fields = parseUnityAsset(file);
       const isCustom =
         fields.scriptGuid === SCRIPT_GUID.CustomRecipeSO ||
-        fields.scriptGuid === SCRIPT_GUID.CustomRecipeOptionalPizzaSO;
+        fields.scriptGuid === SCRIPT_GUID.CustomRecipeOptionalPizzaSO ||
+        fields.scriptGuid === SCRIPT_GUID.CustomRecipeOptionalSandwichSO;
       const isOriginal = fields.scriptGuid === SCRIPT_GUID.PseudoPrefabSORecipe;
       if (!isCustom && !isOriginal) continue;
       const guid = readGuid(file + ".meta");
@@ -1965,8 +1986,14 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge, ingredientIds) {
 
   const list = [];
   const skipped = [];
+  const saladNamesPath = path.join(repoRoot, "Assets/commonW3/custom_recipes/names.json");
+  const saladNames = new Map(fs.existsSync(saladNamesPath)
+    ? (JSON.parse(fs.readFileSync(saladNamesPath, "utf8").replace(/^\uFEFF/, "")).names || []).map((n) => [n.id, n])
+    : []);
 
   for (const entry of customByGuid.values()) {
+    // Internal partial-state anchors stay indexed for recursive dependencies, not catalog choices.
+    if (entry.id.startsWith("Web_SauceSalad_Optional_")) continue;
     const { fields } = entry;
     const ingredientIds = [];
     const stats = { ings: 0, cooks: 0 };
@@ -2009,12 +2036,15 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge, ingredientIds) {
     const group = foodGroupOf(entry.assetPath);
     const rawScore = fields.score || 0;
     const score = entry.assetPath.includes("/common03/") && rawScore > 0 ? estimateCommon03RecipeScore(entry.id, step, ingredientIds) : rawScore;
+    const saladName = group === "commonw3" ? saladNames.get(entry.id) : null;
     list.push({
       guid: entry.guid,
       id: entry.id,
       ...lookupName(dictionary, idToRow, entry.id),
+      ...(saladName ? { nameZh: saladName.zh, nameEn: saladName.en } : {}),
       assetPath: entry.assetPath,
       cookingStep: step,
+      ...(group === "commonw3" ? { platingStep: fields.platingStepGuid ? guidIndex.get(fields.platingStepGuid)?.id || "" : "" } : {}),
       ingredients: ingredientIds,
       compositionIds: (fields.compositionGuids || []).map((g) => guidIndex.get(g)?.id || g),
       ingredientCount,
@@ -2120,6 +2150,7 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge, ingredientIds) {
 
   for (const r of list) {
     r.cookingGroups = computeCookingGroups(r, list, knowledge.cookSteps);
+    if (r.type === "salad") r.saladSubgroups = deriveSaladSubgroups(r);
   }
 
   list.sort((a, b) => a.nameZh.localeCompare(b.nameZh));
@@ -2256,12 +2287,20 @@ function floorRelevance(id) {
 
 const THEME_NAMES_ZH = {
   "": "默认",
+  // 食材箱 Dispenser01–05。主题键只有这五只箱子在用。
+  // 04 = dispenser_crate_04（与「圣诞」同一 prefab），05 = dispenser_crate_05（与「部落」同一 prefab）。
+  "01": "原木",
+  "02": "暗木",
+  "03": "浅木",
+  "04": "圣诞",
+  "05": "部落",
   Camping: "露营",
   Camping1: "露营 1",
   Camping2: "露营 2",
   Circus: "马戏团",
   Circus01: "马戏团 1",
   Circus02: "马戏团 2",
+  Circus03: "马戏团 3",
   Dark: "暗黑",
   Edge: "边缘",
   Gold: "黄金",
@@ -2290,7 +2329,9 @@ const THEME_NAMES_ZH = {
   DarkWood: "暗木",
   OldWood: "旧木",
   Medieval: "部落",
+  Medieval4: "部落 4",
   Circus: "马戏团",
+  Circus04: "马戏团 4",
   Winter: "冬季",
   Circus1: "马戏团 1",
   Circus2: "马戏团 2",
@@ -2308,6 +2349,30 @@ const THEME_NAMES_ZH = {
   Jungle: "丛林",
   Anniversary: "生日",
 };
+
+/** 把各类型文件名后缀收成同一主题键，使「统一全部」能覆盖切菜台等。
+ *  例：普通桌 CounterCircus（实为马戏团 2）与切菜台 Circus02 对齐；
+ *  Counter02（prefab 为部落 4）与 Medieval4 对齐。托盘水槽保持独立主题。 */
+function canonicalCounterTheme(theme, prefabName) {
+  const file = String(prefabName || "").replace(/\\/g, "/").split("/").pop().toLowerCase();
+  if (!file) return theme;
+  if (file.includes("medieval")) {
+    if (/04|medieval_04|medieval4|_4(?:_|$)/.test(file)) return "Medieval4";
+    if (/03|medieval_03|medieval3|_3(?:_|$)/.test(file)) return "Medieval3";
+    if (/02|medieval_02|medieval2|_2(?:_|$)/.test(file)) return "Medieval2";
+    return "Medieval";
+  }
+  if (file.includes("circus")) {
+    if (file.includes("tray")) return theme;
+    if (/04|_4(?:_|$)/.test(file)) return "Circus04";
+    if (/03|_3(?:_|$)/.test(file)) return "Circus03";
+    if (/02|_2(?:_|$)/.test(file)) return "Circus02";
+    if (/01|_1(?:_|$)/.test(file)) return "Circus01";
+  }
+  if ((theme === "China" || theme === "Wood13") && file.includes("dlc13") && file.includes("wood"))
+    return "Wood13";
+  return theme;
+}
 
 const COUNTER_TYPE_NAMES_ZH = {
   Counter: "普通桌台",
@@ -2355,9 +2420,20 @@ function scanCounterAppearances(dictionary, idToRow) {
       if (fs.existsSync(path.join(repoRoot, counters))) roots.push(counters);
     }
   }
+  // commonW2 工作台皮肤（部落 2/3、马戏团水槽 4 等）：与 commonW1 一样按 dlc 子目录发现。
+  const w2SoRoot = path.join(repoRoot, "Assets/commonW2/pseudo_prefab_so");
+  if (fs.existsSync(w2SoRoot)) {
+    for (const name of fs.readdirSync(w2SoRoot)) {
+      const counters = `Assets/commonW2/pseudo_prefab_so/${name}/counters`;
+      if (fs.existsSync(path.join(repoRoot, counters))) roots.push(counters);
+    }
+  }
   // commonW5 桌台皮肤（丛林 / 生日）：固定 counters 目录。
   if (fs.existsSync(path.join(repoRoot, "Assets/commonW5/pseudo_prefab_so/counters")))
     roots.push("Assets/commonW5/pseudo_prefab_so/counters");
+  // commonW6 食材箱 / 灶台皮肤（bundle 引用；灶台仅木纹·中秋）。
+  if (fs.existsSync(path.join(repoRoot, "Assets/commonW6/pseudo_prefab_so/counters")))
+    roots.push("Assets/commonW6/pseudo_prefab_so/counters");
   const byType = {};
   const seen = new Set();
 
@@ -2379,7 +2455,8 @@ function scanCounterAppearances(dictionary, idToRow) {
       }
       if (!counterType) continue;
 
-      const themeSuffix = id.slice(counterType.length).replace(/SO$/, "");
+      const rawTheme = id.slice(counterType.length).replace(/SO$/, "");
+      const themeSuffix = canonicalCounterTheme(rawTheme, fields.prefabName || "");
       const themeName = THEME_NAMES_ZH[themeSuffix] ?? themeSuffix;
 
       if (!byType[counterType]) byType[counterType] = [];
@@ -2531,6 +2608,21 @@ function writeCatalogFile(fileName, payload) {
   }
 }
 
+function writeCounterAppearances(dictionary, idToRow) {
+  const counterAppearances = scanCounterAppearances(dictionary, idToRow);
+  let caCount = 0;
+  for (const v of Object.values(counterAppearances)) caCount += v.length;
+  console.log(`Counter appearance options: ${caCount} across ${Object.keys(counterAppearances).length} types`);
+  writeCatalogFile("counter-appearances.json", {
+    generatedAt: new Date().toISOString(),
+    schemaVersion: SCHEMA_VERSION,
+    itemCount: caCount,
+    typeNames: COUNTER_TYPE_NAMES_ZH,
+    themeNames: THEME_NAMES_ZH,
+    byType: counterAppearances,
+  });
+}
+
 function main() {
   const manual = fs.existsSync(MANUAL_PATH) ? fs.readFileSync(MANUAL_PATH, "utf8") : "";
   const idToRow = parseManualTable(manual);
@@ -2540,6 +2632,11 @@ function main() {
     dictionary.set(id, names);
   }
   Object.assign(FOOTPRINT_OVERRIDES, commonW1Manifest.footprints);
+
+  if (process.argv.includes("--only-counter-appearances")) {
+    writeCounterAppearances(dictionary, idToRow);
+    return;
+  }
 
   const items = [];
   const measuredFootprints = loadMeasuredFootprints();
@@ -2819,10 +2916,14 @@ function main() {
     "Assets/common03/food/CookingSteps",
     "Assets/common03/food/PlatingSteps",
     "Assets/commonW1/food",
+    "Assets/commonW1/pseudo_prefab_so/dlc11/food",
+    "Assets/commonW3/custom_recipes/salad",
   ]);
   const knowledge = loadKnowledge();
 
   const ingredients = scanIngredients(dictionary, idToRow);
+  // Recipe leaves use the same canonical ids as the ingredient catalog / bridge.
+  for (const ing of ingredients) guidIndex.set(ing.guid, { id: ing.id, assetPath: ing.assetPath });
   stampIcons(ingredients, "ingredients");
   writeCatalogFile("ingredients.json", {
     generatedAt: new Date().toISOString(),
@@ -2978,17 +3079,7 @@ function main() {
     materials,
   });
 
-  const counterAppearances = scanCounterAppearances(dictionary, idToRow);
-  let caCount = 0;
-  for (const v of Object.values(counterAppearances)) caCount += v.length;
-  console.log(`Counter appearance options: ${caCount} across ${Object.keys(counterAppearances).length} types`);
-  writeCatalogFile("counter-appearances.json", {
-    generatedAt: new Date().toISOString(),
-    schemaVersion: SCHEMA_VERSION,
-    typeNames: COUNTER_TYPE_NAMES_ZH,
-    themeNames: THEME_NAMES_ZH,
-    byType: counterAppearances,
-  });
+  writeCounterAppearances(dictionary, idToRow);
 
   const switchMaterials = scanSwitchMaterials(dictionary, idToRow);
   console.log(`Switch materials: ${switchMaterials.length}`);

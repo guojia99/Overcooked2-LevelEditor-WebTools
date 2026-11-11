@@ -1,4 +1,4 @@
-# 05 · 运行时加载器 OC2LevelRuntimeLoader
+﻿# 05 · 运行时加载器 OC2LevelRuntimeLoader
 
 > 目录：`Assets/WebCustomStubRuntime/Loader~/`（唯一源文件 `Loader.cs`，v3.5.3；`~` 后缀 Unity 忽略，dotnet 单独编译）
 > 一句话定位：「Overcooked2 关卡代码分发」体系的**游戏侧运行时注入端**——把编辑器按关卡集编译、随关卡 zip 分发的 C# 程序集（统一运行时 `WebCustomStubRuntime`，内含随机食材箱等自定义玩法逻辑）在**关卡场景加载之前**注入游戏进程的 AppDomain，使场景 bundle 里的脚本引用能解析成真实组件。
@@ -49,7 +49,8 @@ BepInEx Chainloader 实例化插件
   ├─ Awake()：仅日志/配置绑定（不预载、不挂事件）
   ├─ Update() 首帧：DumpEnvironment() + BeginScan(true)（后台线程磁盘扫描）
   ├─ ApplyScanResult（主线程 Drain）：
-  │    读 levels/<set>/stub_levels.txt → WebManifest（"集|关卡|特征,..."）
+  │    读 levels/<set>/stub_levels.txt → WebManifest（"集|关卡|特征,..."；
+  │    "集" = 内部集名，由集内 info_<set> 文件名推断，4.0.0.16（原 4.5.0）起改名免疫）
   │    ├─ 清单为空 → 【完全休眠】不加载 bundle/程序集、不挂 AssemblyResolve，
   │    │   一个字节都不加载（未用 web 导出的环境零介入）
   │    └─ 非空 → 挂 AssemblyResolve → LoadDependenciesAndRuntime()
@@ -69,6 +70,7 @@ BepInEx Chainloader 实例化插件
 
 **清单规则**：
 - `stub_levels.txt`（v3.5.0 导出器逐场景写出）：每行 `<关卡名>|<特征1,特征2,...>`（'#' 注释/空行忽略）；**每个集都写（含空清单）**；
+- **清单键 = 内部集名（4.0.0.16，原 4.5.0，2026-11-08 文件夹改名事故修复）**：条目前缀「集」由集文件夹内 `info_<set>` bundle 文件名推断（`DetectManifestSetName`）——它与 bundle 场景内固化路径 `assets/levelsets/<set>/scenes/…` 同源（导出时同名写出），而磁盘文件夹名是玩家可随便改的（社区 18 个 stub 关卡集 17 个被改名，如 `zhuzi_v0.13(竹子)`，全部静默零介入：火锅/随机箱/锅具时间失效）。无 `info_*`（或名字含 `|`、`/`、扩展名）回落文件夹名（原行为）；`info_*` 多命中（混装多集）告警取第一个；两个文件夹指向同一内部名（新旧版本并存）告警——查表先到者命中，建议清理。改名集打常开汇总 Info 日志「4.0.0 清单键改名免疫」。**清单条目格式与 EntryPoint 查表逻辑零变更，已分发关卡集无需重导出，更新 Loader.dll 即修复**；
 - **旧版导出集兼容（3.5.0 ≤ 版本 < 4.0.0，用户决策 2026-09-28）**：有 `requires.txt` 无 `stub_levels.txt` 的集（如 3.2.1 导出）→ loader 生成 `"集|*|legacy"` 兼容条目，EntryPoint 对其维持 v3.4 行为（探测 + tag 自愈 + 特征全开）——**已分发旧集无需重导出即可继续工作**；v4.0.0 起 loader 不再生成兼容条目（`LegacyCompatCutoff`），旧集归零、需重新导出一次。新导出的集始终走严格清单路径；
 - 无 `requires.txt` 的集（前 web 导出时代）本就不归 loader 管（旧 `runtime` 文件自 v2.0 起忽略+告警）。
 
@@ -101,17 +103,18 @@ BepInEx Chainloader 实例化插件
 | coaxial | Coaxial\| tag / CoaxialButtonGroup 组件 | 自愈（同轴按钮组，组件自治） |
 | randomtrigger | RandomTrigger\| tag / RandomTrigger 组件 | 自愈（随机触发器，组件自治，不计 ticker 票） |
 | animgrid | Design/Animated Objects 有组根 | HealAnimGridMembers |
-| conveyor | ConveyorDirectionSync\| / ConveyorServe\| tag / 组件 | 自愈（含可上菜传送带的末端放菜与非盘子无效上菜补丁） |
+| conveyor | ConveyorDirectionSync\| / ConveyorServe\| tag / 组件 | 自愈（可上菜传送带：沿传送方向相邻格 + 横向≤0.8m + 高度差≤1m 识别上菜口并放菜；非盘子无效上菜补丁） |
 | speedctl | SpeedCtl\| tag / ButtonSpeedControl 组件 | 自愈（按钮控速：步带 m_speed+材质 / 传送带 m_conveySpeed 循环切档，组件自治） |
 | spawnerbatch | SpawnerBatch\| tag / ButtonSpawnerBatch 组件 | 自愈（生成器按钮批次：每按一批 N 个、批次完成后冷却，组件自治；仅服务端驱动生成） |
 | camera / travelator / teleportal / rat / worldmap | 对应 tag / 组件 | 自愈（camera：`CameraOffset\|` 注册+按需补丁；`SplitScreen\|` 分屏驱动：原版镜头屏蔽、按本地厨师数量建 1/2/3/4 镜头、单目标复用 MultiplayerCamera 运镜，互斥 CameraOffset，组件自治不计 ticker 票） |
 | terminal | Terminal.m_pilotableObject==null | ticker TerminalGuard |
 | cannon | SetupCannonStub 根 | ticker CannonGuard + 大炮补丁 |
+| orderseq | OrderSeq\| tag / OrderSequenceSettings 组件（PseudoPrefabManagerStub 物体上，4.0.0.18，原 4.7.0） | `OrderSequenceDirector` 状态机 + `RoundData.GetNextRecipe` 按需前缀（组件自治，不计 ticker 票；ProcessScene 末尾 `ActivateFromScene` 激活，tag 自愈重建组件，uID 在关卡 RecipeList 解析 Entry——与编辑器 LevelConfigSetup / 真机 OC2DIYLevel 构建链同源） |
 | stub | 未知 CustomStub 组件兜底（导出告警） | 核心（保底激活） |
 
 > **新增 stub 类型四处同步**：① `CustomStubTagPrefixes`、② `StubTagFeatureMap`、③ `StubComponentFeatureMap`（均 LayoutEditorSetExporter.cs）、④ 运行时特征消费方（EntryPoint.ProcessScene / StubTicker）。
 
-### 3.3.1 多镜头分屏（SplitScreenCamera，4.1.0）
+### 3.3.1 多镜头分屏（SplitScreenCamera，4.0.0.11，原 4.1.0）
 
 - 载体：相机 **Camera 子物体**上的 `SplitScreen|2|C0:ox,oy,oz,fov,size,vis|C1:...`（与根节点 `CameraOffset|` 分离，避免同一 tag 字符串互斥覆盖）。每镜头 offset 相对玩家位置，FOV<=0 沿用主相机，size=距离倍率，vis=false=编辑器不画参考且运行时该玩家画面不生成（保留黑框）。
 - 触发：`EntryPoint.HealScene` → `SplitScreenCamera.ActivateFromTag` → 场景根 `SplitScreenCameras` 驱动。
@@ -175,8 +178,9 @@ BepInEx Chainloader 实例化插件
 | ≤1.6.0 | 早期：`.dll.bytes` 路径匹配修复、日志桥、EntryPoint 引导、移除探针回归纯加载器 |
 | 2.x | 统一运行时体系：`requires.txt` semver 门控、commonW 动态发现、扫描挪后台线程、Verbose 配置 |
 | 3.0–3.2.1 | 扫描启动一次化；同名程序集冲突诊断；旧包兼容护栏（RecipeHelper 空节点） |
+| **4.0.0（当前，2026-11-10 首个发布版）** | 收敛内部迭代 4.0.1–4.8.0：订单顺序（4.0.0.18，原 4.7.0）、上游 sandwich/optional（4.0.0.17，原 4.6.0）、清单键改名免疫 + 屏幕点探针（4.0.0.16，原 4.5.0）、动画组 fade（4.0.0.15，原 4.3.0）、多镜头分屏（4.0.0.11，原 4.1.0）、互锁按钮修复、传送带方向/停稳系列；Loader 仅同步版本号。继承 3.5.0 零介入铁律 + 严格 `stub_levels.txt` 清单；v4.0.0 起关闭 legacy 兼容条目 |
+| 3.5.0 | **零介入铁律**：① 删除兼容护栏（不主动 hook 非 web 关卡路径的函数；旧集混装崩溃=重导出解决）；② `stub_levels.txt` 逐关卡清单 + `WebManifest` 注入 + EntryPoint 逐关卡闸门（未命中场景零扫描/零探测/零补丁）；③ 按特征挂载（KillPlane 仅 pushable、ticker 子系统按特征）；④ 清单为空=加载器整体休眠；⑤ 兼容期（3.5.0≤v<4.0.0）旧版导出集走 `"集|*|legacy"` 条目；⑥ 新导出集的真机路径不再依赖 TickProbe 名字子串探测 |
 | 3.3.x–3.4.0 | 随统一运行时功能同步版本号（按钮联动/传送带/开关初始色，loader 侧无改动） |
-| **3.5.0（当前）** | **零介入铁律**：① 删除兼容护栏（不主动 hook 非 web 关卡路径的函数；旧集混装崩溃=重导出解决）；② `stub_levels.txt` 逐关卡清单 + `WebManifest` 注入 + EntryPoint 逐关卡闸门（未命中场景零扫描/零探测/零补丁）；③ 按特征挂载（KillPlane 仅 pushable、ticker 子系统按特征）；④ 清单为空=加载器整体休眠；⑤ **兼容期（<4.0.0）：旧版导出集走 `"集|*|legacy"` 条目维持 v3.4 行为（探测+自愈），已分发旧集无需重导出；v4.0.0 起严格按清单**；⑥ 新导出集的真机路径不再依赖 TickProbe 名字子串探测 |
 
 ## 7. 构建与安装
 

@@ -115,19 +115,12 @@ public static class LayoutEditorMatchlistMap
         Walk(custom.cookingStepSO, keys, visited);
         Walk(custom.platingStepSO, keys, visited);
 
-        var burger = so as CustomRecipeOptionalBurgerSO;
-        if (burger != null)
+        if (LayoutEditorOptionalRecipe.IsAssembly(custom))
         {
-            Walk(burger.bunSO, keys, visited);
-            CollectFromPseudo(burger.ingredientModelSOs, keys, visited);
-        }
-
-        var pizza = so as CustomRecipeOptionalPizzaSO;
-        if (pizza != null)
-        {
-            Walk(pizza.doughSO, keys, visited);
-            CollectFromPseudo(pizza.rawPizzaIngredientPrefabSOs, keys, visited);
-            CollectFromPseudo(pizza.cookedPizzaIngredientPrefabSOs, keys, visited);
+            var refs = new List<ScriptableObject>();
+            LayoutEditorOptionalRecipe.CollectAssemblySoRefs(custom, refs);
+            for (int i = 0; i < refs.Count; i++)
+                Walk(refs[i], keys, visited);
         }
     }
 

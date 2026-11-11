@@ -214,6 +214,9 @@ public static class LayoutEditorStubIO
             item.conveyor = new LayoutConveyorStubDto
             {
                 conveySpeed = conveyor.conveySpeed,
+                serve = IsServeConveyorPrefab(go, null)
+                    || HasCustomStubTag(go, "ConveyorServe|")
+                    || FindCustomStubType(go, "ConveyorServe") != null,
                 buttonControlled = HasCustomStubTag(go, "ConveyorDirectionSync|")
                     || HasCustomStubTag(go, "ConveyorServe|dir")
                     || FindCustomStubType(go, "ConveyorDirectionSync") != null
@@ -844,25 +847,25 @@ public static class LayoutEditorStubIO
         }
 
         EnsureIngredientSplitterDefaultUI(go);
+        var splitterComponent = go.GetComponent("IngredientSplitter") as Component;
+        if (splitterComponent != null)
+            LayoutEditorIngredientSplitterMigration.TryMigrate(splitterComponent, true);
         // 门扇碰撞：门 prefab 只有 MeshFilter/MeshRenderer，默认可穿过。写回时在
         // 伪根上补 BoxCollider（尺寸优先读 exports/decor/models/<guid>/model.obj，
         // DLC5 门有精确兜底），随动画组旋转——关门挡住门洞、开门旋到侧面。
         ApplyDoorCollision(go, item);
 
-        if (!string.IsNullOrEmpty(item.pseudoPrefabGuid))
+        if (item.resetAppearance)
         {
-            var pseudoStub = go.GetComponent<PseudoPrefabStub>();
-            if (pseudoStub != null)
-            {
-                // 仅当 guid 能解析才写入；解析失败时保留 prefab 继承的 SO，
-                // 避免把 pseudoPrefabSO 置空 → 宿主 PseudoPrefabManager 空引用抛异常。
-                var so = LoadPseudoPrefabSO(item.pseudoPrefabGuid);
-                if (so != null)
-                {
-                    Undo.RecordObject(pseudoStub, "Layout Editor PseudoPrefab");
-                    pseudoStub.pseudoPrefabSO = so;
-                }
-            }
+            // 切回默认：还原预制件自带 SO。还原失败（非预制实例）再尝试目录里的默认 guid。
+            if (!RestorePrefabAppearance(go))
+                TryAssignAppearance(go, item.pseudoPrefabGuid);
+        }
+        else if (!string.IsNullOrEmpty(item.pseudoPrefabGuid))
+        {
+            // 仅当 guid 能解析才写入；解析失败时保留 prefab 继承的 SO，
+            // 避免把 pseudoPrefabSO 置空 → 宿主 PseudoPrefabManager 空引用抛异常。
+            TryAssignAppearance(go, item.pseudoPrefabGuid);
         }
 
         // 食材箱外观防御：静态网格箱皮肤（dlc03/07/08/09/13 箱）已从外观目录移除——
@@ -1253,7 +1256,9 @@ public static class LayoutEditorStubIO
                 item.conveyor.speedControl.levels.Length > 0)
                 conveyor.conveySpeed = item.conveyor.speedControl.levels[0];
             ApplyConveyorDirectionSync(go, item.conveyor.buttonControlled);
-            ApplyConveyorServe(go, IsServeConveyorPrefab(go, item.prefabAssetPath), item.conveyor.buttonControlled);
+            ApplyConveyorServe(go,
+                IsServeConveyorPrefab(go, item.prefabAssetPath) || item.conveyor.serve,
+                item.conveyor.buttonControlled);
             return;
         }
 
@@ -2846,6 +2851,152 @@ public static class LayoutEditorStubIO
         item.soArray = new LayoutSOArrayStubDto { pseudoPrefabGuids = guids };
     }
 
+    /// <summary>把外观 SO 写到根上每一个 PseudoPrefabStub（基类与上菜台等派生类）。
+    /// 只写 GetComponent 命中的第一个时，派生 stub 在前的桌台换肤不会落到 ResetChild 读取的那份。</summary>
+    private static void TryAssignAppearance(GameObject go, string guid)
+    {
+        if (go == null || string.IsNullOrEmpty(guid))
+            return;
+        var so = ResolveAppearanceSo(LoadPseudoPrefabSO(guid));
+        if (so == null)
+            return;
+        var stubs = go.GetComponents<PseudoPrefabStub>();
+        if (stubs == null)
+            return;
+        for (int i = 0; i < stubs.Length; i++)
+        {
+            var stub = stubs[i];
+            if (stub == null)
+                continue;
+            Undo.RecordObject(stub, "Layout Editor PseudoPrefab");
+            stub.pseudoPrefabSO = so;
+            EditorUtility.SetDirty(stub);
+            if (IsPrefabInstanceObject(stub))
+                PrefabUtility.RecordPrefabInstancePropertyModifications(stub);
+        }
+    }
+
+    /// <summary>把实例外观恢复成预制件上的 SO。没有预制父级时返回 false。</summary>
+    private static bool RestorePrefabAppearance(GameObject go)
+    {
+        if (go == null)
+            return false;
+        var parent = PrefabUtility.GetPrefabParent(go) as GameObject;
+        if (parent == null)
+            return false;
+        var parentStubs = parent.GetComponents<PseudoPrefabStub>();
+        var stubs = go.GetComponents<PseudoPrefabStub>();
+        if (parentStubs == null || stubs == null || parentStubs.Length == 0 || stubs.Length == 0)
+            return false;
+        bool any = false;
+        for (int i = 0; i < stubs.Length; i++)
+        {
+            var stub = stubs[i];
+            if (stub == null)
+                continue;
+            PseudoPrefabSO src = null;
+            for (int j = 0; j < parentStubs.Length; j++)
+            {
+                var ps = parentStubs[j];
+                if (ps != null && ps.GetType() == stub.GetType())
+                {
+                    src = ps.pseudoPrefabSO;
+                    break;
+                }
+            }
+            if (src == null)
+                continue;
+            Undo.RecordObject(stub, "Layout Editor PseudoPrefab");
+            stub.pseudoPrefabSO = src;
+            EditorUtility.SetDirty(stub);
+            if (IsPrefabInstanceObject(stub))
+                PrefabUtility.RecordPrefabInstancePropertyModifications(stub);
+            any = true;
+        }
+        return any;
+    }
+
+    private static bool IsPrefabInstanceObject(UnityEngine.Object obj)
+    {
+        var t = PrefabUtility.GetPrefabType(obj);
+        return t == PrefabType.PrefabInstance
+            || t == PrefabType.ModelPrefabInstance
+            || t == PrefabType.DisconnectedPrefabInstance
+            || t == PrefabType.DisconnectedModelPrefabInstance;
+    }
+
+    // prefabName（小写）→ 正斜杠 assetPath 的皮肤 SO。common01 里一批副本用了反斜杠路径，
+    // 游戏 LoadAsset 对不上；同 prefabName 的 common03 副本可以替换。
+    private static Dictionary<string, PseudoPrefabSO> _forwardAppearanceByName;
+
+    private static PseudoPrefabSO ResolveAppearanceSo(PseudoPrefabSO so)
+    {
+        if (so == null || string.IsNullOrEmpty(so.assetPath) || so.assetPath.IndexOf('\\') < 0)
+            return so;
+        if (string.IsNullOrEmpty(so.prefabName))
+            return so;
+        var index = ForwardAppearanceIndex();
+        PseudoPrefabSO alt;
+        if (index.TryGetValue(so.prefabName.ToLowerInvariant(), out alt) && alt != null)
+            return alt;
+        return so;
+    }
+
+    private static Dictionary<string, PseudoPrefabSO> ForwardAppearanceIndex()
+    {
+        if (_forwardAppearanceByName != null)
+            return _forwardAppearanceByName;
+        _forwardAppearanceByName = new Dictionary<string, PseudoPrefabSO>();
+        string[] folders = new string[]
+        {
+            "Assets/common01/pseudo_prefab_so/counters",
+            "Assets/common02/pseudo_prefab_so/counters",
+            "Assets/common03/pseudo_prefab_so/counters",
+            "Assets/commonW1/pseudo_prefab_so",
+            "Assets/commonW2/pseudo_prefab_so",
+            "Assets/commonW5/pseudo_prefab_so/counters"
+        };
+        var existing = new List<string>();
+        for (int i = 0; i < folders.Length; i++)
+        {
+            if (AssetDatabase.IsValidFolder(folders[i]))
+                existing.Add(folders[i]);
+        }
+        if (existing.Count == 0)
+            return _forwardAppearanceByName;
+        var guids = AssetDatabase.FindAssets("t:PseudoPrefabSO", existing.ToArray());
+        for (int i = 0; i < guids.Length; i++)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guids[i]);
+            if (string.IsNullOrEmpty(path) || path.Replace('\\', '/').IndexOf("/counters/") < 0)
+                continue;
+            var candidate = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
+            if (candidate == null || string.IsNullOrEmpty(candidate.prefabName))
+                continue;
+            if (!string.IsNullOrEmpty(candidate.assetPath) && candidate.assetPath.IndexOf('\\') >= 0)
+                continue;
+            var key = candidate.prefabName.ToLowerInvariant();
+            PseudoPrefabSO prev;
+            if (!_forwardAppearanceByName.TryGetValue(key, out prev) || AppearanceRank(candidate) > AppearanceRank(prev))
+                _forwardAppearanceByName[key] = candidate;
+        }
+        return _forwardAppearanceByName;
+    }
+
+    private static int AppearanceRank(PseudoPrefabSO so)
+    {
+        if (so == null)
+            return 0;
+        var path = AssetDatabase.GetAssetPath(so);
+        if (string.IsNullOrEmpty(path))
+            path = so.assetPath ?? "";
+        path = path.Replace('\\', '/');
+        if (path.IndexOf("/common03/") >= 0) return 3;
+        if (path.IndexOf("/commonW") >= 0) return 2;
+        if (path.IndexOf("/common02/") >= 0) return 1;
+        return 0;
+    }
+
     /// <summary>导出基础 PseudoPrefabStub.pseudoPrefabSO 的 guid（外观皮肤）。
     /// 本分支提前 return 的 stub 类型（Dispenser/ServingStation/PlateReturn/Conveyor 等）
     /// 走不到方法末尾的通用导出——漏掉时 web 重新加载丢失已设置的外观皮肤
@@ -4028,6 +4179,7 @@ public static class LayoutEditorStubIO
     /// "RandomCrate|w1,w2,..."（invariant 浮点）。候选列表存 PseudoPrefabSOArray。
     /// 关卡集 stub 程序集缺失期间靠它往返 web 数据。</summary>
     private const string RandomCrateTagPrefix = "RandomCrate|";
+    private const string OrderSeqTagPrefix = "OrderSeq|";
 
     /// <summary>问号图标库目录（多样式；PNG 均为正常方向，游戏内由
     /// RandomCrate.PaintQuestionMark 统一做左右镜像）。</summary>
@@ -5699,6 +5851,20 @@ public static class LayoutEditorStubIO
                 // tag 漂移由本分支捕捉（内部比对，仅变化时写）。
                 if (RandomTriggerBakery.RefreshTagFromComponent(go))
                     rewritten++;
+            }
+            else if (prefab.StartsWith(OrderSeqTagPrefix, StringComparison.Ordinal))
+            {
+                // 订单顺序（4.0.0.18（原 4.7.0））：组件为权威（全标量字段），整串重算。
+                var c = FindComp(go, "OrderSequenceSettings");
+                if (c == null) continue;
+                var end = GetStubField(c, "m_endBehavior") as string;
+                var t = LayoutEditorOrderSequenceBake.BuildTag(
+                    string.IsNullOrEmpty(end) ? "loop" : end,
+                    GetStubField(c, "m_groupModes") as int[],
+                    GetStubField(c, "m_groupSizes") as int[],
+                    GetStubField(c, "m_groupBatches") as int[],
+                    GetStubField(c, "m_recipeUids") as int[]);
+                if (t != prefab) { SetCustomStubTag(go, t); rewritten++; }
             }
             // PushablePot| / CameraOffset|：payload 来自 soArray/摆放位（非组件字段），
             // 写回时已按最新格式烘焙，导出期不重算（避免误伤结构性数据）。

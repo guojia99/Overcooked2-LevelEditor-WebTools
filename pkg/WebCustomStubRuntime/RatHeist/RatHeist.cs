@@ -1030,11 +1030,16 @@ namespace CustomStub
 
         private static void AssignCockroachAlbedo(Material mat, Texture2D tex)
         {
-            mat.mainTexture = tex;
             if (mat.HasProperty("_MainTex"))
                 mat.SetTexture("_MainTex", tex);
+            if (mat.HasProperty("_DiffuseMap"))
+                mat.SetTexture("_DiffuseMap", tex);
             if (mat.HasProperty("_Diffuse_Map"))
                 mat.SetTexture("_Diffuse_Map", tex);
+            if (mat.HasProperty("_Diffuse"))
+                mat.SetTexture("_Diffuse", tex);
+            if (mat.HasProperty("_Albedo"))
+                mat.SetTexture("_Albedo", tex);
         }
 
         private static void AssignCockroachNormal(Material mat, Texture2D tex)

@@ -412,6 +412,10 @@ export const S = {
   /** 画布上显示相机视野范围（FOV 视锥与地面交线）。 */
   showCameraFov: localStorage.getItem("showCameraFov") !== "0",
   showSceneLights: localStorage.getItem("showSceneLights") !== "0",
+  /** 「🎮 Unity 实时画面」：右下角悬浮 Unity 游戏相机预览（localStorage 持久化，默认开）。 */
+  showUnityPreview: localStorage.getItem("unityPreview") !== "0",
+  /** Unity 实时画面面板是否收起（收起后仅剩小药丸按钮；localStorage 持久化）。 */
+  unityPreviewCollapsed: localStorage.getItem("unityPreviewCollapsed") === "1",
   /** 「🖼 装饰预览」尺寸：none / small / medium / large（localStorage 持久化，默认小）。 */
   decorPreviewSize: initialDecorPreviewSize(),
   autoKillPlane: false,
@@ -495,6 +499,10 @@ export const S = {
   expandedMemberId: null as string | null,
   activeRightTab: "items" as "items" | "anim" | "triggers",
   draggingWaypointId: null as string | null,
+  /** 拖拽中的 orbit 圆心（激活组的 orbit 事件下标）。 */
+  draggingOrbitCenter: null as number | null,
+  /** 拖拽中的贝塞尔控制点（所属路点 id）。 */
+  draggingCtrlPoint: null as string | null,
   scale: 1,
   panX: 0,
   panY: 0,
@@ -562,6 +570,9 @@ export const S = {
   pendingNewFloor: false,
   pendingNewFloorCat: null as CatalogItem | null,
   pendingNewAirFloor: false,
+  /** 进场动画目标选点中（focus 聚焦点 / tourA·tourB 巡回点；cameraLight 弹窗发起，
+   *  画布点击一次性消耗，Esc 取消）。空串 = 非选点态。 */
+  pendingCameraTargetPick: "" as "" | "focus" | "tourA" | "tourB",
   bridgeWasUp: false,
   bridgeStopAlerted: false,
   bridgeFailCount: 0,

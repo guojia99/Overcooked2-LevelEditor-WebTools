@@ -1,0 +1,134 @@
+[
+  {
+    "fbx": "Assets/commonW3/custom_recipes/salad/models/SaladKetchup.fbx",
+    "bytes": 212140,
+    "sha256": "2099f35cf91f854615f2dab577821d581b6849ff007c1b9eebf215260aa6f180",
+    "triangles": 4999,
+    "vertices": 2549,
+    "material_slots": 1,
+    "uv_layers": 1,
+    "unity_bounds": {
+      "min": [
+        -0.2623654901981354,
+        -1.9841542345785907e-09,
+        -0.3129999947612259
+      ],
+      "max": [
+        0.21836550533771515,
+        0.05349585147432095,
+        0.337000011134928
+      ],
+      "size": [
+        0.4807309955358505,
+        0.053495853458475184,
+        0.6500000058961539
+      ]
+    },
+    "principal_angle_from_positive_x_degrees": 87.99999999867948,
+    "texture_links": [
+      {
+        "name": "texture_pbr_20250901.png",
+        "size": [
+          1024,
+          1024
+        ],
+        "exists": true
+      }
+    ],
+    "raw_fbx": {
+      "version": 7400,
+      "mesh_count": 1,
+      "local_bounds": {
+        "min": [
+          -0.2623654901981354,
+          0.0,
+          -0.31299999356269836
+        ],
+        "max": [
+          0.21836550533771515,
+          0.0534958690404892,
+          0.3370000123977661
+        ],
+        "size": [
+          0.4807309955358505,
+          0.0534958690404892,
+          0.6500000059604645
+        ]
+      },
+      "faces": 4999,
+      "all_triangles": true,
+      "has_tangents": false,
+      "embedded_texture_bytes": 0,
+      "animation_objects": 0
+    },
+    "uv_finite": true,
+    "max_horizontal_radius_m": 0.35742918065917234,
+    "passed": true
+  },
+  {
+    "fbx": "Assets/commonW3/custom_recipes/salad/models/SaladMustard.fbx",
+    "bytes": 205916,
+    "sha256": "c9f495c7d43dfd340b0a0b2112e77f12ed8367cf1c0f45a7eba35256cac75fcf",
+    "triangles": 5000,
+    "vertices": 2512,
+    "material_slots": 1,
+    "uv_layers": 1,
+    "unity_bounds": {
+      "min": [
+        -0.271855890750885,
+        1.0799164776615924e-08,
+        -0.33700001336590873
+      ],
+      "max": [
+        0.31585589051246643,
+        0.04880258431292416,
+        0.3129999916748983
+      ],
+      "size": [
+        0.5877117812633514,
+        0.048802573513759384,
+        0.650000005040807
+      ]
+    },
+    "principal_angle_from_positive_x_degrees": 55.000000115797185,
+    "texture_links": [
+      {
+        "name": "texture_pbr_20250901.png",
+        "size": [
+          1024,
+          1024
+        ],
+        "exists": true
+      }
+    ],
+    "raw_fbx": {
+      "version": 7400,
+      "mesh_count": 1,
+      "local_bounds": {
+        "min": [
+          -0.271855890750885,
+          0.0,
+          -0.3370000123977661
+        ],
+        "max": [
+          0.31585589051246643,
+          0.04880259931087494,
+          0.31299999356269836
+        ],
+        "size": [
+          0.5877117812633514,
+          0.04880259931087494,
+          0.6500000059604645
+        ]
+      },
+      "faces": 5000,
+      "all_triangles": true,
+      "has_tangents": false,
+      "embedded_texture_bytes": 0,
+      "animation_objects": 0
+    },
+    "uv_finite": true,
+    "max_horizontal_radius_m": 0.37431693605752747,
+    "passed": true
+  }
+]

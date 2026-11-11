@@ -257,10 +257,20 @@ public static class LayoutEditorAllIngredientsFill
         var entries = new List<ScriptableObject>();
         if (recipe.compositionSOs != null)
             entries.AddRange(recipe.compositionSOs);
-        var optionalBurger = recipe as CustomRecipeOptionalBurgerSO;
-        var optionalPizza = recipe as CustomRecipeOptionalPizzaSO;
-        if (optionalBurger == null && optionalPizza == null && recipe.optionalSOs != null)
+        var sandwich = recipe as CustomRecipeOptionalSandwichSO;
+        if (sandwich != null)
+        {
+            if (sandwich.toastSO != null)
+                entries.Add(sandwich.toastSO);
+            if (sandwich.optionalSOs != null)
+                entries.AddRange(sandwich.optionalSOs);
+            if (sandwich.sauceSOs != null)
+                entries.AddRange(sandwich.sauceSOs);
+        }
+        else if (!LayoutEditorOptionalRecipe.IsAssembly(recipe) && recipe.optionalSOs != null)
+        {
             entries.AddRange(recipe.optionalSOs);
+        }
         foreach (ScriptableObject comp in entries)
         {
             if (comp == null)

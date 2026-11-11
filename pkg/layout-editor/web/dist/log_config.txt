@@ -30,3 +30,12 @@ maxLogSessions=21
 
 # 相同消息去重秒数
 deduplicateSeconds=5
+
+# 原生良性错误不写 player.log，只留首条样本+汇总
+suppressNativeSpam=true
+
+# 同一模式错误最多逐条提示玩家的次数（超出后只汇总）
+maxPlayerPromptsPerPattern=20
+
+# 重复错误汇总间隔（秒）
+infoSpamSummarySeconds=30

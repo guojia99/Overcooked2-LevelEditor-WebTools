@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 10,
+  "schemaVersion": 11,
   "group": "dlc11",
   "itemCount": 13,
   "recipes": [
@@ -158,6 +158,10 @@
           ]
         }
       ],
+      "saladSubgroups": [
+        "no_sauce",
+        "official"
+      ],
       "icon": true
     },
     {
@@ -191,6 +195,10 @@
           ]
         }
       ],
+      "saladSubgroups": [
+        "no_sauce",
+        "official"
+      ],
       "icon": true
     },
     {
@@ -223,6 +231,10 @@
             "dlc11_onion_salad"
           ]
         }
+      ],
+      "saladSubgroups": [
+        "no_sauce",
+        "official"
       ],
       "icon": true
     },
@@ -259,6 +271,10 @@
           ]
         }
       ],
+      "saladSubgroups": [
+        "no_sauce",
+        "official"
+      ],
       "icon": true
     },
     {
@@ -292,6 +308,10 @@
           ]
         }
       ],
+      "saladSubgroups": [
+        "no_sauce",
+        "official"
+      ],
       "icon": true
     },
     {
@@ -324,6 +344,10 @@
             "dlc11_onion_salad"
           ]
         }
+      ],
+      "saladSubgroups": [
+        "no_sauce",
+        "official"
       ],
       "icon": true
     },

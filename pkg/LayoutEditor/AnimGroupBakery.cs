@@ -427,6 +427,12 @@ public static class AnimGroupBakery
         // to their own name (Floor -> Floor (1) -> Floor (1) (1) ...).
         // Also fold repeated suffixes left over from older builds:
         // "Floor (1) (1) (1)" -> "Floor (1)".
+        // fade 驱动器挂载条件：组内存在 fade 事件（成员循环内逐个挂）。
+        bool hasFadeEvents = false;
+        foreach (var e in group.events)
+        {
+            if (e != null && e.type == "fade") { hasFadeEvents = true; break; }
+        }
         foreach (var go in members)
         {
             if (go == null)
@@ -471,6 +477,10 @@ public static class AnimGroupBakery
             // 子树 StaticGridLocation 换装成 vanilla DynamicGridLocation（逐帧跟随
             // 重占格）。静止成员空转零副作用。反射挂载（CustomStub 运行时类型）。
             AttachAnimGridMemberSync(go);
+            // fade（淡入淡出）驱动器：组含 fade 事件才挂（惰性组件，alpha 恒 1
+            // 时零开销；曲线绑定其公开字段 alpha）。
+            if (hasFadeEvents)
+                AttachFadeDriver(go);
         }
 
         // User member groups become named sub-roots under the group root; their
@@ -522,6 +532,7 @@ public static class AnimGroupBakery
             if (w != null && !string.IsNullOrEmpty(w.id)) wpById[w.id] = w;
 
         int moveIdx = 0, waitIdx = 0, liftIdx = 0, dropIdx = 0, rotIdx = 0;
+        int scaleIdx = 0, tiltIdx = 0, orbitIdx = 0, fadeIdx = 0;
         foreach (var e in group.events)
         {
             if (e == null) continue;
@@ -531,8 +542,22 @@ public static class AnimGroupBakery
                 else if (e.type == "lift") e.triggerName = "Lift" + (++liftIdx);
                 else if (e.type == "drop") e.triggerName = "Drop" + (++dropIdx);
                 else if (e.type == "rotate") e.triggerName = "Rotate" + (++rotIdx);
+                else if (e.type == "scale") e.triggerName = "Scale" + (++scaleIdx);
+                else if (e.type == "tilt") e.triggerName = "Tilt" + (++tiltIdx);
+                else if (e.type == "orbit") e.triggerName = "Orbit" + (++orbitIdx);
+                else if (e.type == "fade") e.triggerName = "Fade" + (++fadeIdx);
                 else e.triggerName = "Wait" + (++waitIdx);
             }
+        }
+        // 未知事件类型预警（曾经是静默丢弃，排查极难）。
+        foreach (var e in group.events)
+        {
+            if (e == null) continue;
+            if (e.type != "move" && e.type != "lift" && e.type != "drop" &&
+                e.type != "wait" && e.type != "rotate" && e.type != "scale" &&
+                e.type != "tilt" && e.type != "orbit" && e.type != "fade")
+                LayoutEditorLog.LogWarning("anim group: event " + (e.triggerName ?? "?") +
+                    " has unknown type \"" + (e.type ?? "?") + "\" — skipped");
         }
         // 时间轴迁移：旧顺序数据（startTime < 0）按 delay 链换算绝对开始时间
         // （0.1s 对齐，与 web 端 migrateGroupTimeline 同一规则）。
@@ -540,11 +565,43 @@ public static class AnimGroupBakery
         // 时间轴模型：事件按 startTime 绝对调度（LINQ OrderBy 稳定排序），重叠即并行。
         var animEvents = group.events
             .Where(e => e != null && (e.type == "move" || e.type == "lift" ||
-                e.type == "drop" || e.type == "wait" || e.type == "rotate"))
+                e.type == "drop" || e.type == "wait" || e.type == "rotate" ||
+                e.type == "scale" || e.type == "tilt" || e.type == "orbit" ||
+                e.type == "fade"))
             .OrderBy(e => e.startTime)
             .ToList();
         if (animEvents.Count == 0)
             return "动画组「" + (group.displayName ?? "?") + "」没有可烘焙事件";
+
+        // XZ 驱动互斥校验：orbit 与 move/其他 orbit 的时间区间不得重叠
+        // （两者都写 m_LocalPosition.x/z，并行只能靠合并 clip，而 orbit 是
+        // per-member 圆弧、move 是共享路线+偏移，无法合并——前端同样阻断）。
+        // move 与 move 重叠维持旧行为（簇内警告、最晚者生效），不破坏存量关卡。
+        {
+            var xzEvts = new List<AnimGroupEventDto>();
+            foreach (var e in animEvents)
+            {
+                if (e.type == "move" || e.type == "orbit") xzEvts.Add(e);
+            }
+            for (int i = 0; i < xzEvts.Count; i++)
+            {
+                for (int j = i + 1; j < xzEvts.Count; j++)
+                {
+                    var a = xzEvts[i];
+                    var b = xzEvts[j];
+                    if (a.type == "move" && b.type == "move") continue;
+                    float aS = Mathf.Max(0f, a.startTime);
+                    float aE = aS + EventDuration(a, wpById);
+                    float bS = Mathf.Max(0f, b.startTime);
+                    float bE = bS + EventDuration(b, wpById);
+                    if (bS < aE - 0.0001f && aS < bE - 0.0001f)
+                        return "动画组「" + (group.displayName ?? "?") +
+                            "」：事件 " + a.triggerName + "（" + a.type + "）与 " +
+                            b.triggerName + "（" + b.type + "）时间区间重叠" +
+                            "（XZ 驱动互斥，请错开开始时间）";
+                }
+            }
+        }
 
         if (IsHold(group))
         {
@@ -910,8 +967,16 @@ public static class AnimGroupBakery
         // otherwise the move -> drop hand-off "flashes back" to the route start.
         Vector2? lastRouteEnd = null;
         // 旋转事件的角度跨事件累积（非循环）：第 N 个旋转从前面所有旋转的终态
-        // 继续（same rule as the preview 的 rotY 叠加）。
+        // 继续（same rule as the preview 的 rotY 叠加）。tilt 按轴独立累积；
+        // scale 为倍率累积（绝对目标，初始 1）。
         float rotAccum = 0f;
+        float tiltAccumX = 0f, tiltAccumZ = 0f;
+        float scaleAccum = 1f;
+        float alphaAccum = 1f;
+        // orbit 事件的 per-member 末位置（成员各自半径/方位不同，无法用共享
+        // lastRouteEnd 表达）：后续 wait/lift/drop 的 XZ 定持优先用它，避免
+        // 「公转完 → wait 一下」闪回公转起点。
+        Dictionary<string, Vector2> memberHoldPos = null;
         int clusterSeq = 0;
         foreach (var cluster in clusters)
         {
@@ -927,7 +992,8 @@ public static class AnimGroupBakery
                 }
                 var mclip = BuildClusterClip(key, "s" + clipIndex++, members, groupRoot,
                     cluster, wpById, memberOffsets, staticSet, memberFollowPos,
-                    lastRouteEnd, seqLiftY, rotAccum, finishedTrigger, animDir, usedAssets);
+                    lastRouteEnd, seqLiftY, rotAccum, tiltAccumX, tiltAccumZ, scaleAccum,
+                    alphaAccum, finishedTrigger, animDir, usedAssets, memberHoldPos);
                 if (mclip != null) clips[head.triggerName] = mclip;
             }
             else
@@ -939,7 +1005,8 @@ public static class AnimGroupBakery
                     // survives the scene round-trip.
                     var wclip = BuildWaitClip(key, "s" + clipIndex++, members, groupRoot,
                         evt.duration > 0f ? evt.duration : 1f,
-                        finishedTrigger, animDir, usedAssets, memberOffsets, memberFollowPos, lastRouteEnd);
+                        finishedTrigger, animDir, usedAssets, memberOffsets, memberFollowPos,
+                        lastRouteEnd, memberHoldPos);
                     if (wclip != null) clips[evt.triggerName] = wclip;
                 }
                 else if (evt.type == "rotate")
@@ -956,9 +1023,33 @@ public static class AnimGroupBakery
                     else
                     {
                         rclip = BuildRotateClip(key, "s" + clipIndex++, members, groupRoot, evt,
-                            rotAccum, finishedTrigger, staticSet, animDir, usedAssets);
+                            rotAccum, tiltAccumX, tiltAccumZ, finishedTrigger, staticSet, animDir, usedAssets);
                     }
                     if (rclip != null) clips[evt.triggerName] = rclip;
+                }
+                else if (evt.type == "scale")
+                {
+                    var sclip = BuildScaleClip(key, "s" + clipIndex++, members, groupRoot, evt,
+                        scaleAccum, finishedTrigger, staticSet, animDir, usedAssets);
+                    if (sclip != null) clips[evt.triggerName] = sclip;
+                }
+                else if (evt.type == "tilt")
+                {
+                    var tclip = BuildTiltClip(key, "s" + clipIndex++, members, groupRoot, evt,
+                        rotAccum, tiltAccumX, tiltAccumZ, finishedTrigger, staticSet, animDir, usedAssets);
+                    if (tclip != null) clips[evt.triggerName] = tclip;
+                }
+                else if (evt.type == "orbit")
+                {
+                    var oclip = BuildOrbitClip(key, "s" + clipIndex++, members, groupRoot, evt,
+                        finishedTrigger, staticSet, seqLiftY, animDir, usedAssets);
+                    if (oclip != null) clips[evt.triggerName] = oclip;
+                }
+                else if (evt.type == "fade")
+                {
+                    var fclip = BuildFadeClip(key, "s" + clipIndex++, members, groupRoot, evt,
+                        alphaAccum, finishedTrigger, staticSet, animDir, usedAssets);
+                    if (fclip != null) clips[evt.triggerName] = fclip;
                 }
                 else
                 {
@@ -1002,7 +1093,8 @@ public static class AnimGroupBakery
                         var clip = BuildMoveClip(key, "s" + clipIndex++, members, groupRoot, pts,
                             Mathf.Max(0.05f, evt.intervalSeconds > 0f ? evt.intervalSeconds : 2f),
                             (evt.loop || evt.pingpong) && evt.type == "move", evt.pingpong && evt.type == "move",
-                            finishedTrigger, memberOffsets, memberPhases, staticSet, animDir, usedAssets, yp, memberFollowPos);
+                            finishedTrigger, memberOffsets, memberPhases, staticSet, animDir, usedAssets, yp, memberFollowPos,
+                            memberHoldPos, evt.easing);
                         if (clip != null) clips[evt.triggerName] = clip;
                     }
                 }
@@ -1022,11 +1114,44 @@ public static class AnimGroupBakery
                     var pts2 = ResolveRoute(ce, wpById);
                     if (pts2.Count > 0)
                         lastRouteEnd = new Vector2(pts2[pts2.Count - 1].x, pts2[pts2.Count - 1].z);
+                    memberHoldPos = null;
                 }
-                else if (ce.type == "rotate" && !ce.loop)
+                else if (ce.type == "rotate" && !ce.loop && !ce.pingpong)
                 {
                     float rd = ce.rotateDegrees > 0f ? Mathf.Min(360f, ce.rotateDegrees) : 180f;
                     rotAccum += (ce.rotateDirection == "ccw" ? -1f : 1f) * rd;
+                }
+                else if (ce.type == "scale" && !ce.loop && !ce.pingpong)
+                {
+                    scaleAccum = Mathf.Max(0f, ce.scaleTo);
+                }
+                else if (ce.type == "fade" && !ce.loop && !ce.pingpong)
+                {
+                    alphaAccum = Mathf.Clamp01(ce.fadeTo);
+                }
+                else if (ce.type == "tilt" && !ce.loop && !ce.pingpong)
+                {
+                    float td = Mathf.Clamp(ce.tiltDegrees != 0f ? ce.tiltDegrees : 90f, -180f, 180f);
+                    if (ce.tiltAxis == "z") tiltAccumZ += td;
+                    else tiltAccumX += td;
+                }
+                else if (ce.type == "orbit" && !ce.loop)
+                {
+                    // per-member 末位置（pingpong 回到起点）；后续 wait/纯Y 事件
+                    // 用它定持 XZ，避免闪回。
+                    float deg = Mathf.Abs(ce.orbitDegrees) > 0.001f ? ce.orbitDegrees : 360f;
+                    bool ppEnd = ce.pingpong;
+                    memberHoldPos = new Dictionary<string, Vector2>();
+                    foreach (var go in members)
+                    {
+                        if (go == null) continue;
+                        var lp = go.transform.localPosition;
+                        var start = new Vector2(lp.x, lp.z);
+                        memberHoldPos["u:" + go.GetInstanceID()] = ppEnd
+                            ? start
+                            : OrbitPos(start, new Vector2(ce.orbitCenterX, ce.orbitCenterZ),
+                                deg, ce.orbitDirection);
+                    }
                 }
             }
             clusterSeq++;
@@ -1713,8 +1838,18 @@ public static class AnimGroupBakery
     private static void BuildTimeline(List<AnimGroupWaypointDto> pts, float interval,
         out List<float> times, out List<Vector2> values)
     {
+        List<int> keyWp;
+        BuildTimeline(pts, interval, out times, out values, out keyWp);
+    }
+
+    /// <summary>同上，并输出每个 key 所属的 waypoint 下标（wait 停留的重复键同下标；
+    /// 供 SampleRouteKeys 定位段的贝塞尔控制点）。</summary>
+    private static void BuildTimeline(List<AnimGroupWaypointDto> pts, float interval,
+        out List<float> times, out List<Vector2> values, out List<int> keyWp)
+    {
         times = new List<float>();
         values = new List<Vector2>();
+        keyWp = new List<int>();
         bool anyEdit = false;
         for (int i = 0; i < pts.Count; i++)
         {
@@ -1731,6 +1866,7 @@ public static class AnimGroupBakery
             {
                 times.Add(pts[i].t);
                 values.Add(new Vector2(pts[i].x, pts[i].z));
+                keyWp.Add(i);
             }
             return;
         }
@@ -1740,10 +1876,12 @@ public static class AnimGroupBakery
             var p = new Vector2(pts[i].x, pts[i].z);
             times.Add(t);
             values.Add(p);
+            keyWp.Add(i);
             if (pts[i].wait > 0f)
             {
                 times.Add(t + pts[i].wait);
                 values.Add(p);
+                keyWp.Add(i);
             }
             if (i < pts.Count - 1)
             {
@@ -1751,6 +1889,137 @@ public static class AnimGroupBakery
                 t += seg + Mathf.Max(0f, pts[i].wait);
             }
         }
+    }
+
+    // --------------------------------------------------------------- easing / arcs
+
+    /// <summary>缓动映射（与 web 端 easeValue 同名同公式；easeOutBounce /
+    /// easeInOutBack 为标准 easing 公式，两端常量必须严格一致——flashEnvelope
+    /// 同款铁律，改动须同步预览）。</summary>
+    internal static float EaseValue(float k, string easing)
+    {
+        if (string.IsNullOrEmpty(easing) || easing == "linear") return Mathf.Clamp01(k);
+        k = Mathf.Clamp01(k);
+        if (easing == "easeIn") return k * k;
+        if (easing == "easeOut") return 1f - (1f - k) * (1f - k);
+        if (easing == "easeInOut")
+            return k < 0.5f ? 2f * k * k : 1f - Mathf.Pow(-2f * k + 2f, 2f) / 2f;
+        if (easing == "easeOutBounce")
+        {
+            const float n1 = 7.5625f, d1 = 2.75f;
+            if (k < 1f / d1) return n1 * k * k;
+            if (k < 2f / d1) { float x = k - 1.5f / d1; return n1 * x * x + 0.75f; }
+            if (k < 2.5f / d1) { float x = k - 2.25f / d1; return n1 * x * x + 0.9375f; }
+            float x4 = k - 2.625f / d1; return n1 * x4 * x4 + 0.984375f;
+        }
+        if (easing == "easeInOutBack")
+        {
+            const float c2 = 1.70158f * 1.525f;
+            return k < 0.5f
+                ? (Mathf.Pow(2f * k, 2f) * ((c2 + 1f) * 2f * k - c2)) / 2f
+                : (Mathf.Pow(2f * k - 2f, 2f) * ((c2 + 1f) * (k * 2f - 2f) + c2)) / 2f + 1f;
+        }
+        return k;
+    }
+
+    /// <summary>pingpong 三角波进度：前半正放、后半倒放（各半内部走同一缓动）。</summary>
+    private static float PingPongEase(float k, string easing)
+    {
+        k = Mathf.Clamp01(k);
+        return EaseValue(k <= 0.5f ? k * 2f : 2f - k * 2f, easing);
+    }
+
+    /// <summary>二次贝塞尔点（ctrl=null → 直线插值；e 为缓动后的段内参数）。</summary>
+    private static Vector2 BezierPoint(Vector2 a, Vector2? ctrl, Vector2 b, float e)
+    {
+        if (!ctrl.HasValue) return Vector2.Lerp(a, b, e);
+        float im = 1f - e;
+        return im * im * a + 2f * im * e * ctrl.Value + e * e * b;
+    }
+
+    /// <summary>路线段采样层：事件缓动 + waypoint 级二次贝塞尔控制点。每段重采样
+    /// N 个中间键（时间均匀参数化 = 段时长语义不变）；停留段（同位键）不采样；
+    /// 无缓动且无控制点 → 原样拷贝（存量关卡关键帧零变化）。pingpong 镜像在采样
+    /// 之后运行，不受影响。</summary>
+    private static void SampleRouteKeys(List<AnimGroupWaypointDto> pts, List<int> keyWp,
+        List<float> times, List<Vector2> values, string easing,
+        List<float> outTimes, List<Vector2> outValues)
+    {
+        bool eased = !string.IsNullOrEmpty(easing) && easing != "linear";
+        bool anyCtrl = false;
+        if (pts != null)
+        {
+            for (int i = 0; i < pts.Count; i++)
+            {
+                if (pts[i] != null && pts[i].ctrlHas) { anyCtrl = true; break; }
+            }
+        }
+        if (!eased && !anyCtrl)
+        {
+            for (int i = 0; i < times.Count; i++)
+            {
+                outTimes.Add(times[i]);
+                outValues.Add(values[i]);
+            }
+            return;
+        }
+        for (int i = 0; i < times.Count; i++)
+        {
+            if (i >= times.Count - 1)
+            {
+                outTimes.Add(times[i]);
+                outValues.Add(values[i]);
+                break;
+            }
+            float t0 = times[i], t1 = times[i + 1];
+            Vector2 a = values[i], b = values[i + 1];
+            if (t1 - t0 < 0.0001f || (b - a).sqrMagnitude < 1e-10f)
+            {
+                // 停留段（waypoint wait 的同位重复键）：保持原键。
+                outTimes.Add(t0);
+                outValues.Add(a);
+                continue;
+            }
+            Vector2? ctrl = null;
+            int wi = keyWp != null && i < keyWp.Count ? keyWp[i] : -1;
+            if (wi >= 0 && wi < pts.Count && pts[wi] != null && pts[wi].ctrlHas)
+                ctrl = new Vector2(pts[wi].ctrlX, pts[wi].ctrlZ);
+            int n = ctrl.HasValue ? 16 : (eased ? 12 : 1);
+            for (int j = 0; j < n; j++)
+            {
+                float u = (float)j / n;
+                float e = EaseValue(u, easing);
+                outTimes.Add(t0 + (t1 - t0) * u);
+                outValues.Add(BezierPoint(a, ctrl, b, e));
+            }
+        }
+    }
+
+    /// <summary>单值缓动键生成（lift/drop 的 Y 段等）：linear = 首末两键（与旧行为
+    /// 逐键一致）；缓动 = 12 段中间键。includeStart=false 时跳过起始键（与上一段
+    /// 共享边界键，避免同时间重复键）。</summary>
+    private static void AddEasedKeys(AnimationCurve curve, float t0, float v0, float t1, float v1,
+        string easing, bool includeStart)
+    {
+        if (t1 - t0 < 0.0001f)
+        {
+            if (includeStart) curve.AddKey(new Keyframe(t0, v0));
+            return;
+        }
+        if (string.IsNullOrEmpty(easing) || easing == "linear")
+        {
+            if (includeStart) curve.AddKey(new Keyframe(t0, v0));
+            curve.AddKey(new Keyframe(t1, v1));
+            return;
+        }
+        const int n = 12;
+        int start = includeStart ? 0 : 1;
+        for (int i = start; i < n; i++)
+        {
+            float u = (float)i / n;
+            curve.AddKey(new Keyframe(t0 + (t1 - t0) * u, Mathf.Lerp(v0, v1, EaseValue(u, easing))));
+        }
+        curve.AddKey(new Keyframe(t1, v1));
     }
 
     /// <summary>时间轴粒度：所有时间吸附到 0.1 秒（与 web 端 snapTime 一致）。</summary>
@@ -1777,6 +2046,14 @@ public static class AnimGroupBakery
             return Mathf.Max(0.1f, evt.liftSeconds > 0f ? evt.liftSeconds : 1f);
         if (evt.type == "rotate")
             return Mathf.Max(0.1f, evt.rotateSeconds > 0f ? evt.rotateSeconds : 2f);
+        if (evt.type == "scale")
+            return Mathf.Max(0.1f, evt.scaleSeconds > 0f ? evt.scaleSeconds : 1f);
+        if (evt.type == "tilt")
+            return Mathf.Max(0.1f, evt.tiltSeconds > 0f ? evt.tiltSeconds : 1f);
+        if (evt.type == "orbit")
+            return Mathf.Max(0.1f, evt.orbitSeconds > 0f ? evt.orbitSeconds : 8f);
+        if (evt.type == "fade")
+            return Mathf.Max(0.1f, evt.fadeSeconds > 0f ? evt.fadeSeconds : 1f);
         return Mathf.Max(0.1f, evt.duration > 0f ? evt.duration : 1f);
     }
 
@@ -1881,16 +2158,22 @@ public static class AnimGroupBakery
 
     private static AnimationClip BuildRotateClip(string key, string suffix,
         List<GameObject> members, Transform groupRoot, AnimGroupEventDto evt,
-        float rotAccum, string finishedTrigger, HashSet<string> staticSet,
-        string animDir, HashSet<string> usedAssets)
+        float rotAccum, float tiltAccumX, float tiltAccumZ, string finishedTrigger,
+        HashSet<string> staticSet, string animDir, HashSet<string> usedAssets)
     {
         float deg = evt.rotateDegrees > 0f ? Mathf.Min(360f, evt.rotateDegrees) : 180f;
         float dir = evt.rotateDirection == "ccw" ? -1f : 1f;
         float dur = Mathf.Max(0.1f, evt.rotateSeconds > 0f ? evt.rotateSeconds : 2f);
+        bool pp = evt.pingpong && !evt.loop;
+        float clipLen = pp ? dur * 2f : dur;
         var clip = new AnimationClip();
         clip.name = key + "_" + suffix;
         clip.legacy = false;
         clip.frameRate = 60f;
+        var ts = new List<float>();
+        var angles = new List<Vector3>();
+        BuildAxisRotationKeys(rotAccum, tiltAccumX, tiltAccumZ, 'y', rotAccum,
+            dir * deg, dur, pp, evt.easing, ts, angles);
         foreach (var go in members)
         {
             var id = "u:" + go.GetInstanceID();
@@ -1898,12 +2181,16 @@ public static class AnimGroupBakery
             if (string.IsNullOrEmpty(path)) continue;
             // Static members get constant rotation curves so every clip animates
             // the same path set (the importer rejects mismatched subsets).
-            WriteRotationCurves(clip, path, go.transform.localRotation, rotAccum,
-                staticSet.Contains(id) ? 0f : dir * deg, 0f, dur, dur);
+            if (staticSet.Contains(id))
+            {
+                WriteRotationCurves(clip, path, go.transform.localRotation, 0f, 0f, 0f, clipLen, clipLen);
+                continue;
+            }
+            WriteRotationKeyList(clip, path, go.transform.localRotation, ts, angles);
         }
         var path2 = animDir + "/" + key + "_" + suffix + ".anim";
         AssetDatabase.CreateAsset(clip, path2);
-        if (!evt.loop && !string.IsNullOrEmpty(finishedTrigger))
+        if (!evt.loop && !pp && !string.IsNullOrEmpty(finishedTrigger))
         {
             var animEvent = new AnimationEvent();
             animEvent.functionName = "OnTrigger";
@@ -1915,6 +2202,324 @@ public static class AnimGroupBakery
         }
         usedAssets.Add(path2);
         return clip;
+    }
+
+    /// <summary>Tilt event clip：绕自身 X（俯仰）/ Z（侧倾）轴翻转/倾斜。角度带符号
+    /// （-180~180），序贯累积按轴独立（tiltAccumX/Z）；与 rotate 的合成顺序固定为
+    /// baseRot * Y * X * Z（ComposeRot）。pingpong = 往返摆动（缓慢晃动：小角度 +
+    /// pingpong + 长用时）；easing 应用于角度进度。</summary>
+    private static AnimationClip BuildTiltClip(string key, string suffix,
+        List<GameObject> members, Transform groupRoot, AnimGroupEventDto evt,
+        float rotAccum, float tiltAccumX, float tiltAccumZ, string finishedTrigger,
+        HashSet<string> staticSet, string animDir, HashSet<string> usedAssets)
+    {
+        float deg = Mathf.Clamp(evt.tiltDegrees != 0f ? evt.tiltDegrees : 90f, -180f, 180f);
+        char axis = evt.tiltAxis == "z" ? 'z' : 'x';
+        float dur = Mathf.Max(0.1f, evt.tiltSeconds > 0f ? evt.tiltSeconds : 1f);
+        bool pp = evt.pingpong && !evt.loop;
+        float clipLen = pp ? dur * 2f : dur;
+        var clip = new AnimationClip();
+        clip.name = key + "_" + suffix;
+        clip.legacy = false;
+        clip.frameRate = 60f;
+        var ts = new List<float>();
+        var angles = new List<Vector3>();
+        float fromDeg = axis == 'x' ? tiltAccumX : tiltAccumZ;
+        BuildAxisRotationKeys(rotAccum, tiltAccumX, tiltAccumZ, axis, fromDeg,
+            deg, dur, pp, evt.easing, ts, angles);
+        foreach (var go in members)
+        {
+            var id = "u:" + go.GetInstanceID();
+            var path = GetChildPath(go.transform, groupRoot);
+            if (string.IsNullOrEmpty(path)) continue;
+            if (staticSet.Contains(id))
+            {
+                WriteRotationCurves(clip, path, go.transform.localRotation, 0f, 0f, 0f, clipLen, clipLen);
+                continue;
+            }
+            WriteRotationKeyList(clip, path, go.transform.localRotation, ts, angles);
+        }
+        var path2 = animDir + "/" + key + "_" + suffix + ".anim";
+        AssetDatabase.CreateAsset(clip, path2);
+        if (!evt.loop && !pp && !string.IsNullOrEmpty(finishedTrigger))
+        {
+            var animEvent = new AnimationEvent();
+            animEvent.functionName = "OnTrigger";
+            animEvent.stringParameter = finishedTrigger;
+            animEvent.time = dur;
+            AnimationUtility.SetAnimationEvents(clip, new AnimationEvent[] { animEvent });
+            EditorUtility.SetDirty(clip);
+            AssetDatabase.SaveAssets();
+        }
+        usedAssets.Add(path2);
+        return clip;
+    }
+
+    /// <summary>Scale event clip：全组非静态成员从起始倍率 scaleAccum 过渡到
+    /// scaleTo（相对各成员初始尺寸的倍率，曲线值 = 初始 scale × 倍率；隐身 = 0、
+    /// 放大 > 1）。loop = 脉冲（自转移重放）；pingpong = 目标-回弹三角波。</summary>
+    private static AnimationClip BuildScaleClip(string key, string suffix,
+        List<GameObject> members, Transform groupRoot, AnimGroupEventDto evt,
+        float scaleAccum, string finishedTrigger, HashSet<string> staticSet,
+        string animDir, HashSet<string> usedAssets)
+    {
+        float to = Mathf.Max(0f, evt.scaleTo);
+        float dur = Mathf.Max(0.1f, evt.scaleSeconds > 0f ? evt.scaleSeconds : 1f);
+        bool pp = evt.pingpong && !evt.loop;
+        float clipLen = pp ? dur * 2f : dur;
+        var clip = new AnimationClip();
+        clip.name = key + "_" + suffix;
+        clip.legacy = false;
+        clip.frameRate = 60f;
+        const int steps = 12;
+        foreach (var go in members)
+        {
+            var id = "u:" + go.GetInstanceID();
+            var path = GetChildPath(go.transform, groupRoot);
+            if (string.IsNullOrEmpty(path)) continue;
+            var s0 = go.transform.localScale;
+            var csx = new AnimationCurve();
+            var csy = new AnimationCurve();
+            var csz = new AnimationCurve();
+            bool isStatic = staticSet.Contains(id);
+            // 静态成员常量曲线（保持 path 集合与非静态一致）；非静态走倍率曲线。
+            for (int i = 0; i <= (isStatic ? 1 : steps); i++)
+            {
+                float k = (float)i / (isStatic ? 1 : steps);
+                float t = clipLen * k;
+                float mul;
+                if (isStatic)
+                    mul = 1f; // 常量 = 成员当前（初始）比例
+                else
+                    mul = scaleAccum + (to - scaleAccum) *
+                        (pp ? PingPongEase(k, evt.easing) : EaseValue(k, evt.easing));
+                csx.AddKey(new Keyframe(t, s0.x * mul));
+                csy.AddKey(new Keyframe(t, s0.y * mul));
+                csz.AddKey(new Keyframe(t, s0.z * mul));
+            }
+            SetLinear(csx);
+            SetLinear(csy);
+            SetLinear(csz);
+            SetCycleWrap(csx);
+            SetCycleWrap(csy);
+            SetCycleWrap(csz);
+            AnimationUtility.SetEditorCurve(clip,
+                EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalScale.x"), csx);
+            AnimationUtility.SetEditorCurve(clip,
+                EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalScale.y"), csy);
+            AnimationUtility.SetEditorCurve(clip,
+                EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalScale.z"), csz);
+        }
+        var path2 = animDir + "/" + key + "_" + suffix + ".anim";
+        AssetDatabase.CreateAsset(clip, path2);
+        if (!evt.loop && !pp && !string.IsNullOrEmpty(finishedTrigger))
+        {
+            var animEvent = new AnimationEvent();
+            animEvent.functionName = "OnTrigger";
+            animEvent.stringParameter = finishedTrigger;
+            animEvent.time = dur;
+            AnimationUtility.SetAnimationEvents(clip, new AnimationEvent[] { animEvent });
+            EditorUtility.SetDirty(clip);
+            AssetDatabase.SaveAssets();
+        }
+        usedAssets.Add(path2);
+        return clip;
+    }
+
+    /// <summary>Orbit event clip：每成员绕共享圆心（orbitCenterX/Z，组根局部=世界
+    /// XZ，同 waypoint 约定）公转 orbitDegrees 度；半径/起始角 = 成员初始位到圆心
+    /// 的距离/方位（per-member，初始姿态连续无跳变）。方向约定同 rotate（cw/ccw）。
+    /// loop = 持续公转（首尾键闭合整圈）；pingpong = 弧线往返摆动。Y 通道保持
+    /// 常量（可继承 lift 的悬空 Δy——orbit 与 lift/drop 可同簇并行，见
+    /// BuildClusterClip）。</summary>
+    private static AnimationClip BuildOrbitClip(string key, string suffix,
+        List<GameObject> members, Transform groupRoot, AnimGroupEventDto evt,
+        string finishedTrigger, HashSet<string> staticSet, float seqLiftY,
+        string animDir, HashSet<string> usedAssets)
+    {
+        float deg = Mathf.Abs(evt.orbitDegrees) > 0.001f ? evt.orbitDegrees : 360f;
+        float dur = Mathf.Max(0.1f, evt.orbitSeconds > 0f ? evt.orbitSeconds : 8f);
+        bool pp = evt.pingpong && !evt.loop;
+        float clipLen = pp ? dur * 2f : dur;
+        var center = new Vector2(evt.orbitCenterX, evt.orbitCenterZ);
+        var clip = new AnimationClip();
+        clip.name = key + "_" + suffix;
+        clip.legacy = false;
+        clip.frameRate = 60f;
+        foreach (var go in members)
+        {
+            var id = "u:" + go.GetInstanceID();
+            var path = GetChildPath(go.transform, groupRoot);
+            if (string.IsNullOrEmpty(path)) continue;
+            var curPos = go.transform.localPosition;
+            var cx = new AnimationCurve();
+            var cz = new AnimationCurve();
+            if (staticSet.Contains(id))
+            {
+                cx.AddKey(new Keyframe(0f, curPos.x));
+                cx.AddKey(new Keyframe(clipLen, curPos.x));
+                cz.AddKey(new Keyframe(0f, curPos.z));
+                cz.AddKey(new Keyframe(clipLen, curPos.z));
+            }
+            else
+            {
+                int steps = Mathf.Max(4, Mathf.CeilToInt(Mathf.Abs(deg) / 30f)) * (pp ? 2 : 1);
+                for (int i = 0; i <= steps; i++)
+                {
+                    float k = (float)i / steps;
+                    float prog = pp ? PingPongEase(k, evt.easing) : EaseValue(k, evt.easing);
+                    var p = OrbitPos(new Vector2(curPos.x, curPos.z), center,
+                        deg * prog, evt.orbitDirection);
+                    float t = clipLen * k;
+                    cx.AddKey(new Keyframe(t, p.x));
+                    cz.AddKey(new Keyframe(t, p.y));
+                }
+            }
+            SetLinear(cx);
+            SetLinear(cz);
+            SetCycleWrap(cx);
+            SetCycleWrap(cz);
+            AnimationUtility.SetEditorCurve(clip,
+                EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalPosition.x"), cx);
+            AnimationUtility.SetEditorCurve(clip,
+                EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalPosition.z"), cz);
+            // Y 常量（+ 继承悬空 Δy），与 move 的 plain-XZ 分支同一策略。
+            SetConstantY(clip, path, curPos.y + Mathf.Max(0f, seqLiftY), clipLen);
+        }
+        var path2 = animDir + "/" + key + "_" + suffix + ".anim";
+        AssetDatabase.CreateAsset(clip, path2);
+        if (!evt.loop && !pp && !string.IsNullOrEmpty(finishedTrigger))
+        {
+            var animEvent = new AnimationEvent();
+            animEvent.functionName = "OnTrigger";
+            animEvent.stringParameter = finishedTrigger;
+            animEvent.time = dur;
+            AnimationUtility.SetAnimationEvents(clip, new AnimationEvent[] { animEvent });
+            EditorUtility.SetDirty(clip);
+            AssetDatabase.SaveAssets();
+        }
+        usedAssets.Add(path2);
+        return clip;
+    }
+
+    /// <summary>orbit 圆周位置：startPos 绕 center 转 deg 度（Unity Y 轴约定，与
+    /// rotate 的 cw/ccw 同向：+deg 绕 up 把 +X 转向 -Z）。供 clip 采样与折叠期末
+    /// 位置计算（memberHoldPos）共用。</summary>
+    internal static Vector2 OrbitPos(Vector2 startPos, Vector2 center, float deg, string direction)
+    {
+        float dir = direction == "ccw" ? -1f : 1f;
+        float theta = dir * deg * Mathf.Deg2Rad;
+        float ox = startPos.x - center.x;
+        float oz = startPos.y - center.y;
+        float c = Mathf.Cos(theta);
+        float s = Mathf.Sin(theta);
+        return new Vector2(center.x + ox * c + oz * s, center.y - ox * s + oz * c);
+    }
+
+    /// <summary>fade 事件 clip：动画每成员 FadeDriver（CustomStub 运行时组件，烘焙
+    /// 时反射挂载，见 AttachFadeDriver）的公开字段 alpha——组件把 alpha 写入成员
+    /// 子树全部 Renderer 材质颜色（真模型是运行时实例化的 bundle child，材质无法
+    /// 直接绑曲线，经驱动组件转发）。fadeTo 为绝对目标透明度（0=隐身、1=显型）；
+    /// loop=闪烁呼吸、pingpong=目标-回弹三角；静态成员常量 1（path 集合对齐）。</summary>
+    private static AnimationClip BuildFadeClip(string key, string suffix,
+        List<GameObject> members, Transform groupRoot, AnimGroupEventDto evt,
+        float alphaAccum, string finishedTrigger, HashSet<string> staticSet,
+        string animDir, HashSet<string> usedAssets)
+    {
+        if (!FadeDriverTypeAvailable())
+        {
+            LayoutEditorLog.LogWarning("anim group: fade 事件 " + evt.triggerName +
+                " 跳过——找不到 CustomStub.FadeDriver（WebCustomStubRuntime 未编译？）");
+            return null;
+        }
+        float to = Mathf.Clamp01(evt.fadeTo);
+        float dur = Mathf.Max(0.1f, evt.fadeSeconds > 0f ? evt.fadeSeconds : 1f);
+        bool pp = evt.pingpong && !evt.loop;
+        float clipLen = pp ? dur * 2f : dur;
+        var clip = new AnimationClip();
+        clip.name = key + "_" + suffix;
+        clip.legacy = false;
+        clip.frameRate = 60f;
+        const int steps = 12;
+        foreach (var go in members)
+        {
+            var id = "u:" + go.GetInstanceID();
+            var path = GetChildPath(go.transform, groupRoot);
+            if (string.IsNullOrEmpty(path)) continue;
+            var ca = new AnimationCurve();
+            bool isStatic = staticSet.Contains(id);
+            for (int i = 0; i <= (isStatic ? 1 : steps); i++)
+            {
+                float k = (float)i / (isStatic ? 1 : steps);
+                float a;
+                if (isStatic)
+                    a = 1f; // 常量 1（静态成员从不参与淡出）
+                else
+                    a = Mathf.Clamp01(alphaAccum + (to - alphaAccum) *
+                        (pp ? PingPongEase(k, evt.easing) : EaseValue(k, evt.easing)));
+                ca.AddKey(new Keyframe(clipLen * k, a));
+            }
+            SetLinear(ca);
+            SetCycleWrap(ca);
+            AnimationUtility.SetEditorCurve(clip, FadeCurveBinding(path), ca);
+        }
+        var path2 = animDir + "/" + key + "_" + suffix + ".anim";
+        AssetDatabase.CreateAsset(clip, path2);
+        if (!evt.loop && !pp && !string.IsNullOrEmpty(finishedTrigger))
+        {
+            var animEvent = new AnimationEvent();
+            animEvent.functionName = "OnTrigger";
+            animEvent.stringParameter = finishedTrigger;
+            animEvent.time = dur;
+            AnimationUtility.SetAnimationEvents(clip, new AnimationEvent[] { animEvent });
+            EditorUtility.SetDirty(clip);
+            AssetDatabase.SaveAssets();
+        }
+        usedAssets.Add(path2);
+        return clip;
+    }
+
+    /// <summary>成员 wrapper 上反射挂载 CustomStub.FadeDriver（fade 事件的曲线绑定
+    /// 目标；类型缺失仅告警——旧依赖包安全降级为无淡出）。internal 供簇烘焙同轮
+    /// 复用；幂等。</summary>
+    internal static void AttachFadeDriver(GameObject member)
+    {
+        try
+        {
+            var driverType = LayoutEditorStubIO.FindCustomStubType(member, "FadeDriver");
+            if (driverType == null)
+            {
+                LayoutEditorLog.LogWarning("anim group: 找不到 CustomStub.FadeDriver" +
+                    "（WebCustomStubRuntime 未编译或依赖包过旧？）——fade 事件将无淡出效果");
+                return;
+            }
+            if (member.GetComponent(driverType) != null)
+                return; // 幂等
+            Undo.AddComponent(member, driverType);
+        }
+        catch (Exception e)
+        {
+            LayoutEditorLog.LogWarning("anim group: 挂载 FadeDriver 失败 " + member.name + ": " + e.Message);
+        }
+    }
+
+    /// <summary>簇内 t 时刻的 fade 透明度：fades 按 startTime 串接（同
+    /// ClusterScaleAt 语义，目标字段不同）。</summary>
+    private static float ClusterFadeAt(float t, List<AnimGroupEventDto> fades,
+        float clusterStart, float initial)
+    {
+        float a = initial;
+        for (int i = 0; i < fades.Count; i++)
+        {
+            var fe = fades[i];
+            float fs = Mathf.Max(0f, fe.startTime - clusterStart);
+            if (t < fs) break;
+            float fdur = Mathf.Max(0.1f, fe.fadeSeconds > 0f ? fe.fadeSeconds : 1f);
+            float to = Mathf.Clamp01(fe.fadeTo);
+            float k = Mathf.Clamp01((t - fs) / fdur);
+            a = a + (to - a) * EaseValue(k, fe.easing);
+        }
+        return a;
     }
 
     private class HoldRotateSpec
@@ -2089,16 +2694,97 @@ public static class AnimGroupBakery
         }
     }
 
-    /// <summary>并行时间簇的组合 clip：移动（XZ 路线）+ 升降（Y）+ 旋转
-    /// （localRotation）曲线按各自 startTime 偏移合并进同一时间轴。多移动/多
-    /// 升降重叠时最晚开始者生效（与 web 预览一致）；旋转角度全部叠加。</summary>
+    /// <summary>序贯旋转合成（固定乘法顺序，rotate/tilt 事件共享的唯一姿态公式）：
+    /// q = baseRot * Y(yDeg) * X(xDeg) * Z(zDeg)。rotate 只动 Y 分量、tilt 只动
+    /// X/Z 分量，累积量跨事件传递（rotAccum / tiltAccumX / tiltAccumZ）；预览端
+    /// 使用同一顺序，保证编辑器所见即真机所得。</summary>
+    private static Quaternion ComposeRot(Quaternion baseRot, float yDeg, float xDeg, float zDeg)
+    {
+        var q = baseRot;
+        if (yDeg != 0f) q = q * Quaternion.AngleAxis(yDeg, Vector3.up);
+        if (xDeg != 0f) q = q * Quaternion.AngleAxis(xDeg, Vector3.right);
+        if (zDeg != 0f) q = q * Quaternion.AngleAxis(zDeg, Vector3.forward);
+        return q;
+    }
+
+    /// <summary>按键序列写四元数曲线（WriteRotationCurves 的多轴推广）：ts 为键时间，
+    /// angles[i] = (y, x, z) 累计角；半球归一 + 线性切线 + Cycle wrap 后写
+    /// m_LocalRotation 四条绑定。rotate/tilt 单事件 clip 与簇内旋转段共用。</summary>
+    private static void WriteRotationKeyList(AnimationClip clip, string path, Quaternion baseRot,
+        List<float> ts, List<Vector3> angles)
+    {
+        var keys = new Quaternion[ts.Count];
+        for (int i = 0; i < ts.Count; i++)
+            keys[i] = ComposeRot(baseRot, angles[i].x, angles[i].y, angles[i].z);
+        NormalizeRotationHemisphere(keys);
+        var cx = new AnimationCurve();
+        var cy = new AnimationCurve();
+        var cz = new AnimationCurve();
+        var cw = new AnimationCurve();
+        for (int i = 0; i < ts.Count; i++)
+        {
+            cx.AddKey(new Keyframe(ts[i], keys[i].x));
+            cy.AddKey(new Keyframe(ts[i], keys[i].y));
+            cz.AddKey(new Keyframe(ts[i], keys[i].z));
+            cw.AddKey(new Keyframe(ts[i], keys[i].w));
+        }
+        SetLinear(cx);
+        SetLinear(cy);
+        SetLinear(cz);
+        SetLinear(cw);
+        SetCycleWrap(cx);
+        SetCycleWrap(cy);
+        SetCycleWrap(cz);
+        SetCycleWrap(cw);
+        AnimationUtility.SetEditorCurve(clip,
+            EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalRotation.x"), cx);
+        AnimationUtility.SetEditorCurve(clip,
+            EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalRotation.y"), cy);
+        AnimationUtility.SetEditorCurve(clip,
+            EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalRotation.z"), cz);
+        AnimationUtility.SetEditorCurve(clip,
+            EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalRotation.w"), cw);
+    }
+
+    /// <summary>单事件旋转 clip 的键序列生成（rotate/tilt 共用）：三轴序贯累积量
+    /// accumY/X/Z 中，主轴（mainAxis）从 fromDeg 走到 fromDeg+delta（缓动可选、
+    /// pingpong 镜像为三角波），其余轴保持累积角不变。steps 保证每段 ≤90°
+    /// 圆弧精确（pingpong 全程 steps 不减半）。</summary>
+    private static void BuildAxisRotationKeys(float accumY, float accumX, float accumZ,
+        char mainAxis, float fromDeg, float delta, float dur,
+        bool pingpong, string easing, List<float> ts, List<Vector3> angles)
+    {
+        float total = pingpong ? dur * 2f : dur;
+        int steps = Mathf.Max(1, Mathf.CeilToInt(Mathf.Abs(delta) / 90f)) * (pingpong ? 2 : 1);
+        for (int i = 0; i <= steps; i++)
+        {
+            float k = (float)i / steps;
+            float t = total * k;
+            float prog = pingpong ? PingPongEase(k, easing) : EaseValue(k, easing);
+            float ang = fromDeg + delta * prog;
+            ts.Add(t);
+            angles.Add(new Vector3(
+                mainAxis == 'y' ? ang : accumY,
+                mainAxis == 'x' ? ang : accumX,
+                mainAxis == 'z' ? ang : accumZ));
+        }
+    }
+
+    /// <summary>并行时间簇的组合 clip：移动（XZ 路线，缓动/贝塞尔采样后）+ 公转
+    /// （per-member 圆弧，与 move XZ 互斥）+ 升降（Y）+ 旋转（rotate+tilt 统一
+    /// 四元数键，ComposeRot 固定乘法顺序）+ 缩放（scale 事件按 startTime 串接）
+    /// + 淡入淡出（fade 事件按 startTime 串接，写 FadeDriver.alpha）曲线按各自
+    /// startTime 偏移合并进同一时间轴。多移动/多升降重叠时最晚开始者生效（与
+    /// web 预览一致）；旋转/倾斜角度全部叠加。</summary>
     private static AnimationClip BuildClusterClip(string key, string suffix,
         List<GameObject> members, Transform groupRoot, EventCluster cluster,
         Dictionary<string, AnimGroupWaypointDto> wpById,
         Dictionary<string, Vector2> memberOffsets, HashSet<string> staticSet,
         Dictionary<string, Vector2> memberFollowPos,
         Vector2? lastRouteEnd, float seqLiftY, float rotAccum,
-        string finishedTrigger, string animDir, HashSet<string> usedAssets)
+        float tiltAccumX, float tiltAccumZ, float scaleAccum, float alphaAccum,
+        string finishedTrigger, string animDir, HashSet<string> usedAssets,
+        Dictionary<string, Vector2> memberHoldPos)
     {
         AnimGroupEventDto moveEvt = null;
         // 簇内全部 lift/drop 事件（已按 startTime 排序）：逐个串接为分段 Δy
@@ -2106,6 +2792,10 @@ public static class AnimGroupBakery
         // （旧实现只保留最后一个 Y 事件，其余静默丢失）。
         var yEvts = new List<AnimGroupEventDto>();
         var rotates = new List<AnimGroupEventDto>();
+        var tilts = new List<AnimGroupEventDto>();
+        var scales = new List<AnimGroupEventDto>();
+        var fades = new List<AnimGroupEventDto>();
+        AnimGroupEventDto orbitEvt = null;
         foreach (var ce in cluster.events)
         {
             if (ce.type == "move")
@@ -2115,6 +2805,13 @@ public static class AnimGroupBakery
                         ce.triggerName + " 生效");
                 moveEvt = ce;
             }
+            else if (ce.type == "orbit")
+            {
+                if (orbitEvt != null)
+                    Debug.LogWarning("[LayoutEditor] anim group: 同一时间簇存在多个公转事件，仅 " +
+                        ce.triggerName + " 生效（XZ 互斥，正常应被前置校验拦截）");
+                orbitEvt = ce;
+            }
             else if (ce.type == "lift" || ce.type == "drop")
             {
                 yEvts.Add(ce);
@@ -2123,6 +2820,31 @@ public static class AnimGroupBakery
             {
                 rotates.Add(ce);
             }
+            else if (ce.type == "tilt")
+            {
+                tilts.Add(ce);
+            }
+            else if (ce.type == "scale")
+            {
+                scales.Add(ce);
+            }
+            else if (ce.type == "fade")
+            {
+                fades.Add(ce);
+            }
+        }
+        if (moveEvt != null && orbitEvt != null)
+        {
+            // 防御（BakeGroup 前置校验应已拦截）：move 优先，orbit 丢弃。
+            Debug.LogWarning("[LayoutEditor] anim group: 同一时间簇同时存在移动与公转事件，公转 " +
+                orbitEvt.triggerName + " 被忽略");
+            orbitEvt = null;
+        }
+        if (fades.Count > 0 && !FadeDriverTypeAvailable())
+        {
+            Debug.LogWarning("[LayoutEditor] anim group: 簇内 fade 事件被忽略——找不到 " +
+                "CustomStub.FadeDriver（WebCustomStubRuntime 未编译？）");
+            fades.Clear();
         }
         float clipLen = Mathf.Max(0.1f, cluster.end - cluster.start);
 
@@ -2141,10 +2863,27 @@ public static class AnimGroupBakery
             }
             else
             {
+                List<int> mkeyWp;
                 BuildTimeline(pts, Mathf.Max(0.05f, moveEvt.intervalSeconds > 0f ? moveEvt.intervalSeconds : 2f),
-                    out mtimes, out mvalues);
+                    out mtimes, out mvalues, out mkeyWp);
+                // 缓动/贝塞尔采样层（linear 且无控制点 = 原样，存量关卡零变化）。
+                var st = new List<float>();
+                var sv = new List<Vector2>();
+                SampleRouteKeys(pts, mkeyWp, mtimes, mvalues, moveEvt.easing, st, sv);
+                mtimes = st;
+                mvalues = sv;
                 moveRel = moveEvt.startTime - cluster.start;
             }
+        }
+        // orbit 参数（与 move 互斥，见上）。
+        float orbitRel = 0f, orbitDeg = 360f, orbitDur = 8f;
+        Vector2 orbitCenter = Vector2.zero;
+        if (orbitEvt != null)
+        {
+            orbitRel = Mathf.Max(0f, orbitEvt.startTime - cluster.start);
+            orbitDeg = Mathf.Abs(orbitEvt.orbitDegrees) > 0.001f ? orbitEvt.orbitDegrees : 360f;
+            orbitDur = Mathf.Max(0.1f, orbitEvt.orbitSeconds > 0f ? orbitEvt.orbitSeconds : 8f);
+            orbitCenter = new Vector2(orbitEvt.orbitCenterX, orbitEvt.orbitCenterZ);
         }
         // lift/drop Y profile (takes precedence over the move's own Y in the cluster).
         // 语义：yTo 为相对位移量 Δy（lift=上升量默认 1；drop=下降量，0=落回原高度）。
@@ -2177,8 +2916,15 @@ public static class AnimGroupBakery
             {
                 SetConstantCurves(clip, path, curPos.x, curPos.y, curPos.z, clipLen);
                 // Path-set parity with rotate clips: constant rotation for statics.
-                if (rotates.Count > 0)
+                if (rotates.Count > 0 || tilts.Count > 0)
                     WriteRotationCurves(clip, path, go.transform.localRotation, 0f, 0f, 0f, clipLen, clipLen);
+                if (scales.Count > 0)
+                {
+                    var s0 = go.transform.localScale;
+                    WriteConstantScaleCurves(clip, path, s0, clipLen);
+                }
+                if (fades.Count > 0)
+                    WriteConstantFadeCurve(clip, path, clipLen);
                 continue;
             }
             Vector2 off;
@@ -2218,12 +2964,47 @@ public static class AnimGroupBakery
                     cz.AddKey(new Keyframe(clipLen, last.y + off.y));
                 }
             }
+            else if (orbitEvt != null)
+            {
+                // per-member 圆弧（半径/起始角 = 成员当前位到圆心）；簇内 orbit
+                // 不 loop/pingpong（并行簇剥离循环），θ 从 0 单调到 deg。
+                if (orbitRel > 0.0001f)
+                {
+                    cx.AddKey(new Keyframe(0f, curPos.x));
+                    cz.AddKey(new Keyframe(0f, curPos.z));
+                }
+                var startPos = new Vector2(curPos.x, curPos.z);
+                int osteps = Mathf.Max(4, Mathf.CeilToInt(Mathf.Abs(orbitDeg) / 30f));
+                for (int i = 0; i <= osteps; i++)
+                {
+                    float k = (float)i / osteps;
+                    float t = Mathf.Min(orbitRel + orbitDur * k, clipLen);
+                    var p = OrbitPos(startPos, orbitCenter,
+                        orbitDeg * EaseValue(k, orbitEvt.easing), orbitEvt.orbitDirection);
+                    cx.AddKey(new Keyframe(t, p.x));
+                    cz.AddKey(new Keyframe(t, p.y));
+                }
+                float orbitEndT = orbitRel + orbitDur;
+                if (clipLen > orbitEndT + 0.001f)
+                {
+                    var endP = OrbitPos(startPos, orbitCenter, orbitDeg, orbitEvt.orbitDirection);
+                    cx.AddKey(new Keyframe(clipLen, endP.x));
+                    cz.AddKey(new Keyframe(clipLen, endP.y));
+                }
+            }
             else
             {
-                // No move in the cluster: hold where the previous route ended.
+                // No move/orbit in the cluster: hold where the previous route ended
+                // (orbit 簇后用 per-member 末位置，路线簇后用 lastRouteEnd+偏移).
                 float hx = curPos.x;
                 float hz = curPos.z;
-                if (lastRouteEnd.HasValue)
+                Vector2 mh;
+                if (memberHoldPos != null && memberHoldPos.TryGetValue(id, out mh))
+                {
+                    hx = mh.x;
+                    hz = mh.y;
+                }
+                else if (lastRouteEnd.HasValue)
                 {
                     hx = lastRouteEnd.Value.x + off.x;
                     hz = lastRouteEnd.Value.y + off.y;
@@ -2274,10 +3055,11 @@ public static class AnimGroupBakery
                             : (ye.yTo != 0f ? ye.yTo : accum);
                         accum = ye.type == "lift" ? accum + d : Mathf.Max(0f, accum - d);
                         float v1 = curPos.y + accum;
-                        // 跳过与上一关键帧同时间同值的重复键（back-to-back 事件）。
-                        if (prevT < 0f || Mathf.Abs(rel - prevT) > 0.0001f || Mathf.Abs(v0 - prevV) > 0.0001f)
-                            cy.AddKey(new Keyframe(rel, v0));
-                        cy.AddKey(new Keyframe(endT, v1));
+                        // 跳过与上一关键帧同时间同值的重复键（back-to-back 事件）；
+                        // 段内按事件缓动采样（linear = 首末两键，旧行为不变）。
+                        bool needStart = prevT < 0f || Mathf.Abs(rel - prevT) > 0.0001f ||
+                            Mathf.Abs(v0 - prevV) > 0.0001f;
+                        AddEasedKeys(cy, rel, v0, endT, v1, ye.easing, needStart);
                         prevT = endT;
                         prevV = v1;
                     }
@@ -2317,31 +3099,43 @@ public static class AnimGroupBakery
                     EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalPosition.y"), cy);
             }
 
-            // ---- Rotation (all rotate events in the cluster accumulate).
-            if (rotates.Count > 0)
+            // ---- Rotation (rotate + tilt events in the cluster, unified quaternion
+            // keys via ComposeRot: q = baseRot * Y(rotAccum+Δ) * X(tiltX+Δ) * Z(tiltZ+Δ);
+            // 两类事件各按自己的 startTime/时长/缓动贡献进度，固定乘法顺序保证
+            // 不互相覆盖）。
+            if (rotates.Count > 0 || tilts.Count > 0)
             {
-                // Key times: cluster bounds + each rotate's start/end + ≤90° substeps.
+                // Key times: cluster bounds + each rotate/tilt's start/end + ≤90° substeps.
                 var keyTimes = new List<float> { 0f, clipLen };
                 foreach (var re in rotates)
                 {
-                    float rs = re.startTime - cluster.start;
+                    float rs = Mathf.Max(0f, re.startTime - cluster.start);
                     float rd = re.rotateDegrees > 0f ? Mathf.Min(360f, re.rotateDegrees) : 180f;
                     float rdur = Mathf.Max(0.1f, re.rotateSeconds > 0f ? re.rotateSeconds : 2f);
                     int steps = Mathf.Max(1, Mathf.CeilToInt(rd / 90f));
                     for (int i = 0; i <= steps; i++)
                         keyTimes.Add(Mathf.Min(rs + rdur * i / steps, clipLen));
                 }
+                foreach (var te in tilts)
+                {
+                    float ts0 = Mathf.Max(0f, te.startTime - cluster.start);
+                    float td = Mathf.Clamp(te.tiltDegrees != 0f ? te.tiltDegrees : 90f, -180f, 180f);
+                    float tdur = Mathf.Max(0.1f, te.tiltSeconds > 0f ? te.tiltSeconds : 1f);
+                    int steps = Mathf.Max(1, Mathf.CeilToInt(Mathf.Abs(td) / 90f));
+                    for (int i = 0; i <= steps; i++)
+                        keyTimes.Add(Mathf.Min(ts0 + tdur * i / steps, clipLen));
+                }
                 keyTimes.Sort();
-                var cxr = new AnimationCurve();
-                var cyr = new AnimationCurve();
-                var czr = new AnimationCurve();
-                var cwr = new AnimationCurve();
-                float prevT = -1f;
+                var ts2 = new List<float>();
+                var angles2 = new List<Vector3>();
+                float prevKT = -1f;
                 foreach (var kt in keyTimes)
                 {
-                    if (prevT >= 0f && kt - prevT < 0.0001f) continue;
-                    prevT = kt;
-                    float ang = rotAccum;
+                    if (prevKT >= 0f && kt - prevKT < 0.0001f) continue;
+                    prevKT = kt;
+                    float angY = rotAccum;
+                    float angX = tiltAccumX;
+                    float angZ = tiltAccumZ;
                     foreach (var re in rotates)
                     {
                         float rs = re.startTime - cluster.start;
@@ -2349,30 +3143,88 @@ public static class AnimGroupBakery
                         float rd = re.rotateDegrees > 0f ? Mathf.Min(360f, re.rotateDegrees) : 180f;
                         float rdir = re.rotateDirection == "ccw" ? -1f : 1f;
                         float rdur = Mathf.Max(0.1f, re.rotateSeconds > 0f ? re.rotateSeconds : 2f);
-                        ang += rdir * rd * Mathf.Clamp01((kt - rs) / rdur);
+                        angY += rdir * rd * EaseValue(Mathf.Clamp01((kt - rs) / rdur), re.easing);
                     }
-                    var q = go.transform.localRotation * Quaternion.AngleAxis(ang, Vector3.up);
-                    cxr.AddKey(new Keyframe(kt, q.x));
-                    cyr.AddKey(new Keyframe(kt, q.y));
-                    czr.AddKey(new Keyframe(kt, q.z));
-                    cwr.AddKey(new Keyframe(kt, q.w));
+                    foreach (var te in tilts)
+                    {
+                        float rs = te.startTime - cluster.start;
+                        if (kt < rs) continue;
+                        float td = Mathf.Clamp(te.tiltDegrees != 0f ? te.tiltDegrees : 90f, -180f, 180f);
+                        float tdur = Mathf.Max(0.1f, te.tiltSeconds > 0f ? te.tiltSeconds : 1f);
+                        float prog = td * EaseValue(Mathf.Clamp01((kt - rs) / tdur), te.easing);
+                        if (te.tiltAxis == "z") angZ += prog;
+                        else angX += prog;
+                    }
+                    ts2.Add(kt);
+                    angles2.Add(new Vector3(angY, angX, angZ));
                 }
-                SetLinear(cxr);
-                SetLinear(cyr);
-                SetLinear(czr);
-                SetLinear(cwr);
-                SetCycleWrap(cxr);
-                SetCycleWrap(cyr);
-                SetCycleWrap(czr);
-                SetCycleWrap(cwr);
+                WriteRotationKeyList(clip, path, go.transform.localRotation, ts2, angles2);
+            }
+
+            // ---- Scale (scale events in the cluster, chained by startTime:
+            // 每段从上一段目标倍率过渡到本段目标，段内按事件缓动)。
+            if (scales.Count > 0)
+            {
+                var s0 = go.transform.localScale;
+                var stimes = new List<float> { 0f, clipLen };
+                foreach (var se in scales)
+                {
+                    float ss = Mathf.Max(0f, se.startTime - cluster.start);
+                    float sdur = Mathf.Max(0.1f, se.scaleSeconds > 0f ? se.scaleSeconds : 1f);
+                    for (int i = 0; i <= 12; i++)
+                        stimes.Add(Mathf.Min(ss + sdur * i / 12f, clipLen));
+                }
+                stimes.Sort();
+                var csx = new AnimationCurve();
+                var csy = new AnimationCurve();
+                var csz = new AnimationCurve();
+                float prevST = -1f;
+                foreach (var st in stimes)
+                {
+                    if (prevST >= 0f && st - prevST < 0.0001f) continue;
+                    prevST = st;
+                    float mul = ClusterScaleAt(st, scales, cluster.start, scaleAccum);
+                    csx.AddKey(new Keyframe(st, s0.x * mul));
+                    csy.AddKey(new Keyframe(st, s0.y * mul));
+                    csz.AddKey(new Keyframe(st, s0.z * mul));
+                }
+                SetLinear(csx);
+                SetLinear(csy);
+                SetLinear(csz);
+                SetCycleWrap(csx);
+                SetCycleWrap(csy);
+                SetCycleWrap(csz);
                 AnimationUtility.SetEditorCurve(clip,
-                    EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalRotation.x"), cxr);
+                    EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalScale.x"), csx);
                 AnimationUtility.SetEditorCurve(clip,
-                    EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalRotation.y"), cyr);
+                    EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalScale.y"), csy);
                 AnimationUtility.SetEditorCurve(clip,
-                    EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalRotation.z"), czr);
-                AnimationUtility.SetEditorCurve(clip,
-                    EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalRotation.w"), cwr);
+                    EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalScale.z"), csz);
+            }
+
+            // ---- Fade (fade events in the cluster, chained by startTime → FadeDriver.alpha)。
+            if (fades.Count > 0)
+            {
+                var ftimes = new List<float> { 0f, clipLen };
+                foreach (var fe in fades)
+                {
+                    float fs = Mathf.Max(0f, fe.startTime - cluster.start);
+                    float fdur = Mathf.Max(0.1f, fe.fadeSeconds > 0f ? fe.fadeSeconds : 1f);
+                    for (int i = 0; i <= 12; i++)
+                        ftimes.Add(Mathf.Min(fs + fdur * i / 12f, clipLen));
+                }
+                ftimes.Sort();
+                var cfa = new AnimationCurve();
+                float prevFT = -1f;
+                foreach (var ft in ftimes)
+                {
+                    if (prevFT >= 0f && ft - prevFT < 0.0001f) continue;
+                    prevFT = ft;
+                    cfa.AddKey(new Keyframe(ft, ClusterFadeAt(ft, fades, cluster.start, alphaAccum)));
+                }
+                SetLinear(cfa);
+                SetCycleWrap(cfa);
+                AnimationUtility.SetEditorCurve(clip, FadeCurveBinding(path), cfa);
             }
         }
 
@@ -2397,6 +3249,83 @@ public static class AnimGroupBakery
         return times != null && times.Count > 0 ? times[times.Count - 1] : 0f;
     }
 
+    /// <summary>簇内 t 时刻的 scale 倍率：scales 按 startTime 串接（已过段 = 该段
+    /// 目标；进行中段从上一目标向本段目标按事件缓动过渡；未开始段不影响）。</summary>
+    private static float ClusterScaleAt(float t, List<AnimGroupEventDto> scales,
+        float clusterStart, float initialMul)
+    {
+        float mul = initialMul;
+        for (int i = 0; i < scales.Count; i++)
+        {
+            var se = scales[i];
+            float ss = Mathf.Max(0f, se.startTime - clusterStart);
+            if (t < ss) break;
+            float sdur = Mathf.Max(0.1f, se.scaleSeconds > 0f ? se.scaleSeconds : 1f);
+            float to = Mathf.Max(0f, se.scaleTo);
+            float k = Mathf.Clamp01((t - ss) / sdur);
+            mul = mul + (to - mul) * EaseValue(k, se.easing);
+        }
+        return mul;
+    }
+
+    /// <summary>成员 scale 常量曲线（静态成员的 path 集合对齐）。</summary>
+    private static void WriteConstantScaleCurves(AnimationClip clip, string path, Vector3 s0, float clipLen)
+    {
+        var csx = new AnimationCurve(new Keyframe(0f, s0.x), new Keyframe(clipLen, s0.x));
+        var csy = new AnimationCurve(new Keyframe(0f, s0.y), new Keyframe(clipLen, s0.y));
+        var csz = new AnimationCurve(new Keyframe(0f, s0.z), new Keyframe(clipLen, s0.z));
+        SetLinear(csx);
+        SetLinear(csy);
+        SetLinear(csz);
+        SetCycleWrap(csx);
+        SetCycleWrap(csy);
+        SetCycleWrap(csz);
+        AnimationUtility.SetEditorCurve(clip,
+            EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalScale.x"), csx);
+        AnimationUtility.SetEditorCurve(clip,
+            EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalScale.y"), csy);
+        AnimationUtility.SetEditorCurve(clip,
+            EditorCurveBinding.FloatCurve(path, typeof(Transform), "m_LocalScale.z"), csz);
+    }
+
+    /// <summary>FadeDriver 类型（反射解析 CustomStub.FadeDriver——LayoutEditor
+    /// 程序集不得硬引用 WebCustomStubRuntime，独立编译铁律；结果缓存）。</summary>
+    private static Type s_fadeDriverType;
+    private static bool s_fadeDriverTypeResolved;
+
+    /// <summary>FadeDriver 类型是否可用（WebCustomStubRuntime 未编译时 fade 曲线
+    /// 整体跳过——AttachFadeDriver 已打警告，安全降级）。</summary>
+    private static bool FadeDriverTypeAvailable()
+    {
+        if (!s_fadeDriverTypeResolved)
+        {
+            s_fadeDriverTypeResolved = true;
+            s_fadeDriverType = LayoutEditorStubIO.FindCustomStubType((string)null, "FadeDriver");
+        }
+        return s_fadeDriverType != null;
+    }
+
+    /// <summary>FadeDriver.alpha 曲线绑定。Unity 2017 的 EditorCurveBinding.type
+    /// 是 System.Type（2020+ 才改 string）——传反射解析的 FadeDriver Type，
+    /// 序列化（classID=114 + script 引用）由 SetEditorCurve 内部处理。</summary>
+    private static EditorCurveBinding FadeCurveBinding(string path)
+    {
+        var b = new EditorCurveBinding();
+        b.path = path;
+        b.type = s_fadeDriverType;
+        b.propertyName = "alpha";
+        return b;
+    }
+
+    /// <summary>成员 FadeDriver.alpha 常量曲线 = 1（静态成员的 path 集合对齐）。</summary>
+    private static void WriteConstantFadeCurve(AnimationClip clip, string path, float clipLen)
+    {
+        var ca = new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(clipLen, 1f));
+        SetLinear(ca);
+        SetCycleWrap(ca);
+        AnimationUtility.SetEditorCurve(clip, FadeCurveBinding(path), ca);
+    }
+
 
     /// <summary>One clip per animation event (move / lift / drop). Each group member
     /// gets position curves: XZ follows the route (or holds still for pure-Y events)
@@ -2408,7 +3337,8 @@ public static class AnimGroupBakery
         List<GameObject> members, Transform groupRoot, List<AnimGroupWaypointDto> pts, float interval,
         bool loop, bool pingpong, string finishedTrigger, Dictionary<string, Vector2> memberOffsets,
         Dictionary<string, float> memberPhases, HashSet<string> staticSet, string animDir,
-        HashSet<string> usedAssets, ClipProfile yp, Dictionary<string, Vector2> memberFollowPos)
+        HashSet<string> usedAssets, ClipProfile yp, Dictionary<string, Vector2> memberFollowPos,
+        Dictionary<string, Vector2> memberHoldPos, string easing)
     {
         var clip = new AnimationClip();
         clip.name = key + "_" + suffix;
@@ -2417,7 +3347,16 @@ public static class AnimGroupBakery
 
         List<float> times;
         List<Vector2> values;
-        BuildTimeline(pts, interval, out times, out values);
+        List<int> keyWp;
+        BuildTimeline(pts, interval, out times, out values, out keyWp);
+        // 缓动/贝塞尔采样层（linear 且无控制点 = 原样键，存量关卡零变化）。
+        {
+            var st = new List<float>();
+            var sv = new List<Vector2>();
+            SampleRouteKeys(pts, keyWp, times, values, easing, st, sv);
+            times = st;
+            values = sv;
+        }
 
         // XZ keys shift by the rise time so the group stays put while lifting.
         float up = yp != null && !yp.pureY ? Mathf.Max(0f, yp.liftSeconds) : 0f;
@@ -2501,9 +3440,16 @@ public static class AnimGroupBakery
                 // move event (holdPos + member offset) when present — using the
                 // bake-time position instead would snap the member back to the
                 // first-waypoint anchor on the move -> drop transition ("闪回").
+                // orbit 后续的纯 Y 事件用 per-member 末位置（memberHoldPos 优先）。
                 float hx = curPos.x;
                 float hz = curPos.z;
-                if (yp.holdPos.HasValue)
+                Vector2 mh;
+                if (memberHoldPos != null && memberHoldPos.TryGetValue(id, out mh))
+                {
+                    hx = mh.x;
+                    hz = mh.y;
+                }
+                else if (yp.holdPos.HasValue)
                 {
                     Vector2 offH;
                     memberOffsets.TryGetValue(id, out offH);
@@ -2562,8 +3508,7 @@ public static class AnimGroupBakery
                     float yTarget = yp.isDrop
                         ? curPos.y + Mathf.Max(0f, yp.dropFrom - fall)
                         : yFrom + yp.yTo;
-                    cy.AddKey(new Keyframe(0f, yFrom));
-                    cy.AddKey(new Keyframe(clipLen, yTarget));
+                    AddEasedKeys(cy, 0f, yFrom, clipLen, yTarget, easing, true);
                 }
                 else if (yp.constantY > 0f)
                 {
@@ -2637,7 +3582,7 @@ public static class AnimGroupBakery
         List<GameObject> members, Transform groupRoot, float seconds, string finishedTrigger,
         string animDir, HashSet<string> usedAssets,
         Dictionary<string, Vector2> memberOffsets, Dictionary<string, Vector2> memberFollowPos,
-        Vector2? holdPos)
+        Vector2? holdPos, Dictionary<string, Vector2> memberHoldPos)
     {
         seconds = Mathf.Max(0.1f, seconds);
         var clip = new AnimationClip();
@@ -2651,12 +3596,19 @@ public static class AnimGroupBakery
             var p = go.transform.localPosition;
             var id = "u:" + go.GetInstanceID();
             Vector2 fpos;
+            Vector2 mh;
             if (memberFollowPos.TryGetValue(id, out fpos))
             {
                 Vector2 off;
                 memberOffsets.TryGetValue(id, out off);
                 p.x = fpos.x + off.x;
                 p.z = fpos.y + off.y;
+            }
+            else if (memberHoldPos != null && memberHoldPos.TryGetValue(id, out mh))
+            {
+                // orbit 后续 wait：每成员各自的公转末位置（半径不同无法共享 holdPos）。
+                p.x = mh.x;
+                p.z = mh.y;
             }
             else if (holdPos.HasValue)
             {
@@ -2902,8 +3854,10 @@ public static class AnimGroupBakery
             // clip) — reliable even when clip.loopTime does not persist to disk on the
             // game build (Unity 2017 SetAnimationClipSettings gap).
             bool canLoop = evt.type == "move" || evt.type == "rotate" ||
-                evt.type == "shake" || evt.type == "flash";
-            bool isLoop = (evt.loop || (evt.pingpong && evt.type == "move")) && canLoop &&
+                evt.type == "shake" || evt.type == "flash" ||
+                evt.type == "scale" || evt.type == "tilt" || evt.type == "orbit" ||
+                evt.type == "fade";
+            bool isLoop = (evt.loop || evt.pingpong) && canLoop &&
                 si == moveStates.Count - 1;
             if ((evt.loop || evt.pingpong) && !isLoop)
                 Debug.LogWarning("[LayoutEditor] anim group: event " + evt.triggerName +

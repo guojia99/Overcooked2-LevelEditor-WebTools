@@ -429,8 +429,8 @@ namespace CustomStub
         public static readonly Type ContainerTransferBehaviourType = Find("IContainerTransferBehaviour");
         public static readonly MethodInfo ICarrierInspectCarriedMethod = Safe(delegate
         {
-            return ICarrierType != null
-                ? ICarrierType.GetMethod("InspectCarriedItem", BindingFlags.Public | BindingFlags.Instance,
+            return ICarrierPlacementType != null
+                ? ICarrierPlacementType.GetMethod("InspectCarriedItem", BindingFlags.Public | BindingFlags.Instance,
                     null, Type.EmptyTypes, null)
                 : null;
         });
@@ -1343,6 +1343,44 @@ namespace CustomStub
             Field(MultiplayerCameraType, "m_gradientLimit");
         public static readonly FieldInfo MultiplayerCameraTimeToMaxField =
             Field(MultiplayerCameraType, "m_timeToMax");
+
+        // 物品上方浮动 UI（进度条/图标）用 Camera.main.WorldToViewportPoint 定位；
+        // 分屏时把它映射到对应镜头 viewport，避免图标偏到屏幕外。
+        public static readonly Type HoverIconUIControllerType = Find("HoverIconUIController");
+        public static readonly FieldInfo HoverIconFollowTransformField =
+            Field(HoverIconUIControllerType, "m_followTransform");
+        public static readonly FieldInfo HoverIconFollowOffsetField =
+            Field(HoverIconUIControllerType, "m_followOffset");
+        public static readonly MethodInfo HoverIconGetScreenPosMethod = Safe(delegate
+        {
+            return HoverIconUIControllerType != null
+                ? HoverIconUIControllerType.GetMethod("GetScreenPos",
+                    BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
+        // 对局开始/结束：ClientFlowControllerBase.SetRoundBehaviourActivation(bool)
+        // 与 InRound 属性；结束进结算时暂停分屏并恢复主镜头，重开后再恢复。
+        public static readonly Type ClientFlowControllerBaseType = Find("ClientFlowControllerBase");
+        public static readonly PropertyInfo ClientInRoundProperty =
+            Prop(ClientFlowControllerBaseType, "InRound");
+        public static readonly MethodInfo ClientSetRoundBehaviourActivationMethod = Safe(delegate
+        {
+            return ClientFlowControllerBaseType != null
+                ? ClientFlowControllerBaseType.GetMethod("SetRoundBehaviourActivation",
+                    BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, new[] { typeof(bool) }, null)
+                : null;
+        });
+        public static readonly Type OverheadIconGUIType = Find("OverheadIconGUI");
+        public static readonly MethodInfo OverheadIconOnGUIMethod = Safe(delegate
+        {
+            return OverheadIconGUIType != null
+                ? OverheadIconGUIType.GetMethod("OnGUI",
+                    BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, Type.EmptyTypes, null)
+                : null;
+        });
         public static readonly Type PlayerIDProviderType = Find("PlayerIDProvider");
         public static readonly FieldInfo PlayerIDProviderAllProvidersField = Safe(delegate
         {
@@ -1504,6 +1542,50 @@ namespace CustomStub
             }
             return list.Count > 0 ? list.ToArray() : null;
         });
+
+        // ---- 订单顺序（4.0.0.18（原 4.7.0）：RoundData.GetNextRecipe 接管；类型均在 vanilla
+        //      Assembly-CSharp 核验过：RoundData / RecipeList / RecipeList.Entry；
+        //      OrderDefinitionNodeType / NodeUidField 复用上方既有反射组） ----
+        public static readonly Type RoundDataType = Find("RoundData");
+        public static readonly Type RecipeListType = Find("RecipeList");
+        public static readonly Type RecipeListEntryType = Safe(delegate
+        {
+            return RecipeListType != null
+                ? RecipeListType.GetNestedType("Entry", BindingFlags.Public | BindingFlags.NonPublic)
+                : null;
+        });
+        /// <summary>RoundData.GetNextRecipe(RoundInstanceDataBase)——按名匹配
+        /// （参数类型为 protected 嵌套类，types 数组不可用）；public virtual，
+        /// 本类唯一该名方法。</summary>
+        public static readonly MethodInfo RoundDataGetNextRecipeMethod = Safe(delegate
+        {
+            return RoundDataType != null
+                ? RoundDataType.GetMethod("GetNextRecipe",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                : null;
+        });
+        /// <summary>RoundData.m_recipes（RecipeList）。</summary>
+        public static readonly FieldInfo RoundDataRecipesField = Safe(delegate
+        {
+            return RoundDataType != null
+                ? RoundDataType.GetField("m_recipes", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                : null;
+        });
+        /// <summary>RecipeList.m_recipes（RecipeList.Entry[]）。</summary>
+        public static readonly FieldInfo RecipeListRecipesField = Safe(delegate
+        {
+            return RecipeListType != null
+                ? RecipeListType.GetField("m_recipes", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                : null;
+        });
+        /// <summary>RecipeList.Entry.m_order（OrderDefinitionNode）。</summary>
+        public static readonly FieldInfo EntryOrderField = Safe(delegate
+        {
+            return RecipeListEntryType != null
+                ? RecipeListEntryType.GetField("m_order", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                : null;
+        });
+
         // ============ 运行时辅助（不缓存，静态只读之外的部分） ============
 
         /// <summary>网络实体扫描+链接+StartSynchronising 是否全部完成。

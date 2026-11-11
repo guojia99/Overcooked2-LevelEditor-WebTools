@@ -1,4 +1,4 @@
-// 分料机（IngredientSplitter）真机运行时模块。
+﻿// 分料机（IngredientSplitter）真机运行时模块。
 // 这个文件不在 Unity 工程内编译（上级目录带 ~），由 IngredientSplitterRuntime.csproj
 // 单独编译成 DLL，随 webcustomstub_runtime bundle 分发，Loader 在 WebCustomStubRuntime
 // 之前加载。它直接引用游戏 Assembly-CSharp / LevelEditorStub / IngredientSplitterStub，
@@ -122,6 +122,50 @@ namespace IngredientSplitterRuntime
             return null;
         }
 
+        /// <summary>2026-11 上游：IngredientSplitter.outputPrefabSO(PseudoPrefabSO) + optional 输出。
+        /// 优先调用 LevelEditor.RecipeHelper.GetIngredientPrefabForOptional（真机在 OC2DIYLevel 模组内），
+        /// 找不到时回落为直接加载 SO 指向的 prefab。</summary>
+        internal static GameObject ResolveOutputPrefab(PseudoPrefabSO so)
+        {
+            if (so == null)
+                return null;
+            try
+            {
+                var helper = FindType("LevelEditor.RecipeHelper");
+                if (helper != null)
+                {
+                    var method = helper.GetMethod("GetIngredientPrefabForOptional",
+                        BindingFlags.Public | BindingFlags.Static, null,
+                        new[] { typeof(PseudoPrefabSO) }, null);
+                    if (method != null)
+                    {
+                        var prefab = method.Invoke(null, new object[] { so }) as GameObject;
+                        if (prefab != null)
+                            return prefab;
+                    }
+                }
+            }
+            catch
+            {
+            }
+            return LoadPrefab(so);
+        }
+
+        private static Type FindType(string fullName)
+        {
+            var type = Type.GetType(fullName + ", Assembly-CSharp");
+            if (type != null)
+                return type;
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            for (int i = 0; i < assemblies.Length; i++)
+            {
+                type = assemblies[i].GetType(fullName);
+                if (type != null)
+                    return type;
+            }
+            return null;
+        }
+
         internal static AssembledDefinitionNode OutputNode(GameObject prefab)
         {
             if (prefab == null)
@@ -136,6 +180,7 @@ namespace IngredientSplitterRuntime
     public class ClientIngredientSplitter : ClientSynchroniserBase, IClientHandlePickup, IClientHandlePlacement
     {
         private IngredientSplitter splitter;
+        private GameObject outputPrefab;
         private AssembledDefinitionNode inputAssembledNode;
         private AssembledDefinitionNode outputAssembledNode;
         private int ingredientCnt;
@@ -152,10 +197,11 @@ namespace IngredientSplitterRuntime
         {
             base.StartSynchronising(synchronisedObject);
             splitter = (IngredientSplitter)synchronisedObject;
-            NetworkUtils.RegisterSpawnablePrefab(gameObject, splitter.outputPrefab);
+            outputPrefab = RuntimeRecipeNodes.ResolveOutputPrefab(splitter.outputPrefabSO);
+            NetworkUtils.RegisterSpawnablePrefab(gameObject, outputPrefab);
             var inputNode = RuntimeRecipeNodes.GetOrderDefinitionNode(splitter.inputRecipe);
             inputAssembledNode = inputNode != null ? inputNode.Simpilfy() : null;
-            var outputNode = RuntimeRecipeNodes.OutputNode(splitter.outputPrefab);
+            var outputNode = RuntimeRecipeNodes.OutputNode(outputPrefab);
             outputAssembledNode = outputNode != null ? outputNode.Simpilfy() : null;
             ingredientCnt = 0;
             EnsureCounterUI();
@@ -269,7 +315,7 @@ namespace IngredientSplitterRuntime
                 if (ingredientContainer != null && prep == null)
                     return false;
                 bool flag1 = carried.GetComponent<WorkableItem>() != null;
-                bool flag2 = splitter.outputPrefab.GetComponent<WorkableItem>() != null;
+                bool flag2 = outputPrefab.GetComponent<WorkableItem>() != null;
                 return flag1 == flag2;
             }
             return false;
@@ -320,6 +366,7 @@ namespace IngredientSplitterRuntime
     public class ServerIngredientSplitter : ServerSynchroniserBase, IHandlePlacement, IHandlePickup
     {
         private IngredientSplitter splitter;
+        private GameObject outputPrefab;
         private AssembledDefinitionNode inputAssembledNode;
         private AssembledDefinitionNode outputAssembledNode;
         private int ingredientCnt;
@@ -334,10 +381,11 @@ namespace IngredientSplitterRuntime
         {
             base.StartSynchronising(synchronisedObject);
             splitter = (IngredientSplitter)synchronisedObject;
-            NetworkUtils.RegisterSpawnablePrefab(gameObject, splitter.outputPrefab);
+            outputPrefab = RuntimeRecipeNodes.ResolveOutputPrefab(splitter.outputPrefabSO);
+            NetworkUtils.RegisterSpawnablePrefab(gameObject, outputPrefab);
             var inputNode = RuntimeRecipeNodes.GetOrderDefinitionNode(splitter.inputRecipe);
             inputAssembledNode = inputNode != null ? inputNode.Simpilfy() : null;
-            var outputNode = RuntimeRecipeNodes.OutputNode(splitter.outputPrefab);
+            var outputNode = RuntimeRecipeNodes.OutputNode(outputPrefab);
             outputAssembledNode = outputNode != null ? outputNode.Simpilfy() : null;
             ingredientCnt = 0;
         }
@@ -352,8 +400,8 @@ namespace IngredientSplitterRuntime
             Vector3 position = gameObject.transform.position;
             var parentable = _carrier.AccessGameObject().RequestInterface<IParentable>();
             if (parentable as MonoBehaviour != null)
-                position = parentable.GetAttachPoint(splitter.outputPrefab).position;
-            GameObject output = NetworkUtils.ServerSpawnPrefab(gameObject, splitter.outputPrefab, position, Quaternion.identity);
+                position = parentable.GetAttachPoint(outputPrefab).position;
+            GameObject output = NetworkUtils.ServerSpawnPrefab(gameObject, outputPrefab, position, Quaternion.identity);
             _carrier.CarryItem(output);
             ingredientCnt--;
             SendPickup();
@@ -389,7 +437,7 @@ namespace IngredientSplitterRuntime
                 if (ingredientContainer != null && prep == null)
                     return false;
                 bool flag1 = carried.GetComponent<WorkableItem>() != null;
-                bool flag2 = splitter.outputPrefab.GetComponent<WorkableItem>() != null;
+                bool flag2 = outputPrefab.GetComponent<WorkableItem>() != null;
                 return flag1 == flag2;
             }
             return false;

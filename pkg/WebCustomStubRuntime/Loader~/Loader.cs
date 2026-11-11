@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using BepInEx;
 using BepInEx.Configuration;
@@ -38,18 +39,24 @@ namespace OC2LevelRuntimeLoader
     /// 场景自愈（RandomCrate| 等 tag）统一收编于 CustomStub.EntryPoint（本 loader 不再
     /// 自行 HealScene），loader 只负责程序集/依赖加载 + 每次场景加载幂等补扫。
     ///
-    /// v4.1.0（2026-11-04 多镜头分屏·版本对齐）：**loader 逻辑零变更**，
-    ///     仅与 CustomStub 运行时 SSOT（StubVersion 4.1.0）对齐——新增
-    ///     SplitScreenCamera（SplitScreen|1 tag 自愈）。
-    /// v4.0.10（2026-11-04 传送带方向刷新·版本对齐）：**loader 逻辑零变更**，
-    ///     仅与 CustomStub 运行时 SSOT（StubVersion 4.0.10）对齐——修复在
-    ///     ConveyorDirectionSync（同步器就绪门禁，修开局 NRE）。
-    /// v4.0.0（2026-10-28 commonW5 版本门控断点）：**loader 逻辑零变更**，仅与
-    ///     CustomStub 运行时 SSOT（StubVersion 4.0.0）对齐——本版运行时主内容是
-    ///     commonW5 增量库（BGM/桌台皮肤/食材/卷饼/茶杯链路，详见 StubVersion.cs
-    ///     4.0.0 条目）。⚠ 兼容期截止：本版起不再为旧版导出集（有 requires.txt、
-    ///     无 stub_levels.txt）生成 "集|*|legacy" 兼容条目，此类老集需重新导出；
-    ///     全新导出集不受影响（3.5.0 起 stub_levels.txt 清单格式继续支持）。
+    /// 进图卡加载诊断（2026-11-08，未改版本号）：新增常开 Info 行
+    ///     `[断点:闸门] 场景 … → 集=… 关卡=… 清单命中/未命中（特征=…）`——
+    ///     直接解析 scene.path 与 WebManifest，不依赖 EntryPoint/Verbose，用于快速
+    ///     区分「该关本就不适用 stub」与「导出清单漏项」；其余逻辑零变更。
+    /// v4.0.0（2026-11-10 首个发布版 · 收敛内部迭代 4.0.0–4.8.0）：**loader 逻辑
+    ///     零变更**，发布号统一为 4.0.0；原 4.0.1–4.8.0 全部并入本版，不再单独发号。
+    ///     包含：commonW5 增量库、清单键改名免疫（原 4.5.0，内部号 4.0.0.16）、
+    ///     屏幕点探针（原 4.5.0）、上游 sandwich/optional 同步（原 4.6.0，
+    ///     内部号 4.0.0.17）；其余 4.1–4.8 的运行时代码变更均在 CustomStub/EntryPoint
+    ///     侧，loader 仅同步版本号。
+    ///     ⚠ 兼容期截止：本版起不再为旧版导出集（有 requires.txt、无 stub_levels.txt）
+    ///     生成 "集|*|legacy" 兼容条目，此类老集需重新导出；全新导出集不受影响
+    ///     （3.5.0 起 stub_levels.txt 清单格式继续支持）。
+    ///     内部修订仅记录在 changelog：4.0.0.11（原 4.1.0）分屏、4.0.0.12（原 4.2.0）
+    ///     寿司、4.0.0.13/.14（原 4.2.1/.2）互锁、4.0.0.15（原 4.3.0）fade、
+    ///     4.0.0.16（原 4.5.0）改名免疫、4.0.0.17（原 4.6.0）上游同步、
+    ///     4.0.0.18（原 4.7.0）订单顺序、4.0.0.19（原 4.8.0）可上菜；
+    ///     4.0.0.1–.10（原 4.0.1–4.0.10）传送带系列修复。
     /// v3.10.0（2026-10-14 按钮控速 + 按钮生成器批次·版本对齐）：**loader 逻辑
     ///     零变更**（新特征 speedctl/spawnerbatch 经 stub_levels.txt 原样透传，
     ///     自愈在 CustomStub.EntryPoint 侧），仅与 StubVersion 3.10.0 对齐。
@@ -229,7 +236,7 @@ namespace OC2LevelRuntimeLoader
     {
         public const string PluginGuid = "oc2.oc2diylevelruntimewloader";
         public const string PluginName = "OC2DIYLevelRuntimeWLoader";
-        public const string PluginVersion = "4.1.0";
+        public const string PluginVersion = "4.0.0";
 
         /// <summary>统一运行时 bundle 文件名（依赖包内，固定；不与关卡目录下的
         /// *_custom_runtime 混淆，也绝不叫裸 runtime）。</summary>
@@ -322,9 +329,20 @@ namespace OC2LevelRuntimeLoader
         /// 调用内部，该行会以巨大耗时直接指认元凶。仅激活态（清单非空）安装。</summary>
         private static ConfigEntry<bool> _cfgTraceAssets;
 
+        /// <summary>屏幕点探针开关（[Diagnostics] ScreenPointProbe，诊断用）。
+        /// 给 Camera 的屏幕/视口点 API 挂只观察前缀，定位
+        /// "Screen position out of view frustum" 的高频调用方（默认开启；90 秒/最多 3 个
+        /// 高频调用点后自动停止采样，不影响游戏行为）。</summary>
+        private static ConfigEntry<bool> _cfgScreenProbe;
+
         public static bool TraceAssetsEnabled
         {
             get { return _cfgTraceAssets != null && _cfgTraceAssets.Value; }
+        }
+
+        public static bool ScreenProbeEnabled
+        {
+            get { return _cfgScreenProbe != null && _cfgScreenProbe.Value; }
         }
 
         public static bool VerboseEnabled
@@ -435,6 +453,12 @@ namespace OC2LevelRuntimeLoader
                 + "LoadAsset / LoadAllAssets 挂计时，仅耗时 ≥100ms 的慢调用输出一行 [资产跟踪] 明细"
                 + "（快调用零日志零字符串，开销≈0，不影响游戏）。已立功：定位过 OC2DIYLevel 同步加载 "
                 + "info_* bundle 合计 ~15s 的进关卡选择冻结。仅在使用 web 导出关卡的环境激活。");
+            _cfgScreenProbe = Config.Bind("Diagnostics", "ScreenPointProbe", true,
+                "屏幕点探针（2026-11-08 诊断，默认开启）：进入 web 关卡后给 Camera 的 "
+                + "ScreenPointToRay/ScreenToWorldPoint/ViewportPointToRay/ViewportToWorldPoint "
+                + "挂只观察前缀；同一调用点累计 ≥50 次时打印调用方托管堆栈（最多 3 个调用点，"
+                + "90 秒后自动停止采样）。用于定位原生错误 Screen position out of view frustum 的"
+                + "真正调用方；不拦截、不改变任何游戏行为，设为 false 可关闭。");
             // v3.5.0 零介入铁律：Awake 不再预载依赖/统一运行时、不挂 AssemblyResolve。
             // 先等启动后台扫描汇总 levels/<set>/stub_levels.txt 清单，只有存在
             // web 导出的 stub 关卡（清单非空）才激活（ApplyScanResult）——未用 web
@@ -1220,6 +1244,8 @@ namespace OC2LevelRuntimeLoader
             }
             if (TraceAssetsEnabled && _tracerInstalled)
                 TraceSummaryTick();
+            if (ScreenProbeEnabled)
+                ScreenProbeTick();
             if (!_startupScanDone)
             {
                 _startupScanDone = true;
@@ -1379,6 +1405,12 @@ namespace OC2LevelRuntimeLoader
             /// 清单为空即休眠会让该类关卡场景外部引用无法解析 → 进图卡加载
             ///（2026-10-06 事故，LaTiao 实锤）。存在即激活（commonW + 运行时）。</summary>
             public bool AnyStubLevelsFile;
+            /// <summary>4.0.0.16（原 4.5.0）：文件夹名 ≠ 内部集名（info_* 推断）的集，元素
+            /// "文件夹名 → 内部名"——供主线程汇总 Info 日志确认改名集已正确键控。</summary>
+            public readonly List<string> AliasedSets = new List<string>();
+            /// <summary>4.0.0.16（原 4.5.0）：内部集名 → 首个声明它的文件夹名。两个文件夹指向
+            /// 同一内部名（新旧版本并存）时告警——清单查表先到者命中，建议清理。</summary>
+            public readonly Dictionary<string, string> ManifestKeyOwners = new Dictionary<string, string>();
             public bool NoRootFound;
         }
 
@@ -1505,6 +1537,16 @@ namespace OC2LevelRuntimeLoader
                 LogI("已装 " + result.SetCount + " 个 web 导出关卡集但均未使用 CustomStub（清单为空）"
                     + "——仍激活依赖/运行（commonW 素材 + 双 stub 自愈；逐关卡玩法闸门保持零介入，v3.7.0）");
             }
+            // 4.0.0.16（原 4.5.0）：改名集汇总（常开 Info，无需 Verbose）——社区排障时以此行确认
+            // 清单已按内部集名键控（修复前此类集全部静默零介入）。
+            if (result.AliasedSets.Count > 0)
+            {
+                var shown = result.AliasedSets.Count <= 6
+                    ? string.Join("；", result.AliasedSets.ToArray())
+                    : string.Join("；", result.AliasedSets.GetRange(0, 6).ToArray()) + "；…";
+                LogI("4.0.0 清单键改名免疫：" + result.AliasedSets.Count + " 个关卡集的文件夹名与内部集名不同，"
+                    + "已按内部集名匹配（" + shown + "）——无需恢复文件夹名，stub 玩法照常生效");
+            }
             // v3.5.9：info bundle 预载已整体回退（Unity 2017.4 同文件二次
             // LoadFromFile 返回 null 报错，与 OC2DIYLevel 的加载互斥——见头部
             // 变更记录）。进关卡选择的 ~15s 同步加载卡顿归上游修。
@@ -1593,6 +1635,11 @@ namespace OC2LevelRuntimeLoader
                 result.SetCount++;
                 var setName = Path.GetFileName(setDir);
 
+                // 集内文件枚举一次复用（4.0.0.16（原 4.5.0） info_* 内部名检测 + *_custom_runtime 收集）。
+                string[] files;
+                try { files = Directory.GetFiles(setDir); }
+                catch { continue; }
+
                 // 旧版 runtime 文件（含旧每集 Stub_<set> 代码）——统一单程序集重构后
                 // 不再识别，显式告警提示重新导出（新代码走依赖包统一运行时）。
                 if (File.Exists(Path.Combine(setDir, "runtime")))
@@ -1615,10 +1662,24 @@ namespace OC2LevelRuntimeLoader
                 // （探测+自愈），旧集无需重导出；4.0.0 起不再生成 → 零介入 + 提示重导出。
                 // 非 web 集（无 requires.txt）本就不归本加载器管。
                 var manifestPath = Path.Combine(setDir, "stub_levels.txt");
+                var manifestKey = setName;
+                if (File.Exists(manifestPath) || !string.IsNullOrEmpty(requires))
+                {
+                    // 4.0.0.16（原 4.5.0）：清单条目键改用【内部集名】——由集内 info_<set> bundle
+                    // 文件名推断（导出时与 bundle 场景内路径 assets/levelsets/<set>/
+                    // 同源，文件夹改名后不变）。此前以磁盘文件夹名为键，玩家给
+                    // levels/<set>/ 改名（加版本号/标注）即与 EntryPoint 的场景路径
+                    // 匹配断链 → stub 玩法静默失效（2026-11-08 社区 18 集 17 个中招）。
+                    // 无 info_* 或名字非法时回落文件夹名（原行为）。
+                    manifestKey = DetectManifestSetName(files, setName, result);
+                    if (!string.Equals(manifestKey, setName, StringComparison.Ordinal))
+                        result.AliasedSets.Add(setName + " → " + manifestKey);
+                }
                 if (File.Exists(manifestPath))
                 {
+                    RegisterManifestKeyOwner(manifestKey, setName, result);
                     result.AnyStubLevelsFile = true; // v3.7.0：存在即 web 导出集（空清单也需 commonW）
-                    var added = ReadStubLevels(setName, manifestPath, result);
+                    var added = ReadStubLevels(setName, manifestKey, manifestPath, result);
                     if (added > 0)
                         result.SetsWithManifest++;
                     else if (result.Verbose)
@@ -1628,7 +1689,8 @@ namespace OC2LevelRuntimeLoader
                 {
                     if (CompareSemver(PluginVersion, LegacyCompatCutoff) < 0)
                     {
-                        result.ManifestEntries.Add(setName + "|*|legacy");
+                        RegisterManifestKeyOwner(manifestKey, setName, result);
+                        result.ManifestEntries.Add(manifestKey + "|*|legacy");
                         result.SetsWithManifest++;
                         result.Infos.Add("  [" + setName + "] 旧版导出（无 stub_levels.txt）→ 兼容模式（探测+自愈，同 v3.4 行为，无需重导出）；"
                             + "v4.0.0 起将严格按清单，届时请重新导出");
@@ -1641,9 +1703,6 @@ namespace OC2LevelRuntimeLoader
                 }
 
                 // 每关卡自定义 runtime（预留通道）：只认 *_custom_runtime。
-                string[] files;
-                try { files = Directory.GetFiles(setDir); }
-                catch { continue; }
                 foreach (var f in files)
                 {
                     if (!Path.GetFileName(f).EndsWith(CustomRuntimeSuffix, StringComparison.OrdinalIgnoreCase))
@@ -1668,10 +1727,60 @@ namespace OC2LevelRuntimeLoader
             catch { return null; }
         }
 
+        /// <summary>4.0.0.16（原 4.5.0） 从集文件夹内文件名推断清单键【内部集名】。
+        /// 锚点 = info_&lt;内部集名&gt; bundle 文件（导出时与场景内路径
+        /// assets/levelsets/&lt;set&gt;/scenes/… 同源写出，文件夹改名后不变）。
+        /// 候选须无扩展名（.manifest/.meta/.txt 等噪音排除）且不含 '|'、'/'、'\'
+        /// （清单条目与路径的分段字符）。多命中 → 告警取第一个（可能混装多集）；
+        /// 无命中 → 回落文件夹名（原 4.4 及以前行为）。</summary>
+        private static string DetectManifestSetName(string[] files, string folderName, ScanResult result)
+        {
+            string found = null;
+            var hits = 0;
+            for (int i = 0; i < files.Length; i++)
+            {
+                var fn = Path.GetFileName(files[i]);
+                if (!fn.StartsWith("info_", StringComparison.Ordinal))
+                    continue;
+                var name = fn.Substring("info_".Length);
+                if (name.Length == 0 || name.IndexOf('.') >= 0)
+                    continue;
+                if (name.IndexOf('|') >= 0 || name.IndexOf('/') >= 0 || name.IndexOf('\\') >= 0)
+                    continue;
+                hits++;
+                if (found == null)
+                    found = name;
+            }
+            if (found == null)
+                return folderName;
+            if (hits > 1)
+                result.Warns.Add("  [" + folderName + "] 检测到 " + hits + " 个 info_* 文件（清单键取 " + found
+                    + "）——该文件夹可能混装了多个关卡集，建议每个集独立一个文件夹");
+            return found;
+        }
+
+        /// <summary>4.0.0.16（原 4.5.0） 跨文件夹重复键检测：两个文件夹指向同一内部集名（新旧
+        /// 版本并存，如 zhuzi 与 zhuzi_v0.13 都含 info_zhuzi）时告警——EntryPoint
+        /// 查表先到者命中，建议删除旧版文件夹。</summary>
+        private static void RegisterManifestKeyOwner(string manifestKey, string folderName, ScanResult result)
+        {
+            string owner;
+            if (result.ManifestKeyOwners.TryGetValue(manifestKey, out owner))
+            {
+                if (!string.Equals(owner, folderName, StringComparison.Ordinal))
+                    result.Warns.Add("  [" + folderName + "] 与 [" + owner + "] 指向同一内部集名 " + manifestKey
+                        + "（新旧版本并存？）——清单以先扫描到的文件夹为准，建议删除旧版文件夹");
+                return;
+            }
+            result.ManifestKeyOwners[manifestKey] = folderName;
+        }
+
         /// <summary>v3.5.0 读关卡集 stub_levels.txt → 汇总进扫描结果。
         /// 每行 "&lt;关卡&gt;|&lt;特征1,特征2,...&gt;"（特征段可为空 = 仅自愈无 ticker/补丁需求）；
-        /// '#' 开头注释与空行忽略；格式非法的行跳过并告警。返回有效条目数。</summary>
-        private static int ReadStubLevels(string setName, string manifestPath, ScanResult result)
+        /// '#' 开头注释与空行忽略；格式非法的行跳过并告警。返回有效条目数。
+        /// 4.0.0.16（原 4.5.0）：条目前缀用 manifestKey（内部集名，info_* 推断）而非文件夹名——
+        /// 文件夹改名后 EntryPoint 仍按 bundle 内路径命中；日志消息仍显示文件夹名。</summary>
+        private static int ReadStubLevels(string setName, string manifestKey, string manifestPath, ScanResult result)
         {
             int added = 0;
             try
@@ -1695,7 +1804,7 @@ namespace OC2LevelRuntimeLoader
                         result.Warns.Add("  [" + setName + "] stub_levels.txt 第 " + (i + 1) + " 行关卡名非法: " + level + "，已跳过");
                         continue;
                     }
-                    result.ManifestEntries.Add(setName + "|" + line);
+                    result.ManifestEntries.Add(manifestKey + "|" + line);
                     added++;
                 }
             }
@@ -1902,6 +2011,8 @@ namespace OC2LevelRuntimeLoader
                     LogV("场景加载: " + scene.name + "（无 web 导出集=休眠模式，零介入）");
                     return;
                 }
+                LogManifestGate(scene);
+                EnsureScreenPointProbe(scene);
                 LoadDependenciesAndRuntime();
                 EnsureAssetTracer();
                 EnsureLevelEntryGate();
@@ -1926,12 +2037,291 @@ namespace OC2LevelRuntimeLoader
             }
         }
 
+        /// <summary>场景清单闸门诊断（常开 Info）：解析 scene.path 的
+        /// assets/levelsets/&lt;set&gt;/scenes/&lt;level&gt;.unity，查 WebManifest 是否有该关条目。
+        /// 不依赖 EntryPoint / Verbose——「进图卡加载」时据此确认是清单漏项还是运行时问题。
+        /// 仅对 levelsets 路径（web 关卡）输出，主菜单/官方图零日志。</summary>
+        private static void LogManifestGate(Scene scene)
+        {
+            try
+            {
+                var path = scene.path ?? "";
+                const string levelsetsMarker = "/levelsets/";
+                var at = path.IndexOf(levelsetsMarker, StringComparison.OrdinalIgnoreCase);
+                if (at < 0)
+                    return;
+                var rest = path.Substring(at + levelsetsMarker.Length);
+                var slash = rest.IndexOf('/');
+                if (slash <= 0)
+                    return;
+                var set = rest.Substring(0, slash);
+                rest = rest.Substring(slash + 1);
+                const string scenesMarker = "scenes/";
+                if (!rest.StartsWith(scenesMarker, StringComparison.OrdinalIgnoreCase))
+                    return;
+                var level = rest.Substring(scenesMarker.Length);
+                var dot = level.LastIndexOf('.');
+                if (dot > 0)
+                    level = level.Substring(0, dot);
+                if (level.Length == 0)
+                    return;
+
+                var wanted = set + "|" + level + "|";
+                var legacy = set + "|*|legacy";
+                string feats = null;
+                for (int i = 0; i < WebManifest.Length; i++)
+                {
+                    var entry = WebManifest[i];
+                    if (entry == null)
+                        continue;
+                    if (entry.StartsWith(wanted, StringComparison.OrdinalIgnoreCase))
+                    {
+                        feats = entry.Substring(wanted.Length);
+                        break;
+                    }
+                    if (string.Equals(entry, legacy, StringComparison.OrdinalIgnoreCase))
+                    {
+                        feats = "legacy";
+                        break;
+                    }
+                }
+                if (feats != null)
+                {
+                    LogI("[断点:闸门] 场景 " + scene.name + " → 集=" + set + " 关卡=" + level
+                        + " 清单命中（特征=" + (feats.Length > 0 ? feats : "无") + "）");
+                }
+                else
+                {
+                    LogI("[断点:闸门] 场景 " + scene.name + " → 集=" + set + " 关卡=" + level
+                        + " 清单未命中（该关无 stub 特征或导出清单漏项；如有自定义玩法请重新导出该集）");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogW("[断点:闸门] 清单诊断失败: " + ex.Message);
+            }
+        }
+
         private static string[] ToArray(HashSet<string> set)
         {
             var arr = new string[set.Count];
             set.CopyTo(arr);
             return arr;
         }
+
+        #region 屏幕点探针（诊断：定位 "Screen position out of view frustum" 的调用方）
+
+        private static bool _screenProbeInstalled;
+        private static bool _screenProbeFailed;
+        private static int _screenProbeBudget;
+        private static DateTime _screenProbeUntilUtc;
+        private static int _screenProbeHighReports;
+        private static readonly object _screenProbeLock = new object();
+        private static readonly Dictionary<string, int> _screenProbeCounts = new Dictionary<string, int>();
+        private static readonly Dictionary<string, string> _screenProbeFirstStacks = new Dictionary<string, string>();
+        private static DateTime _screenProbeNextSummaryUtc;
+        private const int ScreenProbeHighThreshold = 50;
+        private const int ScreenProbeHighLimit = 3;
+        private const int ScreenProbeBudgetMax = 20000;
+
+        /// <summary>进入 web 关卡后按配置安装只观察探针。只对 levelsets 路径生效
+        /// （主菜单/官方图不安装）；安装后 90 秒或上报满 3 个高频调用点自动停止采样。</summary>
+        private static void EnsureScreenPointProbe(Scene scene)
+        {
+            if (_screenProbeFailed)
+                return;
+            var path = scene.path ?? "";
+            if (path.IndexOf("/levelsets/", StringComparison.OrdinalIgnoreCase) < 0)
+                return;
+            if (_screenProbeInstalled)
+                return;
+            if (_cfgScreenProbe == null || !_cfgScreenProbe.Value)
+                return;
+            try
+            {
+                var harmony = new Harmony("oc2.loader.screenpointprobe");
+                PatchScreenProbe(harmony, "ScreenPointToRay", "ProbeScreenPointToRay");
+                PatchScreenProbe(harmony, "ScreenToWorldPoint", "ProbeScreenToWorldPoint");
+                PatchScreenProbe(harmony, "ViewportPointToRay", "ProbeViewportPointToRay");
+                PatchScreenProbe(harmony, "ViewportToWorldPoint", "ProbeViewportToWorldPoint");
+                _screenProbeInstalled = true;
+                _screenProbeBudget = ScreenProbeBudgetMax;
+                _screenProbeUntilUtc = DateTime.UtcNow.AddSeconds(90);
+                _screenProbeNextSummaryUtc = DateTime.UtcNow.AddSeconds(20);
+                LogI("[诊断] 屏幕点探针已安装（定位 Screen position out of view frustum 调用方；"
+                    + "同一调用点 ≥" + ScreenProbeHighThreshold + " 次即打印堆栈，最多 "
+                    + ScreenProbeHighLimit + " 个调用点，90 秒后自动停止采样）");
+            }
+            catch (Exception ex)
+            {
+                _screenProbeFailed = true;
+                LogW("[诊断] 屏幕点探针安装失败: " + ex.Message);
+            }
+        }
+
+        private static void PatchScreenProbe(Harmony harmony, string targetName, string prefixName)
+        {
+            var target = typeof(Camera).GetMethod(targetName,
+                BindingFlags.Public | BindingFlags.Instance, null, new Type[] { typeof(Vector3) }, null);
+            if (target == null)
+            {
+                LogW("[诊断] 屏幕点探针: Camera." + targetName + " 反射失败（跳过）");
+                return;
+            }
+            var prefix = typeof(LevelRuntimeLoader).GetMethod(prefixName,
+                BindingFlags.NonPublic | BindingFlags.Static);
+            if (prefix == null)
+            {
+                LogW("[诊断] 屏幕点探针: 前缀缺失 " + prefixName + "（跳过）");
+                return;
+            }
+            harmony.Patch(target, new HarmonyMethod(prefix));
+        }
+
+        private static void ProbeScreenPointToRay(Camera __instance, Vector3 __0) { ProbeCall("Camera.ScreenPointToRay", __instance, __0); }
+        private static void ProbeScreenToWorldPoint(Camera __instance, Vector3 __0) { ProbeCall("Camera.ScreenToWorldPoint", __instance, __0); }
+        private static void ProbeViewportPointToRay(Camera __instance, Vector3 __0) { ProbeCall("Camera.ViewportPointToRay", __instance, __0); }
+        private static void ProbeViewportToWorldPoint(Camera __instance, Vector3 __0) { ProbeCall("Camera.ViewportToWorldPoint", __instance, __0); }
+
+        private static void ProbeCall(string api, Camera cam, Vector3 p)
+        {
+            try
+            {
+                if (cam == null || _screenProbeBudget <= 0)
+                    return;
+                if (DateTime.UtcNow > _screenProbeUntilUtc)
+                    return;
+                var stack = new System.Diagnostics.StackTrace(2, false);
+                var key = api + "@" + ProbeFingerprint(stack);
+                string report = null;
+                lock (_screenProbeLock)
+                {
+                    if (_screenProbeBudget <= 0)
+                        return;
+                    _screenProbeBudget--;
+                    int count;
+                    _screenProbeCounts.TryGetValue(key, out count);
+                    count++;
+                    _screenProbeCounts[key] = count;
+                    if (count == 1 && _screenProbeFirstStacks.Count < 200)
+                        _screenProbeFirstStacks[key] = BuildProbeReport(api, cam, p, stack, count, "首次调用点");
+                    if (count == ScreenProbeHighThreshold && _screenProbeHighReports < ScreenProbeHighLimit)
+                    {
+                        _screenProbeHighReports++;
+                        report = BuildProbeReport(api, cam, p, stack, count, "高频调用点");
+                        if (_screenProbeHighReports >= ScreenProbeHighLimit)
+                            _screenProbeBudget = 0;
+                    }
+                }
+                if (report != null)
+                    LogI(report);
+            }
+            catch
+            {
+            }
+        }
+
+        /// <summary>每 20 秒输出一次调用点计数汇总（最高频调用点附首次堆栈）——
+        /// 即使没有单点达到 50 次，也能从汇总里看到可疑调用方。</summary>
+        private static void ScreenProbeTick()
+        {
+            if (!_screenProbeInstalled || _screenProbeBudget <= 0)
+                return;
+            if (DateTime.UtcNow > _screenProbeUntilUtc)
+            {
+                _screenProbeBudget = 0;
+                return;
+            }
+            if (DateTime.UtcNow < _screenProbeNextSummaryUtc)
+                return;
+            _screenProbeNextSummaryUtc = DateTime.UtcNow.AddSeconds(20);
+            string report = null;
+            lock (_screenProbeLock)
+            {
+                if (_screenProbeCounts.Count == 0)
+                    return;
+                var entries = new List<KeyValuePair<string, int>>(_screenProbeCounts);
+                entries.Sort(delegate(KeyValuePair<string, int> a, KeyValuePair<string, int> b)
+                {
+                    return b.Value.CompareTo(a.Value);
+                });
+                var sb = new StringBuilder();
+                sb.Append("[诊断][屏幕点探针] 调用点汇总（剩余采样预算 ").Append(_screenProbeBudget).Append("）:\n");
+                for (int i = 0; i < entries.Count && i < 5; i++)
+                    sb.Append("  #").Append(i + 1).Append(" x").Append(entries[i].Value)
+                        .Append("  ").Append(entries[i].Key).Append("\n");
+                string topStack;
+                if (_screenProbeFirstStacks.TryGetValue(entries[0].Key, out topStack) && !string.IsNullOrEmpty(topStack))
+                    sb.Append("  最高频调用点堆栈：\n").Append(topStack).Append("\n");
+                report = sb.ToString();
+            }
+            if (report != null)
+                LogI(report);
+        }
+
+        private static string BuildProbeReport(string api, Camera cam, Vector3 p,
+            System.Diagnostics.StackTrace stack, int count, string tag)
+        {
+            var rect = cam.pixelRect;
+            var sb = new StringBuilder();
+            sb.Append("[诊断][屏幕点探针] ").Append(api).Append(" ").Append(tag)
+                .Append("（第 ").Append(count).Append(" 次）")
+                .Append(" pos=").Append(p.x.ToString("0.###")).Append(",").Append(p.y.ToString("0.###"))
+                .Append(",").Append(p.z.ToString("0.###"))
+                .Append(" rect=").Append(rect.xMin.ToString("0")).Append(",").Append(rect.yMin.ToString("0"))
+                .Append(",").Append(rect.width.ToString("0")).Append(",").Append(rect.height.ToString("0"))
+                .Append(" screen=").Append(Screen.width).Append("x").Append(Screen.height)
+                .Append(" 相机=").Append(cam.name)
+                .Append(" 场景=").Append(cam.gameObject == null ? "?" : cam.gameObject.scene.name)
+                .Append("\n调用方堆栈：\n");
+            var frames = stack.GetFrames();
+            var shown = 0;
+            if (frames != null)
+            {
+                for (int i = 0; i < frames.Length && shown < 12; i++)
+                {
+                    var m = frames[i].GetMethod();
+                    if (m == null)
+                        continue;
+                    var decl = m.DeclaringType == null ? "?" : m.DeclaringType.FullName;
+                    if (decl.StartsWith("OC2LevelRuntimeLoader", StringComparison.Ordinal))
+                        continue;
+                    if (decl.StartsWith("HarmonyLib", StringComparison.Ordinal))
+                        continue;
+                    sb.Append("    at ").Append(decl).Append(".").Append(m.Name).Append("\n");
+                    shown++;
+                }
+            }
+            if (shown == 0)
+                sb.Append("    (无托管帧)\n");
+            return sb.ToString();
+        }
+
+        private static string ProbeFingerprint(System.Diagnostics.StackTrace stack)
+        {
+            var sb = new StringBuilder();
+            var frames = stack.GetFrames();
+            if (frames != null)
+            {
+                var taken = 0;
+                for (int i = 0; i < frames.Length && taken < 4; i++)
+                {
+                    var m = frames[i].GetMethod();
+                    if (m == null)
+                        continue;
+                    var decl = m.DeclaringType == null ? "?" : m.DeclaringType.FullName;
+                    if (decl.StartsWith("OC2LevelRuntimeLoader", StringComparison.Ordinal))
+                        continue;
+                    if (decl.StartsWith("HarmonyLib", StringComparison.Ordinal))
+                        continue;
+                    sb.Append(decl).Append(".").Append(m.Name).Append(";");
+                    taken++;
+                }
+            }
+            return sb.ToString();
+        }
+
+        #endregion
 
         /// <summary>关卡程序集（RandomCrate 等）的日志桥：它们编不进 BepInEx 插件
         /// 程序集，Debug.Log 又可能被过滤——反射调用本方法转发到插件日志通道，

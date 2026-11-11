@@ -741,10 +741,16 @@ namespace CustomStub
                     return;
                 }
                 var material = new Material(materials[matNumber]);
-                material.mainTexture = texture;
+                var textureSlot = AssignAlbedo(material, texture);
+                if (textureSlot == null)
+                {
+                    LogWarn("[RandomCrate] 箱盖材质无可用贴图槽（shader=" + materials[matNumber].shader.name
+                        + "），问号绘制跳过: " + child.name);
+                    return;
+                }
                 // 问号贴图需左右翻转（盖子 UV 采样方向与独立贴图相反）：U 轴取负并平移一个周期
-                material.mainTextureOffset = new Vector2(uvScale.x, 1f / uvScale.y);
-                material.mainTextureScale = new Vector2(-uvScale.x, -uvScale.y);
+                material.SetTextureOffset(textureSlot, new Vector2(uvScale.x, 1f / uvScale.y));
+                material.SetTextureScale(textureSlot, new Vector2(-uvScale.x, -uvScale.y));
                 materials[matNumber] = material;
                 renderer.sharedMaterials = materials;
                 Log("[RandomCrate] 问号绘制成功: " + child.name + "（" + rendererPath
@@ -754,6 +760,42 @@ namespace CustomStub
             {
                 LogWarn("[RandomCrate] 绘制问号图标失败: " + ex.Message);
             }
+        }
+
+        /// <summary>把贴图写进材质的主色槽并返回槽名。优先 _MainTex，其次 OC2 自定义
+        /// shader 常用的 _DiffuseMap/_Diffuse/_Albedo/_BaseMap——避免直接写
+        /// Material.mainTexture 在无 _MainTex 的 shader 上触发 Unity 原生错误
+        /// "Material doesn't have a texture property '_MainTex'"。</summary>
+        private static string AssignAlbedo(Material material, Texture2D texture)
+        {
+            if (material == null || texture == null)
+                return null;
+            if (material.HasProperty("_MainTex"))
+            {
+                material.SetTexture("_MainTex", texture);
+                return "_MainTex";
+            }
+            if (material.HasProperty("_DiffuseMap"))
+            {
+                material.SetTexture("_DiffuseMap", texture);
+                return "_DiffuseMap";
+            }
+            if (material.HasProperty("_Diffuse"))
+            {
+                material.SetTexture("_Diffuse", texture);
+                return "_Diffuse";
+            }
+            if (material.HasProperty("_Albedo"))
+            {
+                material.SetTexture("_Albedo", texture);
+                return "_Albedo";
+            }
+            if (material.HasProperty("_BaseMap"))
+            {
+                material.SetTexture("_BaseMap", texture);
+                return "_BaseMap";
+            }
+            return null;
         }
 
         /// <summary>子孙中递归查找 PickupItemSpawner（真实箱子的定位锚点，游戏原生

@@ -8,6 +8,7 @@ import type { IngredientEntry } from "./types";
 import { navHtml, wireNav } from "./nav";
 import { groupRecipesByType, recipeTypeLabel, burgerSubtypeLabel, burgerSubtypeOrder } from "./recipeTypes";
 import { foodGroupLabel } from "./ingredientLabels";
+import { groupSalads } from "./recipeGroups";
 import {
   rlCardHtml,
   rlSectionHtml,
@@ -356,7 +357,11 @@ function render(): void {
     .map(([type, arr]) =>
       type === "burger"
         ? rlSectionHtml(type, burgerSubSectionsHtml(arr), arr.length)
-        : rlSectionHtml(type, arr.map(card).join(""), arr.length)
+        : type === "salad"
+          ? rlSectionHtml(type, groupSalads(arr).map(([label, list]) =>
+            `<div class="rl-subsection" style="width:100%;min-width:0"><h3 class="rl-subsection-title">${esc(label)}<span class="rl-section-count">${list.length}</span></h3><div class="rl-grid">${list.map(card).join("")}</div></div>`
+          ).join(""), new Set(arr.map((r) => r.id)).size)
+          : rlSectionHtml(type, arr.map(card).join(""), arr.length)
     )
     .join("");
 }

@@ -18,6 +18,7 @@ import { hideContextMenu } from "./ui/overlay";
 import {
   openFoodSpawnerEditor,
   openIngredientMultiPicker,
+  ingredientIconImg,
   openRandomCrateEditor,
   openWebBackpackFillModal,
   iconImg
@@ -30,6 +31,9 @@ import type { IngredientEntry, LayoutSpeedControl } from "../types";
 import {
   counterTypeOfItem,
   counterAppearanceOptions,
+  counterAppearanceChoices,
+  counterAppearanceSelectValue,
+  assignCounterAppearance,
   ingredientGuidById,
   ingredientIdByGuid
 } from "./catalog";
@@ -525,22 +529,30 @@ export function utensilCapacityOrDefault(item: EditorItem): number {
 export function counterAppearanceHtml(item: EditorItem): string {
   const options = counterAppearanceOptions(item);
   if (!options.length) return "";
+  const choices = counterAppearanceChoices(options).filter((o) => o.theme);
   const cur = item.pseudoPrefabGuid ?? "";
   const nameLookup = new Map(options.map((o) => [o.guid, o]));
   const curOpt = nameLookup.get(cur);
-  const curName = curOpt?.nameZh ?? (cur ? "未知外观" : "默认外观");
-  const curBadge = curOpt?.icon
-    ? `<img class="csm-thumb" src="${escHtml(counterSkinIconUrl(curOpt.icon))}" alt="" onerror="this.remove()" />`
-    : curOpt?.color
-      ? `<span class="csm-dot" style="background:${escHtml(curOpt.color)}"></span>`
+  const curName = curOpt?.theme ? (curOpt.nameZh || curOpt.id) : "默认外观";
+  const badgeOpt = curOpt?.theme ? curOpt : counterAppearanceChoices(options).find((o) => !o.theme);
+  const curBadge = badgeOpt?.icon
+    ? `<img class="csm-thumb" src="${escHtml(counterSkinIconUrl(badgeOpt.icon))}" alt="" style="${badgeOpt.color ? `background:${escHtml(badgeOpt.color)}` : ""}" onerror="this.remove()" />`
+    : badgeOpt?.color
+      ? `<span class="csm-dot" style="background:${escHtml(badgeOpt.color)}"></span>`
       : "";
-  const opts = ['<option value="">— 默认外观 —</option>']
-    .concat(
-      options.map(
-        (o) => `<option value="${o.guid}" ${o.guid === cur ? "selected" : ""}>${escHtml(o.nameZh || o.id)}</option>`
+  const selected = counterAppearanceSelectValue(item, options);
+  const unknown = cur && !nameLookup.has(cur)
+    ? `<option value="${escHtml(cur)}" selected>未知外观</option>`
+    : "";
+  const opts =
+    `<option value="" ${selected ? "" : "selected"}>— 默认外观 —</option>` +
+    choices
+      .map(
+        (o) =>
+          `<option value="${escHtml(o.guid)}" ${o.guid === selected ? "selected" : ""}>${escHtml(o.themeName || o.nameZh || o.id)}</option>`
       )
-    )
-    .join("");
+      .join("") +
+    unknown;
   const ct = counterTypeOfItem(item);
   const typeName = S.counterAppearances?.typeNames[ct!] ?? ct ?? "桌台";
   // 3D 预览按钮：当前外观（默认皮肤 → <Type>_Default）在 3D manifest 中存在时显示
@@ -827,7 +839,7 @@ export function webBackpackGridDim(cap: number): number {
 /** guid → 小宫格图标（食材；历史菜谱填充回落圆点，画布层处理）。 */
 function wbEntryIcon(guid: string): string {
   const ing = S.ingredientsCache.find((x) => x.guid === guid);
-  if (ing) return iconImg("ingredients", ing.id, ing.icon);
+  if (ing) return ingredientIconImg(ing);
   const r = (S.intermediatesCache ?? []).find((x) => x.guid === guid);
   if (r) return iconImg("recipes", r.id, r.icon);
   return "";
@@ -987,13 +999,18 @@ export function stubControlsHtml(item: EditorItem): string {
     }
     case "Conveyor": {
       const sp = item.conveyor?.conveySpeed ?? 0.5;
-      const serveHint = prefabIdFromPath(item.prefabAssetPath) === "web_conveyor_station_serve"
-        ? `<div class="ctx-stub-row" style="font-size:11px;color:#8a909a">可上菜：运动方向末端的上菜台会接住物品；盘子正常上菜，非盘子按无效上菜处理并断小费</div>`
+      const prefabServe = prefabIdFromPath(item.prefabAssetPath) === "web_conveyor_station_serve";
+      const serveOn = prefabServe || !!item.conveyor?.serve;
+      const serveBox = prefabServe
+        ? `<label class="ctx-stub-row"><input type="checkbox" checked disabled/> 可上菜传送带（本道具默认）</label>`
+        : `<label class="ctx-stub-row"><input type="checkbox" id="ctx-cv-serve" ${serveOn ? "checked" : ""}/> 可上菜传送带</label>`;
+      const serveHint = serveOn
+        ? `<div class="ctx-stub-row" style="font-size:11px;color:#8a909a">可上菜：运动方向正前方（高度差 ≤1m）的上菜口会接住物品；盘子正常上菜，非盘子按无效上菜处理并断小费</div>`
         : "";
       return `<div class="ctx-stub"><div class="ctx-stub-title">传送带参数</div>
         <label class="ctx-stub-row">速度 <input type="number" id="ctx-cv-speed" class="ctx-input" step="0.1" value="${sp}"/>（负值反向）</label>
         ${speedControlBlockHtml("cv", item.conveyor?.speedControl, sp)}
-        ${serveHint}</div>`;
+        ${serveBox}${serveHint}</div>`;
     }
     case "Teleportal": {
       const tp = item.teleportal ?? {};
@@ -1866,6 +1883,15 @@ export function wireStubControls(item: EditorItem) {
         setStatus(`传送带速度已设为 ${v}（写回后生效）`);
       });
       wireSpeedControl(item, "cv", item.conveyor?.conveySpeed ?? 0.5, "传送带");
+      num("ctx-cv-serve")?.addEventListener("change", (e) => {
+        pushHistory();
+        item.stubKind = "Conveyor";
+        const on = (e.target as HTMLInputElement).checked;
+        if (on) item.conveyor = { ...item.conveyor, serve: true };
+        else if (item.conveyor?.serve) delete item.conveyor.serve;
+        draw();
+        setStatus(on ? "已启用可上菜（写回后生效）" : "已关闭可上菜（写回后生效）");
+      });
       break;
     }
     case "Teleportal": {
@@ -2474,12 +2500,12 @@ export function wireCounterAppearance(item: EditorItem) {
   if (!sel) return;
   sel.addEventListener("change", () => {
     pushHistory();
-    item.pseudoPrefabGuid = sel.value || undefined;
-    draw();
     const options = counterAppearanceOptions(item);
+    assignCounterAppearance(item, options, sel.value);
+    draw();
     const nameLookup = new Map(options.map((o) => [o.guid, o]));
     const picked = nameLookup.get(item.pseudoPrefabGuid ?? "");
-    const name = picked?.nameZh ?? "默认外观";
+    const name = sel.value ? (picked?.themeName || picked?.nameZh || "外观") : "默认外观";
     const bundleHint = picked?.bundleName ? `（需 ${picked.bundleName}，写回时自动并入 dependencies）` : "";
     setStatus(`已更新外观为：${name}${bundleHint}`);
     // Re-show context menu to update the display

@@ -92,6 +92,7 @@ import type {
 } from "../types";
 import { airSlopeEndY } from "./items";
 import { setLayer } from "./init";
+import { scheduleUnityPreviewAutoRefresh } from "./ui/unityPreview";
 
 export function selectSceneInDropdowns(assetPath: string): void {
   if (!assetPath) return;
@@ -175,6 +176,11 @@ export async function loadScene(assetPath: string) {
     } else {
       setStatus(`已加载 ${S.items.length} 个物体${floorNote}${walkableRecoverNote}`);
     }
+    // 🎮 Unity 实时画面：场景加载完成（首次进关 / 切场景 / 重新加载 / 写回后的
+    // 重载均走这里）后自动抓一帧游戏相机画面。延后一拍抓：Unity 侧 GET layout 刚
+    // OpenSceneIfNeeded，主线程可能仍在跑 OnSceneOpened/伪资产刷新，立刻抓容易
+    // 排队超时（见 unityPreview.ts 文件头「超时与重试」）。
+    scheduleUnityPreviewAutoRefresh();
   } catch (e) {
     setStatus((e as Error).message, false);
   } finally {

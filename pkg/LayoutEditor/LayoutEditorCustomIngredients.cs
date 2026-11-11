@@ -142,14 +142,17 @@ public static class LayoutEditorCustomIngredients
         foreach (var c in recipe.optionalSOs ?? new ScriptableObject[0])
             if (IsCommonW2Asset(c != null ? AssetDatabase.GetAssetPath(c) : null))
                 return true;
+        if (LayoutEditorOptionalRecipe.IsAssembly(recipe))
+        {
+            var refs = new List<ScriptableObject>();
+            LayoutEditorOptionalRecipe.CollectAssemblySoRefs(recipe, refs);
+            for (int i = 0; i < refs.Count; i++)
+                if (refs[i] != null && IsCommonW2Asset(AssetDatabase.GetAssetPath(refs[i])))
+                    return true;
+        }
         var burger = so as CustomRecipeOptionalBurgerSO;
         if (burger != null)
         {
-            if (burger.bunSO != null && IsCommonW2Asset(AssetDatabase.GetAssetPath(burger.bunSO)))
-                return true;
-            foreach (var m in burger.ingredientModelSOs ?? new PseudoPrefabSO[0])
-                if (IsCommonW2Asset(m != null ? AssetDatabase.GetAssetPath(m) : null))
-                    return true;
             foreach (var m in burger.ingredientModels ?? new GameObject[0])
                 if (IsCommonW2Asset(m != null ? AssetDatabase.GetAssetPath(m) : null))
                     return true;
@@ -714,6 +717,8 @@ public static class LayoutEditorCustomIngredients
                     AddDependency(deps, bn);
             }
         }
+        LayoutEditorSaladSauceFactory.SyncOptionals(info);
+        LayoutEditorSaladSauceFactory.AddDependencies(info, deps);
         info.dependencies = deps.ToArray();
         EditorUtility.SetDirty(info);
     }

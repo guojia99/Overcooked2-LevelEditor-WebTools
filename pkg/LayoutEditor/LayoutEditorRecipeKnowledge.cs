@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using LevelEditorStub;
@@ -17,7 +17,32 @@ public static class LayoutEditorRecipeKnowledge
     ///  写回会静默丢参数）。
     ///  v8（2026-10-08）：燃烧弹射器波次（item.burner.waves）——旧桥不认识
     ///  waves 字段，写回会静默丢落点/时序，靠版本告警拦旧桥。</summary>
-    public const int BridgeSchemaVersion = 10;
+    public const int BridgeSchemaVersion = 11;
+
+    // Mirrors deriveSaladSubgroups in recipeGroups.ts / build-catalog.mjs.
+    public static string[] ComputeSaladSubgroups(RecipeEntryDto recipe)
+    {
+        if (recipe == null || recipe.type != "salad" || recipe.group == "levelset"
+            || (!string.IsNullOrEmpty(recipe.assetPath)
+                && recipe.assetPath.Replace('\\', '/').StartsWith("Assets/LevelSets/", StringComparison.Ordinal)))
+            return new string[0];
+        var mustard = false;
+        var ketchup = false;
+        var hasLeaf = false;
+        var storyLeavesOnly = true;
+        foreach (var id in recipe.ingredients ?? new string[0])
+        {
+            if (id == "mustard" || id == "DLC08_Mustard" || id == "dlc11_mustard") { mustard = true; continue; }
+            if (id == "ketchup" || id == "DLC08_Ketchup" || id == "dlc11_ketchup") { ketchup = true; continue; }
+            hasLeaf = true;
+            if (id != "LettuceSO" && id != "TomatoSO" && id != "CucumberSO") storyLeavesOnly = false;
+        }
+        if (hasLeaf && storyLeavesOnly) return new[] { "non_dlc11_official" };
+        var groups = new List<string>();
+        groups.Add(mustard ? (ketchup ? "both_sauces" : "mustard_only") : (ketchup ? "ketchup_only" : "no_sauce"));
+        if (!recipe.isCustom) groups.Add("official");
+        return groups.ToArray();
+    }
 
     /// <summary>面粉/蛋家族（与前端 recipeKnowledge.ts 一致）：面粉系菜谱
     ///  （蛋糕/松饼/月饼/派/布丁，含 dlc09/dlc13 变体）的搅拌分组判定用。</summary>
@@ -80,7 +105,7 @@ public static class LayoutEditorRecipeKnowledge
     ///  Rules (evaluated in order):
     ///  - 半成品：直接按自身烹饪步骤成组。
     ///  - 煎锅中间产物覆盖：汉堡肉排 → FryingPan，面包胚/生菜保持生。
-    ///  - 寿司：只有寿司米蒸，其余不处理。
+    ///  - 寿司：只有寿司米煮（Pot），鱼/虾/海苔生食，不进蒸笼。
     ///  - 卷饼：米饭煮，卷饼皮不处理，其余煎。
     ///  - 棉花糖饼干：只有棉花糖烤，其余不处理。
     ///  - 意面：意面煮，其余食材各自煎（分开成组）。
@@ -487,6 +512,7 @@ public static class LayoutEditorRecipeKnowledge
         var cakeLike = type == "cake" || type == "pudding";
         if (type == "sushi")
         {
+            // 实际菜谱：寿司米进煮锅（BoiledSushiRice = Pot），鱼/虾/海苔生食，不进蒸笼。
             foreach (var ing in ingredients)
                 prep[ing] = (ing == "SushiRiceSO" || ing == "RiceSO") ? "Pot" : "";
         }
@@ -939,9 +965,9 @@ public static class LayoutEditorRecipeKnowledge
         var entries = new List<ScriptableObject>();
         if (so.compositionSOs != null)
             entries.AddRange(so.compositionSOs);
-        var optionalBurger = so as CustomRecipeOptionalBurgerSO;
-        var optionalPizza = so as CustomRecipeOptionalPizzaSO;
-        if (optionalBurger == null && optionalPizza == null && so.optionalSOs != null)
+        if (LayoutEditorOptionalRecipe.IsAssembly(so))
+            LayoutEditorOptionalRecipe.CollectAssemblyIngredientRefs(so, entries);
+        else if (so.optionalSOs != null)
             entries.AddRange(so.optionalSOs);
         return entries;
     }

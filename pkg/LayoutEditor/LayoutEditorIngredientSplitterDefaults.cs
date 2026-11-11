@@ -30,6 +30,8 @@ public static class LayoutEditorIngredientSplitterDefaults
 
     private static void OnSceneOpened(Scene scene, OpenSceneMode mode)
     {
+        if (LayoutEditorPseudoReload.ExportBuildInProgress)
+            return;
         EnsureAllOpenScenes();
     }
 

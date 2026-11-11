@@ -36,18 +36,34 @@ function ensure(): HTMLDivElement {
   return overlay;
 }
 
+function setBusyNote(note: string): void {
+  const box = ensure().querySelector(".busy-box");
+  if (!box) return;
+  let noteEl = box.querySelector("#busy-note") as HTMLDivElement | null;
+  if (!noteEl) {
+    noteEl = document.createElement("div");
+    noteEl.id = "busy-note";
+    noteEl.className = "busy-note";
+    box.appendChild(noteEl);
+  }
+  noteEl.textContent = note;
+  noteEl.style.display = note ? "" : "none";
+}
+
 export function showBusy(msg = "处理中…"): void {
   const o = ensure();
   const m = o.querySelector("#busy-msg");
   if (m) m.textContent = msg;
+  setBusyNote("");
   o.classList.remove("hidden");
   depth++;
 }
 
-/** 任务进行中只更新文案（不动引用计数）。用于长时间任务的阶段提示。 */
-export function setBusyMessage(msg: string): void {
+/** 任务进行中只更新文案（不动引用计数）。note 为可选的第二行提醒。 */
+export function setBusyMessage(msg: string, note = ""): void {
   const m = ensure().querySelector("#busy-msg");
   if (m) m.textContent = msg;
+  setBusyNote(note);
 }
 
 export function hideBusy(): void {

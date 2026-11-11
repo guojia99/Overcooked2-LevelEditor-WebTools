@@ -59,7 +59,7 @@ public static class LayoutEditorDualStubRepair
         if (!EditorUtility.DisplayDialog("双 stub 修复", summary, "开始", "取消"))
             return;
         var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        var result = RepairScenes(scenes, stamp, true);
+        var result = RepairScenes(scenes, stamp, true, false);
         EditorUtility.DisplayDialog("双 stub 修复", result, "确定");
     }
 
@@ -107,7 +107,7 @@ public static class LayoutEditorDualStubRepair
     }
 
     /// <summary>批量修复场景列表（逐个打开→修复→保存→回开原场景）。返回汇总文案。</summary>
-    private static string RepairScenes(List<string> scenePaths, string stamp, bool interactive)
+    private static string RepairScenes(List<string> scenePaths, string stamp, bool interactive, bool prepareBeforeSave)
     {
         var prevActive = EditorSceneManager.GetActiveScene().path;
         var totalFixed = 0;
@@ -124,6 +124,8 @@ public static class LayoutEditorDualStubRepair
                 var fixedNames = RepairOpenScene(scene);
                 if (fixedNames.Count > 0)
                 {
+                    if (prepareBeforeSave)
+                        LayoutEditorPseudoReload.ForcePrepareForExportStrict(true);
                     BackupSceneFile(scenePaths[i], stamp);
                     EditorSceneManager.MarkSceneDirty(scene);
                     EditorSceneManager.SaveScene(scene);
@@ -173,7 +175,7 @@ public static class LayoutEditorDualStubRepair
         if (candidates.Count == 0)
             return null;
         var stamp = "export_" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        var summary = RepairScenes(candidates, stamp, false);
+        var summary = RepairScenes(candidates, stamp, false, true);
         Debug.Log("[DualStubRepair] 导出前自动修复: " + summary);
         return "[DualStubRepair] " + summary;
     }

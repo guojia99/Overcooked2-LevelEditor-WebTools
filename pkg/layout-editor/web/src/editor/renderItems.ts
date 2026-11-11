@@ -1115,7 +1115,8 @@ export function isConveyorItem(item: EditorItem): boolean {
 }
 
 export function isServeConveyorItem(item: EditorItem): boolean {
-  return prefabIdFromPath(item.prefabAssetPath) === "web_conveyor_station_serve";
+  if (prefabIdFromPath(item.prefabAssetPath) === "web_conveyor_station_serve") return true;
+  return item.stubKind === "Conveyor" && !!item.conveyor?.serve;
 }
 
 export function isPlayerItem(item: EditorItem): boolean {

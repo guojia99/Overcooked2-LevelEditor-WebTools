@@ -1,4 +1,4 @@
-# 03 · 前端 layout-editor
+﻿# 03 · 前端 layout-editor
 
 > 目录：`layout-editor/`（主体在 `web/`，Vite + TypeScript；配套 `scripts/` 资源工具链）
 > 一句话定位：Overcooked2 关卡编辑器的 Web 前端——俯视图画布编排 + 关卡管理 + 菜谱清单 + 自定义菜谱工作台，由 Unity 桥（:8765）托管静态资源并提供 API。
@@ -106,13 +106,14 @@ flowchart LR
 | **ui/views/** | 结构化 UI 渲染：`button.ts`（`cancelBtnHtml` / `primaryBtnHtml` / `mBtnHtml` …）、`modal.ts`（弹窗 class 修正）、`render.ts`（ViewFn 管道） |
 | **styles/tokens.css** | CSS 语义变量 `--ui-*` + `[data-theme]` 四套主题覆盖；由 `main.ts` 在 `style.css` 之前 import |
 | **style.css / recipeList.css** | 全站样式（135KB）/ 菜谱卡片专用；UI 外壳颜色逐步迁移为 `var(--ui-*)`（见 09）；含汇总页 `.sum-*`；`.sum-page.has-bg` = 设了导出背景图时的作用域覆盖 |
-| **levels.ts** | ★ 关卡管理页（2800+ 行）：关卡集/关卡列表（**每关依赖徽标行 + 整集汇总条**：`renderLevelList` 并行拉 `GET /api/sets/<set>/resource-stats`（失败降级为不显示，不阻断列表），卡片 `.m-deps` 徽标 `common01×23 · commonW4×2 · 自定义×1`（`depBadgesHtml`，other 不展示），工具栏下 `.m-deps-summary` 汇总 `common01 8关/56资源`（`depSummaryHtml`，整集并集去重））、配置弹窗（基础/1P-4P 分数/截图）、音频弹窗（BGM/氛围/音效集/死亡特效）、关卡编辑页「汇总导出背景图」区块（上传到 `data/<level>/summary_bg~/`，Unity 忽略目录 → 不进 AssetBundle）、汇总页 + PNG 导出（DOM 快照，背景图 cover + 暗色遮罩内联在 `#sum-node` 上 → 预览与导出同源；官方菜谱按类型分组 + 自定义菜谱独立区块按 category→subcategory 子分类（`buildSummaryGroups`），组内默认分数升序；readme 说明区块（截图后、菜谱前）；**双视图 switch，内容互斥**（`#sum-view-switch`，复用 `.rl-view-switch` 样式，纯客户端状态不进 URL、模块级记忆跨重渲染）：「📋 全部菜谱」= 分组主体（**不含分工区块**）；「🧑‍🍳 分工模式」= 各已配置模式（双人/三人/四人）`assignmentModeBlockHtml` 为主体（未配置 → 空态 + 去分工模式按钮）；切换 = 重写 `#sum-node` 内层 → 导出 PNG 所见即所得（文件名带 `_分工汇总`）、「✏️ 编辑分工」按钮跳分工编辑页；导出倍率下拉 `exportScaleSelectHtml` 见 domSvgExport.ts）、工具历史弹窗（修复/依赖检查/测试布局/同步布局/写回历史 diff 恢复） |
+| **levels.ts** | ★ 关卡管理页（2800+ 行）：关卡集/关卡列表（**每关依赖徽标行 + 整集汇总条**：`renderLevelList` 并行拉 `GET /api/sets/<set>/resource-stats`（失败降级为不显示，不阻断列表），卡片 `.m-deps` 徽标 `common01×23 · commonW4×2 · 自定义×1`（`depBadgesHtml`，other 不展示），工具栏下 `.m-deps-summary` 汇总 `common01 8关/56资源`（`depSummaryHtml`，整集并集去重）；关卡卡片勾选 + 工具栏「全选 / 批量删除所选 (N)」= 批量删除（先按关卡分组预览待删文件，确认后 `POST /api/level/delete-batch`，删除后重渲染列表）；**关卡分组展示**：有分组的关卡集按组分区（`m-group-section`，组顺序 = 各组在关卡序列中首次出现、组内 = 关卡顺序；无分组则维持平铺））、配置弹窗（基础/1P-4P 分数/截图）、音频弹窗（BGM/氛围/音效集/死亡特效）、关卡编辑页「汇总导出背景图」区块（上传到 `data/<level>/summary_bg~/`，Unity 忽略目录 → 不进 AssetBundle）、汇总页 + PNG 导出（DOM 快照，背景图 cover + 暗色遮罩内联在 `#sum-node` 上 → 预览与导出同源；官方菜谱按类型分组 + 自定义菜谱独立区块按 category→subcategory 子分类（`buildSummaryGroups`），组内默认分数升序；readme 说明区块（截图后、菜谱前）；**双视图 switch，内容互斥**（`#sum-view-switch`，复用 `.rl-view-switch` 样式，纯客户端状态不进 URL、模块级记忆跨重渲染）：「📋 全部菜谱」= 分组主体（**不含分工区块**）；「🧑‍🍳 分工模式」= 各已配置模式（双人/三人/四人）`assignmentModeBlockHtml` 为主体（未配置 → 空态 + 去分工模式按钮）；切换 = 重写 `#sum-node` 内层 → 导出 PNG 所见即所得（文件名带 `_分工汇总`）、「✏️ 编辑分工」按钮跳分工编辑页；导出倍率下拉 `exportScaleSelectHtml` 见 domSvgExport.ts）、工具历史弹窗（修复/依赖检查/测试布局/同步布局/写回历史 diff 恢复）。**「⇅ 调整顺序」弹窗 = 分组看板**：竖向分组区块（`openReorderModal`，每区 2~3 列卡片网格），可「＋ 新建分组」、组标题 ✏️改名 / ↑↓调整组顺序 / ✕删除（卡片移回未分组），卡片可在区内或跨区拖拽归组；「保存」按分区阅读序写入顺序（`api.reorderLevels`）与分组（`api.saveLevelGroups`，仅提交变更项，`""` = 取消）；新建关卡弹窗亦可填分组 |
 | **summaryRecipes.ts** | 汇总页/分工页共用分组：官方按 `RECIPE_TYPE_ORDER`、自定义按 `category→subcategory`；`category` 优先取 API 字段，缺失时从 `assetPath` 的 `custom_recipes/<category>[/<sub>]/` 解析（覆盖 commonW3/commonW2/LevelSets）；显示名取 `fetchCustomRecipeConfig`，缺配置回退 `CUSTOM_CATEGORY_ZH`/id，Web 分类按固定顺序；每个分组/子分类内部按分数升序（`byScoreAsc`，同分稳定保持原顺序） |
 | **levelAssignment.ts** | 🧑‍🍳 菜谱分工模式页（**关卡级严格路由 `/assignment/{set}/{levelId}`**，汇总页「🧑‍🍳 分工模式」经 `goAssignment` 整页跳转，可刷新/分享；标题落到具体关卡名）：左菜谱备选池（约 1/3，分组+分数排序，**条目两列网格**）+ 右玩家拖拽框（**两列网格：2P=2×1、3P=2+1、4P=2×2，固定高度+内部滚动**；HTML5 DnD：池→框 = 分配、框间 = 移动、拖回池/✕ = 移除；框内自动去重，已用菜谱池中置灰仍可拖；**落卡后显示完整菜谱卡预览** rlCardHtml + ✕ 悬浮角标）。2P/3P/4P 三套独立配置，JSON 落盘 `data/<level>/assignment~/assignment.json`（前端唯一读写方）；分工区块/导出图：玩家条目**从上到下**、每个玩家内部按汇总分组**子分类**，卡片**按宽度自适应换行（同 .rl-grid，不固定每行格数）**；导出图头部含**关卡名/场景名/作者/关卡截图**（`exportPng` 离屏 `createOffscreenStage` 1280px + `assignmentModeBlockHtml`，与汇总页分工区块共用渲染） |
 | **richText.ts** | 汇总页 readme 富文本（仅文字）：`sanitizeRichTextHtml` 白名单净化（p/h2/h3/b/i/u/s/ul/ol/li/blockquote/br/a[href^=http]，未放行标签拆壳保文字、剥全部属性）+ contenteditable 编辑弹窗（execCommand 工具条、粘贴转纯文本）；存 `readme~/readme.json` |
 | **dependencies.ts** | 依赖管理页：两级列表、`BundleAnalysis` 展示（缺失红/未用黄）、手动编辑 dependencies、依赖闭包 |
 | **customRecipes.ts** | 自定义菜谱管理页（1963 行）：卡片 + 分类侧栏、新建/编辑表单（组成多选/烹饪/装盘/图标/FBX+MTL+贴图上传/cm 校准/3D 预览）、分类管理。<br>2026-09-17：顶栏「🍞 统一面包皮」→ `openBunSwapModal`（`groupBunUsages` 把面包层按菜谱合并成行；目标三选一默认 `BUN_DLC8_ID`，切目标后整体重绘因「已是目标」行会变；调 `api.fetchBunUsage` / `api.replaceBun`）。只改本集 custom_recipes 资产，关卡 BurgerOptional/matchlist/依赖与场景食材箱不联动，弹窗底部固定提醒作者自行处理。<br>2026-09-23：顶栏「📦 资产瘦身」→ `openAssetOptimizeModal`（`api.fetchAssetOptimizeUsage` 概览贴图档位/模型面数分桶 → 材质贴图/图标各选档（128~1024，默认 256）+ 网格精度档（off~high，默认 medium）→ `api.optimizeCustomRecipeAssets` 只改 .meta 导入参数，源 FBX/PNG 不动、GUID 不变；结果弹窗逐项列 变更前→后；commonW2 后端不枚举） |
 | **burgerMaker.ts** | 汉堡组装工作台（严格路由 `/custom-recipes/burger-maker/{set}[/{burgerId}]`，URL 中的 burgerId 自动载入已存成品）：顶部菜谱卡片实时预览（共用 `rlCardHtml`）+ 层层堆叠夹心（拖动排序、候选计数徽标）、夹心>32 层软上限提醒（含超规格实拍弹窗），调 `/api/burger/create`；候选面板按「面包/中间产物/成品菜/官方菜谱/官方食材」五组 + 徽标（DLC / bundle缺失 / 荐）+ 仅推荐/显示无模型筛选 + 👁 3D 预览 + 图标逐级降级（`candIconChain`）；「🥩 夹心工作台 ↗」新开一页跳 `/custom-recipes/filling-maker/{set}` |
+| **sandwichMaker.ts** | 🥪 三明治组装工作台（严格路由 `/custom-recipes/sandwich-maker/{set}[/{sandwichId}]`）：toast 底层 + 夹心（optionalSOs）+ 酱料（sauceSOs）+ 容量/分数/装盘模型；保存走 `/api/custom-recipes/create|update`（`optionalKind=sandwich`），列表回显 `CustomRecipeSummary.toastId/fillingIds/sauceIds/...`。上游 2026-11 `CustomRecipeOptionalSandwichSO` / `ICustomRecipeOptional` 的编辑入口。 |
 | **fillingMaker.ts** | 🥩 夹心工作台（`/custom-recipes/filling-maker/{set}[/{fillingId}]`）：关卡集选择 + 本集夹心列表 + commonW2 共享夹心只读参考 + 新建/编辑/预览/删除。**不自实现编辑逻辑**，直接调 `renderRecipeForm(..., {mode:"filling"})`，编辑器改动自动继承 |
 | **textureEditor.ts** | 夹心贴图编辑器（1024×1024 canvas）：取色纯色填充 / 上传图片 / 画笔涂抹 + 撤销；「🔍 预览模型」用模板 FBX 字节 + 当前贴图 File 实时 3D 渲染（不落盘） |
 | **recipeModelPreview.ts** | 菜谱 3D 模型预览共享实现（原为 customRecipes.ts 私有）：`modelResourceBase` / `openRecipeModelPreview` / `fetchTemplateMeshBuffer`（带缓存）/ `previewLocalModel`（本地 ArrayBuffer + File，零服务器往返） |
@@ -143,6 +144,8 @@ flowchart LR
 | **modelUnits.ts** | 模型单位体系（1 单位=1m=100cm）与足迹/缩放换算 |
 | **fbxTextureRename.ts** | 浏览器端二进制 FBX 贴图引用改名（+endOffset/propListLen 修正） |
 | **mtlTextureRename.ts** | OBJ/MTL 贴图引用改名 + OBJ 补 mtllib 声明 |
+
+内置沙拉的六个子组由 `recipeGroups.ts` 的 `deriveSaladSubgroups/groupSalads` 计算，镜像 `build-catalog.mjs` 与后端 `ComputeSaladSubgroups`（只读 `saladSubgroups`）。先去掉三套芥末/番茄酱 ID，非酱叶食材非空且全部属于 `LettuceSO/TomatoSO/CucumberSO` 时独占返回 `non_dlc11_official`（非DLC11官方沙拉）：剧情 3 道及其 9 道酱扩展共 12 道，不再进入其它子组。其余 `mustard_only/ketchup_only/both_sauces/no_sauce` 按芥末/番茄酱叶食材互斥分组，`official` 是官方来源（`isCustom=false`）的交叉视图；各组数量为 23/23/23/27/6，新组 12，官方 6 道仍交叉无酱，父组唯一总数 108。本关自定义沙拉不进入内置分组。菜谱清单与编辑器选择/已选弹窗复用相同规则，父组按唯一菜谱 ID 计数，重复卡片按 ID 同步勾选；搜索、分数、来源、DLC 去重仍先过滤再分组。静态扫描包含 commonW3 的 `custom_recipes/salad`，名称来自同库 `names.json`，无新 API 或版本变更。
 
 ### 4.2 src/editor/（关卡编辑器核心）
 
@@ -189,7 +192,7 @@ flowchart LR
 | **floors.ts** | 地板领域（716 行）：`finalizeFloor`、材质名匹配修复、**载入合并**（木筏拼板→地板矩形、主题地板物品→地板对象）、`syncBackgroundForTheme` |
 | **floorHeight.ts** | 行走面高度约定（镜像后端 FloorWalkY）：`floorWalkY`、高度分层索引、`floorHeightAt` |
 | **floorPalette.ts** | 地板/背景层调色板 + 画布底部地板信息条 |
-| **floorEditorModal.ts** | 地板详情弹窗（750 行）：尺寸/材质/着色/图片地板（tile/stretch/warp）/平铺/主题信息 |
+| **floorEditorModal.ts** | 地板详情弹窗（约 900 行）：尺寸/材质/着色/图片地板（tile/stretch/warp）/平铺/主题信息；实心材质地板另有「表面参数」两行（金属度/光滑度滑杆 + 渲染模式四态下拉 不透明/镂空/渐隐/透明，各自独立开关 + 统一重置，未启用灰显材质基线；3D 预览 `meshFloors.ts` 换 MeshStandardMaterial/alphaTest/premultipliedAlpha 实时反演） |
 | **palette.ts** | 调色板构建：分组、搜索、双击武装 N 连放、变体家族归并卡片；装饰层左侧调色板「预览：无/小/中/大」四档，以及素材库多选（common01–04、commonW1–W6，空选=全部；与「尺寸」「分组」同行自适应）：卡片显示 Unity 渲染大图 + 占格/高度 + 尺寸徽标 |
 | **combos.ts** | 联合组合定义（一次放置多物品+自动联动）：饮料机/酱料机/断头台/传送门成对/热源+石炉/压力地板+DLC5 自动门（按住式，`advanceMode="hold"`）。默认输出食材一律经 `ingredientGuidById()` 解析（别名感知 + 去重），**禁止 `find(i => i.id === id)` 精确匹配** |
 | **itemVariants.ts** | DLC 换肤变体表：调色板只显示基础版，右键切换变体 |
@@ -202,7 +205,7 @@ flowchart LR
 | **coaxialControls.ts** | 同轴按钮组右键编辑块（成员/时间窗 0.35~5s/目标机器，挂在开关参数面板）；`cleanOrphanedCoaxialLinks` 在 buttonLinks.ts |
 | **randomTriggerControls.ts** | 随机触发器（3.9.0）：右侧「触发源」Tab 底部节点列表 + 编辑弹窗（输入信号名/冷却/分隔符/源按钮多选/候选表格=权重+信号名+目标三选[自身/物品/RT 节点]+参数模式子表单[固定/候选/随机字符串/随机 N 位整数/数值区间]）；`cleanOrphanedRandomTriggers` 失效引用清理；状态 `S.randomTriggers`（文档级 `randomTriggers`，仅全量写回） |
 | **recipeKnowledge.ts** | 菜谱→道具需求（前端侧）：餐洗链、奶油喷罐/汽水机/饮料机需求判定、中间产物自动分配。**机器可输出食材清单的唯一数据源**（`DRINK/SODA/CONDIMENT_MACHINE_INGREDIENT_IDS` + `dispenserIngredientIds(prefabId)`）——各清单一律写「目录现行 id + common03 正式版 id」两代写法 |
-| **cameraLight.ts** | 相机/灯光弹窗（背景色 + FOV 即时反映；「多镜头分屏」复选框 = `cameraInfo.splitScreen`，按厨师数量自动 1/2/3/4 镜头；分屏开启时显示「镜头 1~4」分页独立参考（启用/隐藏、相对玩家 X/Y/Z offset、FOV、大小，含「↺ 默认」重置）并隐藏主镜头「出发点位置」；取消启用 = 编辑器不画参考且运行时该玩家画面不生成，写回 `SplitScreen|2|C0:...|C1:...`；运行时单向、原版镜头屏蔽） |
+| **cameraLight.ts** | 相机弹窗（三个顶层 tab：📷 相机视野 / 🎬 进场动画 / 🔲 多镜头分屏）。视野 tab：背景色 + FOV 即时反映、出发点位置；分屏 tab：「多镜头分屏」复选框 = `cameraInfo.splitScreen`，按厨师数量自动 1/2/3/4 镜头，开启时显示「镜头 1~4」分页独立参考（启用/隐藏、相对玩家 X/Y/Z offset、FOV、大小，含「↺ 默认」重置）；进场 tab：下拉 = `cameraInfo.intro.mode`（vanilla/none/pullBack/rotateLeft/rotateRight/focus/tour/dollyIn/dive/orbit(左/右环绕两个选项)/raft/space），自定义模式显示时长/起始距离（orbit 下标签=环绕半径）/旋转幅度/俯冲高度/环绕角度参数，`normalizeIntroConfig` 归一化默认值；focus「📍 画布选点」与 tour 的 A/B 点选按钮关闭弹窗进入一次性选点（`S.pendingCameraTargetPick`（"focus"|"tourA"|"tourB"），input.ts 消耗画布点击按吸附步长取整 → `applyCameraTargetPick` 写入并重开弹窗回进场 tab，Esc 取消；render.ts `drawCameraIntroMarkers` 在画布上画聚焦标记 / 巡回 A→B→归位虚线 / orbit 圆弧 / dive·dollyIn 远端直线）；**右栏顶部「动画演示」16:9 横向 canvas（`startIntroDemo`）**：俯视示意（厨房矩形位于相机视轴地面落点 h/tan(pitch) + 相机球带朝向线 + 目标球 + 路径虚线 + 进度条），运动公式与 `BuildPathClip` 烘焙一致（折线 = 段距比例 + 每段 easeInOut；orbit 弧 = 段内 linear + 全局 easeInOut 重映射防蠕动；dive 球大小随高度；vanilla/raft/space 固定 5m 拉近示意 + 待机摆动），rAF 循环（末尾停 0.8s，canvas 摘除自动停），参数改动即时反映；分屏开启时进场配置禁用并提示不可见 |
 | **testLayout.ts** | 测试布局一键生成（30×16 地板 + 全部食材箱/核心道具/菜谱） |
 | **gridAlign.ts** | 一键网格对齐（核心层/地板层，工具栏「图层显示」右侧）：`alignCurrentLayerToGrid()` 对齐当前层全部物件（无视选中状态）；物件对齐到最近的格子、填满整格——角贴可见网格线角（(k+0.5)·CELL 点阵，锚 GridInfo 原点）：奇数跨距中心落整格点（如 6.00/-1.20）、偶数跨距中心落两格之间、<1 格小件中心贴整格点、木筏拼板贴整格点；火锅灶台/大锅 stub 偏移保持；一条 undo 整体可撤回；`syncGridAlignUI`（非核心/地板层置灰）+ `wireGridAlign` |
 
@@ -217,7 +220,7 @@ flowchart LR
 
 | 文件 | 职责 |
 |---|---|
-| **animControl.ts** | ★ 动画组编辑器（3748 行，最大模块）：组/成员/路径点数据、时间轴模型（startTime 并行 + 旧 delay 迁移）、事件类型（move/wait/lift/drop/rotate/shake/flash）、前端预览模拟（play/scrub/step）、画布覆盖层、右侧面板 |
+| **animControl.ts** | ★ 动画组编辑器（最大模块）：组/成员/路径点数据、时间轴模型（startTime 并行 + 旧 delay 迁移）、事件类型（move/wait/lift/drop/rotate/shake/flash + scale 缩放/tilt 翻转/orbit 公转/fade 淡入淡出（隐身/显型，CustomStub.FadeDriver 驱动材质 alpha）；快捷预设下拉：隐身（慢慢变淡）/显型/弹跳/晃动/自转/公转）、事件级缓动（`easeValue` 与烘焙端 `EaseValue` 同公式，含 easeOutBounce/easeInOutBack）+ waypoint 级贝塞尔控制点（右键「段弧线」拉出，画布菱形可拖拽，`clipPos` 与烘焙同公式插值）、互斥通道（lift/drop=Y 类、move/orbit=XZ 类各自避让）、前端预览模拟（play/scrub/step；`PreviewPose` 含 rotY/tiltX/tiltZ/scale/alpha 叠加通道 + orbit 接管通道）、画布覆盖层（orbit 圆心十字可拖拽+虚线圆轨道、贝塞尔曲线+控制点把手）、3D 联动（`scene3d/anim3d.ts`：orbit 圆环、曲线、ghost 缩放/翻转经 `applySceneEuler`、透明度乘 alpha） |
 | **builtinAnimDecor.ts** | prefab 内嵌环境动画装饰知识表（蝴蝶/灯笼/水车等） |
 | **npcAnimations.ts** | 自带动画 NPC 知识表（服务生/月亮 NPC/面包人） |
 
@@ -229,7 +232,7 @@ flowchart LR
 | **ui/detailPanel.ts** | 物品点击浮动详情卡：stub 参数区 + 变体切换 + 联动摘要 |
 | **ui/contextMenu.ts** | 右键菜单：微移/旋转/删除/批量高度/变体/动画控制/路径点/参数项。聚焦单个装饰物（点选或右侧列表跳转）时在画布右上角持续显示缩略图（`ui/decorContextPreview.ts`；右键菜单挡住该角时改放到不压住菜单的空位）。列表点击会把 2D/3D 镜头对准该物品。食材/成品菜用彩色图标，其余用 /api/web-assets/decor/front/<guid>.png 正面大图；详情面板左右并排显示正/背双视图；装饰物右键提供独立一行「🖼 预览」（统一弹窗） |
 | **ui/overlay.ts / ui/pickTip.ts / ui/pickOverlap.ts** | 浮层隐藏 / 通用候选选择 / 重叠候选封装 |
-| **ui/recipesDialogs.ts** | 菜谱管理大弹窗（1533 行，五 Tab）：select/selected/autofill（按菜谱自动补道具）/optional（含无效条目检测：重复注册/自定义菜谱残留 → 警告条 + 🧹 一键清理）/matchlist |
+| **ui/recipesDialogs.ts** | 菜谱管理大弹窗（六 Tab，面板已加宽至约 1560px/92vh）：select/selected/autofill（按菜谱自动补道具）/optional（含无效条目检测：重复注册/自定义菜谱残留 → 警告条 + 🧹 一键清理）/matchlist/orderseq（订单顺序 v2 卡片化 UI，4.0.0.18，原 4.7.0：**组 tab 切换/拖拽排序（→按序/🎲随机标记，圆点颜色与预览一致）**；组面板 = 模式 + 抽菜数（`全部出完 N=本组数量` 或自定义 N 1~999，每组独立）+ **与「选择菜谱」同一套完整 rl-card（角标序号、拖拽排序、✕ 移除）** + **多选添加面板（本关菜谱按一级分类/二级类型分组，沙拉保留子分组；分类头「全选本类」、类型头「全选」、顶部「全选全部 / 清空选择」，支持搜索、折叠与已选/总数统计）**；结束行为 loop 循环 / pingpong 钟摆倒序 / stop 停单 + **分组配色序列预览（每组每次最多展示 2 道菜，随机组只展示抽菜数，组号圆标同色）**；增删/切组/改模式后保留滚动位置与搜索焦点，删除非空组二次确认；存 `order_seq~/order_seq.json`（`fetchLevelOrderSequence/saveLevelOrderSequence`），随写回/导出烘焙进场景；未启用 = 原版加权随机出单；**选择菜谱批量按钮**：一级分类头「全选本类」/ 二级类型组头「全选」只勾选当前搜索/筛选/去重后可见的卡片，全部已选后切换为「取消本类 / 取消全选」，组头 已选/总数 按 recipe id 唯一统计且初次渲染即为准确值） |
 | **ui/utensilManager.ts** | 锅具管理弹窗：按菜谱自动装填 allowedIngredientGuids、一键同步 |
 | **ui/screenshotModal.ts** | 关卡截图：预览/选图/画布拖拽裁剪/JPEG 压缩/base64 上传 |
 | **ui/depsCheck.ts** | 依赖状态检查弹窗（读 envStatus 逐项展示） |
@@ -255,7 +258,7 @@ flowchart LR
 | 方法 | URL | 说明 |
 |---|---|---|
 | GET | `/api/health` | 3s 轮询看门狗 |
-| GET | `/api/level-sets` | 关卡场景清单 |
+| GET | `/api/level-sets` | 关卡场景清单（集内按 LevelSetInfo.levelInfos 游戏内顺序，未登记场景排在末尾） |
 | GET | `/api/scene/layout?assetPath=` | LayoutDocument（items+floors+walkable+deathInfo+animControls+switchLinks+buttonLinks+buttonEvents+coaxialLinks+cameraInfo+lights） |
 | POST | `/api/scene/layout?snap=&syncWalkable=&only=` | 写回（only=""/items/decor/floors 作用域）；返回 `{warnings}` |
 | POST | `/api/scene/repair-broken?assetPath=` | 移除损坏实例 |
@@ -275,8 +278,10 @@ flowchart LR
 |---|---|---|
 | GET | `/api/sets`、`/api/sets/{set}/levels`、`/api/level?assetPath=` | 列表/详情 |
 | POST | `/api/set/create / delete / info` | 关卡集 |
-| POST | `/api/level/create / info / config / audio / delete / reorder / rename / screenshot-upload` | 关卡 |
+| POST | `/api/level/create / info / config / audio / delete / delete-batch / reorder / rename / screenshot-upload` | 关卡 |
+| GET | `/api/level/group?assetPath=`；POST `/api/level/group-save` | 关卡分组（`group~/group.json`）；分组看板保存时同时写顺序 `reorderLevels` + 分组 `saveLevelGroups` |
 | GET | `/api/level/delete-preview?setName=&levelId=` | 删除预览 |
+| POST | `/api/level/delete-preview-batch`（`{setName, levelIds}`） | 批量删除预览（按关卡分组返回待删文件） |
 | POST | `/api/reload` | 触发 Reload Pseudo Assets |
 | POST | `/api/set/export`；GET `/api/set/export/status`、`/download?setName=&fileName=` | 异步导出（轮询+下载） |
 | GET/POST | `/api/set/stub/status?set=`、`/api/set/stub/copy`、`/api/set/stub/compile` | CustomStub |
@@ -315,7 +320,7 @@ LayoutDocument {
   buttonLinks?: ButtonLinkData   // 按钮→动画组
   buttonEvents?: ButtonEventData // 按钮→事件组
   coaxialLinks?: CoaxialLinkData // 同轴按钮组（≥2 按钮时间窗内集齐→目标广播）
-  cameraInfo?: CameraInfo|null   // 背景色+FOV；splitScreen=多镜头分屏；splitScreenCameras[]=每镜头独立参考
+  cameraInfo?: CameraInfo|null   // 背景色+FOV；splitScreen=多镜头分屏；splitScreenCameras[]=每镜头独立参考；intro=进场动画
   lights?: LightInfo[]           // Art/Lights 非 prefab 灯光
 }
 ```
@@ -328,7 +333,7 @@ LayoutDocument {
 
 ### 6.3 FloorObject
 
-`surfaceKind`（solid/raft/ice/snow/sand/alien/walkway/carpet/background…）、`meshType`（plane|quad|prefab）、材质 guid/名、格数、主题地板 `prefabScale*`、`tintColor/tintEnabled`、图片地板 `imageTexturePath/imageMode(tile|stretch|warp)/imageOpacity/imageRotation`、`materialTilingW/D`、`airFloor`。
+`surfaceKind`（solid/raft/ice/snow/sand/alien/walkway/carpet/background…）、`meshType`（plane|quad|prefab）、材质 guid/名、格数、主题地板 `prefabScale*`、`tintColor/tintEnabled`、图片地板 `imageTexturePath/imageMode(tile|stretch|warp)/imageOpacity/imageRotation`、`materialTilingW/D`、实心材质地板 PBR 覆盖 `pbrOverride/metallic/smoothness` 与渲染模式覆盖 `renderModeOverride/renderMode`（0..3，后端变体材质名 `_rm#`/`_m##_s##` 后缀往返；未覆盖时数值为材质基线展示值）、`airFloor`。
 
 ### 6.4 动画组 AnimGroup（时间轴模型）
 
@@ -344,7 +349,7 @@ LayoutDocument {
 
 ### 6.6 关卡管理模型
 
-`LevelSetInfo`、`LevelSummary/LevelDetail`（configs[4]、AudioConfig、dependencies）、`SetExportStatus`、`WriteBackHistory*`、`CustomRecipeSummary/Edit`（含模型变换与 Unity 实测包围盒）、`BurgerDefinition`。
+`LevelSetInfo`、`LevelSummary/LevelDetail`（configs[4]、AudioConfig、dependencies；`LevelSummary.group` = 分组名，来自 group~/group.json）、`SetExportStatus`、`WriteBackHistory*`、`CustomRecipeSummary/Edit`（含模型变换与 Unity 实测包围盒）、`BurgerDefinition`。
 
 ### 6.7 目录 Catalog
 

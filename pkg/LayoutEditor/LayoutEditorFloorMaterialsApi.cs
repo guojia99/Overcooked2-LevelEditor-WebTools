@@ -12,7 +12,11 @@ using UnityEngine;
 public static class LayoutEditorFloorMaterialsApi
 {
     private static readonly Regex SizeTagRegex = new Regex(@"_([0-9]+)x([0-9]+)(?:_|$)", RegexOptions.Compiled);
-    private static readonly Regex TilingSuffixRegex = new Regex(@"_tiling([0-9]+)x([0-9]+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    // 变体名段顺序固定：<base>[_tilingWxH][_rm#][_m##_s##]。tiling/rm 后缀须容忍
+    // 尾随段（带金属度/光滑度/渲染模式覆盖的变体才解析得出前面的段）。
+    private static readonly Regex TilingSuffixRegex = new Regex(@"_tiling([0-9]+)x([0-9]+)(?:_rm[0-9]+)?(?:_m[0-9]+_s[0-9]+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex PbrSuffixRegex = new Regex(@"_m([0-9]+)_s([0-9]+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex RenderModeSuffixRegex = new Regex(@"_rm([0-3])(?:_m[0-9]+_s[0-9]+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     /// <summary>运行时烘焙材质名 mat_foo_tiling12x4 → (12, 4)。</summary>
     public static bool TryParseMaterialTilingSuffix(string materialName, out int tilingW, out int tilingD)
@@ -40,12 +44,93 @@ public static class LayoutEditorFloorMaterialsApi
         return materialName.Substring(0, m.Index);
     }
 
+    /// <summary>PBR 覆盖后缀（写回烘焙变体材质名尾段 _m&lt;0-100&gt;_s&lt;0-100&gt;，
+    ///  百分比整数编码）→ (metallic, smoothness) 0..1。仅实心材质地板使用。</summary>
+    public static bool TryParsePbrSuffix(string materialName, out float metallic, out float smoothness)
+    {
+        metallic = 0f;
+        smoothness = 0f;
+        if (string.IsNullOrEmpty(materialName))
+            return false;
+        var m = PbrSuffixRegex.Match(materialName);
+        if (!m.Success)
+            return false;
+        int mi, si;
+        if (!int.TryParse(m.Groups[1].Value, out mi) || !int.TryParse(m.Groups[2].Value, out si))
+            return false;
+        if (mi < 0 || mi > 100 || si < 0 || si > 100)
+            return false;
+        metallic = mi / 100f;
+        smoothness = si / 100f;
+        return true;
+    }
+
+    /// <summary>去掉材质名尾段的 PBR 后缀 _m##_s##（无则原样返回）。</summary>
+    public static string StripPbrSuffix(string materialName)
+    {
+        if (string.IsNullOrEmpty(materialName))
+            return materialName;
+        var m = PbrSuffixRegex.Match(materialName);
+        if (!m.Success)
+            return materialName;
+        return materialName.Substring(0, m.Index);
+    }
+
+    /// <summary>渲染模式覆盖后缀（变体名中段 _rm&lt;0-3&gt;，0=不透明 1=镂空
+    ///  2=渐隐 3=透明）。命中返回 true 并给出模式值。</summary>
+    public static bool TryParseRenderModeSuffix(string materialName, out int renderMode)
+    {
+        renderMode = 0;
+        if (string.IsNullOrEmpty(materialName))
+            return false;
+        var m = RenderModeSuffixRegex.Match(materialName);
+        if (!m.Success)
+            return false;
+        int rm;
+        if (!int.TryParse(m.Groups[1].Value, out rm) || rm < 0 || rm > 3)
+            return false;
+        renderMode = rm;
+        return true;
+    }
+
+    /// <summary>去掉材质名中的渲染模式后缀 _rm#（含其尾随的 _m##_s## 一并剥到
+    ///  段首；无则原样返回）。</summary>
+    public static string StripRenderModeSuffix(string materialName)
+    {
+        if (string.IsNullOrEmpty(materialName))
+            return materialName;
+        var m = RenderModeSuffixRegex.Match(materialName);
+        if (!m.Success)
+            return materialName;
+        return materialName.Substring(0, m.Index);
+    }
+
+    /// <summary>剥离全部运行时烘焙后缀（_m##_s##、_rm# 与 _tilingWxH，任意组合），
+    ///  还原 catalog 基材质名。TryResolveFloorMaterialByName 用它做基名匹配。</summary>
+    public static string StripFloorVariantSuffixes(string materialName)
+    {
+        return StripMaterialTilingSuffix(StripPbrSuffix(StripRenderModeSuffix(materialName)));
+    }
+
+    /// <summary>地板 PBR 覆盖变体材质名的后缀段（"m50_s40" 形如 _m##_s## 前带下划线）。</summary>
+    public static string PbrVariantSuffix(float metallic, float smoothness)
+    {
+        return "_m" + Mathf.RoundToInt(Mathf.Clamp01(metallic) * 100f)
+            + "_s" + Mathf.RoundToInt(Mathf.Clamp01(smoothness) * 100f);
+    }
+
+    /// <summary>地板渲染模式覆盖变体材质名的后缀段（_rm0.._rm3）。</summary>
+    public static string RenderModeVariantSuffix(int renderMode)
+    {
+        return "_rm" + Mathf.Clamp(renderMode, 0, 3);
+    }
+
     /// <summary>按剥离后缀后的材质 id 在工程中查找 .mat 资产。</summary>
     public static bool TryResolveFloorMaterialByName(string materialName, out string guid, out string assetPath)
     {
         guid = null;
         assetPath = null;
-        var baseName = StripMaterialTilingSuffix(materialName);
+        var baseName = StripFloorVariantSuffixes(materialName);
         if (string.IsNullOrEmpty(baseName))
             return false;
 

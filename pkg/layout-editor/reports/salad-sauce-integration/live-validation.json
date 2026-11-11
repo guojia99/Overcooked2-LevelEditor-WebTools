@@ -1,0 +1,73 @@
+{
+  "checkedAt": "2026-11-10T18:17:17.983Z",
+  "unityUrl": "http://10.211.55.3:8765",
+  "ok": true,
+  "finalRecipes": 78,
+  "optionalAnchors": 24,
+  "nativeChecks": 3088,
+  "colourEvidence": [
+    "dlc08:nativeSlot=0:yellow:mesh=Condiment_1:material=mat_dlc08_gameplayobjects_01:texture=t_dlc08_gameplayobjects_01_d:mean=RGBA(0.786, 0.746, 0.441, 0.999)",
+    "dlc08->Story:uid=17094->890076:icon=Mustard_Icon:yellow:mesh=SaladMustard:material=SaladMustard:texture=SaladMustard_Albedo:mean=RGBA(0.983, 0.578, 0.026, 1.000)",
+    "dlc08->Story:directLookup:yellow:mesh=SaladMustard:material=SaladMustard:texture=SaladMustard_Albedo:mean=RGBA(0.983, 0.578, 0.026, 1.000)",
+    "dlc08:node=Mustard:uid=17094:trigger=Condiment1:clip=DLC008_Dispenser_Emerge_Condeiment1:single/reversed=pass:hotdogIdentity=unchanged",
+    "dlc08:nativeSlot=1:red:mesh=Condiment_2:material=mat_dlc08_gameplayobjects_01:texture=t_dlc08_gameplayobjects_01_d:mean=RGBA(0.751, 0.566, 0.412, 0.999)",
+    "dlc08->Story:uid=158482->890084:icon=Ketchup_Icon:red:mesh=SaladKetchup:material=SaladKetchup:texture=SaladKetchup_Albedo:mean=RGBA(0.898, 0.108, 0.028, 1.000)",
+    "dlc08->Story:directLookup:red:mesh=SaladKetchup:material=SaladKetchup:texture=SaladKetchup_Albedo:mean=RGBA(0.898, 0.108, 0.028, 1.000)",
+    "dlc08:node=Ketchup:uid=158482:trigger=Condiment2:clip=DLC008_Dispenser_Emerge_Condeiment2:single/reversed=pass:hotdogIdentity=unchanged",
+    "dlc08:nativeSlot=0:yellow:mesh=Condiment_1:material=mat_dlc08_gameplayobjects_01:texture=t_dlc08_gameplayobjects_01_d:mean=RGBA(0.786, 0.746, 0.441, 0.999)",
+    "dlc08->DLC11:uid=17094->890076:icon=Mustard_Icon:yellow:mesh=SaladMustard:material=SaladMustard:texture=SaladMustard_Albedo:mean=RGBA(0.983, 0.578, 0.026, 1.000)",
+    "dlc08->DLC11:directLookup:yellow:mesh=SaladMustard:material=SaladMustard:texture=SaladMustard_Albedo:mean=RGBA(0.983, 0.578, 0.026, 1.000)",
+    "dlc08:node=Mustard:uid=17094:trigger=Condiment1:clip=DLC008_Dispenser_Emerge_Condeiment1:single/reversed=pass:hotdogIdentity=unchanged",
+    "dlc08:nativeSlot=1:red:mesh=Condiment_2:material=mat_dlc08_gameplayobjects_01:texture=t_dlc08_gameplayobjects_01_d:mean=RGBA(0.751, 0.566, 0.412, 0.999)",
+    "dlc08->DLC11:uid=158482->890084:icon=Ketchup_Icon:red:mesh=SaladKetchup:material=SaladKetchup:texture=SaladKetchup_Albedo:mean=RGBA(0.898, 0.108, 0.028, 1.000)",
+    "dlc08->DLC11:directLookup:red:mesh=SaladKetchup:material=SaladKetchup:texture=SaladKetchup_Albedo:mean=RGBA(0.898, 0.108, 0.028, 1.000)",
+    "dlc08:node=Ketchup:uid=158482:trigger=Condiment2:clip=DLC008_Dispenser_Emerge_Condeiment2:single/reversed=pass:hotdogIdentity=unchanged",
+    "dlc11:nativeSlot=0:yellow:mesh=Condiment_1:material=mat_dlc08_gameplayobjects_01:texture=t_dlc08_gameplayobjects_01_d:mean=RGBA(0.786, 0.746, 0.441, 0.999)",
+    "dlc11->Story:uid=890076->890076:icon=Mustard_Icon:yellow:mesh=SaladMustard:material=SaladMustard:texture=SaladMustard_Albedo:mean=RGBA(0.983, 0.578, 0.026, 1.000)",
+    "dlc11->Story:directLookup:yellow:mesh=SaladMustard:material=SaladMustard:texture=SaladMustard_Albedo:mean=RGBA(0.983, 0.578, 0.026, 1.000)",
+    "dlc11:node=DLC11_Mustard:uid=890076:trigger=Condiment1:clip=DLC008_Dispenser_Emerge_Condeiment1:single/reversed=pass:hotdogIdentity=unchanged",
+    "dlc11:nativeSlot=1:red:mesh=Condiment_2:material=mat_dlc08_gameplayobjects_01:texture=t_dlc08_gameplayobjects_01_d:mean=RGBA(0.751, 0.566, 0.412, 0.999)",
+    "dlc11->Story:uid=890084->890084:icon=Ketchup_Icon:red:mesh=SaladKetchup:material=SaladKetchup:texture=SaladKetchup_Albedo:mean=RGBA(0.898, 0.108, 0.028, 1.000)",
+    "dlc11->Story:directLookup:red:mesh=SaladKetchup:material=SaladKetchup:texture=SaladKetchup_Albedo:mean=RGBA(0.898, 0.108, 0.028, 1.000)",
+    "dlc11:node=DLC11_Ketchup:uid=890084:trigger=Condiment2:clip=DLC008_Dispenser_Emerge_Condeiment2:single/reversed=pass:hotdogIdentity=unchanged",
+    "dlc11:nativeSlot=0:yellow:mesh=Condiment_1:material=mat_dlc08_gameplayobjects_01:texture=t_dlc08_gameplayobjects_01_d:mean=RGBA(0.786, 0.746, 0.441, 0.999)",
+    "dlc11->DLC11:uid=890076->890076:icon=Mustard_Icon:yellow:mesh=SaladMustard:material=SaladMustard:texture=SaladMustard_Albedo:mean=RGBA(0.983, 0.578, 0.026, 1.000)",
+    "dlc11->DLC11:directLookup:yellow:mesh=SaladMustard:material=SaladMustard:texture=SaladMustard_Albedo:mean=RGBA(0.983, 0.578, 0.026, 1.000)",
+    "dlc11:node=DLC11_Mustard:uid=890076:trigger=Condiment1:clip=DLC008_Dispenser_Emerge_Condeiment1:single/reversed=pass:hotdogIdentity=unchanged",
+    "dlc11:nativeSlot=1:red:mesh=Condiment_2:material=mat_dlc08_gameplayobjects_01:texture=t_dlc08_gameplayobjects_01_d:mean=RGBA(0.751, 0.566, 0.412, 0.999)",
+    "dlc11->DLC11:uid=890084->890084:icon=Ketchup_Icon:red:mesh=SaladKetchup:material=SaladKetchup:texture=SaladKetchup_Albedo:mean=RGBA(0.898, 0.108, 0.028, 1.000)",
+    "dlc11->DLC11:directLookup:red:mesh=SaladKetchup:material=SaladKetchup:texture=SaladKetchup_Albedo:mean=RGBA(0.898, 0.108, 0.028, 1.000)",
+    "dlc11:node=DLC11_Ketchup:uid=890084:trigger=Condiment2:clip=DLC008_Dispenser_Emerge_Condeiment2:single/reversed=pass:hotdogIdentity=unchanged",
+    "liveEdit:dlc11_condiment_dispenser:node=DLC11_Ketchup:uid=890084:configuredIndex=0:nativeVisualSlot=1:readOnly=true"
+  ],
+  "visualGeometry": [
+    "Story:SaladKetchup:y=0.200000:boundsY=0.200000..0.253496:lift=0.200000:previousBoundsY=0.000000..0.053496",
+    "Story:SaladMustard:y=0.206000:boundsY=0.206000..0.254803:lift=0.200000:previousBoundsY=0.006000..0.054803",
+    "DLC11:SaladKetchup:y=0.200000:boundsY=0.200000..0.253496:lift=0.200000:previousBoundsY=0.000000..0.053496",
+    "DLC11:SaladMustard:y=0.206000:boundsY=0.206000..0.254803:lift=0.200000:previousBoundsY=0.006000..0.054803",
+    "asset:SaladKetchup:y=0.200000:boundsY=0.200000..0.253496:lift=0.200000:previousBoundsY=0.000000..0.053496",
+    "asset:SaladMustard:y=0.206000:boundsY=0.206000..0.254803:lift=0.200000:previousBoundsY=0.006000..0.054803"
+  ],
+  "meshes": [
+    "SaladKetchup:4300000:tri=4999",
+    "SaladMustard:4300000:tri=5000"
+  ],
+  "factoryIdempotentFiles": {
+    "SaladKetchupVisual.prefab": "50b80e2411f5ad336d9268d6603eb184e04c372e6321e1fff0b844c7fde13847",
+    "SaladKetchupVisual.prefab.meta": "b1f60d5ce0422f4e123d1a481d0da02c9a77f5736b344de42422e475fab89f4f",
+    "SaladMustardVisual.prefab": "0ed564555b60258d1522448485d9189a0fa6e922ec4a1d57d9eb47590e1b554d",
+    "SaladMustardVisual.prefab.meta": "2048fd96a5d891ee8b99adf00495a635a9870ebc6e9958a20f670510b413a4f2",
+    "Web_SauceSalad_DLC11_Model.asset": "21b73c5f66b3e7c4b34dda596d568400fe49fdfabb6c3e35f9991fb28d9e7eae",
+    "Web_SauceSalad_DLC11_Model.asset.meta": "6b5a7ae7d7e112203a965590f4fd3fe7e7e0a119dc3791d7e4fd030a56be8e2a",
+    "Web_SauceSalad_DLC11_Model.prefab": "d9c6d51de2321fd425b98442e66d22cde759467663cd38e1ec7b6e3557f957f5",
+    "Web_SauceSalad_DLC11_Model.prefab.meta": "1e62796293959bb1c6e37765faa19cf66377eae4929f68fb90a3812d5ddba7b1",
+    "Web_SauceSalad_Story_Model.asset": "2ac106dff25312dcffbd42b163c81f9f34e3d2578dcae450de31a66d99011eac",
+    "Web_SauceSalad_Story_Model.asset.meta": "c91ef0bec016484b036bb1192caed1b71452daf5eb6a78191a118049b9a90841",
+    "Web_SauceSalad_Story_Model.prefab": "c7bd56acc667034caac52b17f0fa36d38ab717ae04344b65941687230ba2bd4d",
+    "Web_SauceSalad_Story_Model.prefab.meta": "6a2880b8022cb075919aba7fa75f5958595a769d74fabd422ee97639ca64a5e9"
+  },
+  "originalFilesUnchanged": 84,
+  "pending": [
+    "Windows player-driven host/client gameplay and final visual approval remain unverified; isolated bundle build results are recorded separately in bundle-validation.json"
+  ]
+}

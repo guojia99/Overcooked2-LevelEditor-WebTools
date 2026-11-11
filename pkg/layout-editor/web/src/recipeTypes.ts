@@ -84,6 +84,7 @@ export const CUSTOM_CATEGORY_ZH: Record<string, string> = {
   milk_slush: "牛奶冰沙",
   burrito: "卷饼",
   milk_tea: "奶茶",
+  sushi: "寿司",
 };
 
 export const CUSTOM_CATEGORY_ORDER = Object.keys(CUSTOM_CATEGORY_ZH);

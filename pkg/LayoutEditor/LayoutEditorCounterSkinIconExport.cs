@@ -8,7 +8,7 @@ using LevelEditorStub;
 
 /// <summary>
 /// 桌台皮肤（counterAppearance）材质球提取工具：
-/// 遍历 common01/02/03 + commonW1 各 pseudo_prefab_so/counters 下的 PseudoPrefabSO，
+/// 遍历 common01/02/03 + commonW1/W2/W5/W6 各 pseudo_prefab_so/counters 下的 PseudoPrefabSO，
 /// 按 bundleName 从 StreamingAssets/Windows 加载真实 prefab，取渲染器材质球主贴图，
 /// 产出两份资产供 web 前端展示皮肤：
 ///   ① exports/counter-skins/icons/&lt;Type&gt;_&lt;Theme|Default&gt;.png —— 128×128 中心裁切缩略图
@@ -168,9 +168,21 @@ public static class LayoutEditorCounterSkinIconExport
                 if (Directory.Exists(counters)) roots.Add("commonW1/pseudo_prefab_so/" + Path.GetFileName(dir) + "/counters");
             }
         }
+        string w2Root = Path.Combine(dataPath, "commonW2/pseudo_prefab_so").Replace("\\", "/");
+        if (Directory.Exists(w2Root))
+        {
+            foreach (string dir in Directory.GetDirectories(w2Root))
+            {
+                string counters = Path.Combine(dir, "counters").Replace("\\", "/");
+                if (Directory.Exists(counters)) roots.Add("commonW2/pseudo_prefab_so/" + Path.GetFileName(dir) + "/counters");
+            }
+        }
         // commonW5 桌台皮肤（丛林 / 生日）：固定 counters 目录。
         if (Directory.Exists(Path.Combine(dataPath, "commonW5/pseudo_prefab_so/counters").Replace("\\", "/")))
             roots.Add("commonW5/pseudo_prefab_so/counters");
+        // commonW6 食材箱 / 灶台皮肤：固定 counters 目录（bundle 引用，无本地网格）。
+        if (Directory.Exists(Path.Combine(dataPath, "commonW6/pseudo_prefab_so/counters").Replace("\\", "/")))
+            roots.Add("commonW6/pseudo_prefab_so/counters");
         foreach (string rel in roots)
         {
             string abs = Path.Combine(dataPath, rel).Replace("\\", "/");

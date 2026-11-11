@@ -45,6 +45,10 @@ namespace CustomStub
         private static SplitScreenCameraDriver s_driver;
         private static readonly Dictionary<int, CameraTarget> s_targets =
             new Dictionary<int, CameraTarget>();
+        private static readonly List<Camera> s_viewCameras = new List<Camera>();
+        private static readonly List<Transform> s_viewTargets = new List<Transform>();
+        private static Rect s_prevMainRect;
+        private static bool s_prevMainRectValid;
 
         // FastList<PlayerIDProvider> 反射缓存（_items / Count）。
         private static Type s_fastListType;
@@ -89,6 +93,13 @@ namespace CustomStub
             get { return s_active; }
         }
 
+        /// <summary>对局结束/结算时暂停分屏（主镜头接管），重开后恢复。</summary>
+        internal static void SetSuspended(bool suspended)
+        {
+            if (s_driver != null)
+                s_driver.SetSuspended(suspended);
+        }
+
         /// <summary>跨场景清场。同场景重复 HealScene 时保留现有驱动与目标映射
         /// （否则会从已屏蔽的原相机重新克隆导致黑屏）；旧场景驱动随场景销毁后
         /// 变成 Unity 假 null，这里清掉引用即可。</summary>
@@ -99,6 +110,8 @@ namespace CustomStub
             {
                 s_driver = null;
                 s_targets.Clear();
+                s_viewCameras.Clear();
+                s_viewTargets.Clear();
             }
             CameraAuthoredOffset.SetSplitScreenActive(false);
         }
@@ -112,6 +125,8 @@ namespace CustomStub
             s_driver = null;
             s_active = false;
             s_targets.Clear();
+            s_viewCameras.Clear();
+            s_viewTargets.Clear();
             CameraAuthoredOffset.SetSplitScreenActive(false);
         }
 
@@ -220,6 +235,142 @@ namespace CustomStub
             {
                 StubLog.LogWarn("[CustomStub] 分屏 GetIdealLocation 后缀异常: " + ex.Message);
             }
+        }
+
+        internal static void RegisterViewCamera(Camera cam, Transform target)
+        {
+            if (cam == null || target == null)
+                return;
+            s_viewCameras.Add(cam);
+            s_viewTargets.Add(target);
+        }
+
+        internal static void ClearViewCameras()
+        {
+            s_viewCameras.Clear();
+            s_viewTargets.Clear();
+        }
+
+        /// <summary>把物品世界坐标映射到“最合适的分屏镜头”viewport 坐标（0..1）。
+        /// 用于 HoverIconUIController.GetScreenPos 后缀：全屏 Overlay 画布上，
+        /// 图标会落在对应分屏矩形内，而不是按主相机整屏坐标乱飘。</summary>
+        internal static bool TryMapWorldToSplitViewport(Vector3 world, out Vector2 viewport)
+        {
+            viewport = Vector2.zero;
+            if (s_viewCameras.Count == 0)
+                return false;
+
+            Camera best = null;
+            Vector3 bestVp = Vector3.zero;
+            var bestScore = float.MaxValue;
+            for (int i = 0; i < s_viewCameras.Count; i++)
+            {
+                var cam = s_viewCameras[i];
+                if (cam == null)
+                    continue;
+                var vp = cam.WorldToViewportPoint(world);
+                if (vp.z <= 0f)
+                    continue;
+                var score = Mathf.Abs(vp.x - 0.5f) + Mathf.Abs(vp.y - 0.5f);
+                if (vp.x < -0.3f || vp.x > 1.3f || vp.y < -0.3f || vp.y > 1.3f)
+                    score += 10f;
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    best = cam;
+                    bestVp = vp;
+                }
+            }
+
+            if (best == null)
+            {
+                // 不在任何镜头前方：选距离最近的分屏目标所在镜头，并夹到画面内。
+                var bestDist = float.MaxValue;
+                for (int i = 0; i < s_viewTargets.Count; i++)
+                {
+                    var t = s_viewTargets[i];
+                    var cam = i < s_viewCameras.Count ? s_viewCameras[i] : null;
+                    if (t == null || cam == null)
+                        continue;
+                    var d = (t.position - world).sqrMagnitude;
+                    if (d < bestDist)
+                    {
+                        bestDist = d;
+                        best = cam;
+                        bestVp = cam.WorldToViewportPoint(world);
+                    }
+                }
+            }
+
+            if (best == null)
+                return false;
+
+            bestVp.x = Mathf.Clamp(bestVp.x, 0.05f, 0.95f);
+            bestVp.y = Mathf.Clamp(bestVp.y, 0.05f, 0.95f);
+            var rect = best.rect;
+            viewport = new Vector2(
+                rect.x + bestVp.x * rect.width,
+                rect.y + bestVp.y * rect.height);
+            return true;
+        }
+
+        /// <summary>HoverIconUIController.GetScreenPos 后缀：把物品上方 UI 映射到
+        /// 对应分屏 viewport（全屏 Overlay 画布内的正确分屏位置）。</summary>
+        private static void HoverIconScreenPosPostfix(object __instance, ref Vector2 __result)
+        {
+            if (s_viewCameras.Count == 0)
+                return;
+            if (GameApi.HoverIconFollowTransformField == null
+                || GameApi.HoverIconFollowOffsetField == null)
+                return;
+            try
+            {
+                var follow = GameApi.HoverIconFollowTransformField.GetValue(__instance) as Transform;
+                if (follow == null)
+                    return;
+                var offset = (Vector3)GameApi.HoverIconFollowOffsetField.GetValue(__instance);
+                Vector2 mapped;
+                if (TryMapWorldToSplitViewport(follow.TransformPoint(offset), out mapped))
+                    __result = mapped;
+            }
+            catch (Exception ex)
+            {
+                StubLog.LogWarn("[CustomStub] 分屏 HoverIcon 映射异常: " + ex.Message);
+            }
+        }
+
+        /// <summary>OverheadIconGUI.OnGUI 会遍历 Camera.allCameras 绘制物品图标；
+        /// 分屏时把原版 dummy 相机的 pixelRect 临时缩成 0，避免它整屏再画一份
+        /// （分屏相机各自会在自己的 viewport 里画）。</summary>
+        private static void OverheadIconOnGuiPrefix()
+        {
+            if (s_viewCameras.Count == 0)
+                return;
+            var main = Camera.main;
+            if (main == null)
+                return;
+            s_prevMainRect = main.rect;
+            s_prevMainRectValid = true;
+            main.rect = new Rect(0f, 0f, 0f, 0f);
+        }
+
+        private static void OverheadIconOnGuiPostfix()
+        {
+            if (!s_prevMainRectValid)
+                return;
+            s_prevMainRectValid = false;
+            var main = Camera.main;
+            if (main != null)
+                main.rect = s_prevMainRect;
+        }
+
+        /// <summary>ClientFlowControllerBase.SetRoundBehaviourActivation(bool) 前缀：
+        /// false = 对局结束（进结算）→ 暂停分屏/恢复主镜头；true = 新对局开始 → 恢复。</summary>
+        private static void RoundActivationPrefix(bool _enabled)
+        {
+            if (s_driver == null)
+                return;
+            s_driver.SetSuspended(!_enabled);
         }
 
         private static void EnsurePatches()

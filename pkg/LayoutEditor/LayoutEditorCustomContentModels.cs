@@ -9,7 +9,6 @@ public class CustomContentTemplateDto
     public string labelEn;
     public string assetPath;
     public string nodePath;
-    public string defaultFootprint;
 }
 
 [Serializable]
@@ -30,6 +29,7 @@ public class CustomContentItemDto
     public string guid;
     public string nodePath;
     public string iconUrl;
+    public string updatedAt;
     public string bundleName;
     public string[] warnings;
     public int orderUid;
@@ -57,6 +57,19 @@ public class CustomContentItemDto
     public string inputRecipeGuid;
     public string outputPrefabGuid;
     public string splitAudioTag;
+
+    // 模型变换回读（WebCustomModel 子物体）
+    public bool hasModel;
+    public float modelScale;
+    public float modelPositionX;
+    public float modelPositionY;
+    public float modelPositionZ;
+    public float modelRotationX;
+    public float modelRotationY;
+    public float modelRotationZ;
+    public float modelPivotX;
+    public float modelPivotY;
+    public float modelPivotZ;
 }
 
 [Serializable]
@@ -86,7 +99,6 @@ public class CustomContentEditDto
 
     // 食材 / 备餐容器
     public int orderUid;
-    public int score;
     public string platingStepId;
     public string restrictionsGuid;
     public string cosmeticsPrefabGuid;
@@ -98,8 +110,6 @@ public class CustomContentEditDto
     public string[] stationTypes;
     public string[] modelGuids;
     public string[] modelSoGuids;
-    public bool flammable;
-    public bool choppingStation;
     public string washingPartPath;
     public string dryingPartPath;
     public string cleanPlateStackGuid;
@@ -116,12 +126,13 @@ public class CustomContentEditDto
     public string inputRecipeGuid;
     public string outputPrefabGuid;
     public int splitNum;
-    public string[] splitterModelPaths;
     public string splitAudioTag;
+
+    // 引用字段显式清除名单（仅 update 消费；空 guid = 保持原值的历史语义不变）
+    public string[] clearFields;
 
     // 资产上传（base64）
     public string iconBase64;
-    public string iconFileName;
     public CustomContentUploadFileDto[] modelFiles;
     public float modelScale;
     public float modelPositionX;

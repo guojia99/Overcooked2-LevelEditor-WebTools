@@ -28,6 +28,8 @@ public static class CustomStubAutoBake
         // 场景打开/退出 Play/域重载后短程轮询，子物体就绪即补画问号。
         UnityEditor.SceneManagement.EditorSceneManager.sceneOpened += delegate (UnityEngine.SceneManagement.Scene scene, UnityEditor.SceneManagement.OpenSceneMode mode)
         {
+            if (LayoutEditorPseudoReload.ExportBuildInProgress)
+                return;
             ArmIconSync();
         };
         EditorApplication.playModeStateChanged += delegate (PlayModeStateChange state)
@@ -88,6 +90,8 @@ public static class CustomStubAutoBake
 
     private static void SyncIconTick()
     {
+        if (LayoutEditorPseudoReload.ExportBuildInProgress)
+            return;
         if (!_iconArmed)
         {
             EditorApplication.update -= SyncIconTick;

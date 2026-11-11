@@ -10,13 +10,13 @@ public static class LayoutEditorSteamerFill
     {
         if (info == null)
             return;
-        RemoveRiceFromSteamers();
+        RemoveSushiFromSteamers();
         ApplyIngredients(CollectSteamerInputs(info), IsSteamer, 1);
         ApplyIngredients(CollectMixerInputs(info), IsMixerBowl, 4);
     }
 
-    /// <summary>米饭走煮锅，历史自动填充可能把 SushiRice 写进蒸笼；这里做一次清理。</summary>
-    private static void RemoveRiceFromSteamers()
+    /// <summary>寿司不是蒸笼菜。米饭走煮锅，寿司鱼/虾/海苔不进蒸笼；这里清掉历史自动填充写进蒸笼的寿司食材。</summary>
+    private static void RemoveSushiFromSteamers()
     {
         bool sceneDirty = false;
         foreach (var stub in Object.FindObjectsOfType<PseudoPrefabStub>())
@@ -35,7 +35,7 @@ public static class LayoutEditorSteamerFill
                     removed = true;
                     continue;
                 }
-                if (IsRice(so))
+                if (IsSushiNotForSteamer(so))
                 {
                     removed = true;
                     continue;
@@ -51,9 +51,13 @@ public static class LayoutEditorSteamerFill
             MarkScenesDirty();
     }
 
-    private static bool IsRice(ScriptableObject so)
+    private static bool IsSushiNotForSteamer(ScriptableObject so)
     {
-        return so != null && (so.name == "SushiRiceSO" || so.name == "RiceSO");
+        if (so == null)
+            return false;
+        var name = so.name;
+        return name == "SushiRiceSO" || name == "RiceSO" || name == "SushiFishSO" ||
+            name == "SushiPrawnSO" || name == "SeaweedSO";
     }
 
     private static void ApplyIngredients(
@@ -136,7 +140,7 @@ public static class LayoutEditorSteamerFill
                 if (comp == null)
                     continue;
                 if ((comp is CustomRecipeSO || comp is PseudoPrefabSO || comp is PseudoPrefabSORecipe)
-                    && seen.Add(comp))
+                    && !IsSushiNotForSteamer(comp) && seen.Add(comp))
                     result.Add(comp);
                 var sub = comp as CustomRecipeSO;
                 if (sub == null || sub.compositionSOs == null)
@@ -146,7 +150,7 @@ public static class LayoutEditorSteamerFill
                     if (subComp == null)
                         continue;
                     if ((subComp is CustomRecipeSO || subComp is PseudoPrefabSO || subComp is PseudoPrefabSORecipe)
-                        && seen.Add(subComp))
+                        && !IsSushiNotForSteamer(subComp) && seen.Add(subComp))
                         result.Add(subComp);
                 }
             }

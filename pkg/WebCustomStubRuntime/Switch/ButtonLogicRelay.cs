@@ -69,6 +69,10 @@ namespace CustomStub
         private bool m_wasInRun;
         private int m_aReadyHash;
         private int m_bReadyHash;
+        private int m_aWait0Hash;
+        private int m_aWait1Hash;
+        private int m_bWait0Hash;
+        private int m_bWait1Hash;
         private bool m_interlockBootstrapped;
         private float m_runEnterTime = -1f;
         private bool m_runStuckWarned;
@@ -90,6 +94,33 @@ namespace CustomStub
         /// <summary>防抖窗口截止时刻（Time.time；-1 = 无窗口）。</summary>
         private float m_pressUnblockTime = -1f;
 
+        private static readonly List<ButtonLogicRelay> s_interlocks = new List<ButtonLogicRelay>();
+
+        /// <summary>按钮根名是否由互锁对接管外观。同轴组用它避开回绿，
+        /// 否则同轴超时/集齐会把按下侧也 Reset，两只同时可按。</summary>
+        internal static bool OwnsButton(string rootName)
+        {
+            if (string.IsNullOrEmpty(rootName))
+                return false;
+            for (int i = 0; i < s_interlocks.Count; i++)
+            {
+                var relay = s_interlocks[i];
+                if (relay == null || !relay.m_interlockPair)
+                    continue;
+                if (rootName == relay.m_interlockSideA || rootName == relay.m_interlockSideB)
+                    return true;
+                var names = relay.m_buttonRootNames;
+                if (names == null)
+                    continue;
+                for (int j = 0; j < names.Length; j++)
+                {
+                    if (names[j] == rootName)
+                        return true;
+                }
+            }
+            return false;
+        }
+
         private void Awake()
         {
             RebuildHashes();
@@ -103,6 +134,8 @@ namespace CustomStub
             m_runStuckWarned = false;
             m_interlockBootstrapped = false;
             m_pressUnblockTime = -1f;
+            if (m_interlockPair && !s_interlocks.Contains(this))
+                s_interlocks.Add(this);
         }
 
         private void Start()
@@ -178,6 +211,18 @@ namespace CustomStub
             m_targetCache.Clear();
             m_aReadyHash = Animator.StringToHash("AReady");
             m_bReadyHash = Animator.StringToHash("BReady");
+            m_aWait0Hash = Animator.StringToHash("AWait0");
+            m_aWait1Hash = Animator.StringToHash("AWait1");
+            m_bWait0Hash = Animator.StringToHash("BWait0");
+            m_bWait1Hash = Animator.StringToHash("BWait1");
+        }
+
+        /// <summary>互锁 AND 等待态。两组同帧完成时状态机一帧只消费一条过渡，
+        /// 另一条 BLDone 还停在参数上；进入这些状态时不能 ResetTrigger。</summary>
+        private bool IsAndWaitState(int hash)
+        {
+            return hash == m_aWait0Hash || hash == m_aWait1Hash
+                || hash == m_bWait0Hash || hash == m_bWait1Hash;
         }
 
         private void BootstrapInterlockVisual()
@@ -245,7 +290,10 @@ namespace CustomStub
 
             // 换状态：清空全部 done 触发名（新组的 BLDone 在进入之后才会到达，
             // 不会被误清；防止迟到的旧 BLDone 在环回后误触发）。
-            if (m_doneTriggers != null)
+            // AND 等待态除外：A 侧两组同帧结束时，ARun 只能先吃掉一条 BLDone 进入
+            // AWait，另一条还没被过渡消费。这里清掉它，等待态永远等不到第二条，
+            // 两侧按钮停在按下色（Disable）不再换手。
+            if (m_doneTriggers != null && !IsAndWaitState(si.shortNameHash))
             {
                 for (int i = 0; i < m_doneTriggers.Length; i++)
                 {
@@ -497,6 +545,7 @@ namespace CustomStub
         private void OnDisable()
         {
             m_goQueued.Clear();
+            s_interlocks.Remove(this);
         }
 
         /// <summary>互锁：A 抬起时 B 按下，反之亦然。每次翻转打投递结果

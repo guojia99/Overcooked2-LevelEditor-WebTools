@@ -1,0 +1,188 @@
+{
+  "protectedOriginals": {
+    "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Corn.png": "a44fb386e0bf946d2db28e2420de50acf2571be3fae544dcb8d67ee64e1aed06",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Corn.png.meta": "70e53ade2e2e8fee734a658f3ff096485e691652a4fcc0350489907eaab8f6e3",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Cucumber.png": "7e46c5f9159ba94d426dba1837d0be4285de71096337615e7b97e28de4552a48",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Cucumber.png.meta": "a936f1f1b5b49ab2aa618b3fc0ce5faeb99ce6e0706e097451b91cab9cce3b35",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_CucumberCorn.png": "136ebf6d3dbb7b9212d4ceabfc00ecbf50caf08d560fc7a7a22255e4990d4696",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_CucumberCorn.png.meta": "e649fdb6f1dd9c25c1632cad731cdaea708d5d24bda52785a3e1d7e30d847c2e",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Lettuce.png": "231c26bcc58aee61a5f7e5024bc4400f63c7374b084ba1c54efb3b25e4010129",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Lettuce.png.meta": "4a99bb49d11647464783b9e36b3a503b4a6b0c90ca75c7e8cd41cc98dd05fb02",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Tomato.png": "3a3df943b21adf675c326f6c48884376594026df418d9ff50ce58670107e01ee",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Tomato.png.meta": "898e260a6c1d83a1bebc15abe799a523f6b4a1813de68f9c247c117cea06de2d",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_TomatoCorn.png": "c9b7a35efb31e09af520227dbf9a32a820b760c1d02c054ffbcdaf47cad6a89f",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_TomatoCorn.png.meta": "31a8385d807a33fe60a7e57f0d748872c13fdf088338c64db80a8a318a4b95a7",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_TomatoCucumber.png": "92cdd22c6fd32c0bc8c6c3a60922547c671b4ec457364dd5453e3285fbb2d914",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_TomatoCucumber.png.meta": "d76e03ba95cfc0f589e07a39ef67fa95db702f100e01ebfdb86697f63e79333d",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_TomatoCucumberCorn.png": "821de8cd91b1fa082a77d859292e571486dd2f98714e497842cc6f4c811af466",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_TomatoCucumberCorn.png.meta": "430d6dd44a2a454e908da65472b20ccb0e53ad60097bd7f4d43cab4ebe90434d",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Corn.png": "c4824b501d33f22a3909c4bc3d8614a77d623cd82a0e4e30ffa6d69eb3357b48",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Corn.png.meta": "95b166dfe23f6d6905599c15f560b9347b7f498222367b759ac94eacc408636b",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Cucumber.png": "d397459c4c1c5e727eb463838f27c0e4427ee7be7a06d4d29082a2e24ff0318f",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Cucumber.png.meta": "192b8d7b0c4bcc4783252d7223d0b5d04859472e9329490640ddb7ec29116405",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_CucumberCorn.png": "03fb02097e00a227e683397f8a941ada2c78d713095d0f9ae2af2c9ac346157f",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_CucumberCorn.png.meta": "1fe947fa06bdf1430f2f15641423418b08ec60f020b3d338e289a5e3c524ee50",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Lettuce.png": "0a83698f81a6c8ea1aad3194898074603f7f979d860169a5159148c258978d5a",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Lettuce.png.meta": "3423cfc9b1c089d712c78c377de3bd5acfc2fad196f801e8d99741f6423a5db2",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceCorn.png": "e6901915b77463b5d9f8b321c18b5fc7c65f4b22cf4fd00c94890ff9d92fb790",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceCorn.png.meta": "57818b6afd1266b8880f95dd2c557aedc4b41e7463ddd7d05c9fa4013e066c44",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceCucumber.png": "9e62d73eff1179d1e8f03f8830cd8eed2fa2a572c037fbe10b3cf5f39903489b",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceCucumber.png.meta": "7e4db37f875802832170c0f58479e1f40e8e17af8d6002ea7f00b1e5d248105d",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceCucumberCorn.png": "5db432aa5602ade6d9027020b90653720ba79b46009268024e1530c58afffd21",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceCucumberCorn.png.meta": "b64e194a660b243680d5f7a71ded86b766b48bca52df20714214c53b7b8bd71c",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomato.png": "3ccb62d6212ade57dd3fe0c84b7afa3067730b5abc5256d1d3448d4240cde634",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomato.png.meta": "d045e22d40b63800eb22a953651948fa66dd4239fc39e0b4dba0eadf80e7df65",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomatoCorn.png": "184ea2f4aa9461cdef3d0e1445e3276af2c264876db84bfec1e5d3ca43c1730d",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomatoCorn.png.meta": "742f3e424b594ee3d0e9d8e1e2b0b1bd1063da4c0fc9bda6429d3aa41a708839",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomatoCucumber.png": "f52c8622c4fefb9fda0df241551d59c0b285f7bf26a1cc67263a14f9d1e0c221",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomatoCucumber.png.meta": "3918bd640a6d12f181476581d9aeb9a4fd7ddd987ecd38a84ffdc6dd08cf3c28",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomatoCucumberCorn.png": "c4c78a187d27485c2c96ab5d4321ffed7aaabe147352aa81c4ff3bf2d08979f5",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomatoCucumberCorn.png.meta": "d01c761adc7361c7962ad8bc4b99b3549e5ba53b9e1e9465cfd40bcd48afa69c",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Tomato.png": "3feebb85d71ea115c615c8b6c4acdf737fb55048889ffb428909114a042b10fc",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Tomato.png.meta": "5736c7a225c08d475f01c166be160585ecc2831060c9efe57ac733a0576412db",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_TomatoCucumberCorn.png": "77323ce94bfb66461a7a8fc39c7ac9f415a36f9b9c5089c407d4824c494ce9f6",
+    "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_TomatoCucumberCorn.png.meta": "7b9c22cf06c0021b53460a71927fd291c01b29094a8abfeb30238137bf027fe5"
+  },
+  "sources": {
+    "Ketchup.png": "20ffe2cc16ad22e188c10a17367b18bee4924e9409af879796cca6d0e6e303ff",
+    "Mustard.png": "80902c9ca535a8f5e3d1ee99299210216be5fea9b5039ef5633c65c9dd65de07",
+    "official-bases/Salad_Tomato_SO.png": "c1ef2894758f65b8ec8e79862257c94bd65f00fc5e5b64beea7df94dbfee4ea7",
+    "official-bases/Salad_Cucumber_SO.png": "ab53129c352ad091e4cfb0656fd163f4e219ac06ec1d12fa46cca9597b6c3703",
+    "official-bases/Salad_Plain_SO.png": "82b635cc6188a6faeb5b0bd1f41df49971926bf5f1bae1133b8267f81ccf03b8",
+    "official-bases/DLC11_Salad_tomato_cucumber_onion.png": "e6901915b77463b5d9f8b321c18b5fc7c65f4b22cf4fd00c94890ff9d92fb790",
+    "official-bases/DLC11_Salad_tomato_corn_onion.png": "823eba5639059d5a251b1ea4f60fdaf058e7384373871c69ee13ab6a01e0fced"
+  },
+  "bases": {
+    "Salad_Tomato_SO": {
+      "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/Salad_Tomato_SO.png",
+      "sha256": "c1ef2894758f65b8ec8e79862257c94bd65f00fc5e5b64beea7df94dbfee4ea7",
+      "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/Salad_Tomato_SO.png"
+    },
+    "Salad_Cucumber_SO": {
+      "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/Salad_Cucumber_SO.png",
+      "sha256": "ab53129c352ad091e4cfb0656fd163f4e219ac06ec1d12fa46cca9597b6c3703",
+      "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/Salad_Cucumber_SO.png"
+    },
+    "Salad_Plain_SO": {
+      "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/Salad_Plain_SO.png",
+      "sha256": "82b635cc6188a6faeb5b0bd1f41df49971926bf5f1bae1133b8267f81ccf03b8",
+      "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/Salad_Plain_SO.png"
+    },
+    "DLC11_Salad_tomato_cucumber_onion": {
+      "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/DLC11_Salad_tomato_cucumber_onion.png",
+      "sha256": "e6901915b77463b5d9f8b321c18b5fc7c65f4b22cf4fd00c94890ff9d92fb790",
+      "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/DLC11_Salad_tomato_cucumber_onion.png"
+    },
+    "DLC11_Salad_tomato_onion": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomato.png",
+      "sha256": "3ccb62d6212ade57dd3fe0c84b7afa3067730b5abc5256d1d3448d4240cde634",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "DLC11_Salad_tomato_corn_onion": {
+      "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/DLC11_Salad_tomato_corn_onion.png",
+      "sha256": "823eba5639059d5a251b1ea4f60fdaf058e7384373871c69ee13ab6a01e0fced",
+      "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/DLC11_Salad_tomato_corn_onion.png"
+    },
+    "DLC11_Salad_cucumber_tomato_onion": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomatoCucumber.png",
+      "sha256": "f52c8622c4fefb9fda0df241551d59c0b285f7bf26a1cc67263a14f9d1e0c221",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "DLC11_Salad_cucumber_onion": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceCucumber.png",
+      "sha256": "9e62d73eff1179d1e8f03f8830cd8eed2fa2a572c037fbe10b3cf5f39903489b",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "DLC11_Salad_corn_onion": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceCorn.png",
+      "sha256": "e6901915b77463b5d9f8b321c18b5fc7c65f4b22cf4fd00c94890ff9d92fb790",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "Web_LSalad_Lettuce": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Lettuce.png",
+      "sha256": "231c26bcc58aee61a5f7e5024bc4400f63c7374b084ba1c54efb3b25e4010129",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "Web_Salad_TomatoCucumberCorn": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_TomatoCucumberCorn.png",
+      "sha256": "77323ce94bfb66461a7a8fc39c7ac9f415a36f9b9c5089c407d4824c494ce9f6",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "Web_Salad_Tomato": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Tomato.png",
+      "sha256": "3feebb85d71ea115c615c8b6c4acdf737fb55048889ffb428909114a042b10fc",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "Web_Salad_Cucumber": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Cucumber.png",
+      "sha256": "d397459c4c1c5e727eb463838f27c0e4427ee7be7a06d4d29082a2e24ff0318f",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "Web_Salad_CucumberCorn": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_CucumberCorn.png",
+      "sha256": "03fb02097e00a227e683397f8a941ada2c78d713095d0f9ae2af2c9ac346157f",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "Web_LSalad_TomatoCucumber": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_TomatoCucumber.png",
+      "sha256": "92cdd22c6fd32c0bc8c6c3a60922547c671b4ec457364dd5453e3285fbb2d914",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "Web_LSalad_TomatoCucumberCorn": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_TomatoCucumberCorn.png",
+      "sha256": "821de8cd91b1fa082a77d859292e571486dd2f98714e497842cc6f4c811af466",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "Web_LSalad_Tomato": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Tomato.png",
+      "sha256": "3a3df943b21adf675c326f6c48884376594026df418d9ff50ce58670107e01ee",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "Web_LSalad_TomatoCorn": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_TomatoCorn.png",
+      "sha256": "c9b7a35efb31e09af520227dbf9a32a820b760c1d02c054ffbcdaf47cad6a89f",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "Web_LSalad_Cucumber": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Cucumber.png",
+      "sha256": "7e46c5f9159ba94d426dba1837d0be4285de71096337615e7b97e28de4552a48",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "Web_LSalad_CucumberCorn": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_CucumberCorn.png",
+      "sha256": "136ebf6d3dbb7b9212d4ceabfc00ecbf50caf08d560fc7a7a22255e4990d4696",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "Web_LSalad_Corn": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Corn.png",
+      "sha256": "a44fb386e0bf946d2db28e2420de50acf2571be3fae544dcb8d67ee64e1aed06",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "Web_Salad_LettuceTomatoCorn": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomatoCorn.png",
+      "sha256": "184ea2f4aa9461cdef3d0e1445e3276af2c264876db84bfec1e5d3ca43c1730d",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "Web_Salad_LettuceCucumberCorn": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceCucumberCorn.png",
+      "sha256": "5db432aa5602ade6d9027020b90653720ba79b46009268024e1530c58afffd21",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "Web_Salad_Lettuce": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Lettuce.png",
+      "sha256": "0a83698f81a6c8ea1aad3194898074603f7f979d860169a5159148c258978d5a",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "Web_Salad_LettuceTomatoCucumberCorn": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomatoCucumberCorn.png",
+      "sha256": "c4c78a187d27485c2c96ab5d4321ffed7aaabe147352aa81c4ff3bf2d08979f5",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    },
+    "Web_Salad_Corn": {
+      "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Corn.png",
+      "sha256": "c4824b501d33f22a3909c4bc3d8614a77d623cd82a0e4e30ffa6d69eb3357b48",
+      "origin": "original 21 icon / ingredient-equivalent alias"
+    }
+  },
+  "existingNewMetas": {}
+}

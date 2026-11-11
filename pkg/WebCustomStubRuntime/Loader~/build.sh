@@ -18,7 +18,7 @@ if [ -z "$LOADER_VER" ]; then
   echo "!! 未能从 Loader.cs 解析 PluginVersion，version.txt 未更新" >&2
   exit 1
 fi
-printf '%s\n' "Loader=$LOADER_VER" 'debugLog=2.0.0' > "$VERSION_FILE"
+printf '%s\n' "Loader=$LOADER_VER" 'debugLog=2.0.1' > "$VERSION_FILE"
 echo ""
 echo "→ 产物: Assets/WebCustomStubRuntime/Loader~/$DLL"
 ls -la "$DLL"

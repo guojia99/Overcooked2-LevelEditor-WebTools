@@ -44,6 +44,14 @@ export function iconImg(kind: "ingredients" | "recipes", id: string | undefined,
   return `<img class="food-icon" loading="lazy" src="${src}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">`;
 }
 
+/** 食材图标：custom_content 自定义食材走后端 iconUrl（含 updatedAt 防缓存）；
+ *  其余条目回落静态图标目录。ing 为 undefined 时显示占位图。 */
+export function ingredientIconImg(ing: { id?: string; icon?: boolean; iconUrl?: string } | undefined): string {
+  if (ing?.iconUrl)
+    return `<img class="food-icon" loading="lazy" src="${ing.iconUrl}" alt="" onerror="this.onerror=null;this.src='/icons/_placeholder.png'">`;
+  return iconImg("ingredients", ing?.id, ing?.icon);
+}
+
 /** A clickable ingredient tile (image + name). Wraps a visually-hidden checkbox so the existing
  *  `input:checked` gathering still works; selected tiles get a green border via :has(). */
 /** 选择器额外选项：single = 单选（食材箱等）；isDisabled = 禁用项置灰不可选（web 内置未放开）。 */
@@ -69,7 +77,7 @@ function ingredientCard(ing: IngredientEntry, checked: boolean, opts?: Ingredien
     : `<input type="checkbox" value="${ing.guid}" ${checked ? "checked" : ""} ${disabledReason ? "disabled" : ""}>`;
   return `<label class="pick-card${disabledReason ? " pick-card-disabled" : ""}"${disabledReason ? ` title="${disabledReason}"` : ""}>
     ${input}
-    <span class="pc-head">${iconImg("ingredients", ing.id, ing.icon)}<span class="pc-name">${ing.nameZh}${badge}${disBadge}${en ? ` <span class="muted pc-en">${en}</span>` : ""}</span></span>
+    <span class="pc-head">${ingredientIconImg(ing)}<span class="pc-name">${ing.nameZh}${badge}${disBadge}${en ? ` <span class="muted pc-en">${en}</span>` : ""}</span></span>
   </label>`;
 }
 
@@ -193,7 +201,7 @@ export function openIngredientPicker(
       const en = (ing.nameEn && ing.nameEn.trim()) || "";
       return `<label class="pick-card${sel ? " selected" : ""}" data-guid="${ing.guid}">
         <input type="radio" name="ing-pick" value="${ing.guid}" ${sel ? "checked" : ""}>
-        <span class="pc-head">${iconImg("ingredients", ing.id, ing.icon)}<span class="pc-name">${ing.nameZh}${badge}${en ? ` <span class="muted pc-en">${en}</span>` : ""}</span></span>
+        <span class="pc-head">${ingredientIconImg(ing)}<span class="pc-name">${ing.nameZh}${badge}${en ? ` <span class="muted pc-en">${en}</span>` : ""}</span></span>
       </label>`;
     })
     .join("")}</div>`;
@@ -608,7 +616,7 @@ export function openRandomCrateEditor(
     const w = state.get(ing.guid) ?? 5;
     return `<div class="pick-card rc-card${checked ? " selected" : ""}${reason ? " pick-card-disabled" : ""}"${reason ? ` title="${reason}"` : ""}>
       <label class="rc-card-main"><input type="checkbox" value="${ing.guid}" ${checked ? "checked" : ""} ${reason ? "disabled" : ""}>
-      ${iconImg("ingredients", ing.id, ing.icon)}<span class="pc-name">${ing.nameZh}${badge}${reason ? ' <span class="pc-badge pc-badge-disabled">⛔ 禁用</span>' : ""}${en ? ` <span class="muted pc-en">${en}</span>` : ""}</span></label>
+      ${ingredientIconImg(ing)}<span class="pc-name">${ing.nameZh}${badge}${reason ? ' <span class="pc-badge pc-badge-disabled">⛔ 禁用</span>' : ""}${en ? ` <span class="muted pc-en">${en}</span>` : ""}</span></label>
       <input type="number" class="rc-weight" data-guid="${ing.guid}" step="1" min="1" value="${w}" title="初始权重/配额（取出 -1，归零回满）">
     </div>`;
   };
@@ -894,7 +902,7 @@ export function openWebBackpackFillModal(
   const nameOf = (guid: string): string => byGuid.get(guid)?.nameZh ?? "未知条目";
   const iconOf = (guid: string): string => {
     const ing = byGuid.get(guid);
-    return ing ? iconImg("ingredients", ing.id, ing.icon) : "";
+    return ing ? ingredientIconImg(ing) : "";
   };
 
   const ingCard = (ing: IngredientEntry): string => {
@@ -904,7 +912,7 @@ export function openWebBackpackFillModal(
     const ord = idx >= 0 && !reason ? `<span class="pc-badge">${idx + 1}</span>` : "";
     return `<label class="pick-card${checked ? " selected" : ""}${reason ? " pick-card-disabled" : ""}">
       <input type="checkbox" value="${ing.guid}" ${checked ? "checked" : ""} ${reason ? "disabled" : ""}>
-      ${iconImg("ingredients", ing.id, ing.icon)}<span class="pc-name">${ing.nameZh}${ord}</span></label>`;
+      ${ingredientIconImg(ing)}<span class="pc-name">${ing.nameZh}${ord}</span></label>`;
   };
 
   const renderGrid = (keyword: string): string => {

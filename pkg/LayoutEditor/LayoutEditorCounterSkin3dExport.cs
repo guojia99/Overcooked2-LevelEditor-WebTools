@@ -146,6 +146,7 @@ public static class LayoutEditorCounterSkin3dExport
         GameObject inst = null;
         RenderTexture rt = null;
         GameObject camGo = null;
+        var tempMeshes = new List<Mesh>();
         try
         {
             // commonW5 等本地直引皮肤（bundleName 为空）：直接用 SO.asset。
@@ -196,6 +197,10 @@ public static class LayoutEditorCounterSkin3dExport
             float maxExt = Math.Max(extX, extZ);
             int w = Math.Max(8, Mathf.RoundToInt(TopTexSize * extX / maxExt));
             int h = Math.Max(8, Mathf.RoundToInt(TopTexSize * extZ / maxExt));
+
+            // 网格常缺顶点色；Sprites/Default 会乘顶点色，缺省为 (0,0,0,0) 时俯视图全透明。
+            for (int ri = 0; ri < list.Count; ri++)
+                WhitenVertexColors(list[ri], tempMeshes);
 
             // ③ 材质替换为 Sprites/Default（无光照直出 diffuse×tint，透明背景）
             Shader unlitShader = Shader.Find("Sprites/Default");
@@ -290,7 +295,11 @@ public static class LayoutEditorCounterSkin3dExport
                             var readable = LayoutEditorCounterSkinIconExport.MakeReadable(tex, MaxMatTexSize);
                             if (readable != null)
                             {
-                                try { File.WriteAllBytes(Path.Combine(outDir, matFile), readable.EncodeToPNG()); }
+                                try
+                                {
+                                    ForceVisibleAlpha(readable);
+                                    File.WriteAllBytes(Path.Combine(outDir, matFile), readable.EncodeToPNG());
+                                }
                                 finally { UnityEngine.Object.DestroyImmediate(readable); }
                                 matFiles.Add(matFile);
                             }
@@ -348,8 +357,73 @@ public static class LayoutEditorCounterSkin3dExport
             if (rt != null) UnityEngine.Object.DestroyImmediate(rt);
             if (camGo != null) UnityEngine.Object.DestroyImmediate(camGo);
             if (inst != null) UnityEngine.Object.DestroyImmediate(inst);
+            for (int i = 0; i < tempMeshes.Count; i++)
+            {
+                if (tempMeshes[i] != null)
+                    UnityEngine.Object.DestroyImmediate(tempMeshes[i]);
+            }
         }
         return row;
+    }
+
+    /// <summary>有些桌台贴图 RGB 有颜色但 alpha 全是 0，俯视图会变成全透明。这种补成不透明。</summary>
+    private static void ForceVisibleAlpha(Texture2D tex)
+    {
+        if (tex == null)
+            return;
+        Color32[] px;
+        try { px = tex.GetPixels32(); }
+        catch { return; }
+        if (px == null || px.Length == 0)
+            return;
+        int step = Math.Max(1, px.Length / 64);
+        int opaque = 0;
+        int colored = 0;
+        int seen = 0;
+        for (int i = 0; i < px.Length; i += step)
+        {
+            seen++;
+            if (px[i].a > 16) opaque++;
+            if (px[i].r + px[i].g + px[i].b > 24) colored++;
+        }
+        if (opaque > seen / 8 || colored < seen / 4)
+            return;
+        for (int i = 0; i < px.Length; i++)
+        {
+            Color32 c = px[i];
+            c.a = 255;
+            px[i] = c;
+        }
+        tex.SetPixels32(px);
+        tex.Apply(false);
+    }
+
+    /// <summary>复制网格并把顶点色刷成不透明白，避免 Sprites/Default 乘出全透明俯视图。</summary>
+    private static void WhitenVertexColors(Renderer r, List<Mesh> tempMeshes)
+    {
+        Mesh src = MeshOf(r);
+        if (src == null)
+            return;
+        Mesh copy;
+        try { copy = UnityEngine.Object.Instantiate(src); }
+        catch { return; }
+        if (copy == null)
+            return;
+        tempMeshes.Add(copy);
+        var cols = new Color32[copy.vertexCount];
+        for (int i = 0; i < cols.Length; i++)
+            cols[i] = new Color32(255, 255, 255, 255);
+        try { copy.colors32 = cols; }
+        catch { return; }
+        var mf = r.GetComponent<MeshFilter>();
+        if (mf != null)
+        {
+            mf.sharedMesh = copy;
+            return;
+        }
+        var smr = r as SkinnedMeshRenderer;
+        if (smr != null)
+            smr.sharedMesh = copy;
     }
 
     private static Color ApplyTint(SkinMatInfo info)

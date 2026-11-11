@@ -134,6 +134,24 @@ debugLog.dll 默认将日志写入自身同级目录：
     相同消息在该时间内只记录一次。设为 0 表示关闭相同消息去重。
     建议正常保持 5；排查高频重复异常时可以临时设为 0。
 
+  suppressNativeSpam（2.0.1 新增）
+    类型：true / false
+    默认：true
+    Unity 原生良性错误（Screen position out of view frustum /
+    Material doesn't have a texture property '_MainTex'）不写 player.log，
+    info.log 只留首条样本并按 infoSpamSummarySeconds 汇总，避免误报
+    「游戏运行时出现严重错误」和日志膨胀。设为 false 恢复旧行为。
+
+  maxPlayerPromptsPerPattern（2.0.1 新增）
+    类型：整数
+    默认：20
+    同一模式错误最多逐条提示玩家的次数，超出后只做汇总。
+
+  infoSpamSummarySeconds（2.0.1 新增）
+    类型：整数，单位为秒
+    默认：30
+    重复错误的计数汇总间隔。
+
 推荐使用方式
 ------------
 

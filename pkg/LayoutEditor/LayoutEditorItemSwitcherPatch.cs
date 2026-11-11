@@ -87,7 +87,7 @@ static class LayoutEditorItemSwitcherPatch
                     pending = true;
                     continue;
                 }
-                Patch(child, soArray.pseudoPrefabSOs);
+                Patch(child, soArray.pseudoPrefabSOs, pseudoSO);
             }
             catch (Exception)
             {
@@ -109,7 +109,7 @@ static class LayoutEditorItemSwitcherPatch
             || prefabName == "dlc08_condiment_dispenser" || prefabName == "dlc11_condiment_dispenser";
     }
 
-    private static void Patch(GameObject child, PseudoPrefabSO[] sos)
+    private static void Patch(GameObject child, PseudoPrefabSO[] sos, PseudoPrefabSO machineSO)
     {
         // Unity 重载 ==：已销毁的对象此处判空为 true，直接跳过
         if (child == null)
@@ -173,7 +173,16 @@ static class LayoutEditorItemSwitcherPatch
         // 两边均自同一已加载 bundle 实例解析，引用相等成立），原数组没有的
         // 新元素按 soArray 顺序追加尾部。循环集合不变，仅顺序归一。
         prefabs = SortByOriginalOrder(switcher != null ? switcher.m_itemPrefabs : null, prefabs);
-        nodes = SortByOriginalOrder(placementSwitcher != null ? placementSwitcher.m_ingredients : null, nodes);
+        if (placementSwitcher != null)
+        {
+            // DLC11 Setup already overwrites the child's list with user order. Only
+            // the untouched bundle prefab still describes native cosmetic slots.
+            IngredientOrderNode[] original = placementSwitcher.m_ingredients;
+            GameObject native = machineSO == null ? null : LoadBundleAsset<GameObject>(machineSO);
+            PlacementItemSwitcher nativeSwitcher = native == null ? null : native.GetComponent<PlacementItemSwitcher>();
+            if (nativeSwitcher != null) original = nativeSwitcher.m_ingredients;
+            nodes = SortByOriginalOrder(original, nodes);
+        }
 
         // 主流形态：PickupItemSwitcher（开关触发 → 循环切换 PickupItemSpawner 输出）
         if (switcher != null && prefabs.Count > 0)

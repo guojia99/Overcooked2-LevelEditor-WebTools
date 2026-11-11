@@ -821,7 +821,7 @@ export function addFromCatalog(
   if (cat.id === "web_conveyor_station_serve") {
     // commonW5 可上菜传送带站：复用 Conveyor 参数轨，运行时由 ConveyorServe| 接管上菜。
     item.stubKind = "Conveyor";
-    item.conveyor = { conveySpeed: 0.5 };
+    item.conveyor = { conveySpeed: 0.5, serve: true };
   }
   if (cat.id === "Teleportal") {
     item.stubKind = "Teleportal";

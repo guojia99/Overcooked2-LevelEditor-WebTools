@@ -9,7 +9,8 @@ namespace CustomStub
     ///
     /// 运行时不引用 Assembly-CSharp 类型（asmdef 只依赖 LevelEditorStub），全部通过反射：
     ///  - 在伪根子物体上解析 ServerConveyorStation / ServerAttachStation；
-    ///  - 传送带空闲且自身 attach 有物品时，沿运动方向找末端上菜台（ServerPlateStation）；
+    ///  - 传送带空闲且自身 attach 有物品时，沿【运动方向正前方】找上菜台（ServerPlateStation）：
+    ///    上菜口（attach point）须落在正前方 ~1 格内、横向对齐、高度差 ≤1m（同一格）；
     ///  - 等待 0.5 / |GetConveySpeed()| 秒后取走物品并 AddItem 到上菜台；
     ///  - 非盘子的无效上菜由 HarmonyPatches 的 ServerPlateStation.OnItemAdded 前缀接管
     ///    （ReportInvalidServe：断小费/连击 + 发失败事件 + 次帧消耗物品）。
@@ -44,7 +45,6 @@ namespace CustomStub
         private Type m_plateStationType;
         private Type m_gridIndexType;
         private PropertyInfo m_gridX;
-        private PropertyInfo m_gridY;
         private PropertyInfo m_gridZ;
 
         private MethodInfo m_isConveying;
@@ -57,12 +57,27 @@ namespace CustomStub
         private MethodInfo m_addItem;
         private MethodInfo m_isReceiving;
         private MethodInfo m_updateAdjacentReceiver;
-        private MethodInfo m_getGridOccupant;
-        private MethodInfo m_getPosFromGrid;
         private MethodInfo m_getGridFromPos;
+        private MethodInfo m_getAttachPoint;
         private FieldInfo m_gridManagerField;
         private FieldInfo m_selfReceiverField;
         private object m_defaultContext;
+
+        /// <summary>上菜台缓存（约 1s TTL）——热路径不做高频 FindObjectsOfType。</summary>
+        private UnityEngine.Object[] m_plateCache;
+        private float m_nextPlateScanAt;
+        /// <summary>诊断节流（常开）：未命中上菜台每 2s 一次；命中目标变化时一次。</summary>
+        private float m_nextDiagAt;
+        private string m_lastDiagTarget;
+
+        /// <summary>几何判定常量（实测两种 attach point 均在本格中心 (0,0.5,0)）：
+        ///  仅接受【相邻格】上菜台——上菜口距传送带落点约 1 格（≈1.2m，即前沿外 ≤0.6m），
+        ///  横向 ≤0.8m（半格 0.6 留浮点/摆放容差；2×1 上菜台上菜口在跨度中心，喂任一侧都是
+        ///  正 0.6m 左右），高度差 ≤1m（同一格）。</summary>
+        private const float MinForward = 0.3f;
+        private const float MaxForward = 1.3f;
+        private const float MaxLateral = 0.8f;
+        private const float MaxHeight = 1.0f;
 
         private Vector3 m_lastPosition;
         private Quaternion m_lastRotation;
@@ -108,14 +123,17 @@ namespace CustomStub
                     return;
                 m_nextTargetAt = Time.time + 0.2f;
 
-                m_plateStation = FindPlateStation();
+                m_plateStation = FindPlateStation(item);
                 if (m_plateStation == null)
                     return;
 
                 m_plateAttach = GameApi.GetComponent(m_plateStation.gameObject, m_serverAttachType);
                 if (m_plateAttach == null)
                     return;
-                if (m_addItem == null || !(bool)m_hasItem.Invoke(m_plateAttach, null))
+                if (m_addItem == null)
+                    return;
+                // 上菜口为空才送（HasItem == true 表示已有物品，等它空出来）。
+                if ((bool)m_hasItem.Invoke(m_plateAttach, null))
                     return;
 
                 float speed = 0.5f;
@@ -155,7 +173,6 @@ namespace CustomStub
                 if (m_gridIndexType != null)
                 {
                     m_gridX = m_gridIndexType.GetProperty("X", BindingFlags.Instance | BindingFlags.Public);
-                    m_gridY = m_gridIndexType.GetProperty("Y", BindingFlags.Instance | BindingFlags.Public);
                     m_gridZ = m_gridIndexType.GetProperty("Z", BindingFlags.Instance | BindingFlags.Public);
                 }
 
@@ -195,6 +212,7 @@ namespace CustomStub
                 m_inspectItem = FindMethodUp(m_conveyorAttach.GetType(), "InspectItem", 0);
                 m_hasItem = FindMethodUp(m_conveyorAttach.GetType(), "HasItem", 0);
                 m_takeItem = FindMethodUp(m_conveyorAttach.GetType(), "TakeItem", 0);
+                m_getAttachPoint = FindMethodUp(m_serverAttachType, "GetAttachPoint", 1);
                 m_addItem = FindMethodUp(m_conveyorAttach.GetType(), "AddItem", 3);
                 if (m_addItem == null)
                     m_addItem = FindMethodUp(m_conveyorAttach.GetType(), "AddItem", 2);
@@ -218,8 +236,6 @@ namespace CustomStub
                     if (gm != null)
                     {
                         var gmType = gm.GetType();
-                        m_getGridOccupant = FindMethodUp(gmType, "GetGridOccupant", 1);
-                        m_getPosFromGrid = FindMethodUp(gmType, "GetPosFromGridLocation", 1);
                         m_getGridFromPos = FindMethodUp(gmType, "GetGridLocationFromPos", 1);
                     }
                 }
@@ -228,7 +244,7 @@ namespace CustomStub
                 m_lastRotation = m_serverConveyor.transform.rotation;
                 m_haveLastPose = true;
 
-                StubLog.Dbg("[ConveyorServe] 已解析传送带: " + m_serverConveyor.name);
+                StubLog.Log("[ConveyorServe] 已解析传送带: " + m_serverConveyor.name);
                 return true;
             }
             catch (Exception ex)
@@ -271,140 +287,173 @@ namespace CustomStub
             }
         }
 
-        /// <summary>找运动方向末端的上菜台：相邻格 → 沿方向第二格 → 上菜台包围盒跨格兜底。</summary>
-        private Component FindPlateStation()
+        /// <summary>沿传送方向正前方找【相邻格】上菜台：取上菜口
+        ///  （ServerAttachStation.GetAttachPoint）落在运动方向正前方约 1 格
+        ///  [MinForward, MaxForward]（≈1.2m，即前沿外 ≤0.6m）、横向 ≤MaxLateral（0.6m，
+        ///  直接对齐）、与传送带落点高度差 ≤MaxHeight（同一格内，1m）的最近者。
+        ///  方向背离 / 非相邻 / 跨层的上菜台一律不算。</summary>
+        private Component FindPlateStation(GameObject item)
         {
-            if (m_getNextGridIndex == null || m_gridManagerField == null || m_getGridOccupant == null)
+            if (m_plateStationType == null)
                 return null;
 
-            object gridManager = m_gridManagerField.GetValue(m_serverConveyor);
-            if (gridManager == null)
+            Vector2 dir = OutputDirectionXZ();
+            if (dir.sqrMagnitude < 0.0001f)
                 return null;
 
-            if (m_getGridOccupant == null)
+            Vector3 anchor = ConveyorAnchor(item);
+            var plates = GetPlateStations();
+            Component best = null;
+            float bestScore = float.MaxValue;
+            float bestFwd = 0f, bestLat = 0f;
+            Component near = null;
+            float nearAbsFwd = float.MaxValue;
+            float nearFwd = 0f, nearLat = 0f, nearH = 0f;
+            for (int i = 0; i < plates.Length; i++)
             {
-                m_getGridOccupant = FindMethodUp(gridManager.GetType(), "GetGridOccupant", 1);
-                m_getPosFromGrid = FindMethodUp(gridManager.GetType(), "GetPosFromGridLocation", 1);
-                m_getGridFromPos = FindMethodUp(gridManager.GetType(), "GetGridLocationFromPos", 1);
-            }
-            if (m_getGridOccupant == null)
-                return null;
+                var c = plates[i] as Component;
+                if (c == null)
+                    continue;
 
-            object next = m_getNextGridIndex.Invoke(m_serverConveyor, null);
-            if (next == null)
-                return null;
-
-            var occupant = m_getGridOccupant.Invoke(gridManager, new object[] { next }) as GameObject;
-            var plate = FindPlateUp(occupant);
-            if (plate != null)
-                return plate;
-
-            // 2x1 上菜台可能只占 origin 格：沿运动方向再探一格。
-            int dx = 0;
-            int dz = 0;
-            if (m_getGridFromPos != null && m_gridX != null && m_gridZ != null)
-            {
-                object current = null;
-                try
+                Vector3 port = PlatePort(c, item);
+                float dx = port.x - anchor.x;
+                float dz = port.z - anchor.z;
+                float forward = dx * dir.x + dz * dir.y;
+                float lateral = Mathf.Abs(dx * -dir.y + dz * dir.x);
+                float height = Mathf.Abs(port.y - anchor.y);
+                if (Mathf.Abs(forward) < nearAbsFwd)
                 {
-                    current = m_getGridFromPos.Invoke(gridManager, new object[] { m_serverConveyor.transform.position });
+                    nearAbsFwd = Mathf.Abs(forward);
+                    near = c;
+                    nearFwd = forward;
+                    nearLat = lateral;
+                    nearH = height;
                 }
-                catch (Exception)
+                if (forward < MinForward || forward > MaxForward)
+                    continue;
+                if (lateral > MaxLateral)
+                    continue;
+                if (height > MaxHeight)
+                    continue;
+
+                float score = forward + lateral * 2f;
+                if (score < bestScore)
                 {
-                    current = null;
-                }
-                if (current != null)
-                {
-                    dx = ReadInt(m_gridX, next) - ReadInt(m_gridX, current);
-                    dz = ReadInt(m_gridZ, next) - ReadInt(m_gridZ, current);
-                }
-            }
-            if (dx == 0 && dz == 0)
-            {
-                dx = Mathf.RoundToInt(-m_serverConveyor.transform.right.x);
-                dz = Mathf.RoundToInt(-m_serverConveyor.transform.right.z);
-            }
-            if ((dx != 0 || dz != 0) && m_gridX != null && m_gridY != null && m_gridZ != null)
-            {
-                object second = OffsetIndex(next, dx, dz);
-                if (second != null)
-                {
-                    var occupant2 = m_getGridOccupant.Invoke(gridManager, new object[] { second }) as GameObject;
-                    plate = FindPlateUp(occupant2);
-                    if (plate != null)
-                        return plate;
+                    bestScore = score;
+                    best = c;
+                    bestFwd = forward;
+                    bestLat = lateral;
                 }
             }
 
-            // 兜底：按格心与上菜台碰撞体包围盒求交（仅在有物品时调用，带缓存）。
-            if (m_getPosFromGrid != null && m_getPosFromGrid.GetParameters().Length == 1)
+            if (best != null)
             {
-                object centerRaw = null;
-                try
+                string tn = best.name;
+                if (tn != m_lastDiagTarget)
                 {
-                    centerRaw = m_getPosFromGrid.Invoke(gridManager, new object[] { next });
+                    m_lastDiagTarget = tn;
+                    StubLog.Log("[ConveyorServe] " + name + " 命中上菜台: " + tn +
+                        " fwd=" + bestFwd.ToString("0.##") + " lat=" + bestLat.ToString("0.##"));
                 }
-                catch (Exception)
+            }
+            else if (Time.time >= m_nextDiagAt)
+            {
+                m_nextDiagAt = Time.time + 2f;
+                m_lastDiagTarget = null;
+                string nearTxt = near != null
+                    ? (" 最近 " + near.name + " fwd=" + nearFwd.ToString("0.##") +
+                       " lat=" + nearLat.ToString("0.##") + " h=" + nearH.ToString("0.##"))
+                    : " 无上菜台";
+                StubLog.LogWarn("[ConveyorServe] " + name + " 未命中上菜台: dir=(" +
+                    dir.x.ToString("0.##") + "," + dir.y.ToString("0.##") + ") anchor=(" +
+                    anchor.x.ToString("0.##") + "," + anchor.y.ToString("0.##") + "," +
+                    anchor.z.ToString("0.##") + ") 上菜台数=" + plates.Length + nearTxt);
+            }
+            return best;
+        }
+
+        /// <summary>传送带输出方向（世界 XZ，单位化）：优先按真实「下一格」差
+        ///  （= 原版 GetNextGridIndex 采用的方向，尊重 Leftwards/Rightwards 与旋转）；
+        ///  取不到时退化为站体 -right（Rightwards 同向，与皮带模型一致）。</summary>
+        private Vector2 OutputDirectionXZ()
+        {
+            if (m_getNextGridIndex != null && m_getGridFromPos != null
+                && m_gridManagerField != null && m_serverConveyor != null
+                && m_gridX != null && m_gridZ != null)
+            {
+                object gridManager = m_gridManagerField.GetValue(m_serverConveyor);
+                if (gridManager != null)
                 {
-                    centerRaw = null;
-                }
-                if (centerRaw is Vector3)
-                {
-                    var center = (Vector3)centerRaw;
-                    var all = GameApi.FindAll(m_plateStationType);
-                    for (int i = 0; i < all.Length; i++)
+                    object next = null;
+                    object current = null;
+                    try { next = m_getNextGridIndex.Invoke(m_serverConveyor, null); }
+                    catch (Exception) { next = null; }
+                    try { current = m_getGridFromPos.Invoke(gridManager, new object[] { m_serverConveyor.transform.position }); }
+                    catch (Exception) { current = null; }
+                    if (next != null && current != null)
                     {
-                        var c = all[i] as Component;
-                        if (c == null)
-                            continue;
-                        if (BoundsCoverXZ(c.gameObject, center))
-                            return c;
+                        int dx = ReadInt(m_gridX, next) - ReadInt(m_gridX, current);
+                        int dz = ReadInt(m_gridZ, next) - ReadInt(m_gridZ, current);
+                        if (dx != 0 || dz != 0)
+                            return new Vector2(dx, dz).normalized;
                     }
                 }
             }
 
-            return null;
+            var right = m_serverConveyor != null ? m_serverConveyor.transform.right : transform.right;
+            var v = new Vector2(-right.x, -right.z);
+            var cardinal = new Vector2(Mathf.Round(v.x), Mathf.Round(v.y));
+            if (cardinal.sqrMagnitude > 0.01f)
+                return cardinal.normalized;
+            return v.sqrMagnitude > 0.0001f ? v.normalized : Vector2.zero;
         }
 
-        private Component FindPlateUp(GameObject go)
+        /// <summary>传送带物品落点（attach point）世界坐标；取不到退回站体位置。</summary>
+        private Vector3 ConveyorAnchor(GameObject item)
         {
-            if (go == null)
-                return null;
-            var direct = GameApi.GetComponent(go, m_plateStationType);
-            if (direct != null)
-                return direct;
-            // 网格占用体可能是上菜台/伪根的父级或子级，两个方向都兜一下。
-            var children = GameApi.GetComponentsInChildren(go, m_plateStationType, true);
-            if (children != null && children.Length > 0)
-                return children[0];
-            var t = go.transform.parent;
-            while (t != null)
+            if (m_conveyorAttach != null && m_getAttachPoint != null)
             {
-                var p = GameApi.GetComponent(t.gameObject, m_plateStationType);
-                if (p != null)
-                    return p;
-                t = t.parent;
-            }
-            return null;
-        }
-
-        private static bool BoundsCoverXZ(GameObject go, Vector3 p)
-        {
-            var colliders = go.GetComponentsInChildren<Collider>(true);
-            for (int i = 0; i < colliders.Length; i++)
-            {
-                var c = colliders[i];
-                if (c == null)
-                    continue;
-                var b = c.bounds;
-                if (p.x >= b.min.x - 0.05f && p.x <= b.max.x + 0.05f
-                    && p.z >= b.min.z - 0.05f && p.z <= b.max.z + 0.05f)
+                try
                 {
-                    if (p.y >= b.min.y - 0.25f && p.y <= b.max.y + 1.5f)
-                        return true;
+                    var t = m_getAttachPoint.Invoke(m_conveyorAttach, new object[] { item }) as Transform;
+                    if (t != null)
+                        return t.position;
+                }
+                catch (Exception) { }
+            }
+            return m_serverConveyor != null ? m_serverConveyor.transform.position : transform.position;
+        }
+
+        /// <summary>上菜台上菜口（attach point）世界坐标；取不到退回上菜台自身位置。</summary>
+        private Vector3 PlatePort(Component plate, GameObject item)
+        {
+            if (plate != null && m_getAttachPoint != null)
+            {
+                var attach = GameApi.GetComponent(plate.gameObject, m_serverAttachType);
+                if (attach == null)
+                    attach = GameApi.GetComponentInParent(plate, m_serverAttachType);
+                if (attach != null)
+                {
+                    try
+                    {
+                        var t = m_getAttachPoint.Invoke(attach, new object[] { item }) as Transform;
+                        if (t != null)
+                            return t.position;
+                    }
+                    catch (Exception) { }
                 }
             }
-            return false;
+            return plate != null ? plate.transform.position : Vector3.zero;
+        }
+
+        /// <summary>上菜台列表（约 1s TTL 缓存，热路径不做高频 FindObjectsOfType）。</summary>
+        private UnityEngine.Object[] GetPlateStations()
+        {
+            if (m_plateCache != null && Time.time < m_nextPlateScanAt)
+                return m_plateCache;
+            m_nextPlateScanAt = Time.time + 1f;
+            m_plateCache = GameApi.FindAll(m_plateStationType);
+            return m_plateCache;
         }
 
         private int ReadInt(PropertyInfo p, object index)
@@ -413,23 +462,6 @@ namespace CustomStub
                 return 0;
             object v = p.GetValue(index, null);
             return v == null ? 0 : Convert.ToInt32(v);
-        }
-
-        private object OffsetIndex(object index, int dx, int dz)
-        {
-            if (m_gridIndexType == null || index == null)
-                return null;
-            try
-            {
-                int x = ReadInt(m_gridX, index) + dx;
-                int y = ReadInt(m_gridY, index);
-                int z = ReadInt(m_gridZ, index) + dz;
-                return Activator.CreateInstance(m_gridIndexType, new object[] { x, y, z });
-            }
-            catch (Exception)
-            {
-                return null;
-            }
         }
 
         private IEnumerator Transfer(GameObject item, Component plateAttach, float speed)
@@ -521,6 +553,8 @@ namespace CustomStub
             try
             {
                 Vector3 fwd = taken.transform.forward;
+                StubLog.Log("[ConveyorServe] " + name + " 送入上菜台: " +
+                    (plateAttach != null ? plateAttach.gameObject.name : "?") + " item=" + taken.name);
                 m_addItem.Invoke(plateAttach, new object[] { taken, new Vector2(fwd.x, fwd.z), m_defaultContext });
             }
             catch (Exception ex)

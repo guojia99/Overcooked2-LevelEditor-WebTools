@@ -1422,6 +1422,8 @@ public static class ButtonLinkBakery
             AddTrigTransition(bReady, bRun, pb);
 
         // AND 门：A 方各组全部完成 → BReady（m=1 直接过渡；m=2 走两条顺序无关路径）。
+        // 同帧双完成时，ButtonLogicRelay 进入 AWait/BWait 不得 ResetTrigger 另一条
+        // BLDone（否则等待态饿死，按钮停在按下色）。共享环已改为只听第一条。
         if (doneA.Length == 1)
         {
             AddTrigTransition(aRun, bReady, doneA[0]);

@@ -367,10 +367,31 @@ const EXPORT_PHASE_HINT: Record<string, string> = {
   compile: "统一运行时源码已更新，自动编译中（完成后自动继续导出）…",
   prepare: "准备场景（逐个保存并清除临时物体）…",
   clean: "清理旧构建产物…",
-  build: "构建 AssetBundle，约需 3-5 分钟，请保持 Unity 打开…",
+  build: "构建 AssetBundle，请保持 Unity 打开…",
   package: "清理 manifest / meta 文件…",
   zip: "生成 zip 压缩包…",
 };
+
+const UNITY_FOCUS_NUDGE =
+  "排队较久：请切换到 Unity，点击编辑器窗口，并在 Unity 页面停留 5–10 秒，以免编辑器在后台卡住导致导出失败。";
+
+/** 排队 / 等编译超过此时长仍无进展，就提醒用户聚焦 Unity。 */
+const QUEUE_NUDGE_AFTER_MS = 12_000;
+
+function queueFocusNote(state: { phase: string; since: number }, phase: string): string {
+  const waiting = phase === "queued" || phase === "compile";
+  if (!waiting) {
+    state.phase = phase;
+    state.since = Date.now();
+    return "";
+  }
+  if (state.phase !== phase) {
+    state.phase = phase;
+    state.since = Date.now();
+  }
+  if (Date.now() - state.since < QUEUE_NUDGE_AFTER_MS) return "";
+  return UNITY_FOCUS_NUDGE;
+}
 
 function fmtElapsed(ms: number): string {
   const sec = Math.floor(ms / 1000);
@@ -378,11 +399,38 @@ function fmtElapsed(ms: number): string {
   return `${m}:${(sec % 60).toString().padStart(2, "0")}`;
 }
 
+/** 按实测校准（15 关约 1+3+1 分钟）：
+ *  排队约 1 分钟（与关卡数无关）；
+ *  准备场景约 12 秒/关（15 关约 3 分钟）；
+ *  逐关打包约 4 秒/关（15 关约 1 分钟）。
+ *  勾选依赖包再加重打 commonW 的约 1 分钟。 */
+function estimateExportDuration(levelCount: number, withDeps = false): string {
+  const n = Math.max(0, Math.floor(levelCount));
+  if (n <= 0) return "请先勾选关卡";
+  const queueSec = 60;
+  const prepareSec = n * 12;
+  const packSec = n * 4;
+  let totalSec = queueSec + prepareSec + packSec;
+  if (withDeps) totalSec += 60;
+  if (totalSec < 90) {
+    const sec = Math.max(20, Math.round(totalSec / 10) * 10);
+    return `约 ${sec} 秒`;
+  }
+  const minutes = Math.max(1, Math.round(totalSec / 60));
+  return `约 ${minutes} 分钟`;
+}
+
 /** 轮询导出进度直至完成并下载 zip（单集 / 多集合并导出共用）。
  *  expectedKey：与后端状态 setName 匹配的标识（单集 = 集名；多集 = "+" 连接串）。 */
-async function awaitExportAndDownload(expectedKey: string, startAt: number): Promise<void> {
+async function awaitExportAndDownload(
+  expectedKey: string,
+  startAt: number,
+  levelCount = 0,
+  withDeps = false
+): Promise<void> {
   // 状态端点由桥接监听线程直答，构建期间仍可响应。
   const deadline = Date.now() + 30 * 60 * 1000;
+  const queueWait = { phase: "", since: Date.now() };
   for (;;) {
     if (Date.now() > deadline) throw new Error("导出超时（30 分钟），请查看 Unity Console。");
     await new Promise((r) => setTimeout(r, 2000));
@@ -405,8 +453,13 @@ async function awaitExportAndDownload(expectedKey: string, startAt: number): Pro
       setStatus(`已导出 ${res.fileName}（${st.fileCount} 个文件），已开始下载`);
       return;
     }
-    const hint = st.message || EXPORT_PHASE_HINT[st.phase] || "导出中…";
-    setBusyMessage(`${hint}（已进行 ${fmtElapsed(Date.now() - startAt)}）`);
+    let hint = st.message || EXPORT_PHASE_HINT[st.phase] || "导出中…";
+    if ((st.phase === "prepare" || st.phase === "build") && levelCount > 0 && hint.indexOf("约") < 0)
+      hint = `${hint} ${estimateExportDuration(levelCount, withDeps)}`;
+    setBusyMessage(
+      `${hint}（已进行 ${fmtElapsed(Date.now() - startAt)}）`,
+      queueFocusNote(queueWait, st.phase || "")
+    );
   }
 }
 
@@ -415,7 +468,7 @@ function confirmExportSet(app: HTMLElement, s: LevelSetInfo): void {
   const prevVersion = (s.version || "").trim();
   openModal(
     `导出关卡集 · ${esc(display)}`,
-    `<p>打包 <b>${esc(display)}</b>（勾选 <span id="exp-sel-count">${s.levelCount}</span> 个关卡），约需 3-5 分钟。</p>
+    `<p>打包 <b>${esc(display)}</b>（勾选 <span id="exp-sel-count">${s.levelCount}</span> 个关卡），<span id="exp-eta">${estimateExportDuration(s.levelCount)}</span>。</p>
      <label class="m-field">版本号（当前 v${esc(prevVersion || "0")}）<input type="text" id="exp-set-version" autocomplete="off" placeholder="${esc(prevVersion || "0.1")}" value="${esc(prevVersion)}"></label>
      <label class="m-field" style="flex-direction:row;align-items:center;gap:8px;">
         <input type="checkbox" id="exp-with-deps" style="width:auto;">
@@ -446,6 +499,12 @@ function confirmExportSet(app: HTMLElement, s: LevelSetInfo): void {
     depsHint.textContent = (depsChk?.checked ?? false)
       ? "zip = 关卡 + 依赖包（Loader/运行时/commonW），新玩家一步到位。"
       : "zip 只含关卡，适合已装依赖包的玩家。";
+    const countEl = document.getElementById("exp-sel-count");
+    const raw = countEl?.textContent ?? "";
+    const selected = parseInt(raw.split("/")[0] ?? "", 10);
+    const etaEl = document.getElementById("exp-eta");
+    if (etaEl && Number.isFinite(selected))
+      etaEl.textContent = estimateExportDuration(selected, depsChk?.checked ?? false);
   };
   depsChk?.addEventListener("change", updateDepsHint);
   updateDepsHint();
@@ -486,7 +545,8 @@ function confirmExportSet(app: HTMLElement, s: LevelSetInfo): void {
       await api.startSetExport([s.setName], mode, undefined, selectedLevels);
       closeModal();
 
-      await awaitExportAndDownload(s.setName, startAt);
+      const exportCount = boxes.length > 0 ? checkedScenes.length : s.levelCount;
+      await awaitExportAndDownload(s.setName, startAt, exportCount, withDeps);
       await renderSetList(app);
     } catch (e) {
       setStatus((e as Error).message, false);
@@ -540,6 +600,9 @@ async function wireExportLevelSelection(setName: string): Promise<void> {
       const checked = boxes.filter((b) => b.checked).length;
       const countEl = document.getElementById("exp-sel-count");
       if (countEl) countEl.textContent = `${checked}/${boxes.length}`;
+      const etaEl = document.getElementById("exp-eta");
+      const withDeps = (document.getElementById("exp-with-deps") as HTMLInputElement | null)?.checked ?? false;
+      if (etaEl) etaEl.textContent = estimateExportDuration(checked, withDeps);
       const okBtn = document.querySelector("[data-ok]") as HTMLButtonElement | null;
       if (okBtn) okBtn.disabled = checked === 0;
     };
@@ -569,6 +632,7 @@ async function wireExportLevelSelection(setName: string): Promise<void> {
  *  （导出前逐个保存，写入 LevelSetInfo 与 zip 文件名）。 */
 function confirmExportMultiSet(app: HTMLElement, sets: LevelSetInfo[]): void {
   const joinedKey = sets.map((s) => s.setName).join("+");
+  const totalLevels = sets.reduce((n, s) => n + (s.levelCount || 0), 0);
   const displayName = (s: LevelSetInfo): string => s.levelSetNameZH || s.levelSetName || s.setName;
   const versionRows = sets
     .map(
@@ -581,7 +645,7 @@ function confirmExportMultiSet(app: HTMLElement, sets: LevelSetInfo[]): void {
     .join("");
   openModal(
     `合并导出 ${sets.length} 个关卡集`,
-    `<p>打包 <b>${sets.map((s) => esc(displayName(s))).join("、")}</b> 到同一个 zip（各集目录并列），约需 3-5 分钟。</p>
+    `<p>打包 <b>${sets.map((s) => esc(displayName(s))).join("、")}</b> 到同一个 zip（各集目录并列，共 ${totalLevels} 关），<span id="exp-eta">${estimateExportDuration(totalLevels)}</span>。</p>
      <p class="modal-hint">合并导出包含各集全部关卡（跳过关卡请用单集导出）。各集版本号（不改则沿用）：</p>
      ${versionRows}
      <label class="m-field" style="flex-direction:row;align-items:center;gap:8px;">
@@ -604,6 +668,8 @@ function confirmExportMultiSet(app: HTMLElement, sets: LevelSetInfo[]): void {
     depsHint.textContent = (depsChk?.checked ?? false)
       ? "zip = 各集关卡 + 一份依赖包，新玩家一步到位。"
       : "zip 只含各集关卡，适合已装依赖包的玩家。";
+    const etaEl = document.getElementById("exp-eta");
+    if (etaEl) etaEl.textContent = estimateExportDuration(totalLevels, depsChk?.checked ?? false);
   };
   depsChk?.addEventListener("change", updateDepsHint);
   updateDepsHint();
@@ -638,7 +704,7 @@ function confirmExportMultiSet(app: HTMLElement, sets: LevelSetInfo[]): void {
       await api.startSetExport(sets.map((s) => s.setName), mode);
       closeModal();
 
-      await awaitExportAndDownload(joinedKey, startAt);
+      await awaitExportAndDownload(joinedKey, startAt, totalLevels, withDeps);
       await renderSetList(app);
     } catch (e) {
       setStatus((e as Error).message, false);
@@ -785,6 +851,7 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
       await api.startSetExport([anchorSet], "deps", norm);
       closeModal();
       const deadline = Date.now() + 15 * 60 * 1000;
+      const queueWait = { phase: "", since: Date.now() };
       for (;;) {
         if (Date.now() > deadline) throw new Error("导出超时（15 分钟），请查看 Unity Console。");
         await new Promise((r) => setTimeout(r, 1500));
@@ -808,7 +875,10 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
           break;
         }
         const hint = st2.message || EXPORT_PHASE_HINT[st2.phase] || "导出中…";
-        setBusyMessage(`${hint}（已进行 ${fmtElapsed(Date.now() - startAt)}）`);
+        setBusyMessage(
+          `${hint}（已进行 ${fmtElapsed(Date.now() - startAt)}）`,
+          queueFocusNote(queueWait, st2.phase || "")
+        );
       }
     } catch (e) {
       setStatus((e as Error).message, false);
@@ -1004,6 +1074,13 @@ function depSummaryHtml(summary: SetLibSummary[] | undefined): string {
     </div>`;
 }
 
+/** 分组名 → 稳定展示色（仅用于 UI 配色，同名同色）。 */
+function groupAccentColor(name: string): string {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
+  return `hsl(${h}, 70%, 55%)`;
+}
+
 async function renderLevelList(app: HTMLElement, setName: string): Promise<void> {
   syncManagePath(manageLevelListPath(setName));
   const content = shell(app, `关卡列表 · ${setName}`, "返回关卡集", () => void renderSetList(app));
@@ -1041,14 +1118,14 @@ async function renderLevelList(app: HTMLElement, setName: string): Promise<void>
 
   const levelIds = levels.map((lv, idx) => lv.dataDir.split("/").pop() || `level${idx}`);
 
-  const cards = levels
-    .map((lv, idx) => {
-      const id = levelIds[idx];
-      const shot = lv.screenshotPath ? api.imageFloorUrl(lv.screenshotPath) : "";
-      const title = lv.levelNameZH || lv.levelName || id;
-      const enName = lv.levelNameZH && lv.levelName ? lv.levelName : "";
-      return `
+  const cardHtml = (lv: LevelSummary, idx: number): string => {
+    const id = levelIds[idx];
+    const shot = lv.screenshotPath ? api.imageFloorUrl(lv.screenshotPath) : "";
+    const title = lv.levelNameZH || lv.levelName || id;
+    const enName = lv.levelNameZH && lv.levelName ? lv.levelName : "";
+    return `
       <div class="m-card m-level-card">
+        ${levels.length > 1 ? `<label class="m-level-pick" title="选择此关卡（可批量删除）"><input type="checkbox" data-pick="${esc(id)}" aria-label="选择关卡 ${esc(title)}"></label>` : ""}
         <div class="m-level-shot${shot ? "" : " empty"}">
           ${shot ? `<img src="${esc(shot)}" alt="截图" loading="lazy">` : '<span class="muted">无截图</span>'}
         </div>
@@ -1066,20 +1143,59 @@ ${depBadgesHtml(statsByPath.get(lv.assetPath))}
           ${mBtnHtml("删除", "danger", { "data-del": esc(id) })}
         </div>
       </div>`;
-    })
-    .join("");
+  };
+
+  // 分组展示：组顺序 = 各组在关卡序列中首次出现先后；组内 = 关卡原顺序（游戏顺序不变）。
+  const groupOrder: string[] = [];
+  const groupMembers = new Map<string, number[]>();
+  levels.forEach((lv, idx) => {
+    const g = (lv.group ?? "").trim();
+    if (!g) return;
+    let arr = groupMembers.get(g);
+    if (!arr) {
+      arr = [];
+      groupMembers.set(g, arr);
+      groupOrder.push(g);
+    }
+    arr.push(idx);
+  });
+  const ungroupedIdx = levels.map((_, i) => i).filter((i) => !(levels[i].group ?? "").trim());
+
+  let gridHtml: string;
+  if (groupOrder.length > 0) {
+    const sections = groupOrder.map((g) => {
+      const idxs = groupMembers.get(g)!;
+      return `
+      <div class="m-group-section">
+        <div class="m-group-head"><span class="m-group-dot" style="--grp-color: ${groupAccentColor(g)}"></span><span class="m-group-title">${esc(g)}</span><span class="m-group-count">${idxs.length} 关</span></div>
+        <div class="m-grid m-level-grid">${idxs.map((i) => cardHtml(levels[i], i)).join("")}</div>
+      </div>`;
+    });
+    if (ungroupedIdx.length > 0) {
+      sections.push(`
+      <div class="m-group-section">
+        <div class="m-group-head"><span class="m-group-dot muted"></span><span class="m-group-title muted">未分组</span><span class="m-group-count">${ungroupedIdx.length} 关</span></div>
+        <div class="m-grid m-level-grid">${ungroupedIdx.map((i) => cardHtml(levels[i], i)).join("")}</div>
+      </div>`);
+    }
+    gridHtml = sections.join("");
+  } else {
+    gridHtml = `<div class="m-grid m-level-grid">${levels.map((lv, i) => cardHtml(lv, i)).join("") || '<p class="muted">暂无关卡</p>'}</div>`;
+  }
 
   content.innerHTML = `
     <div class="m-actions-row m-sticky-toolbar">
       ${mBtnHtml("+ 新建关卡", "primary", { id: "new-level" })}
       ${levels.length > 1 ? mBtnHtml("⇅ 调整顺序", "default", { id: "reorder-levels" }) : ""}
+      ${levels.length > 1 ? mBtnHtml("全选", "default", { id: "levels-select-all", title: "勾选全部关卡" }) : ""}
+      ${levels.length > 1 ? mBtnHtml("批量删除所选 (", "danger", { id: "batch-del", disabled: "", title: "删除勾选的关卡（先预览待删文件）" }, "", `<span id="batch-del-count">0</span>)`) : ""}
       ${levels.length > 0 ? mBtnHtml("🖼 一键导出关卡截图", "default", { id: "shots-export" }) : ""}
       ${mBtnHtml("📦 依赖管理", "default", { id: "set-deps", title: "Bundle 依赖分析与 LevelInfoSO.dependencies 编辑" })}
       <span class="muted">当前关卡集：<b>${setDisplay}</b></span>
     </div>
 ${depSummaryHtml(statsSummary)}
     <div class="m-section-title">关卡</div>
-    <div class="m-grid m-level-grid">${cards || '<p class="muted">暂无关卡</p>'}</div>
+${gridHtml}
   `;
 
   document.getElementById("new-level")?.addEventListener("click", () => openCreateLevelModal(app, setName));
@@ -1131,132 +1247,428 @@ ${depSummaryHtml(statsSummary)}
       )
     )
   );
+
+  // 批量删除：卡片勾选 + 工具栏全选/删除（勾选状态仅当前列表渲染周期内有效）。
+  const picked = new Set<string>();
+  const pickBoxes = Array.from(content.querySelectorAll<HTMLInputElement>("[data-pick]"));
+  const batchBtn = document.getElementById("batch-del") as HTMLButtonElement | null;
+  const batchCount = document.getElementById("batch-del-count");
+  const selectAllBtn = document.getElementById("levels-select-all") as HTMLButtonElement | null;
+  const syncPick = (): void => {
+    if (batchCount) batchCount.textContent = String(picked.size);
+    if (batchBtn) batchBtn.disabled = picked.size === 0;
+    pickBoxes.forEach((b) => b.closest(".m-level-card")?.classList.toggle("picked", b.checked));
+    if (selectAllBtn) {
+      const all = pickBoxes.length > 0 && pickBoxes.every((b) => b.checked);
+      selectAllBtn.textContent = all ? "取消全选" : "全选";
+      selectAllBtn.title = all ? "取消勾选全部关卡" : "勾选全部关卡";
+    }
+  };
+  pickBoxes.forEach((b) =>
+    b.addEventListener("change", () => {
+      const id = b.dataset.pick!;
+      if (b.checked) picked.add(id);
+      else picked.delete(id);
+      syncPick();
+    })
+  );
+  selectAllBtn?.addEventListener("click", () => {
+    const all = pickBoxes.length > 0 && pickBoxes.every((b) => b.checked);
+    pickBoxes.forEach((b) => {
+      b.checked = !all;
+      const id = b.dataset.pick!;
+      if (b.checked) picked.add(id);
+      else picked.delete(id);
+    });
+    syncPick();
+  });
+  batchBtn?.addEventListener("click", () => {
+    const ids = levelIds.filter((id) => picked.has(id));
+    if (ids.length === 0) return;
+    void confirmDeleteLevels(app, setName, ids, levels);
+  });
+  syncPick();
 }
 
 function openReorderModal(app: HTMLElement, setName: string, levels: LevelSummary[]): void {
-  const initialIds = levels.map((lv, idx) => lv.dataDir.split("/").pop() || `level${idx}`);
+  const ids0 = levels.map((lv, idx) => lv.dataDir.split("/").pop() || `level${idx}`);
+  const infoById = new Map<string, LevelSummary>();
+  const assetPathById = new Map<string, string>();
+  const initialGroupById = new Map<string, string>();
+  ids0.forEach((id, i) => {
+    infoById.set(id, levels[i]);
+    assetPathById.set(id, levels[i].assetPath);
+    initialGroupById.set(id, (levels[i].group ?? "").trim());
+  });
 
-  const rows = levels
-    .map((lv, idx) => {
-      const id = initialIds[idx];
-      const title = lv.levelNameZH || lv.levelName || id;
-      const enName = lv.levelNameZH && lv.levelName ? lv.levelName : "";
-      const shot = lv.screenshotPath ? api.imageFloorUrl(lv.screenshotPath) : "";
-      const shotHtml = shot
-        ? `<img class="m-reorder-shot" src="${esc(shot)}" alt="" loading="lazy">`
-        : '<span class="m-reorder-shot empty"><span class="muted">无截图</span></span>';
-      return `
-      <div class="m-reorder-row" draggable="true" data-id="${esc(id)}">
-        <span class="m-reorder-handle" title="拖拽调整顺序" aria-hidden="true">⋮⋮</span>
-        <span class="m-reorder-num" aria-label="第 ${idx + 1} 关">${idx + 1}</span>
-        <div class="m-reorder-shot-wrap">${shotHtml}</div>
-        <div class="m-reorder-main">
+  // 分组初始顺序 = 各组在关卡序列中首次出现先后。
+  const groupOrder: string[] = [];
+  const seenGroups = new Set<string>();
+  ids0.forEach((id) => {
+    const g = initialGroupById.get(id) ?? "";
+    if (g && !seenGroups.has(g)) {
+      seenGroups.add(g);
+      groupOrder.push(g);
+    }
+  });
+
+
+  const shotFor = (lv: LevelSummary): string => {
+    const shot = lv.screenshotPath ? api.imageFloorUrl(lv.screenshotPath) : "";
+    return shot
+      ? `<img class="m-reorder-shot" src="${esc(shot)}" alt="" loading="lazy">`
+      : '<span class="m-reorder-shot empty"><span class="muted">无截图</span></span>';
+  };
+
+  const cardHtml = (id: string): string => {
+    const lv = infoById.get(id)!;
+    const title = lv.levelNameZH || lv.levelName || id;
+    const enName = lv.levelNameZH && lv.levelName ? lv.levelName : "";
+    return `
+      <div class="m-reorder-card" draggable="true" data-id="${esc(id)}">
+        <div class="m-reorder-card-head">
+          <span class="m-reorder-handle" title="拖拽卡片排序 / 拖进分组" aria-hidden="true">⋮⋮</span>
+          <span class="m-reorder-num">1</span>
           <div class="m-reorder-title">${esc(title)}${enName ? ` <span class="muted">(${esc(enName)})</span>` : ""}</div>
-          <div class="m-reorder-meta">
-            <span class="m-reorder-scene">${esc(lv.sceneName)}</span>
-            <span class="m-reorder-id">${esc(id)}</span>
-          </div>
+        </div>
+        <div class="m-reorder-shot-wrap">${shotFor(lv)}</div>
+        <div class="m-reorder-meta">
+          <span class="m-reorder-scene">${esc(lv.sceneName)}</span>
+          <span class="m-reorder-id">${esc(id)}</span>
         </div>
         <span class="m-reorder-btns">
           ${mBtnHtml("↑", "default", { "data-rup": "", title: "上移一位", "aria-label": "上移一位" })}
           ${mBtnHtml("↓", "default", { "data-rdown": "", title: "下移一位", "aria-label": "下移一位" })}
         </span>
       </div>`;
-    })
-    .join("");
+  };
+
+  const groupActionsHtml = (): string => `
+          <span class="m-group-board-actions">
+            ${mBtnHtml("↑", "default", { "data-gup": "", title: "分组上移", "aria-label": "分组上移" })}
+            ${mBtnHtml("↓", "default", { "data-gdown": "", title: "分组下移", "aria-label": "分组下移" })}
+            ${mBtnHtml("✏️", "default", { "data-grename": "", title: "重命名分组" })}
+            ${mBtnHtml("✕", "default", { "data-gdel": "", title: "删除分组（卡片移到未分组）" })}
+          </span>`;
+
+  const sectionHtml = (name: string, cardIds: string[], plain: boolean): string => {
+    const isUngrouped = !name;
+    const style = name ? ` style="--grp-color: ${groupAccentColor(name)}"` : "";
+    const cards = cardIds.length
+      ? cardIds.map(cardHtml).join("")
+      : '<div class="m-group-empty">拖拽关卡到这里</div>';
+    return `
+      <section class="m-group-board${isUngrouped ? " ungrouped" : " has-group"}${plain ? " plain" : ""}" data-group="${esc(name)}"${style}>
+        <header class="m-group-board-head">
+          <span class="m-group-dot"></span>
+          <span class="m-group-board-title" data-gtitle>${isUngrouped ? "未分组" : esc(name)}</span>
+          <span class="m-group-board-count">${cardIds.length} 关</span>
+          ${isUngrouped ? "" : groupActionsHtml()}
+        </header>
+        <div class="m-group-cards" data-dropzone>${cards}</div>
+      </section>`;
+  };
+
+  const byGroup = new Map<string, string[]>();
+  groupOrder.forEach((g) => byGroup.set(g, []));
+  byGroup.set("", []);
+  ids0.forEach((id) => {
+    const g = initialGroupById.get(id) ?? "";
+    const arr = byGroup.get(g);
+    if (arr) arr.push(id);
+    else byGroup.set(g, [id]);
+  });
+
+  const plain = groupOrder.length === 0;
+  const sectionsHtml =
+    groupOrder.map((g) => sectionHtml(g, byGroup.get(g) ?? [], false)).join("") +
+    sectionHtml("", byGroup.get("") ?? [], plain);
 
   openModal(
-    `调整关卡顺序 · ${esc(setName)}`,
+    `调整顺序与分组 · ${esc(setName)}`,
     `
     <div class="m-reorder-head">
-      <p class="modal-hint m-reorder-hint">拖拽左侧手柄或整行上下移动；列表顶部为第 1 关，满意后点「保存顺序」一次性写入。</p>
+      <p class="modal-hint m-reorder-hint">拖拽卡片排序；把卡片拖进下方分组区块即归入该组（也可拖回「未分组」）。保存后顺序 = 分区从上到下、区间内从左到右。</p>
       <span class="m-reorder-count">共 <b>${levels.length}</b> 关</span>
     </div>
-    <div class="modal-scroll m-reorder-scroll"><div class="m-reorder-list" id="reorder-list">${rows}</div></div>
+    <div class="m-reorder-tools">
+      <input type="text" id="reorder-newgroup" class="m-reorder-newgroup" placeholder="新分组名（如 第一章）">
+      ${mBtnHtml("＋ 新建分组", "primary", { id: "reorder-addgroup" })}
+      <span class="muted m-reorder-groupnote">组标题可改名 ✏️、上下移动 ↑↓ 或删除 ✕（卡片会移回未分组）。</span>
+    </div>
+    <div class="modal-scroll m-reorder-scroll"><div class="m-reorder-board" id="reorder-board">${sectionsHtml}</div></div>
     `,
-    `${cancelBtnHtml()} ${primaryBtnHtml("保存顺序")}`,
-    { panelClass: "wide reorder-levels", closeOnBackdrop: false }
+    `${cancelBtnHtml()} ${primaryBtnHtml("保存")}`,
+    { panelClass: "wide reorder-levels has-groups", closeOnBackdrop: false }
   );
 
-  const list = document.getElementById("reorder-list")!;
+  const board = document.getElementById("reorder-board")!;
+  const newGroupInput = document.getElementById("reorder-newgroup") as HTMLInputElement | null;
+  let dragCard: HTMLElement | null = null;
 
-  function renumber(): void {
-    list.querySelectorAll(".m-reorder-row").forEach((row, i) => {
-      const num = row.querySelector(".m-reorder-num");
-      if (num) num.textContent = String(i + 1);
+  const ungroupedSection = (): HTMLElement => board.querySelector<HTMLElement>(".m-group-board.ungrouped")!;
+
+  function clearDropMarks(): void {
+    board.querySelectorAll(".m-group-board.drag-over").forEach((s) => s.classList.remove("drag-over"));
+    board.querySelectorAll(".m-reorder-card.drop-before, .m-reorder-card.drop-after").forEach((c) => {
+      c.classList.remove("drop-before", "drop-after");
     });
   }
 
-  function moveRow(row: Element, delta: number): void {
-    const rows = Array.from(list.querySelectorAll(".m-reorder-row"));
-    const idx = rows.indexOf(row);
+  function syncSection(sec: HTMLElement): void {
+    const zone = sec.querySelector<HTMLElement>("[data-dropzone]");
+    if (!zone) return;
+    const cards = zone.querySelectorAll<HTMLElement>(".m-reorder-card");
+    const count = sec.querySelector(".m-group-board-count");
+    if (count) count.textContent = `${cards.length} 关`;
+    const empty = zone.querySelector(".m-group-empty");
+    if (cards.length === 0 && !empty) {
+      const d = document.createElement("div");
+      d.className = "m-group-empty";
+      d.textContent = "拖拽关卡到这里";
+      zone.appendChild(d);
+    } else if (cards.length > 0 && empty) {
+      empty.remove();
+    }
+  }
+
+  function renumber(): void {
+    let n = 0;
+    board.querySelectorAll<HTMLElement>(".m-group-board").forEach((sec) => {
+      syncSection(sec);
+      sec.querySelectorAll<HTMLElement>(".m-reorder-card").forEach((card) => {
+        n += 1;
+        const num = card.querySelector(".m-reorder-num");
+        if (num) num.textContent = String(n);
+      });
+    });
+  }
+
+  function moveCardInSection(card: HTMLElement, delta: number): void {
+    const zone = card.closest(".m-group-cards");
+    if (!zone) return;
+    const cards = Array.from(zone.querySelectorAll<HTMLElement>(".m-reorder-card"));
+    const idx = cards.indexOf(card);
     const to = idx + delta;
-    if (idx < 0 || to < 0 || to >= rows.length) return;
-    if (delta < 0) list.insertBefore(row, rows[to]);
-    else list.insertBefore(row, rows[to].nextSibling);
+    if (idx < 0 || to < 0 || to >= cards.length) return;
+    if (delta < 0) zone.insertBefore(card, cards[to]);
+    else zone.insertBefore(card, cards[to].nextSibling);
     renumber();
   }
 
-  list.querySelectorAll<HTMLButtonElement>("[data-rup]").forEach((b) =>
-    b.addEventListener("click", () => moveRow(b.closest(".m-reorder-row")!, -1))
-  );
-  list.querySelectorAll<HTMLButtonElement>("[data-rdown]").forEach((b) =>
-    b.addEventListener("click", () => moveRow(b.closest(".m-reorder-row")!, 1))
-  );
-
-  // HTML5 拖拽：拖动行经过目标行时按鼠标相对其中线的位置实时换位。
-  let dragRow: Element | null = null;
-  list.querySelectorAll<HTMLElement>(".m-reorder-row").forEach((row) => {
-    row.addEventListener("dragstart", (e) => {
-      dragRow = row;
-      row.classList.add("dragging");
+  function wireCard(card: HTMLElement): void {
+    card.addEventListener("dragstart", (e) => {
+      dragCard = card;
+      card.classList.add("dragging");
       if (e.dataTransfer) {
         e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", row.dataset.id ?? "");
+        e.dataTransfer.setData("text/plain", card.dataset.id ?? "");
       }
     });
-    row.addEventListener("dragend", () => {
-      row.classList.remove("dragging");
-      list.querySelectorAll(".m-reorder-row.drop-before, .m-reorder-row.drop-after").forEach((r) => {
-        r.classList.remove("drop-before", "drop-after");
-      });
-      dragRow = null;
+    card.addEventListener("dragend", () => {
+      card.classList.remove("dragging");
+      clearDropMarks();
+      dragCard = null;
       renumber();
     });
-    row.addEventListener("dragover", (e) => {
+    card.addEventListener("dragover", (e) => {
       e.preventDefault();
-      if (!dragRow || dragRow === row) return;
-      list.querySelectorAll(".m-reorder-row.drop-before, .m-reorder-row.drop-after").forEach((r) => {
-        r.classList.remove("drop-before", "drop-after");
-      });
-      const rect = row.getBoundingClientRect();
-      const before = e.clientY < rect.top + rect.height / 2;
-      row.classList.add(before ? "drop-before" : "drop-after");
-      if (before) list.insertBefore(dragRow, row);
-      else list.insertBefore(dragRow, row.nextSibling);
+      e.stopPropagation();
+      if (!dragCard || dragCard === card) return;
+      clearDropMarks();
+      card.closest(".m-group-board")?.classList.add("drag-over");
+      const rect = card.getBoundingClientRect();
+      const before = e.clientX < rect.left + rect.width / 2;
+      card.classList.add(before ? "drop-before" : "drop-after");
+      const zone = card.parentElement;
+      if (!zone) return;
+      if (before) zone.insertBefore(dragCard, card);
+      else zone.insertBefore(dragCard, card.nextSibling);
+      renumber();
     });
-    row.addEventListener("dragleave", (e) => {
-      if (!e.relatedTarget || !row.contains(e.relatedTarget as Node)) {
-        row.classList.remove("drop-before", "drop-after");
+  }
+
+  function namedSections(): HTMLElement[] {
+    return Array.from(board.querySelectorAll<HTMLElement>(".m-group-board.has-group"));
+  }
+
+  function groupExists(name: string): boolean {
+    return namedSections().some((s) => (s.dataset.group ?? "") === name);
+  }
+
+  function moveGroup(sec: HTMLElement, delta: number): void {
+    const groups = namedSections();
+    const idx = groups.indexOf(sec);
+    const to = idx + delta;
+    if (idx < 0 || to < 0 || to >= groups.length) return;
+    if (delta < 0) board.insertBefore(sec, groups[to]);
+    else board.insertBefore(sec, groups[to].nextSibling);
+  }
+
+  function startGroupRename(sec: HTMLElement): void {
+    if (sec.classList.contains("ungrouped")) return;
+    const titleEl = sec.querySelector<HTMLElement>("[data-gtitle]");
+    if (!titleEl) return;
+    const oldName = sec.dataset.group ?? "";
+    const input = document.createElement("input");
+    input.className = "m-group-rename";
+    input.type = "text";
+    input.value = oldName;
+    titleEl.replaceWith(input);
+    input.focus();
+    input.select();
+    let settled = false;
+    const commit = (): void => {
+      if (settled) return;
+      settled = true;
+      const next = input.value.trim();
+      if (!next || next === oldName || groupExists(next)) {
+        if (next && next !== oldName) setStatus(`分组「${next}」已存在`, false);
+        input.replaceWith(titleEl);
+        return;
+      }
+      sec.dataset.group = next;
+      sec.style.setProperty("--grp-color", groupAccentColor(next));
+      titleEl.textContent = next;
+      input.replaceWith(titleEl);
+    };
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        commit();
+      } else if (e.key === "Escape") {
+        settled = true;
+        input.replaceWith(titleEl);
       }
     });
+    input.addEventListener("blur", commit);
+  }
+
+  function deleteGroup(sec: HTMLElement): void {
+    const zone = ungroupedSection().querySelector<HTMLElement>("[data-dropzone]");
+    if (zone) sec.querySelectorAll<HTMLElement>(".m-reorder-card").forEach((c) => zone.appendChild(c));
+    sec.remove();
+    if (namedSections().length === 0) ungroupedSection().classList.add("plain");
+    renumber();
+  }
+
+  function createGroup(rawName: string): void {
+    const name = rawName.trim();
+    if (!name) return;
+    if (groupExists(name)) {
+      setStatus(`分组「${name}」已存在`, false);
+      return;
+    }
+    const sec = document.createElement("section");
+    sec.className = "m-group-board has-group";
+    sec.dataset.group = name;
+    sec.style.setProperty("--grp-color", groupAccentColor(name));
+    sec.innerHTML = `
+        <header class="m-group-board-head">
+          <span class="m-group-dot"></span>
+          <span class="m-group-board-title" data-gtitle>${esc(name)}</span>
+          <span class="m-group-board-count">0 关</span>
+          ${groupActionsHtml()}
+        </header>
+        <div class="m-group-cards" data-dropzone><div class="m-group-empty">拖拽关卡到这里</div></div>`;
+    board.insertBefore(sec, ungroupedSection());
+    ungroupedSection().classList.remove("plain");
+    wireSection(sec);
+    if (newGroupInput) newGroupInput.value = "";
+    newGroupInput?.focus();
+  }
+
+  function wireSection(sec: HTMLElement): void {
+    sec.addEventListener("dragover", (e) => {
+      if (!dragCard) return;
+      const target = e.target as Element | null;
+      if (!target || target.closest(".m-reorder-card")) return;
+      // 仅在卡片网格区域内响应（含空占位），避免经过标题时误把卡片移到末尾。
+      if (!target.closest("[data-dropzone]")) return;
+      e.preventDefault();
+      clearDropMarks();
+      const zone = sec.querySelector<HTMLElement>("[data-dropzone]");
+      if (!zone) return;
+      zone.appendChild(dragCard);
+      renumber();
+      sec.classList.add("drag-over");
+    });
+    sec.addEventListener("dragleave", (e) => {
+      const related = e.relatedTarget as Node | null;
+      if (!related || !sec.contains(related)) sec.classList.remove("drag-over");
+    });
+    sec.querySelector<HTMLButtonElement>("[data-gup]")?.addEventListener("click", () => moveGroup(sec, -1));
+    sec.querySelector<HTMLButtonElement>("[data-gdown]")?.addEventListener("click", () => moveGroup(sec, 1));
+    sec.querySelector<HTMLButtonElement>("[data-grename]")?.addEventListener("click", () => startGroupRename(sec));
+    sec.querySelector<HTMLButtonElement>("[data-gdel]")?.addEventListener("click", () => deleteGroup(sec));
+    sec.querySelectorAll<HTMLButtonElement>("[data-rup]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const card = b.closest(".m-reorder-card") as HTMLElement | null;
+        if (card) moveCardInSection(card, -1);
+      })
+    );
+    sec.querySelectorAll<HTMLButtonElement>("[data-rdown]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const card = b.closest(".m-reorder-card") as HTMLElement | null;
+        if (card) moveCardInSection(card, 1);
+      })
+    );
+    sec.querySelectorAll<HTMLElement>(".m-reorder-card").forEach(wireCard);
+    syncSection(sec);
+  }
+
+  // 初始基线 = 分区视图的阅读序；未改动时不写回顺序，避免仅查看就把顺序重排。
+  const readBoard = (): Array<{ id: string; group: string }> => {
+    const out: Array<{ id: string; group: string }> = [];
+    board.querySelectorAll<HTMLElement>(".m-group-board").forEach((sec) => {
+      const g = sec.dataset.group ?? "";
+      sec.querySelectorAll<HTMLElement>(".m-reorder-card").forEach((c) => out.push({ id: c.dataset.id ?? "", group: g }));
+    });
+    return out;
+  };
+  const baseline = readBoard();
+
+  board.querySelectorAll<HTMLElement>(".m-group-board").forEach(wireSection);
+  renumber();
+
+  document.getElementById("reorder-addgroup")?.addEventListener("click", () => createGroup(newGroupInput?.value ?? ""));
+  newGroupInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      createGroup(newGroupInput.value);
+    }
   });
 
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
-    const ids = Array.from(list.querySelectorAll(".m-reorder-row")).map((r) => (r as HTMLElement).dataset.id ?? "");
-    if (ids.join("\n") === initialIds.join("\n")) {
+    const collected = readBoard();
+    const ids = collected.map((x) => x.id);
+    const orderChanged = ids.join("\n") !== baseline.map((x) => x.id).join("\n");
+    const groupChanges = collected.filter((x) => x.group !== (initialGroupById.get(x.id) ?? ""));
+
+    if (!orderChanged && groupChanges.length === 0) {
       closeModal();
-      setStatus("顺序未变化");
+      setStatus("顺序与分组均未变化");
       return;
     }
+
     const okBtn = document.querySelector<HTMLButtonElement>("[data-ok]");
     if (okBtn) okBtn.disabled = true;
     try {
-      showBusy("保存关卡顺序…");
-      await api.reorderLevels(setName, ids);
+      showBusy("保存关卡顺序与分组…");
+      if (orderChanged) await api.reorderLevels(setName, ids);
+      if (groupChanges.length > 0) {
+        await api.saveLevelGroups(
+          setName,
+          groupChanges.map((x) => ({
+            levelId: x.id,
+            assetPath: assetPathById.get(x.id) ?? "",
+            group: x.group,
+          }))
+        );
+      }
       closeModal();
-      setStatus("已保存关卡顺序");
+      setStatus("已保存关卡顺序与分组");
       await renderLevelList(app, setName);
     } catch (e) {
       setStatus((e as Error).message, false);
@@ -1274,18 +1686,35 @@ function openCreateLevelModal(app: HTMLElement, setName: string): void {
     <label class="m-field">关卡标识（仅小写字母/数字/下划线，用于目录与场景名，不再自动加 s_ 前缀）<input type="text" id="lv-id" placeholder="level_1"></label>
     <label class="m-field">英文名 levelName<input type="text" id="lv-en" placeholder="Level 1"></label>
     <label class="m-field">中文名 levelNameZH<input type="text" id="lv-zh" placeholder="第一关"></label>
+    <label class="m-field">分组（可选，展示用，不改关卡顺序）<input type="text" id="lv-group" list="lv-group-list" placeholder="留空 = 未分组"><datalist id="lv-group-list"></datalist></label>
     <p class="modal-hint">将自动生成 4 份分数配置（config_1p~4p，复制模板默认值）、LevelInfoSO，并复制模板场景到 scenes/&lt;标识&gt;.unity。</p>
     `,
     `${mCancelBtnHtml()}${mPrimaryBtnHtml("创建")}`,
     { closeOnBackdrop: false }
   );
   wireIdentInput("lv-id");
+  // 已有分组作为输入建议（可选）。
+  void api
+    .fetchLevels(setName)
+    .then((ls) => {
+      const names = new Set<string>();
+      ls.forEach((l) => {
+        const g = (l.group ?? "").trim();
+        if (g) names.add(g);
+      });
+      const dl = document.getElementById("lv-group-list");
+      if (dl) dl.innerHTML = Array.from(names).map((n) => `<option value="${esc(n)}"></option>`).join("");
+    })
+    .catch(() => {
+      /* 建议失败不阻断创建 */
+    });
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
     try {
       const levelId = (document.getElementById("lv-id") as HTMLInputElement).value.trim();
       if (!levelId) return setStatus("请填写关卡标识", false);
       if (!IDENT_RE.test(levelId)) return setStatus("关卡标识仅允许小写字母/数字/下划线", false);
+      const group = (document.getElementById("lv-group") as HTMLInputElement).value.trim();
       showBusy("创建关卡（生成配置、复制场景）…");
       await api.createLevel({
         setName,
@@ -1293,6 +1722,15 @@ function openCreateLevelModal(app: HTMLElement, setName: string): void {
         levelName: (document.getElementById("lv-en") as HTMLInputElement).value.trim(),
         levelNameZH: (document.getElementById("lv-zh") as HTMLInputElement).value.trim(),
       });
+      if (group) {
+        try {
+          const ls = await api.fetchLevels(setName);
+          const created = ls.find((l) => (l.dataDir.split("/").pop() || "") === levelId);
+          if (created) await api.saveLevelGroups(setName, [{ levelId, assetPath: created.assetPath, group }]);
+        } catch {
+          /* 分组失败不阻断创建 */
+        }
+      }
       closeModal();
       setStatus("已创建关卡");
       await renderLevelList(app, setName);
@@ -1342,49 +1780,161 @@ async function confirmDeleteLevel(app: HTMLElement, setName: string, levelId: st
   });
 }
 
-/** 重命名关卡 id：后端原子改名 data/ 目录、LevelInfo 资产、场景文件与 sceneName、
- *  场景 bundle 名、animations/ 前缀、写回历史目录（GUID 引用随 MoveAsset 保持不断链）。
- *  旧 s_ 前缀场景名顺势迁移到无前缀新约定。完成后调用 onDone 刷新页面。 */
+async function confirmDeleteLevels(
+  app: HTMLElement,
+  setName: string,
+  levelIds: string[],
+  levels: LevelSummary[]
+): Promise<void> {
+  if (levelIds.length === 0) return;
+  showBusy("读取待删文件…");
+  let preview: api.LevelDeletePreviewItem[] = [];
+  try {
+    preview = await api.fetchDeletePreviewBatch(setName, levelIds);
+  } catch (e) {
+    setStatus((e as Error).message, false);
+  } finally {
+    hideBusy();
+  }
+
+  const pathsById = new Map(preview.map((item) => [item.levelId, item.paths]));
+  const titles = new Map<string, string>();
+  levels.forEach((lv, idx) => {
+    const id = lv.dataDir.split("/").pop() || `level${idx}`;
+    titles.set(id, lv.levelNameZH || lv.levelName || id);
+  });
+
+  let total = 0;
+  const groups = levelIds
+    .map((id) => {
+      const paths = pathsById.get(id) ?? [];
+      total += paths.length;
+      const fileList = paths.length
+        ? paths.map((p) => `<div class="del-file">${esc(p)}</div>`).join("")
+        : `<div class="muted">（无文件，可能已不存在）</div>`;
+      return `<div class="del-file-group">
+        <div class="del-file-group-title">${esc(titles.get(id) || id)} <span class="muted">${esc(id)} · ${paths.length} 个</span></div>
+        ${fileList}
+      </div>`;
+    })
+    .join("");
+  const allHint =
+    levelIds.length === levels.length
+      ? '<p class="modal-hint">已选中<b>全部关卡</b>：删除后关卡集将保留为空集。</p>'
+      : "";
+
+  openModal(
+    `批量删除关卡 · ${esc(setName)}`,
+    `<p>将永久删除以下 <b>${levelIds.length}</b> 个关卡、共 <b>${total}</b> 个文件/资源（含场景、LevelInfo、分数配置及关卡目录内自定义菜谱/模型），且<b>不可恢复</b>：</p>
+     <div class="del-file-list">${groups}</div>
+     ${allHint}
+     <p class="modal-hint">关卡集本身不会被删除。如相关关卡已分配 AssetBundle，删除后请重新构建 AssetBundle。</p>`,
+    `${mCancelBtnHtml()}${dangerBtnHtml("确认删除", { "data-ok": "" })}`
+  );
+  document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+  document.querySelector("[data-ok]")?.addEventListener("click", async () => {
+    const okBtn = document.querySelector<HTMLButtonElement>("[data-ok]");
+    if (okBtn) okBtn.disabled = true;
+    showBusy(`删除 ${levelIds.length} 个关卡…`);
+    try {
+      await api.deleteLevels(setName, levelIds);
+      closeModal();
+      setStatus(`已删除 ${levelIds.length} 个关卡`);
+      await renderLevelList(app, setName);
+    } catch (e) {
+      setStatus((e as Error).message, false);
+      if (okBtn) okBtn.disabled = false;
+    } finally {
+      hideBusy();
+    }
+  });
+}
+
+/** 与后端 FolderIdForRename 同口径：s_+目录 或 场景名=目录 时，新目录去掉一层开头的 s_。 */
+function folderIdForRename(oldFolderId: string, oldSceneName: string, newSceneName: string): string {
+  const scene = oldSceneName || "";
+  const historical = scene.toLowerCase() === ("s_" + oldFolderId).toLowerCase();
+  const unified = scene.toLowerCase() === oldFolderId.toLowerCase();
+  if (!historical && !unified) return oldFolderId;
+  if (newSceneName.startsWith("s_") && newSceneName.length > 2) return newSceneName.slice(2);
+  return newSceneName;
+}
+
+function renamePreviewHtml(
+  setName: string,
+  levelId: string,
+  oldSceneName: string,
+  newSceneName: string
+): string {
+  const currentScene = oldSceneName || levelId;
+  const nextFolder = newSceneName ? folderIdForRename(levelId, oldSceneName, newSceneName) : levelId;
+  const folderSame = nextFolder.toLowerCase() === levelId.toLowerCase();
+  const sceneSame = newSceneName === currentScene;
+  const unrelated = !!oldSceneName
+    && oldSceneName.toLowerCase() !== ("s_" + levelId).toLowerCase()
+    && oldSceneName.toLowerCase() !== levelId.toLowerCase();
+  const bundleFrom = `${setName}/${currentScene}`;
+  const bundleTo = `${setName}/${newSceneName || "?"}`;
+  const lines = [
+    `场景文件与 sceneName：<b>${esc(currentScene)}</b> → <b>${esc(newSceneName || "（未填）")}</b>`,
+    `AssetBundle：<b>${esc(bundleFrom)}</b> → <b>${esc(bundleTo)}</b>`,
+    folderSame
+      ? `数据目录保持 <b>${esc(levelId)}</b>${unrelated ? "（与场景名不是同一套标识，这次只改场景和打包名）" : ""}`
+      : `数据目录：<b>${esc(levelId)}</b> → <b>${esc(nextFolder)}</b>`,
+  ];
+  const anim = sceneSame
+    ? ""
+    : `动画资产前缀 <b>${esc(currentScene)}_</b> 会改成 <b>${esc(newSceneName)}_</b>。`;
+  const note = sceneSame
+    ? "场景名未改。确认后会把打包名核对成上面的目标名（已经一致则不动文件）。"
+    : "去掉或保留开头的 <b>s_</b> 都会写进场景文件和打包名，不会再自动删掉。";
+  return `${lines.join("<br>")}<br>${anim}${anim ? "<br>" : ""}${note} 已导出的玩家分发包需重新导出。`;
+}
+
+/** 重命名场景名（可含 s_）：同步场景文件、sceneName、AssetBundle、动画前缀；
+ *  目录在「场景名 = s_+目录」或「场景名 = 目录」时跟着去掉一层 s_。 */
 function openRenameLevelModal(
   setName: string,
   levelId: string,
   oldSceneName: string,
   onDone: () => Promise<void>
 ): void {
-  const migrateHint =
-    oldSceneName && oldSceneName.startsWith("s_")
-      ? "当前场景名带 s_ 前缀，重命名后将顺势迁移到无前缀新约定（场景名 = 新 id）。"
-      : "重命名后场景名 = 新 id。";
+  const currentScene = oldSceneName || levelId;
   openModal(
-    `重命名关卡 · ${esc(levelId)}`,
+    `重命名关卡 · ${esc(currentScene)}`,
     `
-    <label class="m-field">新关卡标识（仅小写字母/数字/下划线）<input type="text" id="lv-new-id" placeholder="level_2" value="${esc(levelId)}"></label>
-    <p class="modal-hint">
-      将一次性同步改名：data/&lt;id&gt;/ 目录、LevelInfo_&lt;id&gt;.asset、场景文件与 sceneName、
-      场景 AssetBundle 名、animations/ 动画资产前缀、写回历史目录（引用按 GUID 保持，不会断链）。${migrateHint}
-      已导出的玩家分发包不会自动更新，改名后需重新导出关卡集。
-    </p>
+    <p class="modal-hint">当前场景名 <b>${esc(currentScene)}</b>，数据目录 <b>${esc(levelId)}</b>，打包名 <b>${esc(setName + "/" + currentScene)}</b>。</p>
+    <label class="m-field">新场景名（仅小写字母/数字/下划线，可保留 s_）<input type="text" id="lv-new-id" placeholder="s_level_2" value="${esc(currentScene)}"></label>
+    <p class="modal-hint" id="lv-rename-hint"></p>
     `,
     `${mCancelBtnHtml()}${mPrimaryBtnHtml("确认重命名")}`,
     { closeOnBackdrop: false }
   );
   wireIdentInput("lv-new-id");
+  const input = document.getElementById("lv-new-id") as HTMLInputElement;
+  const hint = document.getElementById("lv-rename-hint");
+  const refreshHint = () => {
+    if (hint) hint.innerHTML = renamePreviewHtml(setName, levelId, oldSceneName, input.value.trim());
+  };
+  input.addEventListener("input", refreshHint);
+  refreshHint();
   document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
-    const newId = (document.getElementById("lv-new-id") as HTMLInputElement).value.trim();
-    if (!newId) return setStatus("请填写新关卡标识", false);
-    if (!IDENT_RE.test(newId)) return setStatus("关卡标识仅允许小写字母/数字/下划线", false);
-    if (newId === levelId) {
-      closeModal();
-      return setStatus("关卡标识未变化");
-    }
+    const newScene = input.value.trim();
+    if (!newScene) return setStatus("请填写新场景名", false);
+    if (!IDENT_RE.test(newScene)) return setStatus("场景名仅允许小写字母/数字/下划线", false);
     const okBtn = document.querySelector<HTMLButtonElement>("[data-ok]");
     if (okBtn) okBtn.disabled = true;
     try {
-      showBusy("重命名关卡（目录/场景/动画前缀同步迁移）…");
-      await api.renameLevel(setName, levelId, newId);
+      showBusy("重命名关卡（场景 / 打包名 / 动画前缀同步）…");
+      await api.renameLevel(setName, levelId, newScene);
       closeModal();
-      setStatus(`已重命名为 ${newId}（如需分发请重新导出关卡集）`);
+      const bundle = `${setName}/${newScene}`;
+      setStatus(
+        newScene === currentScene
+          ? `已核对场景名与打包名 ${bundle}`
+          : `已改为场景 ${newScene}，打包名 ${bundle}（如需分发请重新导出关卡集）`
+      );
       await onDone();
     } catch (e) {
       setStatus((e as Error).message, false);
@@ -1418,7 +1968,7 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
   content.innerHTML = `
     <div class="m-actions-row">
       ${mBtnHtml("打开关卡编辑器", "default", { id: "btn-layout" })}
-      ${mBtnHtml("✏️ 重命名 id", "default", { id: "btn-rename" })}
+      ${mBtnHtml("✏️ 重命名", "default", { id: "btn-rename" })}
       ${mBtnHtml("📊 关卡配置", "default", { id: "btn-level-config" })}
       ${mBtnHtml("📦 依赖管理", "default", { id: "btn-deps" })}
       ${mBtnHtml("📋 汇总", "default", { id: "btn-summary" })}
@@ -1430,7 +1980,7 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
       <div class="m-form">
         <label class="m-field">英文名 levelName<input type="text" id="f-levelName" value="${esc(detail.levelName)}"></label>
         <label class="m-field">中文名 levelNameZH<input type="text" id="f-levelNameZH" value="${esc(detail.levelNameZH)}"></label>
-        <label class="m-field">场景名 sceneName（由关卡 id 决定，用「✏️ 重命名 id」统一改名）<input type="text" value="${esc(detail.sceneName)}" readonly></label>
+        <label class="m-field">场景名 sceneName（与 AssetBundle 名一致，用「✏️ 重命名」修改，可含 s_）<input type="text" value="${esc(detail.sceneName)}" readonly></label>
         <label class="m-field">调试菜谱数 debugRecipeCount<input type="number" id="f-debugRecipeCount" value="${detail.debugRecipeCount}"></label>
         <label class="m-field">最少同时订单 minOrderCount<input type="number" id="f-minOrderCount" min="1" max="10" step="1" value="${detail.minOrderCount}"></label>
         <label class="m-field">最多同时订单 maxOrderCount<input type="number" id="f-maxOrderCount" min="1" max="10" step="1" value="${detail.maxOrderCount}"></label>

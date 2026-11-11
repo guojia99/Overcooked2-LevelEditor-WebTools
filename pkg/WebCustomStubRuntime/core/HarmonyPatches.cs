@@ -2360,6 +2360,36 @@ namespace CustomStub
             get { return typeof(HarmonyPatches).GetMethod("ServerPlateStationItemAddedPrefix", BF); }
         }
 
+        // ============ 订单顺序：RoundData.GetNextRecipe 接管（4.0.0.18（原 4.7.0）） ============
+        // 首行静态放行（场景无配置零开销）；状态机异常/配置无效一律放行原版随机。
+        // 仅服务端出单路径调用（ServerOrderControllerBase.AddNewOrder），无网络负担。
+        private static bool RoundDataGetNextRecipePrefix(object __instance, ref object __result)
+        {
+            if (!OrderSequenceDirector.Active)
+                return true;
+            if (__instance == null || __instance.GetType() != GameApi.RoundDataType)
+                return true; // ScriptedRoundData/DynamicRoundData 等 base 调用：放行
+            try
+            {
+                object entries;
+                if (!OrderSequenceDirector.TryPick(__instance, out entries))
+                    return true;
+                __result = entries;
+                return false;
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("orderseq-next",
+                    "[OrderSeq] GetNextRecipe 前缀异常（放行原版随机）: " + ex.Message);
+                return true;
+            }
+        }
+
+        internal static System.Reflection.MethodInfo RoundDataGetNextRecipePrefixMethod
+        {
+            get { return typeof(HarmonyPatches).GetMethod("RoundDataGetNextRecipePrefix", BF); }
+        }
+
         private const System.Reflection.BindingFlags BF =
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
     }

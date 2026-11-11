@@ -1,6 +1,14 @@
 import { S, EditorItem } from "../state";
 import { escHtml } from "../coords";
-import { counterTypeOfItem } from "../catalog";
+import {
+  counterTypeOfItem,
+  counterAppearanceChoices,
+  counterAppearanceForTheme,
+  counterAppearanceSelectValue,
+  counterDefaultAppearance,
+  assignCounterAppearance,
+  assignCounterTheme,
+} from "../catalog";
 import { pushHistory } from "../historyOps";
 import { draw } from "../render";
 import { setStatus } from "../status";
@@ -8,7 +16,7 @@ import { openModal, closeModal } from "../../modals";
 import { cancelBtnHtml, modalBtnHtml, primaryBtnHtml, smallBtnHtml } from "../../ui/views/button";
 import { itemLabel } from "../labels";
 import { openModelPreview } from "../../modelPreview";
-import { fetchCounter3dManifest, counterSkinIconUrl } from "../../api";
+import { fetchCounter3dManifest, counterSkinIconUrl, counter3dUrl } from "../../api";
 import type { Counter3dEntry, CounterAppearanceOption } from "../../types";
 
 /** 确保 3D 资产 manifest 已加载（开关打开 / 弹窗重试共用）：
@@ -42,30 +50,28 @@ interface CounterSkinGroup {
   type: string;
   typeZh: string;
   items: EditorItem[];
+  /** 完整列表（含重复 SO），用来把已写上的 guid 认回主题。 */
   options: CounterAppearanceOption[];
+  /** 每个主题一条，下拉和写回都用它。 */
+  choices: CounterAppearanceOption[];
   /** 该类型可用主题（保持数据源顺序去重；"" = 默认外观） */
   themes: string[];
 }
 
-function optionOfTheme(options: CounterAppearanceOption[], theme: string): CounterAppearanceOption | undefined {
-  return options.find((o) => o.theme === theme);
-}
-
-function optionOfGuid(options: CounterAppearanceOption[], guid: string): CounterAppearanceOption | undefined {
-  return guid ? options.find((o) => o.guid === guid) : undefined;
-}
-
 function themeLabelOf(group: CounterSkinGroup, theme: string): string {
   if (!theme) return "默认";
-  const opt = optionOfTheme(group.options, theme);
+  const opt = counterAppearanceForTheme(group.options, theme);
   return opt?.themeName || S.counterAppearances?.themeNames[theme] || theme;
 }
 
 /** 物品当前主题键（"" = 默认；"@guid" = 目录外的未知外观）。 */
 function currentThemeOf(it: EditorItem, options: CounterAppearanceOption[]): string {
+  if (it.resetAppearance) return "";
   const guid = it.pseudoPrefabGuid ?? "";
   if (!guid) return "";
-  return options.find((o) => o.guid === guid)?.theme ?? `@${guid}`;
+  const hit = options.find((o) => o.guid === guid);
+  if (!hit) return `@${guid}`;
+  return hit.theme || "";
 }
 
 /** 皮肤数据色点（来自材质球均色，非 UI 主题色）。 */
@@ -77,25 +83,34 @@ function dotHtml(color?: string): string {
  *  lg = 组行 128px 原图预览（随下拉选择切换）；默认 28px 行内小图。 */
 function thumbHtml(opt?: CounterAppearanceOption, lg = false): string {
   const cls = lg ? "csm-thumb csm-thumb-lg" : "csm-thumb";
-  if (opt?.icon) {
-    return `<img class="${cls}" src="${escHtml(counterSkinIconUrl(opt.icon))}" alt="" loading="lazy" onerror="this.remove()" />`;
+  const color = opt?.color ? `background:${escHtml(opt.color)}` : "";
+  const icon = opt?.icon ? counterSkinIconUrl(opt.icon) : "";
+  const top = opt?.icon && S.counter3d?.items[opt.icon]?.top ? counter3dUrl(S.counter3d.items[opt.icon].top) : "";
+  if (top || icon) {
+    const src = top || icon;
+    const fallback = top && icon ? `this.onerror=null;this.src='${escHtml(icon)}'` : "this.remove()";
+    return `<img class="${cls}" src="${escHtml(src)}" alt="" style="${color}" loading="lazy" onerror="${fallback}" />`;
   }
-  if (opt?.color) return `<span class="${cls}" style="background:${escHtml(opt.color)}"></span>`;
+  if (opt?.color) return `<span class="${cls}" style="${color}"></span>`;
   return `<span class="${cls} csm-thumb-empty"></span>`;
 }
 
 function thumbByTheme(group: CounterSkinGroup, theme: string, lg = false): string {
-  return thumbHtml(optionOfTheme(group.options, theme), lg);
+  if (!theme) return thumbHtml(counterDefaultAppearance(group.options), lg);
+  return thumbHtml(counterAppearanceForTheme(group.options, theme), lg);
 }
 
-function thumbByGuid(group: CounterSkinGroup, guid: string): string {
-  return thumbHtml(optionOfGuid(group.options, guid));
+function thumbForItem(group: CounterSkinGroup, it: EditorItem): string {
+  const theme = currentThemeOf(it, group.options);
+  if (!theme) return thumbHtml(counterDefaultAppearance(group.options));
+  if (theme.startsWith("@")) return thumbHtml(undefined);
+  return thumbHtml(counterAppearanceForTheme(group.options, theme) ?? group.options.find((o) => o.guid === it.pseudoPrefabGuid));
 }
 
 function distLabel(group: CounterSkinGroup, theme: string): { label: string; dot: string } {
   if (!theme) return { label: "默认", dot: "" };
   if (theme.startsWith("@")) return { label: "未知外观", dot: "" };
-  const opt = optionOfTheme(group.options, theme);
+  const opt = counterAppearanceForTheme(group.options, theme);
   return { label: themeLabelOf(group, theme), dot: dotHtml(opt?.color) };
 }
 
@@ -108,28 +123,82 @@ function groupDistText(group: CounterSkinGroup): string {
   return [...counts.entries()].map(([t, n]) => `${distLabel(group, t).dot}${escHtml(distLabel(group, t).label)}×${n}`).join("、");
 }
 
-function themeOptionsHtml(group: CounterSkinGroup, selectedTheme: string): string {
-  return group.themes
+/** 组内皮肤一致时返回该主题（"" = 全是默认）；不一致或有未知外观时返回 null。 */
+function sharedTheme(group: CounterSkinGroup): string | null {
+  if (!group.items.length) return "";
+  let theme: string | null = null;
+  for (const it of group.items) {
+    const t = currentThemeOf(it, group.options);
+    if (t.startsWith("@")) return null;
+    if (theme === null) theme = t;
+    else if (theme !== t) return null;
+  }
+  return theme ?? "";
+}
+
+function themeOptionsHtml(group: CounterSkinGroup, selectedTheme: string | null): string {
+  const themes = group.themes.includes("") ? group.themes : ["", ...group.themes];
+  const mixed = selectedTheme === null ? `<option value="__mixed__" selected>多种皮肤</option>` : "";
+  return mixed + themes
     .map((t) => `<option value="${escHtml(t)}" ${t === selectedTheme ? "selected" : ""}>${escHtml(themeLabelOf(group, t))}</option>`)
     .join("");
 }
 
 function guidOptionsHtml(group: CounterSkinGroup, selectedGuid: string): string {
-  return group.options
+  return group.choices
+    .filter((o) => o.theme)
     .map((o) => `<option value="${escHtml(o.guid)}" ${o.guid === selectedGuid ? "selected" : ""}>${escHtml(o.themeName || o.nameZh)}</option>`)
     .join("");
 }
 
 /** 把主题写入一组物品（theme="" = 恢复默认外观）；返回写入个数。 */
 function applyThemeToItems(items: EditorItem[], options: CounterAppearanceOption[], theme: string): number {
-  const opt = theme ? optionOfTheme(options, theme) : undefined;
-  if (theme && !opt) return 0;
-  for (const it of items) it.pseudoPrefabGuid = theme ? opt!.guid : undefined;
-  return items.length;
+  if (theme && !counterAppearanceForTheme(options, theme)) return 0;
+  let n = 0;
+  for (const it of items) {
+    if (assignCounterTheme(it, options, theme)) n++;
+  }
+  return n;
 }
 
 function fileKeyOf(group: CounterSkinGroup, theme: string): string {
+  const opt = theme
+    ? counterAppearanceForTheme(group.options, theme)
+    : counterDefaultAppearance(group.options);
+  if (opt?.icon) return opt.icon;
   return `${group.type}_${theme || "Default"}`;
+}
+
+/** 改 select.value 时 Chrome 会把滚动容器拉到该控件（关着的 details 里坐标是 0，就跳到第一行）。 */
+function withScrollLocked(run: () => void) {
+  const scrollers = Array.from(document.querySelectorAll<HTMLElement>("#modal-root .modal-body, #modal-root .modal-scroll"));
+  const tops = scrollers.map((el) => el.scrollTop);
+  const restore = () => {
+    for (let i = 0; i < scrollers.length; i++) {
+      if (scrollers[i].scrollTop !== tops[i]) scrollers[i].scrollTop = tops[i];
+    }
+  };
+  const block = (e: Event) => {
+    const el = e.currentTarget as HTMLElement;
+    const i = scrollers.indexOf(el);
+    if (i >= 0 && el.scrollTop !== tops[i]) el.scrollTop = tops[i];
+  };
+  for (const el of scrollers) el.addEventListener("scroll", block);
+  run();
+  restore();
+  requestAnimationFrame(() => {
+    restore();
+    requestAnimationFrame(() => {
+      restore();
+      for (const el of scrollers) el.removeEventListener("scroll", block);
+    });
+  });
+}
+
+function setSelectValue(sel: HTMLSelectElement, value: string) {
+  if (sel.value === value) return;
+  if (![...sel.options].some((o) => o.value === value)) return;
+  sel.value = value;
 }
 
 /** 打开某 fileKey 的 3D 模型预览（Unity 导出 OBJ/MTL + 材质贴图，只读）。 */
@@ -174,9 +243,10 @@ export function openCounterSkinManager() {
     const items = groupsByType.get(type)!;
     items.sort((a, b) => a._wz - b._wz || a._wx - b._wx);
     const options = S.counterAppearances!.byType[type] ?? [];
+    const choices = counterAppearanceChoices(options);
     const themes: string[] = [];
-    for (const o of options) if (!themes.includes(o.theme)) themes.push(o.theme);
-    return { type, typeZh: S.counterAppearances!.typeNames[type] ?? type, items, options, themes };
+    for (const o of choices) if (!themes.includes(o.theme)) themes.push(o.theme);
+    return { type, typeZh: S.counterAppearances!.typeNames[type] ?? type, items, options, choices, themes };
   });
 
   // 全局主题并集（保持各类型首次出现顺序）+ 中文名
@@ -194,17 +264,22 @@ export function openCounterSkinManager() {
     .map((g) => {
       const itemRows = g.items
         .map((it) => {
-          const cur = it.pseudoPrefabGuid ?? "";
+          const selected = counterAppearanceSelectValue(it, g.options);
+          const unknown = it.pseudoPrefabGuid && !g.options.some((o) => o.guid === it.pseudoPrefabGuid)
+            ? `<option value="${escHtml(it.pseudoPrefabGuid)}" selected>未知外观</option>`
+            : "";
           return `<div class="csm-row csm-item-row">
             <span class="csm-pos" title="${escHtml(itemLabel(it))}">#${it._wx},${it._wz}</span>
-            <span class="csm-thumbwrap" data-thumb>${thumbByGuid(g, cur)}</span>
+            <span class="csm-thumbwrap" data-thumb>${thumbForItem(g, it)}</span>
             <select class="csm-sel csm-item-sel" data-key="${it._editorKey}" data-type="${escHtml(g.type)}">
-              <option value="" ${cur ? "" : "selected"}>— 默认 —</option>
-              ${guidOptionsHtml(g, cur)}
+              <option value="" ${selected ? "" : "selected"}>— 默认 —</option>
+              ${guidOptionsHtml(g, selected)}
+              ${unknown}
             </select>
           </div>`;
         })
         .join("");
+      const shared = sharedTheme(g);
       return `<div class="csm-group" data-group="${escHtml(g.type)}">
         <div class="csm-group-title">${escHtml(g.typeZh)}（${escHtml(g.type)}）× ${g.items.length}
           <span class="csm-dist" data-dist-for="${escHtml(g.type)}">${groupDistText(g)}</span>
@@ -212,10 +287,10 @@ export function openCounterSkinManager() {
         <div class="csm-row">
           <label class="csm-row-label">本组皮肤
             <select class="csm-sel csm-type-sel" data-type="${escHtml(g.type)}">
-              ${themeOptionsHtml(g, "")}
+              ${themeOptionsHtml(g, shared)}
             </select>
           </label>
-          <span class="csm-thumbwrap" data-theme-thumb="${escHtml(g.type)}">${thumbByTheme(g, "", true)}</span>
+          <span class="csm-thumbwrap" data-theme-thumb="${escHtml(g.type)}">${shared === null ? thumbHtml(undefined, true) : thumbByTheme(g, shared, true)}</span>
           ${S.counter3d ? modalBtnHtml("👁 3D 预览", "modal-btn csm-3d", { "data-c3d": g.type }) : ""}
           ${modalBtnHtml(`应用到全部 ${g.items.length} 个`, "modal-btn csm-apply", { "data-type": g.type })}
         </div>
@@ -247,8 +322,33 @@ export function openCounterSkinManager() {
   const groupOf = (type: string | undefined) => groups.find((g) => g.type === type);
   const itemOf = (key: string | undefined) => S.items.find((i) => i._editorKey === key);
   const refreshDist = (g: CounterSkinGroup) => {
-    const el = document.querySelector<HTMLElement>(`[data-dist-for="${g.type}"]`);
+    const el = document.querySelector<HTMLElement>(`[data-dist-for="${CSS.escape(g.type)}"]`);
     if (el) el.innerHTML = groupDistText(g);
+  };
+  const syncGroupChrome = (g: CounterSkinGroup, theme: string | null) => {
+    const sel = document.querySelector<HTMLSelectElement>(`.csm-type-sel[data-type="${CSS.escape(g.type)}"]`);
+    const value = theme === null ? "__mixed__" : theme;
+    if (sel) {
+      if (value === "__mixed__" && ![...sel.options].some((o) => o.value === "__mixed__")) {
+        const opt = document.createElement("option");
+        opt.value = "__mixed__";
+        opt.textContent = "多种皮肤";
+        sel.insertBefore(opt, sel.firstChild);
+      }
+      setSelectValue(sel, value);
+    }
+    const thumb = document.querySelector<HTMLElement>(`[data-theme-thumb="${CSS.escape(g.type)}"]`);
+    if (thumb) thumb.innerHTML = theme === null ? thumbHtml(undefined, true) : thumbByTheme(g, theme, true);
+  };
+  const paintGroup = (g: CounterSkinGroup) => {
+    refreshDist(g);
+    for (const it of g.items) {
+      const sel = document.querySelector<HTMLSelectElement>(`.csm-item-sel[data-key="${CSS.escape(it._editorKey)}"]`);
+      if (sel) setSelectValue(sel, counterAppearanceSelectValue(it, g.options));
+      const thumb = sel?.closest(".csm-item-row")?.querySelector<HTMLElement>("[data-thumb]");
+      if (thumb) thumb.innerHTML = thumbForItem(g, it);
+    }
+    syncGroupChrome(g, sharedTheme(g));
   };
   const themeZh = (theme: string) => (theme ? globalThemeLabel.get(theme) ?? theme : "默认");
 
@@ -259,14 +359,17 @@ export function openCounterSkinManager() {
       const g = groupOf(sel.dataset.type);
       if (!it || !g) return;
       pushHistory();
-      it.pseudoPrefabGuid = sel.value || undefined;
+      assignCounterAppearance(it, g.options, sel.value);
       draw();
-      refreshDist(g);
-      const row = sel.closest(".csm-item-row");
-      const thumb = row?.querySelector<HTMLElement>("[data-thumb]");
-      if (thumb) thumb.innerHTML = thumbByGuid(g, it.pseudoPrefabGuid ?? "");
-      const picked = g.options.find((o) => o.guid === sel.value);
-      setStatus(`${itemLabel(it)} 皮肤已更新为 ${picked?.themeName ?? "默认外观"}（写回后生效）`);
+      withScrollLocked(() => {
+        refreshDist(g);
+        syncGroupChrome(g, sharedTheme(g));
+        const row = sel.closest(".csm-item-row");
+        const thumb = row?.querySelector<HTMLElement>("[data-thumb]");
+        if (thumb) thumb.innerHTML = thumbForItem(g, it);
+      });
+      const picked = g.options.find((o) => o.guid === it.pseudoPrefabGuid);
+      setStatus(`${itemLabel(it)} 皮肤已更新为 ${sel.value ? (picked?.themeName || picked?.nameZh || "外观") : "默认外观"}（写回后生效）`);
     });
   });
 
@@ -308,15 +411,21 @@ export function openCounterSkinManager() {
   document.querySelectorAll<HTMLButtonElement>(".csm-apply").forEach((btn) => {
     btn.addEventListener("click", () => {
       const g = groupOf(btn.dataset.type);
-      const sel = document.querySelector<HTMLSelectElement>(`.csm-type-sel[data-type="${g?.type ?? ""}"]`);
+      const sel = document.querySelector<HTMLSelectElement>(`.csm-type-sel[data-type="${CSS.escape(g?.type ?? "")}"]`);
       if (!g || !sel) return;
       const theme = sel.value;
+      if (theme === "__mixed__") {
+        setStatus("请先在「本组皮肤」里选定一个皮肤，再应用到全部", false);
+        return;
+      }
       pushHistory();
       const n = applyThemeToItems(g.items, g.options, theme);
       draw();
-      setStatus(`已把 ${g.typeZh} × ${n} 个统一为「${escHtml(themeZh(theme))}」（写回后生效）`);
-      closeModal();
-      openCounterSkinManager();
+      withScrollLocked(() => {
+        paintGroup(g);
+        syncGroupChrome(g, theme);
+      });
+      setStatus(`已把 ${g.typeZh} × ${n} 个统一为「${themeZh(theme)}」（写回后生效）`);
     });
   });
 
@@ -329,13 +438,19 @@ export function openCounterSkinManager() {
     let touched = 0;
     const skipped: string[] = [];
     for (const g of groups) {
-      if (theme && !optionOfTheme(g.options, theme)) {
+      if (theme && !counterAppearanceForTheme(g.options, theme)) {
         skipped.push(g.typeZh);
         continue;
       }
       touched += applyThemeToItems(g.items, g.options, theme);
     }
     draw();
+    withScrollLocked(() => {
+      for (const g of groups) {
+        paintGroup(g);
+        if (!theme || counterAppearanceForTheme(g.options, theme)) syncGroupChrome(g, theme);
+      }
+    });
     const skipHint = skipped.length ? `；${skipped.join("、")} 无「${themeZh(theme)}」皮肤，已跳过` : "";
     setStatus(
       touched
@@ -343,7 +458,5 @@ export function openCounterSkinManager() {
         : `没有可应用的桌台${skipHint}`,
       touched > 0
     );
-    closeModal();
-    openCounterSkinManager();
   });
 }

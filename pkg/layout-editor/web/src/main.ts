@@ -1,8 +1,8 @@
-import "./styles/tokens.css";
+﻿import "./styles/tokens.css";
 import "./style.css";
 import "./recipeList.css";
 import { initTheme } from "./theme";
-import { dom, buildLayoutDom, ROUTE, MANAGE_ACTIVE, DEPENDENCIES_ACTIVE, ASSIGNMENT_ACTIVE, CUSTOM_RECIPES_ACTIVE, CUSTOM_CONTENT_ACTIVE, BURGER_MAKER_ACTIVE, FILLING_MAKER_ACTIVE, GUIDE_ACTIVE, GUIDE_PAGE_ID } from "./editor/dom";
+import { dom, buildLayoutDom, ROUTE, MANAGE_ACTIVE, DEPENDENCIES_ACTIVE, ASSIGNMENT_ACTIVE, CUSTOM_RECIPES_ACTIVE, CUSTOM_CONTENT_ACTIVE, BURGER_MAKER_ACTIVE, FILLING_MAKER_ACTIVE, SANDWICH_MAKER_ACTIVE, GUIDE_ACTIVE, GUIDE_PAGE_ID } from "./editor/dom";
 import { init } from "./editor/init";
 import { setRedraw } from "./editor/iconCaches";
 import { setRefreshHooks, draw } from "./editor/render";
@@ -38,6 +38,9 @@ if (GUIDE_ACTIVE) {
 } else if (FILLING_MAKER_ACTIVE) {
   document.body.classList.add("manage-bg");
   void import("./fillingMaker").then((m) => m.renderFillingMakerView(dom.app));
+} else if (SANDWICH_MAKER_ACTIVE) {
+  document.body.classList.add("manage-bg");
+  void import("./sandwichMaker").then((m) => m.renderSandwichMakerView(dom.app));
 } else if (DEPENDENCIES_ACTIVE) {
   void import("./dependencies").then((m) => m.renderDependenciesView(dom.app));
 } else if (ASSIGNMENT_ACTIVE) {

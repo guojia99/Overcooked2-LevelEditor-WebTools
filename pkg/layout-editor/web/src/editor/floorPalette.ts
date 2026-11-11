@@ -4,7 +4,7 @@ import { dom } from "./dom";
 import { escHtml, normalizeRot } from "./coords";
 import { setStatus } from "./status";
 import { draw } from "./render";
-import { isThemedFloor, themedFloorPrefabs, effectiveMaterialTiling } from "./floors";
+import { isThemedFloor, themedFloorPrefabs, effectiveMaterialTiling, floorRenderModeLabelZh } from "./floors";
 import { itemLabel } from "./labels";
 import {
   commonBackgroundPrefabIds,
@@ -404,7 +404,11 @@ function buildSelectionInfo(): string {
       const tilingTxt = tilingMismatch
         ? `<b>平铺 ${tw}×${td}</b>（地板 ${f._wCells}×${f._dCells}）`
         : `平铺 ${tw}×${td}`;
-      return `${f.materialName ?? "无材质"} · ${tilingTxt}`;
+      const pbrTxt = f.pbrOverride
+        ? ` · 金${Math.round((f.metallic ?? 0) * 100)}% 滑${Math.round((f.smoothness ?? 0) * 100)}%`
+        : "";
+      const rmTxt = f.renderModeOverride ? ` · 渲染:${floorRenderModeLabelZh(f.renderMode)}` : "";
+      return `${f.materialName ?? "无材质"} · ${tilingTxt}${pbrTxt}${rmTxt}`;
     })();
     return `<span class="fb-info"><b>${f.airFloor ? "空气地板" : f.surfaceKind === "raft" ? "木筏地板" : isThemedFloor(f) ? "主题地板" : f.imageTexturePath ? "图片地板" : f.tintEnabled ? "染色地板" : surfaceKindLabelZh(f.surfaceKind)}</b> · ${f._wCells}×${f._dCells}格 · ${f.airFloor ? "仅可行走（无可见地板）" : f.surfaceKind === "raft" ? "木筏拼块（写回时生成）" : isThemedFloor(f) ? `${tidyCatalogNameZh(S.catalogByGuid.get(f.prefabGuid!)?.nameZh ?? f.displayName, f.displayName)}（写回时生成单个缩放实例）` : f.imageTexturePath ? `${f.imageMode === "tile" ? "一格平铺" : f.imageMode === "warp" ? "透视贴合" : "全部铺开"}${normalizeRot(f.imageRotation ?? 0) ? ` · 旋转${normalizeRot(f.imageRotation ?? 0)}°` : ""} · ${f.imageTexturePath.split("/").pop() ?? ""}` : f.tintEnabled ? `颜色 ${f.tintColor ?? "#ffffff"}` : matFloorDetail}</span>`;
   }

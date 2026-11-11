@@ -1,0 +1,378 @@
+{
+  "mesh": "m_recipe_sushi_05",
+  "materials": [
+    {
+      "id": "Web_Sushi_Mat_Cucumber",
+      "sourceName": "mat_ingredients_cucumber_01",
+      "texture": "t_ingredients_cucumber_01_d",
+      "colors": {
+        "_Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "_EmissionColor": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "_MaskColor": [
+          0.17260020971298218,
+          0.22058820724487305,
+          0.15733128786087036,
+          1.0
+        ],
+        "_highlight_colour": [
+          0.5202839970588684,
+          0.6985294222831726,
+          0.3184472620487213,
+          1.0
+        ]
+      },
+      "floats": {
+        "_Brightness": 0.0,
+        "_BumpScale": 1.0,
+        "_Cutoff": 0.5,
+        "_DetailNormalMapScale": 1.0,
+        "_DstBlend": 0.0,
+        "_GlossMapScale": 1.0,
+        "_Glossiness": 0.5,
+        "_GlossyReflections": 1.0,
+        "_Metallic": 0.4000000059604645,
+        "_Mode": 0.0,
+        "_OcclusionStrength": 1.0,
+        "_Parallax": 0.019999999552965164,
+        "_RimIntensity": 0.8700000047683716,
+        "_RimPower": 0.49000000953674316,
+        "_Roughness": 0.5299999713897705,
+        "_SmoothnessTextureChannel": 0.0,
+        "_SpecularHighlights": 1.0,
+        "_SrcBlend": 1.0,
+        "_UVSec": 0.0,
+        "_ZWrite": 1.0
+      },
+      "texEnvs": {
+        "_DiffuseMap": {
+          "scale": [
+            1.0,
+            1.0
+          ],
+          "offset": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "id": "Web_Sushi_Mat_Rice",
+      "sourceName": "mat_ingredients_rice_01",
+      "texture": "t_ingredients_rice_01_d",
+      "colors": {
+        "_Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "_EmissionColor": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "_EmissionColour": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "_MaskColor": [
+          0.11764705181121826,
+          0.11764705181121826,
+          0.11764705181121826,
+          1.0
+        ],
+        "_highlight_colour": [
+          0.970588207244873,
+          0.8580102324485779,
+          0.7350778579711914,
+          1.0
+        ]
+      },
+      "floats": {
+        "_Brightness": 0.0,
+        "_BumpScale": 1.0,
+        "_Cutoff": 0.5,
+        "_DetailNormalMapScale": 1.0,
+        "_DetailPreview": 0.0,
+        "_DiffusePreview": 1.0,
+        "_DstBlend": 0.0,
+        "_GlossMapScale": 1.0,
+        "_Glossiness": 0.5,
+        "_GlossyReflections": 1.0,
+        "_Metallic": 0.15000000596046448,
+        "_Mode": 0.0,
+        "_OcclusionStrength": 1.0,
+        "_Parallax": 0.019999999552965164,
+        "_PreviewAO": 1.0,
+        "_PreviewEmission": 1.0,
+        "_ReflectionCubemap_Preivew": 0.0,
+        "_RimIntensity": 0.25,
+        "_RimPower": 0.0,
+        "_RimPreview": 1.0,
+        "_Roughness": 0.6000000238418579,
+        "_SmoothnessTextureChannel": 0.0,
+        "_SpecularHighlights": 1.0,
+        "_SrcBlend": 1.0,
+        "_UVSec": 0.0,
+        "_UseMetallicTexture": 0.0,
+        "_UseRoughnessTexture": 0.0,
+        "_WorldUVMultipllier": 0.0,
+        "_WorldUVRotator": 0.0,
+        "_ZWrite": 1.0
+      },
+      "texEnvs": {
+        "_DiffuseMap": {
+          "scale": [
+            1.0,
+            1.0
+          ],
+          "offset": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "id": "Web_Sushi_Mat_Seaweed",
+      "sourceName": "mat_ingredients_seaweed_02",
+      "texture": "t_ingredients_seaweed_02_d",
+      "colors": {
+        "_Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "_EmissionColor": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "_EmissionColour": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "_MaskColor": [
+          0.11764705181121826,
+          0.11764705181121826,
+          0.11764705181121826,
+          1.0
+        ],
+        "_highlight_colour": [
+          0.2720588445663452,
+          1.0,
+          0.39756596088409424,
+          1.0
+        ]
+      },
+      "floats": {
+        "_Brightness": 0.18000000715255737,
+        "_BumpScale": 1.0,
+        "_Cutoff": 0.5,
+        "_DetailNormalMapScale": 1.0,
+        "_DetailPreview": 0.0,
+        "_DiffusePreview": 1.0,
+        "_DstBlend": 0.0,
+        "_GlossMapScale": 1.0,
+        "_Glossiness": 0.5,
+        "_GlossyReflections": 1.0,
+        "_Metallic": 0.10599999874830246,
+        "_Mode": 0.0,
+        "_OcclusionStrength": 1.0,
+        "_Parallax": 0.019999999552965164,
+        "_PreviewAO": 1.0,
+        "_PreviewEmission": 1.0,
+        "_ReflectionCubemap_Preivew": 0.0,
+        "_RimIntensity": 0.4099999964237213,
+        "_RimPower": 0.6000000238418579,
+        "_RimPreview": 1.0,
+        "_Roughness": 0.5440000295639038,
+        "_SmoothnessTextureChannel": 0.0,
+        "_SpecularHighlights": 1.0,
+        "_SrcBlend": 1.0,
+        "_UVSec": 0.0,
+        "_UseMetallicTexture": 0.0,
+        "_UseRoughnessTexture": 0.0,
+        "_WorldUVMultipllier": 0.0,
+        "_WorldUVRotator": 0.0,
+        "_ZWrite": 1.0
+      },
+      "texEnvs": {
+        "_DiffuseMap": {
+          "scale": [
+            1.0,
+            1.0
+          ],
+          "offset": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "id": "Web_Sushi_Mat_Fish",
+      "sourceName": "mat_plated_fish_fillet_02",
+      "texture": "t_plated_fish_fillet_02_d",
+      "colors": {
+        "_Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "_EmissionColor": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "_MaskColor": [
+          0.36764705181121826,
+          0.3000648617744446,
+          0.3000648617744446,
+          1.0
+        ],
+        "_highlight_colour": [
+          0.8676470518112183,
+          0.5571948289871216,
+          0.46572232246398926,
+          1.0
+        ]
+      },
+      "floats": {
+        "_Brightness": 0.05400000140070915,
+        "_BumpScale": 1.0,
+        "_Cutoff": 0.5,
+        "_DetailNormalMapScale": 1.0,
+        "_DstBlend": 0.0,
+        "_GlossMapScale": 1.0,
+        "_Glossiness": 0.5,
+        "_GlossyReflections": 1.0,
+        "_Metallic": 0.5600000023841858,
+        "_Mode": 0.0,
+        "_OcclusionStrength": 1.0,
+        "_Parallax": 0.019999999552965164,
+        "_RimIntensity": 0.3499999940395355,
+        "_RimPower": -0.27000001072883606,
+        "_Roughness": 0.5799999833106995,
+        "_SmoothnessTextureChannel": 0.0,
+        "_SpecularHighlights": 1.0,
+        "_SrcBlend": 1.0,
+        "_UVSec": 0.0,
+        "_ZWrite": 1.0
+      },
+      "texEnvs": {
+        "_DiffuseMap": {
+          "scale": [
+            1.0,
+            1.0
+          ],
+          "offset": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "id": "Web_Sushi_Mat_Prawn",
+      "sourceName": "mat_ingredients_prawn_01",
+      "texture": "t_ingredients_prawn_01_d",
+      "colors": {
+        "_Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "_EmissionColor": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "_EmissionColour": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "_MaskColor": [
+          0.18382352590560913,
+          0.05704868957400322,
+          0.0,
+          1.0
+        ],
+        "_highlight_colour": [
+          0.845588207244873,
+          0.6341911554336548,
+          0.6341911554336548,
+          1.0
+        ]
+      },
+      "floats": {
+        "_Brightness": 0.0,
+        "_BumpScale": 1.0,
+        "_Cutoff": 0.5,
+        "_DetailNormalMapScale": 1.0,
+        "_DetailPreview": 0.0,
+        "_DiffusePreview": 1.0,
+        "_DstBlend": 0.0,
+        "_GlossMapScale": 1.0,
+        "_Glossiness": 0.5,
+        "_GlossyReflections": 1.0,
+        "_Metallic": 0.0,
+        "_Mode": 0.0,
+        "_OcclusionStrength": 1.0,
+        "_Parallax": 0.019999999552965164,
+        "_PreviewAO": 1.0,
+        "_PreviewEmission": 1.0,
+        "_ReflectionCubemap_Preivew": 0.0,
+        "_RimIntensity": 0.5600000023841858,
+        "_RimPower": -0.15000000596046448,
+        "_RimPreview": 1.0,
+        "_Roughness": 0.699999988079071,
+        "_SmoothnessTextureChannel": 0.0,
+        "_SpecularHighlights": 1.0,
+        "_SrcBlend": 1.0,
+        "_UVSec": 0.0,
+        "_UseMetallicTexture": 0.0,
+        "_UseRoughnessTexture": 0.0,
+        "_WorldUVMultipllier": 0.0,
+        "_WorldUVRotator": 0.0,
+        "_ZWrite": 1.0
+      },
+      "texEnvs": {
+        "_DiffuseMap": {
+          "scale": [
+            1.0,
+            1.0
+          ],
+          "offset": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    }
+  ]
+}

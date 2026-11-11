@@ -47,6 +47,7 @@ public static class AnimGroupBakeryTests
 
         failed += TimelineMigrationTests.Run();
         failed += FxEventTests.Run();
+        failed += NewEventTests.Run();
 
         if (failed == 0)
             Debug.Log("[LayoutEditor/Tests] 动画组烘焙器测试：全部通过。");
@@ -184,6 +185,94 @@ public static class AnimGroupBakeryTests
             failed += AssertEqual("overlapping shakes merge into one cluster",
                 clusters2.Count.ToString(), "1");
             failed += AssertFloat("merged cluster end = max event end", clusters2[0].end, 3f);
+            return failed;
+        }
+
+        private static int AssertFloat(string label, float actual, float expected)
+        {
+            if (Mathf.Abs(actual - expected) < 0.001f) return 0;
+            Debug.LogError("[LayoutEditor/Tests] 失败 " + label + "：期望 " + expected + "，实际 " + actual);
+            return 1;
+        }
+    }
+
+    /// <summary>新增事件类型（scale/tilt/orbit）与缓动/贝塞尔采样层的关键值断言。
+    /// EaseValue 与 web 端 easeValue 同名同公式（flashEnvelope 铁律），关键点值
+    /// 改动须两端同步。</summary>
+    private static class NewEventTests
+    {
+        public static int Run()
+        {
+            int failed = 0;
+
+            // ---- EventDuration 新类型默认值（与 web eventDuration 对齐）。
+            failed += AssertFloat("scale default duration",
+                AnimGroupBakery.EventDuration(new AnimGroupEventDto { type = "scale" }, null), 1f);
+            failed += AssertFloat("tilt default duration",
+                AnimGroupBakery.EventDuration(new AnimGroupEventDto { type = "tilt" }, null), 1f);
+            failed += AssertFloat("orbit default duration",
+                AnimGroupBakery.EventDuration(new AnimGroupEventDto { type = "orbit" }, null), 8f);
+            failed += AssertFloat("orbit explicit duration",
+                AnimGroupBakery.EventDuration(
+                    new AnimGroupEventDto { type = "orbit", orbitSeconds = 4.5f }, null), 4.5f);
+            failed += AssertFloat("fade default duration",
+                AnimGroupBakery.EventDuration(new AnimGroupEventDto { type = "fade" }, null), 1f);
+            failed += AssertFloat("fade explicit duration",
+                AnimGroupBakery.EventDuration(
+                    new AnimGroupEventDto { type = "fade", fadeSeconds = 2.5f }, null), 2.5f);
+
+            // ---- EaseValue 关键点（全部缓动 f(0)=0、f(1)=1）。
+            string[] easings = { "linear", "easeIn", "easeOut", "easeInOut", "easeOutBounce", "easeInOutBack" };
+            foreach (var ez in easings)
+            {
+                failed += AssertFloat(ez + " f(0)=0", AnimGroupBakery.EaseValue(0f, ez), 0f);
+                failed += AssertFloat(ez + " f(1)=1", AnimGroupBakery.EaseValue(1f, ez), 1f);
+            }
+            failed += AssertFloat("easeIn f(0.5)=0.25",
+                AnimGroupBakery.EaseValue(0.5f, "easeIn"), 0.25f);
+            failed += AssertFloat("easeOut f(0.5)=0.75",
+                AnimGroupBakery.EaseValue(0.5f, "easeOut"), 0.75f);
+            failed += AssertFloat("easeInOut f(0.5)=0.5",
+                AnimGroupBakery.EaseValue(0.5f, "easeInOut"), 0.5f);
+            failed += AssertFloat("easeOutBounce f(0.5)=0.765625",
+                AnimGroupBakery.EaseValue(0.5f, "easeOutBounce"), 0.765625f);
+            failed += AssertFloat("easeInOutBack f(0.5)=0.5",
+                AnimGroupBakery.EaseValue(0.5f, "easeInOutBack"), 0.5f);
+            failed += AssertFloat("null easing falls back to linear",
+                AnimGroupBakery.EaseValue(0.5f, null), 0.5f);
+
+            // ---- OrbitPos：Unity Y 轴约定（+deg 绕 up 把 +X 转向 -Z；cw/ccw 同 rotate）。
+            var cw = AnimGroupBakery.OrbitPos(new Vector2(2f, 0f), Vector2.zero, 90f, "cw");
+            failed += AssertFloat("orbit cw 90° x", cw.x, 0f);
+            failed += AssertFloat("orbit cw 90° z", cw.y, -2f);
+            var ccw = AnimGroupBakery.OrbitPos(new Vector2(2f, 0f), Vector2.zero, 90f, "ccw");
+            failed += AssertFloat("orbit ccw 90° x", ccw.x, 0f);
+            failed += AssertFloat("orbit ccw 90° z", ccw.y, 2f);
+            // 整圈回到起点（loop clip 首尾闭合的前提）。
+            var full = AnimGroupBakery.OrbitPos(new Vector2(1.5f, -0.7f), new Vector2(0.3f, 0.4f), 360f, "cw");
+            failed += AssertFloat("orbit 360° returns to start (x)", full.x, 1.5f);
+            failed += AssertFloat("orbit 360° returns to start (z)", full.y, -0.7f);
+
+            // ---- 新类型参与时间簇装箱（EventDuration 驱动簇区间）。
+            var g = new AnimGroupDto
+            {
+                id = "n1",
+                displayName = "NewTypes",
+                events = new[]
+                {
+                    new AnimGroupEventDto { id = "o", type = "orbit", startTime = 0f, orbitSeconds = 4f },
+                    new AnimGroupEventDto { id = "t", type = "tilt", startTime = 1f, tiltSeconds = 2f },
+                    new AnimGroupEventDto { id = "s", type = "scale", startTime = 4.5f, scaleSeconds = 1f }
+                },
+                waypoints = new AnimGroupWaypointDto[0]
+            };
+            var sorted = new System.Collections.Generic.List<AnimGroupEventDto>(g.events);
+            sorted.Sort((a, b) => a.startTime.CompareTo(b.startTime));
+            var clusters = AnimGroupBakery.BuildClusters(sorted, null);
+            failed += AssertEqual("orbit+tilt overlap merges, scale starts new cluster",
+                clusters.Count.ToString(), "2");
+            failed += AssertFloat("first cluster end = orbit end", clusters[0].end, 4f);
+            failed += AssertFloat("scale cluster starts after orbit", clusters[1].start, 4.5f);
             return failed;
         }
 

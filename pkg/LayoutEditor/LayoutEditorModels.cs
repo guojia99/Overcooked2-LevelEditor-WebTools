@@ -93,6 +93,10 @@ public class QuestionMarkStyleListDto
 public class LayoutConveyorStubDto
 {
     public float conveySpeed = 0.5f;
+    /** 可上菜传送带：运动方向正前方（≤1m 高度差）的上菜口会把物品接住——
+     *  盘子正常上菜，非盘子按无效上菜处理。权威 = CustomStub.ConveyorServe 组件，
+     *  载体 = tag "ConveyorServe|" / "ConveyorServe|dir"。 */
+    public bool serve;
     /** 按钮动画旋转后刷新 ServerConveyorStation 的相邻接收器。 */
     public bool buttonControlled;
     /** 按钮控速（null = 未配置）。权威=CustomStub.ButtonSpeedControl 组件 + tag
@@ -672,6 +676,8 @@ public class LayoutItemDto
     public string stubKind;
     /** Counter/Dispenser etc. appearance SO guid (base PseudoPrefabStub.pseudoPrefabSO). */
     public string pseudoPrefabGuid;
+    /** 为 true 时写回把外观恢复为预制件自带皮肤（切回默认）。缺省 false。 */
+    public bool resetAppearance;
     public LayoutCannonStubDto cannon;
     public LayoutDispenserStubDto dispenser;
     public LayoutWebBackpackStubDto webBackpack;
@@ -756,6 +762,12 @@ public class AnimGroupWaypointDto
     public float wait;
     /** Seconds to travel from this waypoint to the next (default: event interval). */
     public float segmentSeconds;
+    /** 二次贝塞尔控制点（本路点→下一路点的段）：ctrlHas=false = 直线段。 */
+    public bool ctrlHas;
+    /** 控制点世界 X。 */
+    public float ctrlX;
+    /** 控制点世界 Z。 */
+    public float ctrlZ;
 }
 
 [Serializable]
@@ -787,6 +799,36 @@ public class AnimGroupEventDto
     public float intervalSeconds;
     /** Ordered waypoint route (contiguous slice of the group waypoint list). */
     public string[] waypointIds;
+    /** scale 事件：目标比例（相对成员初始尺寸的倍率；0=缩没隐身、1=原尺寸、
+     *  >1=放大；缺省 0）。跨事件为绝对目标（第 N 个 scale 从上一 scale 终态起）。 */
+    public float scaleTo;
+    /** scale 事件：过渡用时（秒，<=0 用默认 1）。 */
+    public float scaleSeconds;
+    /** tilt 事件：倾斜角度（带符号 -180~180；正=绕轴正向翻转）。 */
+    public float tiltDegrees;
+    /** tilt 事件：旋转轴（"x" 俯仰 | "z" 侧倾，默认 x）。 */
+    public string tiltAxis;
+    /** tilt 事件：翻转用时（秒，<=0 用默认 1）。 */
+    public float tiltSeconds;
+    /** orbit 事件：公转圆心世界 X（成员半径=各自初始位到圆心的距离）。 */
+    public float orbitCenterX;
+    /** orbit 事件：公转圆心世界 Z。 */
+    public float orbitCenterZ;
+    /** orbit 事件：本次公转角度（度，缺省 360=整圈；loop 时每圈一周期）。 */
+    public float orbitDegrees;
+    /** orbit 事件：公转用时（秒，<=0 用默认 8）。 */
+    public float orbitSeconds;
+    /** orbit 事件：方向（"cw" 顺时针俯视 / "ccw" 逆时针，默认 cw，同 rotate 约定）。 */
+    public string orbitDirection;
+    /** fade 事件：目标透明度（0=全透明隐身、1=不透明显型；缺省 0）。跨事件为
+     *  绝对目标；运行时由 CustomStub.FadeDriver 驱动子树材质 alpha。 */
+    public float fadeTo;
+    /** fade 事件：过渡用时（秒，<=0 用默认 1）。 */
+    public float fadeSeconds;
+    /** 进度缓动（move/scale/lift/drop/rotate/tilt/orbit 通用：
+     *  "linear"|"easeIn"|"easeOut"|"easeInOut"|"easeOutBounce"|"easeInOutBack"，
+     *  缺省 linear；烘焙与 web 预览同名同公式）。 */
+    public string easing;
     /** Loop the clip itself (self-transition replay) — scrolling patterns like
      *  3_4/6_3 Islands 或持续旋转。move/rotate 通用；仅在最后一个单事件时间簇生效。 */
     public bool loop;
@@ -1102,11 +1144,54 @@ public class CameraInfoDto
     /** 分屏每镜头参考（按镜头 1..4 顺序）：各自相对玩家的 offset / FOV / 大小 /
      *  编辑器显示开关。 */
     public SplitScreenCameraDto[] splitScreenCameras;
+    /** 进场动画（CameraIntroBakery 写回/读回）。null = 不动（旧文档/MCP 精简
+     *  写回保护，防误清已有配置）；mode="vanilla" 显式恢复原版 PullBackIntro。 */
+    public CameraIntroDto intro;
     public float pitch;
     public float yaw;
     public float roll;
     public float nearClip;
     public float farClip;
+}
+
+/** 关卡进场动画配置。自定义模式（pullBack/rotateLeft/rotateRight/focus/tour/
+ *  dollyIn/dive/orbit）写回时烘焙专属 clip（Camera 子物体 localPosition/
+ *  localRotation 曲线，首帧=起始位姿、末帧=最终位姿）+ 两态 controller
+ *  （Intro→Idle 常持）整替 Animator；raft/space 切换 common01 官方变体（同时
+ *  改变待机行为）；none 禁用 Animator；vanilla 恢复原版。参数 JSON 以
+ *  IntroSource TextAsset 子资产嵌入 controller 供导出往返。 */
+[Serializable]
+public class CameraIntroDto
+{
+    /** vanilla | none | pullBack | rotateLeft | rotateRight | focus | tour |
+     *  dollyIn | dive | orbit | raft | space */
+    public string mode;
+    /** 时长秒（自定义模式，默认 2，0.5–6）。 */
+    public float duration;
+    /** 起始沿视轴拉近米数（pullBack/dollyIn/dive/rotate 默认 5；orbit = 环绕
+     *  半径默认 8；focus/tour 水平平移不使用）。 */
+    public float startDistance;
+    /** 旋转幅度度（rotateLeft/rotateRight 默认 30，5–90）。 */
+    public float rotateAngle;
+    /** 聚焦目标世界坐标（focus 模式；X/Z 均生效，水平全向平移）。 */
+    public CameraIntroTargetDto focusTarget;
+    /** 巡回路径点 A/B（tour 模式，仅 X 生效；Z 恒取主相机 Z）。 */
+    public CameraIntroTargetDto tourA;
+    public CameraIntroTargetDto tourB;
+    /** dive 起始抬升米数（默认 10，2–40）。 */
+    public float diveHeight;
+    /** orbit 环绕角度（90–360，默认 180）。 */
+    public float orbitAngle;
+    /** orbit 方向："left" | "right"（默认 right）。 */
+    public string orbitDirection;
+}
+
+/** focus 模式聚焦目标（世界 XZ）。 */
+[Serializable]
+public class CameraIntroTargetDto
+{
+    public float x;
+    public float z;
 }
 
 /** 分屏单镜头参考：offset 相对玩家位置（玩家 + offset*size = 相机初始位），
@@ -1201,6 +1286,25 @@ public class FloorDto
      *  Defaults to widthCells/depthCells when unset. */
     public int materialTilingW;
     public int materialTilingD;
+    /** PBR override flag for plain material floors; false = keep the material's
+     *  own values (write-back then behaves exactly as before, no variant). */
+    public bool pbrOverride;
+    /** Metalness 0..1, baked into the variant material's _Metallic when
+     *  pbrOverride is true. Without override holds the source material's
+     *  actual value as a display baseline. */
+    public float metallic;
+    /** Smoothness 0..1, baked into the variant material's _Glossiness when
+     *  pbrOverride is true. Without override holds the source material's
+     *  actual value as a display baseline. */
+    public float smoothness;
+    /** Unity Standard rendering mode override for plain material floors;
+     *  false = keep the material's own mode (write-back unchanged). */
+    public bool renderModeOverride;
+    /** 0=Opaque 1=Cutout 2=Fade 3=Transparent, baked via the Standard
+     *  render-mode recipe (blend/ZWrite/keywords/queue) when
+     *  renderModeOverride is true. Without override holds the source
+     *  material's _Mode as a display baseline. */
+    public int renderMode;
     /** 空气地板：仅有可行走 Col_AirFloor 碰撞盒（Ground 层，几何与普通 Col_Floor
      *  相同），无可见 Plane。导出时按名称 Col_AirFloor 识别，写回时不创建可见面。 */
     public bool airFloor;
@@ -1319,6 +1423,9 @@ public class IngredientEntryDto
     public string assetPath;
     /** "core" / "dlc02" / "dlc05" — matches ingredients.json. */
     public string group;
+    /** custom_content 自定义食材专用：图标直链（/api/custom-content/icon?…&v=updatedAt 防缓存）；
+     *  其余条目为空——沿用静态 /icons/ingredients/<id>.png。 */
+    public string iconUrl;
 }
 
 [Serializable]
@@ -1356,6 +1463,9 @@ public class RecipeEntryDto
      *  assembly / classic / deluxe / mega / breakfast / seafood / veggie / filling。
      *  来源 = commonW2/custom_recipes/burger/&lt;子目录&gt;/，菜谱清单列表据此在「汉堡」组内二级分组。 */
     public string subtype;
+    /** Built-in salads: one exclusive sauce group plus independent official provenance.
+     *  mustard_only / ketchup_only / both_sauces / no_sauce; optional official. */
+    public string[] saladSubgroups;
     /** True for score-0 half-finished products (batter, fried parts, optional pizza parts) — not orderable. */
     public bool intermediate;
     /** Mixed 类型自定义菜谱：先搅拌（MixingBowl）再烹饪（卡片显示双步骤）。 */
@@ -1807,6 +1917,7 @@ public class McpRpcParamsDto
 [Serializable]
 public class McpArgumentsDto
 {
+    public string operation;
     public string setName;
     public string levelSet;
     public string assetPath;
@@ -1871,6 +1982,8 @@ public class LevelSummaryDto
     /** Asset path of the screenshot texture ("" when none), for the web UI to preview. */
     public string screenshotPath;
     public bool hasScene;
+    /** 分组名（显示用覆盖层，data/&lt;level&gt;/group~/group.json；"" = 未分组）。 */
+    public string group;
 }
 
 [Serializable]
@@ -2021,8 +2134,11 @@ public class LevelRenameDto
     public string setName;
     /** 旧关卡标识（= data/ 目录名）。 */
     public string levelId;
-    /** 新关卡标识（同时成为新场景名，无 s_ 前缀）。 */
+    /** 旧客户端：新目录名，且在 newSceneName 为空时同时当作新场景名。 */
     public string newLevelId;
+    /** 新场景名（场景文件、LevelInfoSO.sceneName、AssetBundle 名 &lt;set&gt;/&lt;场景名&gt;）。
+     *  可保留 s_ 前缀。为空时回退为 newLevelId。 */
+    public string newSceneName;
 }
 
 [Serializable]
@@ -2077,6 +2193,27 @@ public class LevelDeleteDto
 {
     public string setName;
     public string levelId;
+}
+
+[Serializable]
+public class LevelDeleteBatchDto
+{
+    public string setName;
+    /** 待删除的关卡 data 目录名列表（≤0 条时拒绝）。 */
+    public string[] levelIds;
+}
+
+[Serializable]
+public class LevelDeletePreviewItemDto
+{
+    public string levelId;
+    public string[] paths;
+}
+
+[Serializable]
+public class LevelDeletePreviewBatchDto
+{
+    public LevelDeletePreviewItemDto[] levels;
 }
 
 [Serializable]
@@ -2204,6 +2341,50 @@ public class AssignmentSaveDto
     public string json;
 }
 
+// ---------- 订单顺序（关卡 data 目录 order_seq~/，4.0.0.18（原 4.7.0）） ----------
+
+/** order_seq.json 结构（后端解析校验 + 烘焙LayoutEditorOrderSequenceBake 消费；
+ *  字段名与前端 types.ts LevelOrderSequence 对齐）。 */
+[Serializable]
+public class OrderSequenceConfigDto
+{
+    /** 总开关；false/缺文件 = 原版随机出单（场景载体清理）。 */
+    public bool enabled;
+    /** loop（循环）/ pingpong（钟摆倒序）/ stop（停止出单）。 */
+    public string endBehavior;
+    /** 组序列（至少 1 组）。 */
+    public OrderSequenceGroupDto[] groups;
+}
+
+[Serializable]
+public class OrderSequenceGroupDto
+{
+    /** 0 = ordered（按序，recipeGuids 保序可重复）；1 = random（原版防重复随机批）。 */
+    public int mode;
+    /** random 组抽菜数 N（0 = 整池 = 组内去重菜谱数；N > 池大小时有放回补足）。 */
+    public int batchSize;
+    /** 组内菜谱 guid 列表（须 ⊆ LevelInfoSO.recipes）。 */
+    public string[] recipeGuids;
+}
+
+[Serializable]
+public class OrderSequenceResultDto
+{
+    /** order_seq.json 是否存在。 */
+    public bool exists;
+    /** order_seq.json 原文；exists=false 时为 ""。 */
+    public string json;
+}
+
+[Serializable]
+public class OrderSequenceSaveDto
+{
+    /** LevelInfoSO asset path. */
+    public string assetPath;
+    /** 完整 order_seq.json 文本。 */
+    public string json;
+}
+
 // ---------- 工作量推测（关卡 data 目录 workload~/） ----------
 
 [Serializable]
@@ -2253,6 +2434,45 @@ public class ReadmeFileDto
 {
     public int schemaVersion;
     public string html;
+}
+
+// ---------- 关卡分组（关卡 data 目录 group~/，4.0.0.19（原 4.8.0）） ----------
+
+/** group~/group.json 的落盘结构（每关一份，仅存组名）。 */
+[Serializable]
+public class LevelGroupFileDto
+{
+    public int schemaVersion;
+    public string group;
+}
+
+/** 单关分组读回（镜像 ReadmeResultDto）。 */
+[Serializable]
+public class LevelGroupResultDto
+{
+    /** group~/group.json 是否存在。 */
+    public bool exists;
+    /** 分组名（"" = 未分组）；exists=false 时为 ""。 */
+    public string group;
+}
+
+/** 批量保存请求：一次写入若干关卡的分组（仅变更项）。 */
+[Serializable]
+public class LevelGroupSaveDto
+{
+    public string setName;
+    public LevelGroupItemDto[] items;
+}
+
+[Serializable]
+public class LevelGroupItemDto
+{
+    /** 关卡标识（data 目录名，仅用于错误提示）。 */
+    public string levelId;
+    /** LevelInfoSO asset path（权威，定位 group~ 目录）。 */
+    public string assetPath;
+    /** 分组名；"" = 取消分组（删除该关 group~ 目录）。 */
+    public string group;
 }
 
 [Serializable]
@@ -2353,6 +2573,18 @@ public class CustomRecipeSummaryDto
     public float boundsSizeX;
     public float boundsSizeY;
     public float boundsSizeZ;
+
+    // ---- Sandwich 回显（optionalKind == "sandwich"）----
+    public string toastId;
+    public string[] fillingIds;
+    public string[] sauceIds;
+    public int sandwichCapacity;
+    public string[] ingredientModelIds;
+    public string[] ingredientModelSoIds;
+    public string[] sauceInPlateModelIds;
+    public string[] sauceOnToastModelIds;
+    public string wrongSauceInPlateId;
+    public string wrongSauceOnToastId;
 }
 
 [Serializable]
@@ -2384,6 +2616,20 @@ public class CustomRecipeEditDto
     public float modelPivotX;
     public float modelPivotY;
     public float modelPivotZ;
+
+    // ---- 可选组装（2026-11 ICustomRecipeOptional / custom sandwich）----
+    /** "" = 普通菜谱；"sandwich" = 创建/更新 CustomRecipeOptionalSandwichSO。 */
+    public string optionalKind;
+    public string toastGuid;
+    public string[] fillingGuids;
+    public string[] sauceGuids;
+    public int ingredientContainerCapacity;
+    public string[] ingredientModelSoGuids;
+    public string[] ingredientModelGuids;
+    public string[] sauceInPlateModelGuids;
+    public string[] sauceOnToastModelGuids;
+    public string wrongSauceInPlateGuid;
+    public string wrongSauceOnToastGuid;
 }
 
 [Serializable]

@@ -22,18 +22,24 @@ namespace CustomStub
     /// 两个 DLC100 类在宿主构建中不存在，此处等价复刻）：
     ///  - 门禁：Active 态才允许 PlacementItemSpawner 接水（Harmony 前缀拦
     ///    ServerPlacementItemSpawner.CanHandlePlacement，见 HarmonyPatches）；
-    ///  - 接一杯即冷（Harmony 后缀 HandlePlacement → Cooldown）；
+    ///  - 接一杯即冷（Harmony 后缀 HandlePlacement → Cooldown → 复位联动开关）；
     ///  - 状态机与动画/音效：Inoperative 触发通道投不进 stub 组件（仓库铁律），
     ///    改为轮询联动开关 TriggerDisableScript.m_script.enabled 的按压沿
     ///    （ButtonSpeedControl/SwitchReenable 同款，双端确定性推导）；
-    ///  - **开关只读**：本组件绝不向开关补发 Disable/Reset。vanilla 开关自己维护
-    ///    “按下→置灰→回弹”，而 ClientSwitchCosmeticDecisions.Update 一看到
-    ///    Interactable.enabled 变化就换 m_buttonBit 材质 + 放 SwitchOn/SwitchOff，
-    ///    任何每帧/定频补发都会让按钮在开/关之间闪（2026-10-27 实测）。
+    ///  - 开关按压链（真机原版 Switch prefab）：Interactable 交互 impulse "Switch"
+    ///    → TriggerAdapter(Switch→Disable) → TriggerDisableScript 禁用 Interactable
+    ///    （按钮变红、不可再按）；**只有显式 "Reset"（m_enableTrigger）才回绿**。
+    ///    编辑器 Play 里 0.35s 自动回弹只是 LayoutEditorSwitchReenableRelay
+    ///    （仅编辑器存在），真机没有——不能据此认为原版开关会自维护回弹。
+    ///  - **接水冷却时补发一次 Reset**（服务端权威；任一联动壶接水即回绿，多壶
+    ///    共用一开关时不做“全部冷却”等待）。只发一次、绝不定频补发：ClientSwitch
+    ///    CosmeticDecisions.Update 每次 Interactable.enabled 变化都会换材质 +
+    ///    放 SwitchOn/SwitchOff，定频补发会让按钮在开/关之间闪（2026-10-27 实测）。
     ///
     /// 联机：按压/禁用状态由 vanilla 网络同步呈现到各端，本组件每端各跑一份、
     /// 各自推导状态（ButtonSpeedControl 同款论证）；接水判定仅服务端权威
-    /// （CanHandlePlacement 前缀只在服务端同步器上命中）。
+    /// （CanHandlePlacement 前缀只在服务端同步器上命中）；复位触发也只由服务端
+    /// 投递（客户端由 ClientTriggerDisableScript.ApplyServerEvent 同步回绿）。
     ///
     /// 数据双通道：本组件（StubIO 反射烘焙，权威）+ tag 载体 "Kettle|"
     /// （无 payload；组件缺失时 EntryPoint 自愈 AddComponent，走默认配置）。
@@ -72,14 +78,18 @@ namespace CustomStub
         private AudioSource m_pour;
         private Component m_triggerTimer;
         private Behaviour m_switchScript;
-        // 原版开关（SwitchStation + TriggerDisableScript + SwitchCosmeticDecisions）自己维护
-        // “按下→灰→回弹”，本组件**只读**开关状态做按压沿检测，绝不再往开关发 trigger：
-        // ClientSwitchCosmeticDecisions.Update 一看到 Interactable.enabled 变化就换材质 + 放
-        // SwitchOn/SwitchOff 音效，我们每 0.25s 补发一次 Disable/Reset 会让按钮在开/关之间闪。
+        // 原版开关按压后会被 TriggerDisableScript 禁用 Interactable（按钮变红），
+        // 必须收到显式 "Reset" 才回绿。本组件只读 enabled 做按压沿检测，并在接水
+        // 冷却时补发一次 Reset（OnServerFilled → ResetSwitchAfterFill）。绝不定频
+        // 补发：ClientSwitchCosmeticDecisions.Update 每次 enabled 变化都会换材质 +
+        // 放音效，定频补发会让按钮在开/关之间闪。
+        private Component m_switchDisable;
+        private string m_switchEnableTrigger;
         private bool m_switchLastEnabled = true;
         private bool m_switchBound;
         private bool m_uiInjected;
         private bool m_noSwitchWarned;
+        private bool m_resetLogged;
         // 进度条 UI（CookingUIController，反射持有：CustomStub 不能编译期引用宿主类型）
         private Component m_cookUi;
         private MethodInfo m_uiSetState;
@@ -234,6 +244,12 @@ namespace CustomStub
                 if (script == null)
                     continue;
                 m_switchScript = script;
+                m_switchDisable = found[i];
+                m_switchEnableTrigger = GameApi.DisableEnableTriggerField != null
+                    ? GameApi.DisableEnableTriggerField.GetValue(found[i]) as string
+                    : null;
+                if (string.IsNullOrEmpty(m_switchEnableTrigger))
+                    m_switchEnableTrigger = "Reset";
                 m_switchLastEnabled = script.enabled;
                 m_switchBound = true;
                 return;
@@ -374,13 +390,48 @@ namespace CustomStub
         }
 
         /// <summary>服务端：接水完成（Harmony 后缀 ServerPlacementItemSpawner.
-        /// HandlePlacement 命中本热水器）。只做冷却——开关的视觉回弹交给原版自身，
-        /// 这里不再补发 trigger（否则会与 vanilla 的回弹互相拉扯 = 按钮闪）。</summary>
+        /// HandlePlacement 命中本热水器）→ 冷却 + 补发一次开关复位（原版开关被
+        /// TriggerDisableScript 禁用后只有显式 Reset 才回绿；真机没有编辑器 relay）。</summary>
         internal void OnServerFilled()
         {
             if (m_state != State.Active)
                 return;
             Cooldown(true);
+            ResetSwitchAfterFill();
+        }
+
+        /// <summary>服务端：任一联动壶接水冷却后补发一次开关复位（用户决策
+        /// 2026-11-10：多壶共用一开关时任一壶接走即回绿，不做“全部冷却”等待）。
+        /// 仍热的其它壶再次按压时由 OnPress 的 state != Inactive 早退忽略，不会
+        /// 白丢水；开关已启用时跳过，避免多壶连续冷却重复投递。</summary>
+        private void ResetSwitchAfterFill()
+        {
+            if (m_switchScript == null)
+                return;
+            if (!GameApi.IsServerMachine())
+                return;
+            if (m_switchScript.enabled)
+                return;
+            var target = m_switchDisable != null
+                ? m_switchDisable.gameObject
+                : m_switchScript.gameObject;
+            if (target == null)
+                return;
+            var trigger = m_switchEnableTrigger;
+            if (string.IsNullOrEmpty(trigger))
+                trigger = "Reset";
+            GameApi.SendTrigger(target, trigger);
+            if (!m_resetLogged)
+            {
+                m_resetLogged = true;
+                StubLog.Log("[Kettle] " + name + " 接水冷却：已复位联动开关 "
+                    + (m_switch != null ? m_switch.name : "?") + "（" + trigger + "）");
+            }
+            else
+            {
+                StubLog.Dbg("[Kettle] " + name + " 接水冷却：复位联动开关 "
+                    + (m_switch != null ? m_switch.name : "?") + "（" + trigger + "）");
+            }
         }
 
         /// <summary>客户端：收到接水消息（ClientPlacementItemSpawner.

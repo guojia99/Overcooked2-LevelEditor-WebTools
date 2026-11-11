@@ -173,7 +173,11 @@ public static class LayoutEditorSwitchLinkPatch
         if (CoaxialMemberNames().Contains(root.name))
             return pending;
 
-        if (switchChild.GetComponent<TriggerDisableScript>() != null)
+        // 热水器联动：按钮复位由 CustomStub.Kettle 在接水冷却时补发（真机同款，
+        // 任一联动壶接走即回绿）。不能挂编辑器 0.35s 回绿中继——否则 Play 会在
+        // 烧水期间提前变绿，与真机行为不一致（2026-11-10 用户实测报告）。
+        if (switchChild.GetComponent<TriggerDisableScript>() != null
+            && !TargetsIncludeKettle(sw.objectToTrigger))
         {
             var reenable = switchChild.GetComponent<LayoutEditorSwitchReenableRelay>();
             if (reenable == null)
@@ -201,6 +205,31 @@ public static class LayoutEditorSwitchLinkPatch
             PatchCannonLink(switchChild, targetChild, trigger);
         }
         return pending;
+    }
+
+    /// <summary>开关直连目标里是否含热水器（CustomStub.Kettle 组件或 Kettle| tag）。
+    /// 命中时按钮复位由 Kettle 接水冷却驱动；编辑器 Play 不得挂 0.35s 回绿中继，
+    /// 否则烧水期间提前变绿，与真机行为不一致（2026-11-10 用户实测报告）。</summary>
+    private static bool TargetsIncludeKettle(GameObject[] targets)
+    {
+        if (targets == null)
+            return false;
+        for (int i = 0; i < targets.Length; i++)
+        {
+            var t = targets[i];
+            if (t == null)
+                continue;
+            if (LayoutEditorStubIO.FindCustomStubType(t, "Kettle") != null)
+                return true;
+            var tags = t.GetComponents<SpecificPseudoPrefabTag>();
+            for (int j = 0; j < tags.Length; j++)
+            {
+                if (tags[j] != null && !string.IsNullOrEmpty(tags[j].prefabTag)
+                    && tags[j].prefabTag.StartsWith("Kettle|", StringComparison.Ordinal))
+                    return true;
+            }
+        }
+        return false;
     }
 
     /// <summary>大炮联动（1:1）：把按钮 child 挂到大炮 Cannon.m_button，并把联动

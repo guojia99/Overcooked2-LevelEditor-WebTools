@@ -1,4 +1,4 @@
-import * as api from "./api";
+﻿import * as api from "./api";
 import {
   chipBtnHtml,
   dangerBtnHtml,
@@ -24,6 +24,7 @@ import { navHtml, wireNav } from "./nav";
 import {
   burgerPath,
   fillingPath,
+  sandwichPath,
   libraryRecipeFormPath,
   libraryRecipeListPath,
   parseRoute,
@@ -479,8 +480,8 @@ async function renderRecipeList(app: HTMLElement, scope: RecipeAdminScope): Prom
       const cat = categories.find((c) => c.id === r.category);
       const plating = r.platingStepId ? platingNames.get(r.platingStepId) : "";
       const compCount = (r.compositionIds ?? []).length;
-      // 组装定义（OptionalBurger/Pizza）与成品汉堡均在汉堡工作台编辑
-      const isAssembly = r.optionalKind === "burger" || r.optionalKind === "pizza";
+      // 组装定义（OptionalBurger/Pizza/Sandwich）与成品汉堡按类型进入对应工作台
+      const isAssembly = r.optionalKind === "burger" || r.optionalKind === "pizza" || r.optionalKind === "sandwich";
       const isFinishedBurger = Boolean(r.isFinishedBurger);
       const gotoBurgerWorkbench = isAssembly || isFinishedBurger;
       return `
@@ -489,25 +490,27 @@ async function renderRecipeList(app: HTMLElement, scope: RecipeAdminScope): Prom
         <div class="cr-card-foot">
           <span class="cr-cat-tag">${esc(catDisplay(cat ?? { id: r.category, zh: customCategoryLabel(r.category), en: r.category }))}</span>
           ${plating ? `<span class="cr-cat-tag cr-plate-tag" title="装盘容器">🍽 ${esc(plating)}</span>` : ""}
-          <span class="muted small">${isAssembly ? "组装定义" : isFinishedBurger ? "成品汉堡" : `UID ${r.uID}`} · 组成 ${compCount} 项</span>
+          <span class="muted small">${r.optionalKind === "sandwich" ? "三明治组装" : isAssembly ? "组装定义" : isFinishedBurger ? "成品汉堡" : `UID ${r.uID}`} · 组成 ${compCount} 项</span>
           <span style="flex:1"></span>
           ${r.previewable ?? r.hasModel ? mBtnHtml("👁", "small", { "data-preview": esc(r.assetPath), title: "3D 模型在线预览" }) : ""}
           ${
             isLibrary
               ? mBtnHtml("编辑", "small", { "data-edit": esc(r.assetPath) })
-              : gotoBurgerWorkbench
-                ? mBtnHtml(
-                    "🍔 工作台",
-                    "small",
-                    {
-                      "data-goto-burger": "",
-                      ...(isFinishedBurger ? { "data-burger-product": esc(r.id) } : {}),
-                      title: isFinishedBurger
-                        ? "在汉堡工作台载入并编辑此成品汉堡"
-                        : "组装定义的可选夹心与堆叠模型在汉堡工作台中管理",
-                    }
-                  )
-                : mBtnHtml("编辑", "small", { "data-edit": esc(r.assetPath) })
+              : r.optionalKind === "sandwich"
+                ? mBtnHtml("🥪 工作台", "small", { "data-goto-sandwich": esc(r.id), title: "在三明治工作台编辑 toast/夹心/酱料" })
+                : gotoBurgerWorkbench
+                  ? mBtnHtml(
+                      "🍔 工作台",
+                      "small",
+                      {
+                        "data-goto-burger": "",
+                        ...(isFinishedBurger ? { "data-burger-product": esc(r.id) } : {}),
+                        title: isFinishedBurger
+                          ? "在汉堡工作台载入并编辑此成品汉堡"
+                          : "组装定义的可选夹心与堆叠模型在汉堡工作台中管理",
+                      }
+                    )
+                  : mBtnHtml("编辑", "small", { "data-edit": esc(r.assetPath) })
           }
           ${isLibrary ? "" : mBtnHtml("删除", "small", { "data-del": esc(r.assetPath) }, "danger")}
         </div>
@@ -587,6 +590,7 @@ async function renderRecipeList(app: HTMLElement, scope: RecipeAdminScope): Prom
       ${mBtnHtml("🍞 统一面包皮", "default", { id: "cr-unify-bun", title: "把本关卡集自定义菜谱里的汉堡面包皮统一换成同一种" })}
       ${mBtnHtml("📦 资产瘦身", "default", { id: "cr-optimize-assets", title: "只调 .meta 导入参数（贴图分辨率/网格精度）缩小导出包；不改源 FBX/PNG" })}
       ${mBtnHtml("🥩 夹心工作台", "default", { id: "cr-new-filling", title: "夹心 = 0 分自定义菜谱，做好后可在汉堡工作台选用" })}
+      ${mBtnHtml("🥪 三明治工作台", "default", { id: "cr-new-sandwich", title: "CustomRecipeOptionalSandwichSO：toast + 夹心 + 酱料" })}
       ${mBtnHtml("🍔 新增汉堡菜谱", "default", { id: "cr-new-burger" })}
       ${mBtnHtml("+ 新建菜谱", "primary", { id: "cr-new-recipe" })}`;
   content.innerHTML = `
@@ -716,7 +720,15 @@ async function renderRecipeList(app: HTMLElement, scope: RecipeAdminScope): Prom
   }
 
   function wireGridButtons(): void {
+    // 三明治工作台：严格路由 /custom-recipes/sandwich-maker/{set}
+    document.getElementById("cr-new-sandwich")?.addEventListener("click", () => {
+      location.assign(sandwichPath(setName));
+    });
+
     // 汉堡工作台：严格路由 /custom-recipes/burger-maker/{set}[/{burgerId}]（整页跳转重载）
+    document.querySelectorAll<HTMLElement>("[data-goto-sandwich]").forEach((b) =>
+      b.addEventListener("click", () => location.assign(sandwichPath(setName, b.dataset.gotoSandwich || undefined)))
+    );
     document.querySelectorAll<HTMLElement>("[data-goto-burger]").forEach((b) =>
       b.addEventListener("click", () => {
         const productId = b.dataset.burgerProduct;

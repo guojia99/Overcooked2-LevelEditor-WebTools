@@ -1,4 +1,4 @@
-import { S } from "./state";
+﻿import { S } from "./state";
 import { VARIANT_TO_BASE } from "./itemVariants";
 import type { RecipeEntry } from "../types";
 import { crateIngredientId, FLOUR_INGREDIENTS, EGG_INGREDIENTS, isCookStepLike } from "../recipeGroups";
@@ -9,7 +9,7 @@ import { ingredientCategoryOf, visibleRecipes } from "../ingredientLabels";
 /** 可作为锅具 allowedIngredientSOs 的中间产物节点（score≤0，非 optional 组装定义）。 */
 export function isUtensilIntermediateRecipe(r: RecipeEntry): boolean {
   if ((r.score ?? 0) > 0) return false;
-  if (r.optionalKind === "burger" || r.optionalKind === "pizza") return false;
+  if (r.optionalKind === "burger" || r.optionalKind === "pizza" || r.optionalKind === "sandwich") return false;
   if (r.id === "OptionalBurger" || /burgerassembly/i.test(r.id)) return false;
   return !!(r.intermediate || r.isCustom);
 }
@@ -424,6 +424,19 @@ export interface UtensilFillEntry {
   clear: boolean;
 }
 
+/** 寿司食材不进蒸笼：米饭走煮锅，鱼/虾/海苔按菜谱生食或煎。 */
+const SUSHI_INGREDIENT_IDS = new Set([
+  "SushiRiceSO",
+  "RiceSO",
+  "SushiFishSO",
+  "SushiPrawnSO",
+  "SeaweedSO",
+]);
+
+function isSushiIngredient(id: string): boolean {
+  return SUSHI_INGREDIENT_IDS.has(id);
+}
+
 export function computeUtensilIngredientFill(
   recipes: RecipeEntry[]
 ): Map<string, UtensilFillEntry> {
@@ -461,6 +474,8 @@ export function computeUtensilIngredientFill(
     return e;
   };
   const addIng = (ut: string, iid: string) => {
+    // 寿司（米饭/寿司鱼/寿司虾/海苔）不是蒸笼菜：米饭进煮锅，鱼虾生食或进煎锅。
+    if (ut === "Steamer" && isSushiIngredient(iid)) return;
     const e = entry(ut);
     if (!e.ings.includes(iid)) e.ings.push(iid);
   };
@@ -586,9 +601,15 @@ export function computeUtensilIngredientFill(
     // 组成员是混合中间产物时——混合容器（搅拌碗）加其叶食材、加热容器加中间产物节点。
     // 容量按**单个分组**的件数取最大（炸物/汉堡的分锅组各自 1 件，汤锅一组 3 件）。
     for (const g of r.cookingGroups ?? []) {
-      const container = STEP_CONTAINER[g.step];
+      // 寿司菜谱的步骤只认煮锅。历史分组若仍标 Steamer，米饭改写入煮锅，其余不进蒸笼。
+      const sushiSteamer = r.type === "sushi" && g.step === "Steamer";
+      const container = STEP_CONTAINER[sushiSteamer ? "Pot" : g.step];
       if (!container) continue;
-      const gIngs = g.ingredients ?? [];
+      let gIngs = g.ingredients ?? [];
+      if (sushiSteamer) {
+        gIngs = gIngs.filter((ing) => ing === "SushiRiceSO" || ing === "RiceSO");
+        if (gIngs.length === 0) continue;
+      }
       if (gIngs.length === 0) {
         if (r.isCustom) {
           const ingredientIds = new Set(S.ingredientsCache.map((i) => i.id));
@@ -637,6 +658,7 @@ export function computeUtensilIngredientFill(
 export function computeIntermediatesForUtensils(recipes: RecipeEntry[]): Map<string, string[]> {
   const result = new Map<string, string[]>();
   const add = (ut: string, iid: string) => {
+    if (ut === "Steamer" && isSushiIngredient(iid)) return;
     if (!result.has(ut)) result.set(ut, []);
     if (!result.get(ut)!.includes(iid)) result.get(ut)!.push(iid);
   };

@@ -119,7 +119,13 @@ export function getCounterTopImage(fileKey: string): HTMLImageElement | null {
   const existing = counterTopCache.get(fileKey);
   if (existing) return existing.complete && existing.naturalWidth > 0 ? existing : null;
   const img = new Image();
-  img.onload = () => redraw();
+  img.onload = () => {
+    if (counterTopIsBlank(img)) {
+      counterTopFailed.add(fileKey);
+      counterTopCache.delete(fileKey);
+    }
+    redraw();
+  };
   img.onerror = () => {
     counterTopFailed.add(fileKey);
     redraw();
@@ -127,4 +133,22 @@ export function getCounterTopImage(fileKey: string): HTMLImageElement | null {
   img.src = counter3dUrl(`${fileKey}_top.png`);
   counterTopCache.set(fileKey, img);
   return null;
+}
+
+/** 俯视图全透明（Sprites/Default × 缺顶点色）时不当成预览，画布回退主色。 */
+function counterTopIsBlank(img: HTMLImageElement): boolean {
+  try {
+    const c = document.createElement("canvas");
+    c.width = 8;
+    c.height = 8;
+    const ctx = c.getContext("2d");
+    if (!ctx) return false;
+    ctx.drawImage(img, 0, 0, 8, 8);
+    const data = ctx.getImageData(0, 0, 8, 8).data;
+    let alpha = 0;
+    for (let i = 3; i < data.length; i += 4) alpha += data[i];
+    return alpha < 16;
+  } catch {
+    return false;
+  }
 }

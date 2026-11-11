@@ -1,0 +1,2696 @@
+{
+  "schemaVersion": 1,
+  "bundle": "commonW3",
+  "sauceUidPolicy": {
+    "canonical": {
+      "ketchup": 890084,
+      "mustard": 890076
+    },
+    "saladOnlyAliases": {
+      "17094": 890076,
+      "158482": 890084
+    },
+    "nativeDispenserVisualSlots": {
+      "mustard": 0,
+      "ketchup": 1
+    }
+  },
+  "ingredients": {
+    "LettuceSO": {
+      "id": "LettuceSO",
+      "assetPath": "Assets/common01/food/Ingredients/LettuceSO.asset",
+      "uid": 19478,
+      "guid": "45f00e942534da143a3e94855455b50b"
+    },
+    "TomatoSO": {
+      "id": "TomatoSO",
+      "assetPath": "Assets/common01/food/Ingredients/TomatoSO.asset",
+      "uid": 15580,
+      "guid": "8a928e5055585f34c89f8535c40fea3f"
+    },
+    "CucumberSO": {
+      "id": "CucumberSO",
+      "assetPath": "Assets/common01/food/Ingredients/CucumberSO.asset",
+      "uid": 37422,
+      "guid": "09a8ff9ede819e14e9f89df70f935402"
+    },
+    "dlc11_lettuce": {
+      "id": "dlc11_lettuce",
+      "assetPath": "Assets/common03/food/Ingredients/dlc11/dlc11_lettuce.asset",
+      "uid": 152142,
+      "guid": "a981e8745a1cda0a67d5b89c7dc72790"
+    },
+    "dlc11_tomato": {
+      "id": "dlc11_tomato",
+      "assetPath": "Assets/common03/food/Ingredients/dlc11/dlc11_tomato.asset",
+      "uid": 151504,
+      "guid": "8f92929d152f8c5d1148ad15a002b20c"
+    },
+    "dlc11_cucumber": {
+      "id": "dlc11_cucumber",
+      "assetPath": "Assets/common03/food/Ingredients/dlc11/dlc11_cucumber.asset",
+      "uid": 151714,
+      "guid": "346c97285c09802fc24b95dd5ed2c4ed"
+    },
+    "dlc11_corn": {
+      "id": "dlc11_corn",
+      "assetPath": "Assets/common03/food/Ingredients/dlc11/dlc11_corn.asset",
+      "uid": 37874,
+      "guid": "8d4a5aaf71fdf648b0648dd20ae1a920"
+    },
+    "dlc11_onion_salad": {
+      "id": "dlc11_onion_salad",
+      "assetPath": "Assets/common03/food/Ingredients/dlc11/dlc11_onion_salad.asset",
+      "uid": 390802,
+      "guid": "1d5a4daa4406430cac79e018fea51a55"
+    },
+    "dlc11_ketchup": {
+      "id": "dlc11_ketchup",
+      "assetPath": "Assets/commonW1/pseudo_prefab_so/dlc11/food/dlc11_ketchup.asset",
+      "uid": 890084,
+      "guid": "fe14544fb8da6790e218aab86630b816"
+    },
+    "dlc11_mustard": {
+      "id": "dlc11_mustard",
+      "assetPath": "Assets/commonW1/pseudo_prefab_so/dlc11/food/dlc11_mustard.asset",
+      "uid": 890076,
+      "guid": "8cf3e1133127b27e4ebc774def772c13"
+    }
+  },
+  "bases": [
+    {
+      "id": "Salad_Tomato_SO",
+      "group": "core",
+      "sourceGuid": "37f84c2a617aa264b8f8bebb5fc8c55b",
+      "sourceAssetPath": "Assets/common01/food/Recipes/Salad_Tomato_SO.asset",
+      "nameZh": "番茄沙拉",
+      "nameEn": "Tomato Salad",
+      "ingredients": [
+        "LettuceSO",
+        "TomatoSO"
+      ],
+      "uidKey": "15580,19478",
+      "aliases": [],
+      "family": "Story"
+    },
+    {
+      "id": "Salad_Cucumber_SO",
+      "group": "core",
+      "sourceGuid": "81bcc1cde7d8cad46a2a0b5ca827cd90",
+      "sourceAssetPath": "Assets/common01/food/Recipes/Salad_Cucumber_SO.asset",
+      "nameZh": "黄瓜沙拉",
+      "nameEn": "Cucumber Salad",
+      "ingredients": [
+        "LettuceSO",
+        "TomatoSO",
+        "CucumberSO"
+      ],
+      "uidKey": "15580,19478,37422",
+      "aliases": [],
+      "family": "Story"
+    },
+    {
+      "id": "Salad_Plain_SO",
+      "group": "core",
+      "sourceGuid": "5f0dafdeee03521408c2363448b9fd98",
+      "sourceAssetPath": "Assets/common01/food/Recipes/Salad_Plain_SO.asset",
+      "nameZh": "生菜沙拉",
+      "nameEn": "Lettuce Salad",
+      "ingredients": [
+        "LettuceSO"
+      ],
+      "uidKey": "19478",
+      "aliases": [],
+      "family": "Story"
+    },
+    {
+      "id": "DLC11_Salad_tomato_cucumber_onion",
+      "group": "dlc11",
+      "sourceGuid": "0f3c0cb3723f9fa9a0946ec627dc40c9",
+      "sourceAssetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_tomato_cucumber_onion.asset",
+      "nameZh": "沙拉·番茄黄瓜洋葱",
+      "nameEn": "Salad Tomato Cucumber & Onion",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_onion_salad"
+      ],
+      "uidKey": "151504,151714,390802",
+      "aliases": [],
+      "family": "DLC11"
+    },
+    {
+      "id": "DLC11_Salad_tomato_onion",
+      "group": "dlc11",
+      "sourceGuid": "b4a2ac7b4f21722ee388bdc59a497af5",
+      "sourceAssetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_tomato_onion.asset",
+      "nameZh": "沙拉·番茄洋葱",
+      "nameEn": "Salad Tomato & Onion",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_onion_salad"
+      ],
+      "uidKey": "151504,152142,390802",
+      "aliases": [
+        "Web_Salad_LettuceTomato"
+      ],
+      "family": "DLC11"
+    },
+    {
+      "id": "DLC11_Salad_tomato_corn_onion",
+      "group": "dlc11",
+      "sourceGuid": "f439c8b1a3e7668333bec741dfa99870",
+      "sourceAssetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_tomato_corn_onion.asset",
+      "nameZh": "沙拉·番茄玉米洋葱",
+      "nameEn": "Salad Tomato Corn & Onion",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_corn",
+        "dlc11_onion_salad"
+      ],
+      "uidKey": "37874,151504,390802",
+      "aliases": [],
+      "family": "DLC11"
+    },
+    {
+      "id": "DLC11_Salad_cucumber_tomato_onion",
+      "group": "dlc11",
+      "sourceGuid": "85af1e323bd8673c9a68b9e3f17da1e2",
+      "sourceAssetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_cucumber_tomato_onion.asset",
+      "nameZh": "沙拉·黄瓜番茄洋葱",
+      "nameEn": "Salad Cucumber Tomato & Onion",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_onion_salad"
+      ],
+      "uidKey": "151504,151714,152142,390802",
+      "aliases": [
+        "Web_Salad_LettuceTomatoCucumber"
+      ],
+      "family": "DLC11"
+    },
+    {
+      "id": "DLC11_Salad_cucumber_onion",
+      "group": "dlc11",
+      "sourceGuid": "9a83520c544b94e585bfd1e91d6bb0cc",
+      "sourceAssetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_cucumber_onion.asset",
+      "nameZh": "沙拉·黄瓜洋葱",
+      "nameEn": "Salad Cucumber & Onion",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_cucumber",
+        "dlc11_onion_salad"
+      ],
+      "uidKey": "151714,152142,390802",
+      "aliases": [
+        "Web_Salad_LettuceCucumber"
+      ],
+      "family": "DLC11"
+    },
+    {
+      "id": "DLC11_Salad_corn_onion",
+      "group": "dlc11",
+      "sourceGuid": "13c7fb32dd92fd78b20468b8e53b2d41",
+      "sourceAssetPath": "Assets/common03/food/Recipes/dlc11/DLC11_Salad_corn_onion.asset",
+      "nameZh": "沙拉·玉米洋葱",
+      "nameEn": "Salad Corn & Onion",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_corn",
+        "dlc11_onion_salad"
+      ],
+      "uidKey": "37874,152142,390802",
+      "aliases": [
+        "Web_Salad_LettuceCorn"
+      ],
+      "family": "DLC11"
+    },
+    {
+      "id": "Web_LSalad_Lettuce",
+      "group": "commonw3",
+      "sourceGuid": "e93323c46c818e37ffff88b6acc5f0ef",
+      "sourceAssetPath": "Assets/commonW3/custom_recipes/salad/Web_LSalad_Lettuce.asset",
+      "nameZh": "Web 纯生菜沙拉",
+      "nameEn": "Web Plain Lettuce Salad",
+      "ingredients": [
+        "dlc11_lettuce"
+      ],
+      "uidKey": "152142",
+      "aliases": [],
+      "family": "DLC11"
+    },
+    {
+      "id": "Web_Salad_TomatoCucumberCorn",
+      "group": "commonw3",
+      "sourceGuid": "7987c4e166267bc8e2e0e91320398d21",
+      "sourceAssetPath": "Assets/commonW3/custom_recipes/salad/Web_Salad_TomatoCucumberCorn.asset",
+      "nameZh": "Web 番茄黄瓜玉米沙拉",
+      "nameEn": "Web Tomato Cucumber Corn Salad",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_onion_salad"
+      ],
+      "uidKey": "37874,151504,151714,390802",
+      "aliases": [],
+      "family": "DLC11"
+    },
+    {
+      "id": "Web_Salad_Tomato",
+      "group": "commonw3",
+      "sourceGuid": "83740be7af4f1825f124b30107a65d93",
+      "sourceAssetPath": "Assets/commonW3/custom_recipes/salad/Web_Salad_Tomato.asset",
+      "nameZh": "Web 番茄沙拉",
+      "nameEn": "Web Tomato Salad",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_onion_salad"
+      ],
+      "uidKey": "151504,390802",
+      "aliases": [],
+      "family": "DLC11"
+    },
+    {
+      "id": "Web_Salad_Cucumber",
+      "group": "commonw3",
+      "sourceGuid": "515c04b1140567433fe778c1a4e9c5f9",
+      "sourceAssetPath": "Assets/commonW3/custom_recipes/salad/Web_Salad_Cucumber.asset",
+      "nameZh": "Web 黄瓜沙拉",
+      "nameEn": "Web Cucumber Salad",
+      "ingredients": [
+        "dlc11_cucumber",
+        "dlc11_onion_salad"
+      ],
+      "uidKey": "151714,390802",
+      "aliases": [],
+      "family": "DLC11"
+    },
+    {
+      "id": "Web_Salad_CucumberCorn",
+      "group": "commonw3",
+      "sourceGuid": "9d518ef35b9789d314ba1b05115258d2",
+      "sourceAssetPath": "Assets/commonW3/custom_recipes/salad/Web_Salad_CucumberCorn.asset",
+      "nameZh": "Web 黄瓜玉米沙拉",
+      "nameEn": "Web Cucumber Corn Salad",
+      "ingredients": [
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_onion_salad"
+      ],
+      "uidKey": "37874,151714,390802",
+      "aliases": [],
+      "family": "DLC11"
+    },
+    {
+      "id": "Web_LSalad_TomatoCucumber",
+      "group": "commonw3",
+      "sourceGuid": "bdbb9c85ae86d67bd21984b168a48491",
+      "sourceAssetPath": "Assets/commonW3/custom_recipes/salad/Web_LSalad_TomatoCucumber.asset",
+      "nameZh": "Web 生菜底番茄黄瓜沙拉",
+      "nameEn": "Web Tomato Cucumber Salad (Lettuce Base)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_cucumber"
+      ],
+      "uidKey": "151504,151714,152142",
+      "aliases": [],
+      "family": "DLC11"
+    },
+    {
+      "id": "Web_LSalad_TomatoCucumberCorn",
+      "group": "commonw3",
+      "sourceGuid": "1ec9203b1b0d4f4b5f4aced9dbebdabe",
+      "sourceAssetPath": "Assets/commonW3/custom_recipes/salad/Web_LSalad_TomatoCucumberCorn.asset",
+      "nameZh": "Web 生菜底番茄黄瓜玉米沙拉",
+      "nameEn": "Web Tomato Cucumber Corn Salad (Lettuce Base)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_corn"
+      ],
+      "uidKey": "37874,151504,151714,152142",
+      "aliases": [],
+      "family": "DLC11"
+    },
+    {
+      "id": "Web_LSalad_Tomato",
+      "group": "commonw3",
+      "sourceGuid": "564ed158f9528d89396cc4c1bba520fb",
+      "sourceAssetPath": "Assets/commonW3/custom_recipes/salad/Web_LSalad_Tomato.asset",
+      "nameZh": "Web 生菜底番茄沙拉",
+      "nameEn": "Web Tomato Salad (Lettuce Base)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato"
+      ],
+      "uidKey": "151504,152142",
+      "aliases": [],
+      "family": "DLC11"
+    },
+    {
+      "id": "Web_LSalad_TomatoCorn",
+      "group": "commonw3",
+      "sourceGuid": "e773cfd3d49d1d4dcff9e60334c4d368",
+      "sourceAssetPath": "Assets/commonW3/custom_recipes/salad/Web_LSalad_TomatoCorn.asset",
+      "nameZh": "Web 生菜底番茄玉米沙拉",
+      "nameEn": "Web Tomato Corn Salad (Lettuce Base)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_corn"
+      ],
+      "uidKey": "37874,151504,152142",
+      "aliases": [],
+      "family": "DLC11"
+    },
+    {
+      "id": "Web_LSalad_Cucumber",
+      "group": "commonw3",
+      "sourceGuid": "773ce93e722cfdeaf5314f3ed951686b",
+      "sourceAssetPath": "Assets/commonW3/custom_recipes/salad/Web_LSalad_Cucumber.asset",
+      "nameZh": "Web 生菜底黄瓜沙拉",
+      "nameEn": "Web Cucumber Salad (Lettuce Base)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_cucumber"
+      ],
+      "uidKey": "151714,152142",
+      "aliases": [],
+      "family": "DLC11"
+    },
+    {
+      "id": "Web_LSalad_CucumberCorn",
+      "group": "commonw3",
+      "sourceGuid": "8c33f4a8e4a3f432bc20f30260bc5212",
+      "sourceAssetPath": "Assets/commonW3/custom_recipes/salad/Web_LSalad_CucumberCorn.asset",
+      "nameZh": "Web 生菜底黄瓜玉米沙拉",
+      "nameEn": "Web Cucumber Corn Salad (Lettuce Base)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_cucumber",
+        "dlc11_corn"
+      ],
+      "uidKey": "37874,151714,152142",
+      "aliases": [],
+      "family": "DLC11"
+    },
+    {
+      "id": "Web_LSalad_Corn",
+      "group": "commonw3",
+      "sourceGuid": "4cb309417609579999ca3f19164034d4",
+      "sourceAssetPath": "Assets/commonW3/custom_recipes/salad/Web_LSalad_Corn.asset",
+      "nameZh": "Web 生菜底玉米沙拉",
+      "nameEn": "Web Corn Salad (Lettuce Base)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_corn"
+      ],
+      "uidKey": "37874,152142",
+      "aliases": [],
+      "family": "DLC11"
+    },
+    {
+      "id": "Web_Salad_LettuceTomatoCorn",
+      "group": "commonw3",
+      "sourceGuid": "13c4fd0bdcc8f42cd9a58e31dc3d083f",
+      "sourceAssetPath": "Assets/commonW3/custom_recipes/salad/Web_Salad_LettuceTomatoCorn.asset",
+      "nameZh": "Web 生菜番茄玉米沙拉",
+      "nameEn": "Web Lettuce Tomato Corn Salad",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_corn",
+        "dlc11_onion_salad"
+      ],
+      "uidKey": "37874,151504,152142,390802",
+      "aliases": [],
+      "family": "DLC11"
+    },
+    {
+      "id": "Web_Salad_LettuceCucumberCorn",
+      "group": "commonw3",
+      "sourceGuid": "a669473582a344aff25b2599a528951e",
+      "sourceAssetPath": "Assets/commonW3/custom_recipes/salad/Web_Salad_LettuceCucumberCorn.asset",
+      "nameZh": "Web 生菜黄瓜玉米沙拉",
+      "nameEn": "Web Lettuce Cucumber Corn Salad",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_onion_salad"
+      ],
+      "uidKey": "37874,151714,152142,390802",
+      "aliases": [],
+      "family": "DLC11"
+    },
+    {
+      "id": "Web_Salad_Lettuce",
+      "group": "commonw3",
+      "sourceGuid": "903ffa80508bd27821bd070cc6f72444",
+      "sourceAssetPath": "Assets/commonW3/custom_recipes/salad/Web_Salad_Lettuce.asset",
+      "nameZh": "Web 生菜沙拉",
+      "nameEn": "Web Lettuce Salad",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_onion_salad"
+      ],
+      "uidKey": "152142,390802",
+      "aliases": [],
+      "family": "DLC11"
+    },
+    {
+      "id": "Web_Salad_LettuceTomatoCucumberCorn",
+      "group": "commonw3",
+      "sourceGuid": "bb6b101d683ab17043d791c46ce20d63",
+      "sourceAssetPath": "Assets/commonW3/custom_recipes/salad/Web_Salad_LettuceTomatoCucumberCorn.asset",
+      "nameZh": "Web 田园全家福沙拉",
+      "nameEn": "Web Garden Salad",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_onion_salad"
+      ],
+      "uidKey": "37874,151504,151714,152142,390802",
+      "aliases": [],
+      "family": "DLC11"
+    },
+    {
+      "id": "Web_Salad_Corn",
+      "group": "commonw3",
+      "sourceGuid": "4a429f4a6321681d564af2eddd143957",
+      "sourceAssetPath": "Assets/commonW3/custom_recipes/salad/Web_Salad_Corn.asset",
+      "nameZh": "Web 玉米沙拉",
+      "nameEn": "Web Corn Salad",
+      "ingredients": [
+        "dlc11_corn",
+        "dlc11_onion_salad"
+      ],
+      "uidKey": "37874,390802",
+      "aliases": [],
+      "family": "DLC11"
+    }
+  ],
+  "recipes": [
+    {
+      "id": "Web_SauceSalad_Salad_Tomato_SO_Ketchup",
+      "uid": 58322401,
+      "guid": "87f52867e63ad9c38a5f073b5518110b",
+      "iconGuid": "86d4814956e9ff8c5c823c1f240755d0",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Salad_Tomato_SO_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Salad_Tomato_SO_Ketchup.asset",
+      "baseId": "Salad_Tomato_SO",
+      "sourceIds": [
+        "Salad_Tomato_SO"
+      ],
+      "family": "Story",
+      "sauce": "Ketchup",
+      "nameZh": "番茄沙拉·红酱",
+      "nameEn": "Tomato Salad (Ketchup)",
+      "ingredients": [
+        "LettuceSO",
+        "TomatoSO",
+        "dlc11_ketchup"
+      ],
+      "score": 60
+    },
+    {
+      "id": "Web_SauceSalad_Salad_Tomato_SO_Mustard",
+      "uid": 58322402,
+      "guid": "852e0135b3b8e035d9c4b966cc3d6683",
+      "iconGuid": "1039a974066e5ec1c8a75a33adbb7134",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Salad_Tomato_SO_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Salad_Tomato_SO_Mustard.asset",
+      "baseId": "Salad_Tomato_SO",
+      "sourceIds": [
+        "Salad_Tomato_SO"
+      ],
+      "family": "Story",
+      "sauce": "Mustard",
+      "nameZh": "番茄沙拉·黄酱",
+      "nameEn": "Tomato Salad (Mustard)",
+      "ingredients": [
+        "LettuceSO",
+        "TomatoSO",
+        "dlc11_mustard"
+      ],
+      "score": 60
+    },
+    {
+      "id": "Web_SauceSalad_Salad_Tomato_SO_KetchupMustard",
+      "uid": 58322403,
+      "guid": "9c9f4138b9751514356ece90ebd5db0c",
+      "iconGuid": "57cc8e51775eb78492c46245e73e303d",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Salad_Tomato_SO_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Salad_Tomato_SO_KetchupMustard.asset",
+      "baseId": "Salad_Tomato_SO",
+      "sourceIds": [
+        "Salad_Tomato_SO"
+      ],
+      "family": "Story",
+      "sauce": "KetchupMustard",
+      "nameZh": "番茄沙拉·双酱",
+      "nameEn": "Tomato Salad (Ketchup & Mustard)",
+      "ingredients": [
+        "LettuceSO",
+        "TomatoSO",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_Salad_Cucumber_SO_Ketchup",
+      "uid": 58322404,
+      "guid": "02f6e4a111627a7d1d9c8b3bfbd2c83b",
+      "iconGuid": "a493f13a7a6d0b92baefa48e2e50ab5c",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Salad_Cucumber_SO_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Salad_Cucumber_SO_Ketchup.asset",
+      "baseId": "Salad_Cucumber_SO",
+      "sourceIds": [
+        "Salad_Cucumber_SO"
+      ],
+      "family": "Story",
+      "sauce": "Ketchup",
+      "nameZh": "黄瓜沙拉·红酱",
+      "nameEn": "Cucumber Salad (Ketchup)",
+      "ingredients": [
+        "LettuceSO",
+        "TomatoSO",
+        "CucumberSO",
+        "dlc11_ketchup"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_Salad_Cucumber_SO_Mustard",
+      "uid": 58322405,
+      "guid": "feba1c53cab9f82bce9774a281aec4c3",
+      "iconGuid": "ab587142db01150f2caed7d7db1049bd",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Salad_Cucumber_SO_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Salad_Cucumber_SO_Mustard.asset",
+      "baseId": "Salad_Cucumber_SO",
+      "sourceIds": [
+        "Salad_Cucumber_SO"
+      ],
+      "family": "Story",
+      "sauce": "Mustard",
+      "nameZh": "黄瓜沙拉·黄酱",
+      "nameEn": "Cucumber Salad (Mustard)",
+      "ingredients": [
+        "LettuceSO",
+        "TomatoSO",
+        "CucumberSO",
+        "dlc11_mustard"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_Salad_Cucumber_SO_KetchupMustard",
+      "uid": 58322406,
+      "guid": "0b897f6a1c1d4aca12bde2d749288c18",
+      "iconGuid": "dcb10854c20b7f50eb62b6a89c6653d8",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Salad_Cucumber_SO_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Salad_Cucumber_SO_KetchupMustard.asset",
+      "baseId": "Salad_Cucumber_SO",
+      "sourceIds": [
+        "Salad_Cucumber_SO"
+      ],
+      "family": "Story",
+      "sauce": "KetchupMustard",
+      "nameZh": "黄瓜沙拉·双酱",
+      "nameEn": "Cucumber Salad (Ketchup & Mustard)",
+      "ingredients": [
+        "LettuceSO",
+        "TomatoSO",
+        "CucumberSO",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_Salad_Plain_SO_Ketchup",
+      "uid": 58322407,
+      "guid": "3cf76b5aea78cfa207830df84eab9dcd",
+      "iconGuid": "e00497026c4b6d88dd3b02d99fa21624",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Salad_Plain_SO_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Salad_Plain_SO_Ketchup.asset",
+      "baseId": "Salad_Plain_SO",
+      "sourceIds": [
+        "Salad_Plain_SO"
+      ],
+      "family": "Story",
+      "sauce": "Ketchup",
+      "nameZh": "生菜沙拉·红酱",
+      "nameEn": "Lettuce Salad (Ketchup)",
+      "ingredients": [
+        "LettuceSO",
+        "dlc11_ketchup"
+      ],
+      "score": 40
+    },
+    {
+      "id": "Web_SauceSalad_Salad_Plain_SO_Mustard",
+      "uid": 58322408,
+      "guid": "2c12e59eada5f5e00d9ba1150921ad1a",
+      "iconGuid": "75396f0a25e66e213526baf920c22488",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Salad_Plain_SO_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Salad_Plain_SO_Mustard.asset",
+      "baseId": "Salad_Plain_SO",
+      "sourceIds": [
+        "Salad_Plain_SO"
+      ],
+      "family": "Story",
+      "sauce": "Mustard",
+      "nameZh": "生菜沙拉·黄酱",
+      "nameEn": "Lettuce Salad (Mustard)",
+      "ingredients": [
+        "LettuceSO",
+        "dlc11_mustard"
+      ],
+      "score": 40
+    },
+    {
+      "id": "Web_SauceSalad_Salad_Plain_SO_KetchupMustard",
+      "uid": 58322409,
+      "guid": "fec0bf7b2090af216243b8579091bee4",
+      "iconGuid": "fac7e9b89f72af4fb2e5dbc0a117c8f7",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Salad_Plain_SO_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Salad_Plain_SO_KetchupMustard.asset",
+      "baseId": "Salad_Plain_SO",
+      "sourceIds": [
+        "Salad_Plain_SO"
+      ],
+      "family": "Story",
+      "sauce": "KetchupMustard",
+      "nameZh": "生菜沙拉·双酱",
+      "nameEn": "Lettuce Salad (Ketchup & Mustard)",
+      "ingredients": [
+        "LettuceSO",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 60
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_tomato_cucumber_onion_Ketchup",
+      "uid": 58322410,
+      "guid": "6689ba0864673caf777b667948ac051b",
+      "iconGuid": "cfda7f56c5a2d3658f789418426f0b96",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_DLC11_Salad_tomato_cucumber_onion_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_DLC11_Salad_tomato_cucumber_onion_Ketchup.asset",
+      "baseId": "DLC11_Salad_tomato_cucumber_onion",
+      "sourceIds": [
+        "DLC11_Salad_tomato_cucumber_onion"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "沙拉·番茄黄瓜洋葱·红酱",
+      "nameEn": "Salad Tomato Cucumber & Onion (Ketchup)",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_ketchup"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_tomato_cucumber_onion_Mustard",
+      "uid": 58322411,
+      "guid": "f81e0bd2319277bb16f6fa7aec1d9ea4",
+      "iconGuid": "54f666c054fc1f7f6ada280668fa2547",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_DLC11_Salad_tomato_cucumber_onion_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_DLC11_Salad_tomato_cucumber_onion_Mustard.asset",
+      "baseId": "DLC11_Salad_tomato_cucumber_onion",
+      "sourceIds": [
+        "DLC11_Salad_tomato_cucumber_onion"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "沙拉·番茄黄瓜洋葱·黄酱",
+      "nameEn": "Salad Tomato Cucumber & Onion (Mustard)",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_mustard"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_tomato_cucumber_onion_KetchupMustard",
+      "uid": 58322412,
+      "guid": "606c55e2c1a181ad8c080ee5cc558365",
+      "iconGuid": "bcc0c40db23c4d2acd517ec61ed34f11",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_DLC11_Salad_tomato_cucumber_onion_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_DLC11_Salad_tomato_cucumber_onion_KetchupMustard.asset",
+      "baseId": "DLC11_Salad_tomato_cucumber_onion",
+      "sourceIds": [
+        "DLC11_Salad_tomato_cucumber_onion"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "沙拉·番茄黄瓜洋葱·双酱",
+      "nameEn": "Salad Tomato Cucumber & Onion (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_tomato_onion_Ketchup",
+      "uid": 58322413,
+      "guid": "bdeb7331ebb777d6968a4baa97e5541e",
+      "iconGuid": "54e1b7d4fa44461416dd5ce22e52d3a9",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_DLC11_Salad_tomato_onion_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_DLC11_Salad_tomato_onion_Ketchup.asset",
+      "baseId": "DLC11_Salad_tomato_onion",
+      "sourceIds": [
+        "DLC11_Salad_tomato_onion",
+        "Web_Salad_LettuceTomato"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "沙拉·番茄洋葱·红酱",
+      "nameEn": "Salad Tomato & Onion (Ketchup)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_onion_salad",
+        "dlc11_ketchup"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_tomato_onion_Mustard",
+      "uid": 58322414,
+      "guid": "64ee4dbf148513b16dfa3b39f15fdd3a",
+      "iconGuid": "1b852f33545fbdddbbfe31ef70a67db5",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_DLC11_Salad_tomato_onion_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_DLC11_Salad_tomato_onion_Mustard.asset",
+      "baseId": "DLC11_Salad_tomato_onion",
+      "sourceIds": [
+        "DLC11_Salad_tomato_onion",
+        "Web_Salad_LettuceTomato"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "沙拉·番茄洋葱·黄酱",
+      "nameEn": "Salad Tomato & Onion (Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_onion_salad",
+        "dlc11_mustard"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_tomato_onion_KetchupMustard",
+      "uid": 58322415,
+      "guid": "0e7046b57a5cf10f00d74d0462e6b04a",
+      "iconGuid": "ae7743fd19dad5c35b51777543d89e8c",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_DLC11_Salad_tomato_onion_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_DLC11_Salad_tomato_onion_KetchupMustard.asset",
+      "baseId": "DLC11_Salad_tomato_onion",
+      "sourceIds": [
+        "DLC11_Salad_tomato_onion",
+        "Web_Salad_LettuceTomato"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "沙拉·番茄洋葱·双酱",
+      "nameEn": "Salad Tomato & Onion (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_onion_salad",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_tomato_corn_onion_Ketchup",
+      "uid": 58322416,
+      "guid": "7f29405d44b4600606394da1b43ab836",
+      "iconGuid": "76194aba16353288475b261835b46d85",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_DLC11_Salad_tomato_corn_onion_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_DLC11_Salad_tomato_corn_onion_Ketchup.asset",
+      "baseId": "DLC11_Salad_tomato_corn_onion",
+      "sourceIds": [
+        "DLC11_Salad_tomato_corn_onion"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "沙拉·番茄玉米洋葱·红酱",
+      "nameEn": "Salad Tomato Corn & Onion (Ketchup)",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_ketchup"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_tomato_corn_onion_Mustard",
+      "uid": 58322417,
+      "guid": "5d91dc677ff30ae948e89cae686af24a",
+      "iconGuid": "a467501efff70628d8a4a1f758cd8abb",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_DLC11_Salad_tomato_corn_onion_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_DLC11_Salad_tomato_corn_onion_Mustard.asset",
+      "baseId": "DLC11_Salad_tomato_corn_onion",
+      "sourceIds": [
+        "DLC11_Salad_tomato_corn_onion"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "沙拉·番茄玉米洋葱·黄酱",
+      "nameEn": "Salad Tomato Corn & Onion (Mustard)",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_mustard"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_tomato_corn_onion_KetchupMustard",
+      "uid": 58322418,
+      "guid": "5c2aa35a0e69cf3accc482e884d590a5",
+      "iconGuid": "7f15f6361755d01d5ad5b8a1cab295d7",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_DLC11_Salad_tomato_corn_onion_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_DLC11_Salad_tomato_corn_onion_KetchupMustard.asset",
+      "baseId": "DLC11_Salad_tomato_corn_onion",
+      "sourceIds": [
+        "DLC11_Salad_tomato_corn_onion"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "沙拉·番茄玉米洋葱·双酱",
+      "nameEn": "Salad Tomato Corn & Onion (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_cucumber_tomato_onion_Ketchup",
+      "uid": 58322419,
+      "guid": "299ea73f64d1da4225196e17e614440c",
+      "iconGuid": "6e9a3052ceb56a130dc384b9b5f3a47a",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_DLC11_Salad_cucumber_tomato_onion_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_DLC11_Salad_cucumber_tomato_onion_Ketchup.asset",
+      "baseId": "DLC11_Salad_cucumber_tomato_onion",
+      "sourceIds": [
+        "DLC11_Salad_cucumber_tomato_onion",
+        "Web_Salad_LettuceTomatoCucumber"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "沙拉·黄瓜番茄洋葱·红酱",
+      "nameEn": "Salad Cucumber Tomato & Onion (Ketchup)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_ketchup"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_cucumber_tomato_onion_Mustard",
+      "uid": 58322420,
+      "guid": "cc0d85d45283b9e4d25707f540d489f8",
+      "iconGuid": "94086011ee0f619a69b5bb449e777ed0",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_DLC11_Salad_cucumber_tomato_onion_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_DLC11_Salad_cucumber_tomato_onion_Mustard.asset",
+      "baseId": "DLC11_Salad_cucumber_tomato_onion",
+      "sourceIds": [
+        "DLC11_Salad_cucumber_tomato_onion",
+        "Web_Salad_LettuceTomatoCucumber"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "沙拉·黄瓜番茄洋葱·黄酱",
+      "nameEn": "Salad Cucumber Tomato & Onion (Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_mustard"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_cucumber_tomato_onion_KetchupMustard",
+      "uid": 58322421,
+      "guid": "b3f5b65f4f66a0be4d0a3b07b5bd8e52",
+      "iconGuid": "f9e4f7e4779dbf2f49db20c7fe94b333",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_DLC11_Salad_cucumber_tomato_onion_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_DLC11_Salad_cucumber_tomato_onion_KetchupMustard.asset",
+      "baseId": "DLC11_Salad_cucumber_tomato_onion",
+      "sourceIds": [
+        "DLC11_Salad_cucumber_tomato_onion",
+        "Web_Salad_LettuceTomatoCucumber"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "沙拉·黄瓜番茄洋葱·双酱",
+      "nameEn": "Salad Cucumber Tomato & Onion (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 120
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_cucumber_onion_Ketchup",
+      "uid": 58322422,
+      "guid": "e633b02467929a5034cf1a821cd0b639",
+      "iconGuid": "34994890c3a5953c6fa4c62287692b32",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_DLC11_Salad_cucumber_onion_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_DLC11_Salad_cucumber_onion_Ketchup.asset",
+      "baseId": "DLC11_Salad_cucumber_onion",
+      "sourceIds": [
+        "DLC11_Salad_cucumber_onion",
+        "Web_Salad_LettuceCucumber"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "沙拉·黄瓜洋葱·红酱",
+      "nameEn": "Salad Cucumber & Onion (Ketchup)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_ketchup"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_cucumber_onion_Mustard",
+      "uid": 58322423,
+      "guid": "dfa6ade6fcb89e9cc022d2090d95a1ec",
+      "iconGuid": "68830ae1750d764ef5895a5569bb94a5",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_DLC11_Salad_cucumber_onion_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_DLC11_Salad_cucumber_onion_Mustard.asset",
+      "baseId": "DLC11_Salad_cucumber_onion",
+      "sourceIds": [
+        "DLC11_Salad_cucumber_onion",
+        "Web_Salad_LettuceCucumber"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "沙拉·黄瓜洋葱·黄酱",
+      "nameEn": "Salad Cucumber & Onion (Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_mustard"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_cucumber_onion_KetchupMustard",
+      "uid": 58322424,
+      "guid": "81589e452435969330b2c0ad1fc2f92b",
+      "iconGuid": "560e8be56c10e91e390e38988a971e15",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_DLC11_Salad_cucumber_onion_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_DLC11_Salad_cucumber_onion_KetchupMustard.asset",
+      "baseId": "DLC11_Salad_cucumber_onion",
+      "sourceIds": [
+        "DLC11_Salad_cucumber_onion",
+        "Web_Salad_LettuceCucumber"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "沙拉·黄瓜洋葱·双酱",
+      "nameEn": "Salad Cucumber & Onion (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_corn_onion_Ketchup",
+      "uid": 58322425,
+      "guid": "73f8a5f426947ad0cb414f2cbb52978b",
+      "iconGuid": "d9d4a3f0452ad0c1060dd39c1566c4b6",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_DLC11_Salad_corn_onion_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_DLC11_Salad_corn_onion_Ketchup.asset",
+      "baseId": "DLC11_Salad_corn_onion",
+      "sourceIds": [
+        "DLC11_Salad_corn_onion",
+        "Web_Salad_LettuceCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "沙拉·玉米洋葱·红酱",
+      "nameEn": "Salad Corn & Onion (Ketchup)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_ketchup"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_corn_onion_Mustard",
+      "uid": 58322426,
+      "guid": "d47cc29df718df603e3ff04519ab114a",
+      "iconGuid": "82df2f05fc321ff6a57bfaf8153bb7ab",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_DLC11_Salad_corn_onion_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_DLC11_Salad_corn_onion_Mustard.asset",
+      "baseId": "DLC11_Salad_corn_onion",
+      "sourceIds": [
+        "DLC11_Salad_corn_onion",
+        "Web_Salad_LettuceCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "沙拉·玉米洋葱·黄酱",
+      "nameEn": "Salad Corn & Onion (Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_mustard"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_corn_onion_KetchupMustard",
+      "uid": 58322427,
+      "guid": "d3046ade24dc9bcad62b35be79d890a9",
+      "iconGuid": "eda3b3f5001e1286aefc8806953c7c24",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_DLC11_Salad_corn_onion_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_DLC11_Salad_corn_onion_KetchupMustard.asset",
+      "baseId": "DLC11_Salad_corn_onion",
+      "sourceIds": [
+        "DLC11_Salad_corn_onion",
+        "Web_Salad_LettuceCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "沙拉·玉米洋葱·双酱",
+      "nameEn": "Salad Corn & Onion (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Lettuce_Ketchup",
+      "uid": 58322428,
+      "guid": "3dd71f5ef02e451786f493e0db6b7028",
+      "iconGuid": "4b29dc501d7e9f4a9ce17b85db465287",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_Lettuce_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_Lettuce_Ketchup.asset",
+      "baseId": "Web_LSalad_Lettuce",
+      "sourceIds": [
+        "Web_LSalad_Lettuce"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "Web 纯生菜沙拉·红酱",
+      "nameEn": "Web Plain Lettuce Salad (Ketchup)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_ketchup"
+      ],
+      "score": 40
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Lettuce_Mustard",
+      "uid": 58322429,
+      "guid": "14270fee1bf3b489ab3918f7a193cae3",
+      "iconGuid": "06b5eeddd6cf26cbfcf202d20dc6faee",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_Lettuce_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_Lettuce_Mustard.asset",
+      "baseId": "Web_LSalad_Lettuce",
+      "sourceIds": [
+        "Web_LSalad_Lettuce"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "Web 纯生菜沙拉·黄酱",
+      "nameEn": "Web Plain Lettuce Salad (Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_mustard"
+      ],
+      "score": 40
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Lettuce_KetchupMustard",
+      "uid": 58322430,
+      "guid": "667f37536ca43b28dbb2ddf272c32041",
+      "iconGuid": "a5aac0ca715d9bbc29a02622226db6fb",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_Lettuce_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_Lettuce_KetchupMustard.asset",
+      "baseId": "Web_LSalad_Lettuce",
+      "sourceIds": [
+        "Web_LSalad_Lettuce"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "Web 纯生菜沙拉·双酱",
+      "nameEn": "Web Plain Lettuce Salad (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 60
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_TomatoCucumberCorn_Ketchup",
+      "uid": 58322431,
+      "guid": "06d04b649a9a3fb4f21c8a0f37632f59",
+      "iconGuid": "8e6b725fd15593a5f692dbfb65517cda",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_TomatoCucumberCorn_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_TomatoCucumberCorn_Ketchup.asset",
+      "baseId": "Web_Salad_TomatoCucumberCorn",
+      "sourceIds": [
+        "Web_Salad_TomatoCucumberCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "Web 番茄黄瓜玉米沙拉·红酱",
+      "nameEn": "Web Tomato Cucumber Corn Salad (Ketchup)",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_ketchup"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_TomatoCucumberCorn_Mustard",
+      "uid": 58322432,
+      "guid": "655713272bcae9d57d61a43edbac96b2",
+      "iconGuid": "4a9334a7624de0f84f7c38697929be46",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_TomatoCucumberCorn_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_TomatoCucumberCorn_Mustard.asset",
+      "baseId": "Web_Salad_TomatoCucumberCorn",
+      "sourceIds": [
+        "Web_Salad_TomatoCucumberCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "Web 番茄黄瓜玉米沙拉·黄酱",
+      "nameEn": "Web Tomato Cucumber Corn Salad (Mustard)",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_mustard"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_TomatoCucumberCorn_KetchupMustard",
+      "uid": 58322433,
+      "guid": "34f48d8b3e6878840da782ba6fab2555",
+      "iconGuid": "2f6f511783bcc6045b0fe6db0a9e96dd",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_TomatoCucumberCorn_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_TomatoCucumberCorn_KetchupMustard.asset",
+      "baseId": "Web_Salad_TomatoCucumberCorn",
+      "sourceIds": [
+        "Web_Salad_TomatoCucumberCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "Web 番茄黄瓜玉米沙拉·双酱",
+      "nameEn": "Web Tomato Cucumber Corn Salad (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 120
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Tomato_Ketchup",
+      "uid": 58322434,
+      "guid": "95a6c3a4ff75cfa84296b3e603df2fdf",
+      "iconGuid": "9a583b5067a110bd97c3e67c616c697b",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_Tomato_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_Tomato_Ketchup.asset",
+      "baseId": "Web_Salad_Tomato",
+      "sourceIds": [
+        "Web_Salad_Tomato"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "Web 番茄沙拉·红酱",
+      "nameEn": "Web Tomato Salad (Ketchup)",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_onion_salad",
+        "dlc11_ketchup"
+      ],
+      "score": 60
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Tomato_Mustard",
+      "uid": 58322435,
+      "guid": "102ab80428e698c7305be6d440b5209a",
+      "iconGuid": "a77908ad8842ba45c3357ad2a516b663",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_Tomato_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_Tomato_Mustard.asset",
+      "baseId": "Web_Salad_Tomato",
+      "sourceIds": [
+        "Web_Salad_Tomato"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "Web 番茄沙拉·黄酱",
+      "nameEn": "Web Tomato Salad (Mustard)",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_onion_salad",
+        "dlc11_mustard"
+      ],
+      "score": 60
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Tomato_KetchupMustard",
+      "uid": 58322436,
+      "guid": "b880de9600e8bea1149ef8fb2aadd64d",
+      "iconGuid": "c9fc20bf5d298e3e220c9ca5cb29de28",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_Tomato_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_Tomato_KetchupMustard.asset",
+      "baseId": "Web_Salad_Tomato",
+      "sourceIds": [
+        "Web_Salad_Tomato"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "Web 番茄沙拉·双酱",
+      "nameEn": "Web Tomato Salad (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_onion_salad",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Cucumber_Ketchup",
+      "uid": 58322437,
+      "guid": "02c759084971508c7ac095a579ed9222",
+      "iconGuid": "f121eec34637a3a9244bf77caf2b6cd3",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_Cucumber_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_Cucumber_Ketchup.asset",
+      "baseId": "Web_Salad_Cucumber",
+      "sourceIds": [
+        "Web_Salad_Cucumber"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "Web 黄瓜沙拉·红酱",
+      "nameEn": "Web Cucumber Salad (Ketchup)",
+      "ingredients": [
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_ketchup"
+      ],
+      "score": 60
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Cucumber_Mustard",
+      "uid": 58322438,
+      "guid": "993b3362aeee562272a71f025e27e0f0",
+      "iconGuid": "4070b3e817e44eb39fabec43b04ad817",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_Cucumber_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_Cucumber_Mustard.asset",
+      "baseId": "Web_Salad_Cucumber",
+      "sourceIds": [
+        "Web_Salad_Cucumber"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "Web 黄瓜沙拉·黄酱",
+      "nameEn": "Web Cucumber Salad (Mustard)",
+      "ingredients": [
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_mustard"
+      ],
+      "score": 60
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Cucumber_KetchupMustard",
+      "uid": 58322439,
+      "guid": "0bf365076c7a921bf45577da4b9a8bc5",
+      "iconGuid": "e167ef352f2822702c253ee65e9bee22",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_Cucumber_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_Cucumber_KetchupMustard.asset",
+      "baseId": "Web_Salad_Cucumber",
+      "sourceIds": [
+        "Web_Salad_Cucumber"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "Web 黄瓜沙拉·双酱",
+      "nameEn": "Web Cucumber Salad (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_CucumberCorn_Ketchup",
+      "uid": 58322440,
+      "guid": "0ffd132ad573ab7dcb63e041f073bc6a",
+      "iconGuid": "d962ffc635e501c86e4dbb2414d968f5",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_CucumberCorn_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_CucumberCorn_Ketchup.asset",
+      "baseId": "Web_Salad_CucumberCorn",
+      "sourceIds": [
+        "Web_Salad_CucumberCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "Web 黄瓜玉米沙拉·红酱",
+      "nameEn": "Web Cucumber Corn Salad (Ketchup)",
+      "ingredients": [
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_ketchup"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_CucumberCorn_Mustard",
+      "uid": 58322441,
+      "guid": "a381ee62e11240fb1050b2b6d55464cc",
+      "iconGuid": "04dc615cbd6ae1e40853624d280426a0",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_CucumberCorn_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_CucumberCorn_Mustard.asset",
+      "baseId": "Web_Salad_CucumberCorn",
+      "sourceIds": [
+        "Web_Salad_CucumberCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "Web 黄瓜玉米沙拉·黄酱",
+      "nameEn": "Web Cucumber Corn Salad (Mustard)",
+      "ingredients": [
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_mustard"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_CucumberCorn_KetchupMustard",
+      "uid": 58322442,
+      "guid": "627b0029df2ed1becbf2f432e438b20f",
+      "iconGuid": "0430822387a3d052ffd4f5d99ca67e48",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_CucumberCorn_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_CucumberCorn_KetchupMustard.asset",
+      "baseId": "Web_Salad_CucumberCorn",
+      "sourceIds": [
+        "Web_Salad_CucumberCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "Web 黄瓜玉米沙拉·双酱",
+      "nameEn": "Web Cucumber Corn Salad (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_TomatoCucumber_Ketchup",
+      "uid": 58322443,
+      "guid": "874f4f18bfb5f3689e722cd366ecac92",
+      "iconGuid": "83cb9eabc20f3ddfef2eca1b3a2821c2",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_TomatoCucumber_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_TomatoCucumber_Ketchup.asset",
+      "baseId": "Web_LSalad_TomatoCucumber",
+      "sourceIds": [
+        "Web_LSalad_TomatoCucumber"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "Web 生菜底番茄黄瓜沙拉·红酱",
+      "nameEn": "Web Tomato Cucumber Salad (Lettuce Base) (Ketchup)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_ketchup"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_TomatoCucumber_Mustard",
+      "uid": 58322444,
+      "guid": "8ed17f9ba76b8a9fa99ae852c23cb089",
+      "iconGuid": "ab5c06cbadf083e827fe7c20431f2b61",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_TomatoCucumber_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_TomatoCucumber_Mustard.asset",
+      "baseId": "Web_LSalad_TomatoCucumber",
+      "sourceIds": [
+        "Web_LSalad_TomatoCucumber"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "Web 生菜底番茄黄瓜沙拉·黄酱",
+      "nameEn": "Web Tomato Cucumber Salad (Lettuce Base) (Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_mustard"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_TomatoCucumber_KetchupMustard",
+      "uid": 58322445,
+      "guid": "b189ceca958dfc271147a1266914697b",
+      "iconGuid": "b3222317f8442ecaf088623065c60728",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_TomatoCucumber_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_TomatoCucumber_KetchupMustard.asset",
+      "baseId": "Web_LSalad_TomatoCucumber",
+      "sourceIds": [
+        "Web_LSalad_TomatoCucumber"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "Web 生菜底番茄黄瓜沙拉·双酱",
+      "nameEn": "Web Tomato Cucumber Salad (Lettuce Base) (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_TomatoCucumberCorn_Ketchup",
+      "uid": 58322446,
+      "guid": "b0c4e9ba0bc0001f5c538479042c080d",
+      "iconGuid": "72065d760e6024f05beaf5c36f6adf54",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_TomatoCucumberCorn_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_TomatoCucumberCorn_Ketchup.asset",
+      "baseId": "Web_LSalad_TomatoCucumberCorn",
+      "sourceIds": [
+        "Web_LSalad_TomatoCucumberCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "Web 生菜底番茄黄瓜玉米沙拉·红酱",
+      "nameEn": "Web Tomato Cucumber Corn Salad (Lettuce Base) (Ketchup)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_ketchup"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_TomatoCucumberCorn_Mustard",
+      "uid": 58322447,
+      "guid": "2adbb1915a9eefaa607eca784b40675e",
+      "iconGuid": "be10e2d2380fbadc72c8dd79d196ec14",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_TomatoCucumberCorn_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_TomatoCucumberCorn_Mustard.asset",
+      "baseId": "Web_LSalad_TomatoCucumberCorn",
+      "sourceIds": [
+        "Web_LSalad_TomatoCucumberCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "Web 生菜底番茄黄瓜玉米沙拉·黄酱",
+      "nameEn": "Web Tomato Cucumber Corn Salad (Lettuce Base) (Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_mustard"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_TomatoCucumberCorn_KetchupMustard",
+      "uid": 58322448,
+      "guid": "46124c1e5f5c7d52227468fd28de5b5a",
+      "iconGuid": "c830250a51fffd2e947ff2ab99ff03fb",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_TomatoCucumberCorn_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_TomatoCucumberCorn_KetchupMustard.asset",
+      "baseId": "Web_LSalad_TomatoCucumberCorn",
+      "sourceIds": [
+        "Web_LSalad_TomatoCucumberCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "Web 生菜底番茄黄瓜玉米沙拉·双酱",
+      "nameEn": "Web Tomato Cucumber Corn Salad (Lettuce Base) (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 120
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Tomato_Ketchup",
+      "uid": 58322449,
+      "guid": "45599b56bdc6665c72808c3b61214771",
+      "iconGuid": "df1e6730616f7a97209ebc65509afd2f",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_Tomato_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_Tomato_Ketchup.asset",
+      "baseId": "Web_LSalad_Tomato",
+      "sourceIds": [
+        "Web_LSalad_Tomato"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "Web 生菜底番茄沙拉·红酱",
+      "nameEn": "Web Tomato Salad (Lettuce Base) (Ketchup)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_ketchup"
+      ],
+      "score": 60
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Tomato_Mustard",
+      "uid": 58322450,
+      "guid": "1a5e359462caa4b005db8cc848b99d7b",
+      "iconGuid": "4051f252ef685213f3ad8d366ac5881d",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_Tomato_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_Tomato_Mustard.asset",
+      "baseId": "Web_LSalad_Tomato",
+      "sourceIds": [
+        "Web_LSalad_Tomato"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "Web 生菜底番茄沙拉·黄酱",
+      "nameEn": "Web Tomato Salad (Lettuce Base) (Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_mustard"
+      ],
+      "score": 60
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Tomato_KetchupMustard",
+      "uid": 58322451,
+      "guid": "9040225ebafe7c6f1626e7b1c5ac3bdd",
+      "iconGuid": "8ed6c549e4711cec017c32df5dc877c3",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_Tomato_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_Tomato_KetchupMustard.asset",
+      "baseId": "Web_LSalad_Tomato",
+      "sourceIds": [
+        "Web_LSalad_Tomato"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "Web 生菜底番茄沙拉·双酱",
+      "nameEn": "Web Tomato Salad (Lettuce Base) (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_TomatoCorn_Ketchup",
+      "uid": 58322452,
+      "guid": "d7b928ecb579b569c70617b9a94e1d9b",
+      "iconGuid": "b08c0f0cd75e1c8111f296dcd435cca8",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_TomatoCorn_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_TomatoCorn_Ketchup.asset",
+      "baseId": "Web_LSalad_TomatoCorn",
+      "sourceIds": [
+        "Web_LSalad_TomatoCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "Web 生菜底番茄玉米沙拉·红酱",
+      "nameEn": "Web Tomato Corn Salad (Lettuce Base) (Ketchup)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_corn",
+        "dlc11_ketchup"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_TomatoCorn_Mustard",
+      "uid": 58322453,
+      "guid": "69e3429a26cb1c374cdf84aca50130f8",
+      "iconGuid": "c325de475e85f338460f779ee411865d",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_TomatoCorn_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_TomatoCorn_Mustard.asset",
+      "baseId": "Web_LSalad_TomatoCorn",
+      "sourceIds": [
+        "Web_LSalad_TomatoCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "Web 生菜底番茄玉米沙拉·黄酱",
+      "nameEn": "Web Tomato Corn Salad (Lettuce Base) (Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_corn",
+        "dlc11_mustard"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_TomatoCorn_KetchupMustard",
+      "uid": 58322454,
+      "guid": "f32bb1966a8c3bec3d393a6902cec867",
+      "iconGuid": "577932cae749687e8a1ed6afea7c3202",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_TomatoCorn_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_TomatoCorn_KetchupMustard.asset",
+      "baseId": "Web_LSalad_TomatoCorn",
+      "sourceIds": [
+        "Web_LSalad_TomatoCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "Web 生菜底番茄玉米沙拉·双酱",
+      "nameEn": "Web Tomato Corn Salad (Lettuce Base) (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_corn",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Cucumber_Ketchup",
+      "uid": 58322455,
+      "guid": "b09a787a2ed6d059b1b4ea2f281f2b6b",
+      "iconGuid": "c70a70d91cc023d4a33066bc0e52efd2",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_Cucumber_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_Cucumber_Ketchup.asset",
+      "baseId": "Web_LSalad_Cucumber",
+      "sourceIds": [
+        "Web_LSalad_Cucumber"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "Web 生菜底黄瓜沙拉·红酱",
+      "nameEn": "Web Cucumber Salad (Lettuce Base) (Ketchup)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_cucumber",
+        "dlc11_ketchup"
+      ],
+      "score": 60
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Cucumber_Mustard",
+      "uid": 58322456,
+      "guid": "91a103e314c5d53052c3c484cacd9a66",
+      "iconGuid": "e1801834cda71baffbd9f5c5fade7b44",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_Cucumber_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_Cucumber_Mustard.asset",
+      "baseId": "Web_LSalad_Cucumber",
+      "sourceIds": [
+        "Web_LSalad_Cucumber"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "Web 生菜底黄瓜沙拉·黄酱",
+      "nameEn": "Web Cucumber Salad (Lettuce Base) (Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_cucumber",
+        "dlc11_mustard"
+      ],
+      "score": 60
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Cucumber_KetchupMustard",
+      "uid": 58322457,
+      "guid": "43edb4cfa5a30b008af4562dc0a06afd",
+      "iconGuid": "47a48927e44a8112a46022144914408a",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_Cucumber_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_Cucumber_KetchupMustard.asset",
+      "baseId": "Web_LSalad_Cucumber",
+      "sourceIds": [
+        "Web_LSalad_Cucumber"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "Web 生菜底黄瓜沙拉·双酱",
+      "nameEn": "Web Cucumber Salad (Lettuce Base) (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_cucumber",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_CucumberCorn_Ketchup",
+      "uid": 58322458,
+      "guid": "4f10f19de89a14498a720ab44bdb2d40",
+      "iconGuid": "dede70a2ed3ea0b19f5d0912dcb3253a",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_CucumberCorn_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_CucumberCorn_Ketchup.asset",
+      "baseId": "Web_LSalad_CucumberCorn",
+      "sourceIds": [
+        "Web_LSalad_CucumberCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "Web 生菜底黄瓜玉米沙拉·红酱",
+      "nameEn": "Web Cucumber Corn Salad (Lettuce Base) (Ketchup)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_ketchup"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_CucumberCorn_Mustard",
+      "uid": 58322459,
+      "guid": "ebe0835c4b1d8b30c55315eacfa2ab4e",
+      "iconGuid": "698bd5c5754cf745fc54ee498a4f5ee2",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_CucumberCorn_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_CucumberCorn_Mustard.asset",
+      "baseId": "Web_LSalad_CucumberCorn",
+      "sourceIds": [
+        "Web_LSalad_CucumberCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "Web 生菜底黄瓜玉米沙拉·黄酱",
+      "nameEn": "Web Cucumber Corn Salad (Lettuce Base) (Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_mustard"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_CucumberCorn_KetchupMustard",
+      "uid": 58322460,
+      "guid": "e811d31642e43169abf9660b372e7af2",
+      "iconGuid": "ea7ad6f786379a341120c88b14073bf3",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_CucumberCorn_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_CucumberCorn_KetchupMustard.asset",
+      "baseId": "Web_LSalad_CucumberCorn",
+      "sourceIds": [
+        "Web_LSalad_CucumberCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "Web 生菜底黄瓜玉米沙拉·双酱",
+      "nameEn": "Web Cucumber Corn Salad (Lettuce Base) (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Corn_Ketchup",
+      "uid": 58322461,
+      "guid": "df35ba1b8f1540456cf9fbe13097d104",
+      "iconGuid": "5d3d57958792de807d513bfe7d93ea9d",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_Corn_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_Corn_Ketchup.asset",
+      "baseId": "Web_LSalad_Corn",
+      "sourceIds": [
+        "Web_LSalad_Corn"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "Web 生菜底玉米沙拉·红酱",
+      "nameEn": "Web Corn Salad (Lettuce Base) (Ketchup)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_corn",
+        "dlc11_ketchup"
+      ],
+      "score": 60
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Corn_Mustard",
+      "uid": 58322462,
+      "guid": "67ce2fb126a923d242f98bec77aa14a1",
+      "iconGuid": "88a4c0683ad00d939f5ca11495f181bc",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_Corn_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_Corn_Mustard.asset",
+      "baseId": "Web_LSalad_Corn",
+      "sourceIds": [
+        "Web_LSalad_Corn"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "Web 生菜底玉米沙拉·黄酱",
+      "nameEn": "Web Corn Salad (Lettuce Base) (Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_corn",
+        "dlc11_mustard"
+      ],
+      "score": 60
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Corn_KetchupMustard",
+      "uid": 58322463,
+      "guid": "8fd77f1aeb30eba069fa2bbaa8615589",
+      "iconGuid": "d47b04158ece3cedf80dbcb13467d65c",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_LSalad_Corn_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_LSalad_Corn_KetchupMustard.asset",
+      "baseId": "Web_LSalad_Corn",
+      "sourceIds": [
+        "Web_LSalad_Corn"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "Web 生菜底玉米沙拉·双酱",
+      "nameEn": "Web Corn Salad (Lettuce Base) (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_corn",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_LettuceTomatoCorn_Ketchup",
+      "uid": 58322464,
+      "guid": "4fd0f46d601c7cc4d521815fe69781cf",
+      "iconGuid": "297411fd036dcea6569158cb39e2917b",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_LettuceTomatoCorn_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_LettuceTomatoCorn_Ketchup.asset",
+      "baseId": "Web_Salad_LettuceTomatoCorn",
+      "sourceIds": [
+        "Web_Salad_LettuceTomatoCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "Web 生菜番茄玉米沙拉·红酱",
+      "nameEn": "Web Lettuce Tomato Corn Salad (Ketchup)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_ketchup"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_LettuceTomatoCorn_Mustard",
+      "uid": 58322465,
+      "guid": "d2ba8500749d77ca7e1f58b5e3865cb7",
+      "iconGuid": "212983aa3c8ce886d0cedd91110e346c",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_LettuceTomatoCorn_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_LettuceTomatoCorn_Mustard.asset",
+      "baseId": "Web_Salad_LettuceTomatoCorn",
+      "sourceIds": [
+        "Web_Salad_LettuceTomatoCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "Web 生菜番茄玉米沙拉·黄酱",
+      "nameEn": "Web Lettuce Tomato Corn Salad (Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_mustard"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_LettuceTomatoCorn_KetchupMustard",
+      "uid": 58322466,
+      "guid": "59adf0edb4b265b70a95612283b99406",
+      "iconGuid": "7723cc05da1e7608862812a63d19c849",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_LettuceTomatoCorn_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_LettuceTomatoCorn_KetchupMustard.asset",
+      "baseId": "Web_Salad_LettuceTomatoCorn",
+      "sourceIds": [
+        "Web_Salad_LettuceTomatoCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "Web 生菜番茄玉米沙拉·双酱",
+      "nameEn": "Web Lettuce Tomato Corn Salad (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 120
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_LettuceCucumberCorn_Ketchup",
+      "uid": 58322467,
+      "guid": "2a9d206dc6fbf489b3e60eadbbc29f31",
+      "iconGuid": "4f2f2f73958a53c1f1facbbec857ac2b",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_LettuceCucumberCorn_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_LettuceCucumberCorn_Ketchup.asset",
+      "baseId": "Web_Salad_LettuceCucumberCorn",
+      "sourceIds": [
+        "Web_Salad_LettuceCucumberCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "Web 生菜黄瓜玉米沙拉·红酱",
+      "nameEn": "Web Lettuce Cucumber Corn Salad (Ketchup)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_ketchup"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_LettuceCucumberCorn_Mustard",
+      "uid": 58322468,
+      "guid": "37ed177c7bafe69a039a8467a00f72e8",
+      "iconGuid": "7b5acb77b9d43a860ed28817217b3240",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_LettuceCucumberCorn_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_LettuceCucumberCorn_Mustard.asset",
+      "baseId": "Web_Salad_LettuceCucumberCorn",
+      "sourceIds": [
+        "Web_Salad_LettuceCucumberCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "Web 生菜黄瓜玉米沙拉·黄酱",
+      "nameEn": "Web Lettuce Cucumber Corn Salad (Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_mustard"
+      ],
+      "score": 100
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_LettuceCucumberCorn_KetchupMustard",
+      "uid": 58322469,
+      "guid": "363cdb0845afb2aa37a1bfedc6288869",
+      "iconGuid": "22cc37782784b8ac2c7af55894019248",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_LettuceCucumberCorn_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_LettuceCucumberCorn_KetchupMustard.asset",
+      "baseId": "Web_Salad_LettuceCucumberCorn",
+      "sourceIds": [
+        "Web_Salad_LettuceCucumberCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "Web 生菜黄瓜玉米沙拉·双酱",
+      "nameEn": "Web Lettuce Cucumber Corn Salad (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 120
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Lettuce_Ketchup",
+      "uid": 58322470,
+      "guid": "c6c26b85e9e22a6424bba6221db804f9",
+      "iconGuid": "ed1cbe4a723a89bfaf379a9b654aa66e",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_Lettuce_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_Lettuce_Ketchup.asset",
+      "baseId": "Web_Salad_Lettuce",
+      "sourceIds": [
+        "Web_Salad_Lettuce"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "Web 生菜沙拉·红酱",
+      "nameEn": "Web Lettuce Salad (Ketchup)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_onion_salad",
+        "dlc11_ketchup"
+      ],
+      "score": 60
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Lettuce_Mustard",
+      "uid": 58322471,
+      "guid": "574a611819db7d94c39543e6de5a6550",
+      "iconGuid": "f4c371bf3cbd9b0cd714ba357036eb27",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_Lettuce_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_Lettuce_Mustard.asset",
+      "baseId": "Web_Salad_Lettuce",
+      "sourceIds": [
+        "Web_Salad_Lettuce"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "Web 生菜沙拉·黄酱",
+      "nameEn": "Web Lettuce Salad (Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_onion_salad",
+        "dlc11_mustard"
+      ],
+      "score": 60
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Lettuce_KetchupMustard",
+      "uid": 58322472,
+      "guid": "6363a66d1e49b169ea94eb4f01c0ff04",
+      "iconGuid": "a479724f36df3fe98c6051a2fe95ad6b",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_Lettuce_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_Lettuce_KetchupMustard.asset",
+      "baseId": "Web_Salad_Lettuce",
+      "sourceIds": [
+        "Web_Salad_Lettuce"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "Web 生菜沙拉·双酱",
+      "nameEn": "Web Lettuce Salad (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_onion_salad",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 80
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_LettuceTomatoCucumberCorn_Ketchup",
+      "uid": 58322473,
+      "guid": "8d5e8203d2cb1b9c4509f23d7684f9bd",
+      "iconGuid": "acc2e00a4e3e09ab5948e643b79be9dd",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_LettuceTomatoCucumberCorn_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_LettuceTomatoCucumberCorn_Ketchup.asset",
+      "baseId": "Web_Salad_LettuceTomatoCucumberCorn",
+      "sourceIds": [
+        "Web_Salad_LettuceTomatoCucumberCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "Web 田园全家福沙拉·红酱",
+      "nameEn": "Web Garden Salad (Ketchup)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_ketchup"
+      ],
+      "score": 120
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_LettuceTomatoCucumberCorn_Mustard",
+      "uid": 58322474,
+      "guid": "71572453d722cad34cec84187530ff86",
+      "iconGuid": "02aac02066281ca7194eb87f1c6e8e3e",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_LettuceTomatoCucumberCorn_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_LettuceTomatoCucumberCorn_Mustard.asset",
+      "baseId": "Web_Salad_LettuceTomatoCucumberCorn",
+      "sourceIds": [
+        "Web_Salad_LettuceTomatoCucumberCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "Web 田园全家福沙拉·黄酱",
+      "nameEn": "Web Garden Salad (Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_mustard"
+      ],
+      "score": 120
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_LettuceTomatoCucumberCorn_KetchupMustard",
+      "uid": 58322475,
+      "guid": "469fdcd134a7406392a9f99cf6afd2dc",
+      "iconGuid": "2ef1b779db19a516235b010c23dd0793",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_LettuceTomatoCucumberCorn_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_LettuceTomatoCucumberCorn_KetchupMustard.asset",
+      "baseId": "Web_Salad_LettuceTomatoCucumberCorn",
+      "sourceIds": [
+        "Web_Salad_LettuceTomatoCucumberCorn"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "Web 田园全家福沙拉·双酱",
+      "nameEn": "Web Garden Salad (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 140
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Corn_Ketchup",
+      "uid": 58322476,
+      "guid": "43955be88d64f18f6cd47143a6bb5781",
+      "iconGuid": "eb831ec6e331954e331f0816a0cd5f23",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_Corn_Ketchup.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_Corn_Ketchup.asset",
+      "baseId": "Web_Salad_Corn",
+      "sourceIds": [
+        "Web_Salad_Corn"
+      ],
+      "family": "DLC11",
+      "sauce": "Ketchup",
+      "nameZh": "Web 玉米沙拉·红酱",
+      "nameEn": "Web Corn Salad (Ketchup)",
+      "ingredients": [
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_ketchup"
+      ],
+      "score": 60
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Corn_Mustard",
+      "uid": 58322477,
+      "guid": "7dbdf42d27c410dbb43bb79271795cae",
+      "iconGuid": "54c1457379c6f1c77aef8f7cba809b47",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_Corn_Mustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_Corn_Mustard.asset",
+      "baseId": "Web_Salad_Corn",
+      "sourceIds": [
+        "Web_Salad_Corn"
+      ],
+      "family": "DLC11",
+      "sauce": "Mustard",
+      "nameZh": "Web 玉米沙拉·黄酱",
+      "nameEn": "Web Corn Salad (Mustard)",
+      "ingredients": [
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_mustard"
+      ],
+      "score": 60
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Corn_KetchupMustard",
+      "uid": 58322478,
+      "guid": "8fb7b5aad41ac008374bc9733f7acd68",
+      "iconGuid": "b9967f97ea05b40b7a80305b5864f530",
+      "iconPath": "Assets/commonW3/custom_recipes/salad/icons/Web_SauceSalad_Web_Salad_Corn_KetchupMustard.png",
+      "assetPath": "Assets/commonW3/custom_recipes/salad/Web_SauceSalad_Web_Salad_Corn_KetchupMustard.asset",
+      "baseId": "Web_Salad_Corn",
+      "sourceIds": [
+        "Web_Salad_Corn"
+      ],
+      "family": "DLC11",
+      "sauce": "KetchupMustard",
+      "nameZh": "Web 玉米沙拉·双酱",
+      "nameEn": "Web Corn Salad (Ketchup & Mustard)",
+      "ingredients": [
+        "dlc11_corn",
+        "dlc11_onion_salad",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "score": 80
+    }
+  ],
+  "optionals": [
+    {
+      "id": "Web_SauceSalad_Optional_Story_LettuceSO_Ketchup",
+      "family": "Story",
+      "uid": 58322601,
+      "ingredients": [
+        "LettuceSO",
+        "dlc11_ketchup"
+      ],
+      "optional": [
+        "TomatoSO",
+        "CucumberSO"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_Story_LettuceSO_Mustard",
+      "family": "Story",
+      "uid": 58322602,
+      "ingredients": [
+        "LettuceSO",
+        "dlc11_mustard"
+      ],
+      "optional": [
+        "TomatoSO",
+        "CucumberSO"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_Story_LettuceSO_KetchupMustard",
+      "family": "Story",
+      "uid": 58322603,
+      "ingredients": [
+        "LettuceSO",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "optional": [
+        "TomatoSO",
+        "CucumberSO"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_Story_TomatoSO_Ketchup",
+      "family": "Story",
+      "uid": 58322604,
+      "ingredients": [
+        "TomatoSO",
+        "dlc11_ketchup"
+      ],
+      "optional": [
+        "LettuceSO",
+        "CucumberSO"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_Story_TomatoSO_Mustard",
+      "family": "Story",
+      "uid": 58322605,
+      "ingredients": [
+        "TomatoSO",
+        "dlc11_mustard"
+      ],
+      "optional": [
+        "LettuceSO",
+        "CucumberSO"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_Story_TomatoSO_KetchupMustard",
+      "family": "Story",
+      "uid": 58322606,
+      "ingredients": [
+        "TomatoSO",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "optional": [
+        "LettuceSO",
+        "CucumberSO"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_Story_CucumberSO_Ketchup",
+      "family": "Story",
+      "uid": 58322607,
+      "ingredients": [
+        "CucumberSO",
+        "dlc11_ketchup"
+      ],
+      "optional": [
+        "LettuceSO",
+        "TomatoSO"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_Story_CucumberSO_Mustard",
+      "family": "Story",
+      "uid": 58322608,
+      "ingredients": [
+        "CucumberSO",
+        "dlc11_mustard"
+      ],
+      "optional": [
+        "LettuceSO",
+        "TomatoSO"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_Story_CucumberSO_KetchupMustard",
+      "family": "Story",
+      "uid": 58322609,
+      "ingredients": [
+        "CucumberSO",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "optional": [
+        "LettuceSO",
+        "TomatoSO"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_DLC11_dlc11_tomato_Ketchup",
+      "family": "DLC11",
+      "uid": 58322631,
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_ketchup"
+      ],
+      "optional": [
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_lettuce",
+        "dlc11_corn"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_DLC11_dlc11_tomato_Mustard",
+      "family": "DLC11",
+      "uid": 58322632,
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_mustard"
+      ],
+      "optional": [
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_lettuce",
+        "dlc11_corn"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_DLC11_dlc11_tomato_KetchupMustard",
+      "family": "DLC11",
+      "uid": 58322633,
+      "ingredients": [
+        "dlc11_tomato",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "optional": [
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_lettuce",
+        "dlc11_corn"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_DLC11_dlc11_cucumber_Ketchup",
+      "family": "DLC11",
+      "uid": 58322634,
+      "ingredients": [
+        "dlc11_cucumber",
+        "dlc11_ketchup"
+      ],
+      "optional": [
+        "dlc11_tomato",
+        "dlc11_onion_salad",
+        "dlc11_lettuce",
+        "dlc11_corn"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_DLC11_dlc11_cucumber_Mustard",
+      "family": "DLC11",
+      "uid": 58322635,
+      "ingredients": [
+        "dlc11_cucumber",
+        "dlc11_mustard"
+      ],
+      "optional": [
+        "dlc11_tomato",
+        "dlc11_onion_salad",
+        "dlc11_lettuce",
+        "dlc11_corn"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_DLC11_dlc11_cucumber_KetchupMustard",
+      "family": "DLC11",
+      "uid": 58322636,
+      "ingredients": [
+        "dlc11_cucumber",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "optional": [
+        "dlc11_tomato",
+        "dlc11_onion_salad",
+        "dlc11_lettuce",
+        "dlc11_corn"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_DLC11_dlc11_onion_salad_Ketchup",
+      "family": "DLC11",
+      "uid": 58322637,
+      "ingredients": [
+        "dlc11_onion_salad",
+        "dlc11_ketchup"
+      ],
+      "optional": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_lettuce",
+        "dlc11_corn"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_DLC11_dlc11_onion_salad_Mustard",
+      "family": "DLC11",
+      "uid": 58322638,
+      "ingredients": [
+        "dlc11_onion_salad",
+        "dlc11_mustard"
+      ],
+      "optional": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_lettuce",
+        "dlc11_corn"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_DLC11_dlc11_onion_salad_KetchupMustard",
+      "family": "DLC11",
+      "uid": 58322639,
+      "ingredients": [
+        "dlc11_onion_salad",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "optional": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_lettuce",
+        "dlc11_corn"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_DLC11_dlc11_lettuce_Ketchup",
+      "family": "DLC11",
+      "uid": 58322640,
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_ketchup"
+      ],
+      "optional": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_corn"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_DLC11_dlc11_lettuce_Mustard",
+      "family": "DLC11",
+      "uid": 58322641,
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_mustard"
+      ],
+      "optional": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_corn"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_DLC11_dlc11_lettuce_KetchupMustard",
+      "family": "DLC11",
+      "uid": 58322642,
+      "ingredients": [
+        "dlc11_lettuce",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "optional": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_corn"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_DLC11_dlc11_corn_Ketchup",
+      "family": "DLC11",
+      "uid": 58322643,
+      "ingredients": [
+        "dlc11_corn",
+        "dlc11_ketchup"
+      ],
+      "optional": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_lettuce"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_DLC11_dlc11_corn_Mustard",
+      "family": "DLC11",
+      "uid": 58322644,
+      "ingredients": [
+        "dlc11_corn",
+        "dlc11_mustard"
+      ],
+      "optional": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_lettuce"
+      ],
+      "score": 0
+    },
+    {
+      "id": "Web_SauceSalad_Optional_DLC11_dlc11_corn_KetchupMustard",
+      "family": "DLC11",
+      "uid": 58322645,
+      "ingredients": [
+        "dlc11_corn",
+        "dlc11_ketchup",
+        "dlc11_mustard"
+      ],
+      "optional": [
+        "dlc11_tomato",
+        "dlc11_cucumber",
+        "dlc11_onion_salad",
+        "dlc11_lettuce"
+      ],
+      "score": 0
+    }
+  ]
+}

@@ -1,0 +1,1891 @@
+{
+  "ok": true,
+  "count": 78,
+  "protectedOriginalFiles": 42,
+  "officialAdditionalBases": 5,
+  "sourceStats": {
+    "Ketchup": {
+      "size": [
+        776,
+        698
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "crop": [
+        0,
+        34,
+        766,
+        681
+      ],
+      "alphaWeightedRGBA": [
+        235.8090511136861,
+        34.29139521908931,
+        16.708960988798765,
+        227.9948156731471
+      ],
+      "sha256": "20ffe2cc16ad22e188c10a17367b18bee4924e9409af879796cca6d0e6e303ff"
+    },
+    "Mustard": {
+      "size": [
+        792,
+        671
+      ],
+      "alpha": [
+        0,
+        255
+      ],
+      "crop": [
+        1,
+        18,
+        792,
+        663
+      ],
+      "alphaWeightedRGBA": [
+        250.2114229238732,
+        182.11762334521055,
+        15.843979470640763,
+        223.3335023884453
+      ],
+      "sha256": "80902c9ca535a8f5e3d1ee99299210216be5fea9b5039ef5633c65c9dd65de07"
+    }
+  },
+  "outputs": {
+    "Web_SauceSalad_Salad_Tomato_SO_Ketchup": "5b05b3de9cd37cf3a63a5e0057848e450ed0fe2eea194356f56669c706e6b832",
+    "Web_SauceSalad_Salad_Tomato_SO_Mustard": "05bcec1975348d99b951a4a4bcbc61439f1b0e36be976b7d9977aeb2016db6a4",
+    "Web_SauceSalad_Salad_Tomato_SO_KetchupMustard": "65088d2b9145b59a10abe156c6a9bcf9c02c02a9a66bc0f1cf13777017fd371c",
+    "Web_SauceSalad_Salad_Cucumber_SO_Ketchup": "f2b1589b3301af760f62a294ec47fde8d84420d33fe74063b70cf6f92519f4a1",
+    "Web_SauceSalad_Salad_Cucumber_SO_Mustard": "9194bda7e865a2337b1f3e2e5a3624801706c1bd50ffb22138af400add1b5cc5",
+    "Web_SauceSalad_Salad_Cucumber_SO_KetchupMustard": "ddb8b371ec7e4130b149cc66f3c8072c6ebd531b68af38e5f369d10a527a6658",
+    "Web_SauceSalad_Salad_Plain_SO_Ketchup": "84474bd892d9b0ecf4fcfe6abf9eb2d3cf4fab440005a53fe5633044759f21d9",
+    "Web_SauceSalad_Salad_Plain_SO_Mustard": "9a9fd65a6407f7ee5da056eb182fd26abb505bd636ddf59c5b604fd3c481bb5d",
+    "Web_SauceSalad_Salad_Plain_SO_KetchupMustard": "b441c5e9a7ddf78c010e93844ba5cb58016b691749bd013ca41cacc66d120533",
+    "Web_SauceSalad_DLC11_Salad_tomato_cucumber_onion_Ketchup": "f18e46524802e162d8ef330a04d2f4fb50dcc7c121426aa4704e504bbb2c80fc",
+    "Web_SauceSalad_DLC11_Salad_tomato_cucumber_onion_Mustard": "f3c01ead61708dce676e0c27e0d544518406a55662618f727fafe920cf2fc41b",
+    "Web_SauceSalad_DLC11_Salad_tomato_cucumber_onion_KetchupMustard": "e40134bac109c0bf1090a16d9132ecf86dcbff672ad8782754b8c4de2a2ff683",
+    "Web_SauceSalad_DLC11_Salad_tomato_onion_Ketchup": "21064b70b1d7d60d8e04b8e74ece20546a0192bf9c9fd7e9e4ffcfe8e9858ec8",
+    "Web_SauceSalad_DLC11_Salad_tomato_onion_Mustard": "8209fcfe6ba9045140195800203027ee5a94d38978a500ca0d134c999886ddda",
+    "Web_SauceSalad_DLC11_Salad_tomato_onion_KetchupMustard": "79de6d67a9c3029a21fa6412fee26e6872f7a4bf2f0e1787f91535702fa5c092",
+    "Web_SauceSalad_DLC11_Salad_tomato_corn_onion_Ketchup": "58e96484699dfbb1e70141355748d104b03a9c3408b0280233d4b008f6826121",
+    "Web_SauceSalad_DLC11_Salad_tomato_corn_onion_Mustard": "01c1702e6e01f2889c7f9d130451c55a3537d9483319fe0baa84a9f89df5bfd3",
+    "Web_SauceSalad_DLC11_Salad_tomato_corn_onion_KetchupMustard": "54bd9abfad6aa00d12407669985fe424fd512adde0ba48917601d72b4a3e0710",
+    "Web_SauceSalad_DLC11_Salad_cucumber_tomato_onion_Ketchup": "eb18e2295465290085f3d6e7b7b8b0403e38d48af97b19bab8ce5a2ee72dc15b",
+    "Web_SauceSalad_DLC11_Salad_cucumber_tomato_onion_Mustard": "d6677a7e926186c0afbb9c4253d24bf388e23ff866657cd6a5faad23a75c8c06",
+    "Web_SauceSalad_DLC11_Salad_cucumber_tomato_onion_KetchupMustard": "0c9f574ba2d79975067725961c2e0f00a901505148f5d8ec3763c760fb1fe821",
+    "Web_SauceSalad_DLC11_Salad_cucumber_onion_Ketchup": "2756504c95148366b4187914d7e9edebe3a01ceec09a0b020418717e3f1b2bca",
+    "Web_SauceSalad_DLC11_Salad_cucumber_onion_Mustard": "b3fc87f9a7175b50b0d4f52476c024c3aa505a15367713361a6d5cd1a710999a",
+    "Web_SauceSalad_DLC11_Salad_cucumber_onion_KetchupMustard": "841063c00ddebd083f1e15d8e4d4bd01e2ff9b682537bab4fec3ef88a35e812e",
+    "Web_SauceSalad_DLC11_Salad_corn_onion_Ketchup": "f18e46524802e162d8ef330a04d2f4fb50dcc7c121426aa4704e504bbb2c80fc",
+    "Web_SauceSalad_DLC11_Salad_corn_onion_Mustard": "f3c01ead61708dce676e0c27e0d544518406a55662618f727fafe920cf2fc41b",
+    "Web_SauceSalad_DLC11_Salad_corn_onion_KetchupMustard": "e40134bac109c0bf1090a16d9132ecf86dcbff672ad8782754b8c4de2a2ff683",
+    "Web_SauceSalad_Web_LSalad_Lettuce_Ketchup": "d53f96a91e93fa309cb64c01274db000006786ad98c8f57ce89f6641de2e7d8d",
+    "Web_SauceSalad_Web_LSalad_Lettuce_Mustard": "65f38ab2160a419380b9d06e86f7d0a785708a3fb3c4ee003f553a2de462c6ee",
+    "Web_SauceSalad_Web_LSalad_Lettuce_KetchupMustard": "43f7acdeb6a85aefc31372fd1f3bb87c8e1dd8851170d3f93a7ff550ee07dd27",
+    "Web_SauceSalad_Web_Salad_TomatoCucumberCorn_Ketchup": "a26ed2bc4fe619977e17db958f42ab20742002c23df5a12f111aa4d9116eaec1",
+    "Web_SauceSalad_Web_Salad_TomatoCucumberCorn_Mustard": "aa08be6c3c6edabe73526425be66c740110f3172c3c07b88ca800802c8451c73",
+    "Web_SauceSalad_Web_Salad_TomatoCucumberCorn_KetchupMustard": "a3b645a1d3745386c9fb1134a207ac605857d45154ab27e103ae46742cefa378",
+    "Web_SauceSalad_Web_Salad_Tomato_Ketchup": "a0b05d95865ec9d2c931f9bc8b83cad19140d7d8f076d88ededdcb3fafe3693e",
+    "Web_SauceSalad_Web_Salad_Tomato_Mustard": "b5ad0dba8a7b6c69842c83dab39612d3db8b215c5c0ccf8511f04cf90609b0a8",
+    "Web_SauceSalad_Web_Salad_Tomato_KetchupMustard": "4d3499af69e79a212bc63cfbb8eadada3f8de18e3ba4694c9240158eadba0e68",
+    "Web_SauceSalad_Web_Salad_Cucumber_Ketchup": "bb6db2d5587a3d1bd0713653915f045e78c8f87eeacbdc89a66a26ab866a8149",
+    "Web_SauceSalad_Web_Salad_Cucumber_Mustard": "75ca34811dfc38cf1a5ae6a093146d3ed7d4aaee6e567d186d2dfa7a6ec2cc3a",
+    "Web_SauceSalad_Web_Salad_Cucumber_KetchupMustard": "80247c67f257e5e7ca3080f75122092820a17fde78042b2292a51ba54f2a42c2",
+    "Web_SauceSalad_Web_Salad_CucumberCorn_Ketchup": "b170e6ccccda5e50d6e55e3411d325ddccb3674e2cc1a299d074e37b79ab2e92",
+    "Web_SauceSalad_Web_Salad_CucumberCorn_Mustard": "4702552c5015abac714c3292a1801f339926b00f3395443354dd7004bf617bd0",
+    "Web_SauceSalad_Web_Salad_CucumberCorn_KetchupMustard": "e07161ba5845b05c18e892c25f4db80613dcd9934a5ff8863455add135daf87b",
+    "Web_SauceSalad_Web_LSalad_TomatoCucumber_Ketchup": "7f5c90b2e465c6d387675b8f46a1e99c477469c42224a02b712e6e9db47db0d0",
+    "Web_SauceSalad_Web_LSalad_TomatoCucumber_Mustard": "c8c025dfe26923a89678cb3dbbd4e9e6d47a46a95b2322cee78b98304e517a6b",
+    "Web_SauceSalad_Web_LSalad_TomatoCucumber_KetchupMustard": "a328907d502fdd4056f0eeaa322f0fb747cd17da0408c194aa3c535d47d460cf",
+    "Web_SauceSalad_Web_LSalad_TomatoCucumberCorn_Ketchup": "f043be5f5ad40b0e3d8ab8b08c02ae94e20d09fc154b45a46ced06b6f184d602",
+    "Web_SauceSalad_Web_LSalad_TomatoCucumberCorn_Mustard": "aae6114cde5aebde197cb8aebcd8a93bfd3500fffdb2a3a59b4cbf9ac602e6b0",
+    "Web_SauceSalad_Web_LSalad_TomatoCucumberCorn_KetchupMustard": "a438d3fc39997fc4653083dd99beab9be5e5bad254fabc25bd0474d75c9142c1",
+    "Web_SauceSalad_Web_LSalad_Tomato_Ketchup": "61f816a0b56b037c8078a0d7c9824107e2711f2591816bebd22d7452fe7129dc",
+    "Web_SauceSalad_Web_LSalad_Tomato_Mustard": "b4fa44054bff65292d617f427d38b86dff3ba7901e2ebfcdf4478825b3b8f3b1",
+    "Web_SauceSalad_Web_LSalad_Tomato_KetchupMustard": "487dfd46426b8954e9edcefdc9f9703744bb900447afd73d7285a70c9b25e0a0",
+    "Web_SauceSalad_Web_LSalad_TomatoCorn_Ketchup": "88c480e8284dc7ce892b8e87ac00da14ae8810ea2058c532fb929baaf43efb31",
+    "Web_SauceSalad_Web_LSalad_TomatoCorn_Mustard": "f5f6eec3c86f6175a9c2bf2281def601477f8c29566d038cb7bf6272a483074b",
+    "Web_SauceSalad_Web_LSalad_TomatoCorn_KetchupMustard": "21eff67f434b7e159c7c5cec6806de50522b9fc135a038e399985b606350df91",
+    "Web_SauceSalad_Web_LSalad_Cucumber_Ketchup": "12c9159d43541e811de1fa08309271198a8b1ca231e3a89eb78c4a1c3acb048f",
+    "Web_SauceSalad_Web_LSalad_Cucumber_Mustard": "892fa9e10666062f9942c84851251b455959da2e054887e037f2b2a65ce3a7f9",
+    "Web_SauceSalad_Web_LSalad_Cucumber_KetchupMustard": "a036acebde8a5c6e5461aceb083963fec60152197fb057845b2a70f881f10cfc",
+    "Web_SauceSalad_Web_LSalad_CucumberCorn_Ketchup": "3aebeaecdcca5ecac8a32e7b4afa0d696178562814152ae1bb2960f025ce3df1",
+    "Web_SauceSalad_Web_LSalad_CucumberCorn_Mustard": "f495444baaeb121a721b6bc4df76db7da980f1c3109345e125969b81575bd052",
+    "Web_SauceSalad_Web_LSalad_CucumberCorn_KetchupMustard": "54c5f5eb63f7cd359759b1b51990fed510ed197f0a36edbc35035d8a0703bd06",
+    "Web_SauceSalad_Web_LSalad_Corn_Ketchup": "5ad731b43f103e8bca483172be6fddd21b99ac8ba0d19d26d96a58f4b34b5a0a",
+    "Web_SauceSalad_Web_LSalad_Corn_Mustard": "06d12db5fddce72b97cde1dff50ea0b36c724fb89443bd2a0ed016b4dbce8898",
+    "Web_SauceSalad_Web_LSalad_Corn_KetchupMustard": "a639c26c72075fc8ea8e810849a8163dca597d74c1c0a4fc97008137526143d3",
+    "Web_SauceSalad_Web_Salad_LettuceTomatoCorn_Ketchup": "ca8981a3a804cf214f0e2ef0b3b52317bba83fc542ff0e7b3c92efc6e1668439",
+    "Web_SauceSalad_Web_Salad_LettuceTomatoCorn_Mustard": "402dd4739af2226f511014b06bfec0e89e382d3704120c327a13f373f8146f00",
+    "Web_SauceSalad_Web_Salad_LettuceTomatoCorn_KetchupMustard": "3f50ab49a78e5dfc0c1b374fe9e04469467e5b9cedbaa62eb24889f84f7c4453",
+    "Web_SauceSalad_Web_Salad_LettuceCucumberCorn_Ketchup": "cc15ced3d2bf0bf521ed4329c02f5864aef49c99e38a02411573b3623f3cf103",
+    "Web_SauceSalad_Web_Salad_LettuceCucumberCorn_Mustard": "42c8a81b1ddc9a0385de0e2844a8c3d2769711eebb62210a3422628cbfd46424",
+    "Web_SauceSalad_Web_Salad_LettuceCucumberCorn_KetchupMustard": "6fa396094a6a68ed888c40f821e0bc2f954ada5284a98871c9fd411fc9b55532",
+    "Web_SauceSalad_Web_Salad_Lettuce_Ketchup": "6f130c149b706ea5a82bd4a9a8427f956ac4c4320aa9896dc1011795f22fb1a1",
+    "Web_SauceSalad_Web_Salad_Lettuce_Mustard": "e5dce1afa1083a833c825ce8df97c197fe9993110b92c75e6a6a8a5e932b3054",
+    "Web_SauceSalad_Web_Salad_Lettuce_KetchupMustard": "f3541fcbbff37274563aa53a8620db3f35d103c1ecd24eae12e9185b3b1610a8",
+    "Web_SauceSalad_Web_Salad_LettuceTomatoCucumberCorn_Ketchup": "9d19b2322051e3ba7fd0130bf763413bd5812772762b6b586f5367c1e50fb8e1",
+    "Web_SauceSalad_Web_Salad_LettuceTomatoCucumberCorn_Mustard": "52ae039236d5890da9bf60fb853dfd4b9c4dd1d16c9f45c4478902e09f9fc4e9",
+    "Web_SauceSalad_Web_Salad_LettuceTomatoCucumberCorn_KetchupMustard": "a67d24d60816203199b7b398705d87ff794d63109cc852b0d1956c5f6e459da3",
+    "Web_SauceSalad_Web_Salad_Corn_Ketchup": "8409c423ec2bb81055642bf5d9f2988ea5dbe8ce9f56636cedd51b94565a452e",
+    "Web_SauceSalad_Web_Salad_Corn_Mustard": "5aa5cc2e0cfe70600397f792d463abf77eac481839d7e89310bf14d342ee6546",
+    "Web_SauceSalad_Web_Salad_Corn_KetchupMustard": "00422dba5b35ae4eb6ed317eb57cd723cd64969a1279a83da99978cdc64f42ac"
+  },
+  "icons": [
+    {
+      "id": "Web_SauceSalad_Salad_Tomato_SO_Ketchup",
+      "base": "Salad_Tomato_SO",
+      "source": {
+        "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/Salad_Tomato_SO.png",
+        "sha256": "c1ef2894758f65b8ec8e79862257c94bd65f00fc5e5b64beea7df94dbfee4ea7",
+        "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/Salad_Tomato_SO.png"
+      },
+      "size": [
+        117,
+        98
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 1896,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1399
+      },
+      "dualOverlapPixels": 0,
+      "guid": "86d4814956e9ff8c5c823c1f240755d0",
+      "sha256": "5b05b3de9cd37cf3a63a5e0057848e450ed0fe2eea194356f56669c706e6b832"
+    },
+    {
+      "id": "Web_SauceSalad_Salad_Tomato_SO_Mustard",
+      "base": "Salad_Tomato_SO",
+      "source": {
+        "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/Salad_Tomato_SO.png",
+        "sha256": "c1ef2894758f65b8ec8e79862257c94bd65f00fc5e5b64beea7df94dbfee4ea7",
+        "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/Salad_Tomato_SO.png"
+      },
+      "size": [
+        117,
+        98
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 1840,
+      "visibleSauceColorPixels": {
+        "Mustard": 1327
+      },
+      "dualOverlapPixels": 0,
+      "guid": "1039a974066e5ec1c8a75a33adbb7134",
+      "sha256": "05bcec1975348d99b951a4a4bcbc61439f1b0e36be976b7d9977aeb2016db6a4"
+    },
+    {
+      "id": "Web_SauceSalad_Salad_Tomato_SO_KetchupMustard",
+      "base": "Salad_Tomato_SO",
+      "source": {
+        "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/Salad_Tomato_SO.png",
+        "sha256": "c1ef2894758f65b8ec8e79862257c94bd65f00fc5e5b64beea7df94dbfee4ea7",
+        "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/Salad_Tomato_SO.png"
+      },
+      "size": [
+        117,
+        98
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2288,
+      "visibleSauceColorPixels": {
+        "Ketchup": 910,
+        "Mustard": 804
+      },
+      "dualOverlapPixels": 84,
+      "guid": "57cc8e51775eb78492c46245e73e303d",
+      "sha256": "65088d2b9145b59a10abe156c6a9bcf9c02c02a9a66bc0f1cf13777017fd371c"
+    },
+    {
+      "id": "Web_SauceSalad_Salad_Cucumber_SO_Ketchup",
+      "base": "Salad_Cucumber_SO",
+      "source": {
+        "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/Salad_Cucumber_SO.png",
+        "sha256": "ab53129c352ad091e4cfb0656fd163f4e219ac06ec1d12fa46cca9597b6c3703",
+        "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/Salad_Cucumber_SO.png"
+      },
+      "size": [
+        117,
+        98
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 1908,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1380
+      },
+      "dualOverlapPixels": 0,
+      "guid": "a493f13a7a6d0b92baefa48e2e50ab5c",
+      "sha256": "f2b1589b3301af760f62a294ec47fde8d84420d33fe74063b70cf6f92519f4a1"
+    },
+    {
+      "id": "Web_SauceSalad_Salad_Cucumber_SO_Mustard",
+      "base": "Salad_Cucumber_SO",
+      "source": {
+        "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/Salad_Cucumber_SO.png",
+        "sha256": "ab53129c352ad091e4cfb0656fd163f4e219ac06ec1d12fa46cca9597b6c3703",
+        "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/Salad_Cucumber_SO.png"
+      },
+      "size": [
+        117,
+        98
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 1854,
+      "visibleSauceColorPixels": {
+        "Mustard": 1348
+      },
+      "dualOverlapPixels": 0,
+      "guid": "ab587142db01150f2caed7d7db1049bd",
+      "sha256": "9194bda7e865a2337b1f3e2e5a3624801706c1bd50ffb22138af400add1b5cc5"
+    },
+    {
+      "id": "Web_SauceSalad_Salad_Cucumber_SO_KetchupMustard",
+      "base": "Salad_Cucumber_SO",
+      "source": {
+        "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/Salad_Cucumber_SO.png",
+        "sha256": "ab53129c352ad091e4cfb0656fd163f4e219ac06ec1d12fa46cca9597b6c3703",
+        "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/Salad_Cucumber_SO.png"
+      },
+      "size": [
+        117,
+        98
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2300,
+      "visibleSauceColorPixels": {
+        "Ketchup": 881,
+        "Mustard": 817
+      },
+      "dualOverlapPixels": 84,
+      "guid": "dcb10854c20b7f50eb62b6a89c6653d8",
+      "sha256": "ddb8b371ec7e4130b149cc66f3c8072c6ebd531b68af38e5f369d10a527a6658"
+    },
+    {
+      "id": "Web_SauceSalad_Salad_Plain_SO_Ketchup",
+      "base": "Salad_Plain_SO",
+      "source": {
+        "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/Salad_Plain_SO.png",
+        "sha256": "82b635cc6188a6faeb5b0bd1f41df49971926bf5f1bae1133b8267f81ccf03b8",
+        "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/Salad_Plain_SO.png"
+      },
+      "size": [
+        117,
+        98
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 1932,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1345
+      },
+      "dualOverlapPixels": 0,
+      "guid": "e00497026c4b6d88dd3b02d99fa21624",
+      "sha256": "84474bd892d9b0ecf4fcfe6abf9eb2d3cf4fab440005a53fe5633044759f21d9"
+    },
+    {
+      "id": "Web_SauceSalad_Salad_Plain_SO_Mustard",
+      "base": "Salad_Plain_SO",
+      "source": {
+        "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/Salad_Plain_SO.png",
+        "sha256": "82b635cc6188a6faeb5b0bd1f41df49971926bf5f1bae1133b8267f81ccf03b8",
+        "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/Salad_Plain_SO.png"
+      },
+      "size": [
+        117,
+        98
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 1858,
+      "visibleSauceColorPixels": {
+        "Mustard": 1393
+      },
+      "dualOverlapPixels": 0,
+      "guid": "75396f0a25e66e213526baf920c22488",
+      "sha256": "9a9fd65a6407f7ee5da056eb182fd26abb505bd636ddf59c5b604fd3c481bb5d"
+    },
+    {
+      "id": "Web_SauceSalad_Salad_Plain_SO_KetchupMustard",
+      "base": "Salad_Plain_SO",
+      "source": {
+        "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/Salad_Plain_SO.png",
+        "sha256": "82b635cc6188a6faeb5b0bd1f41df49971926bf5f1bae1133b8267f81ccf03b8",
+        "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/Salad_Plain_SO.png"
+      },
+      "size": [
+        117,
+        98
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2319,
+      "visibleSauceColorPixels": {
+        "Ketchup": 842,
+        "Mustard": 849
+      },
+      "dualOverlapPixels": 84,
+      "guid": "fac7e9b89f72af4fb2e5dbc0a117c8f7",
+      "sha256": "b441c5e9a7ddf78c010e93844ba5cb58016b691749bd013ca41cacc66d120533"
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_tomato_cucumber_onion_Ketchup",
+      "base": "DLC11_Salad_tomato_cucumber_onion",
+      "source": {
+        "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/DLC11_Salad_tomato_cucumber_onion.png",
+        "sha256": "e6901915b77463b5d9f8b321c18b5fc7c65f4b22cf4fd00c94890ff9d92fb790",
+        "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/DLC11_Salad_tomato_cucumber_onion.png"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2550,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1898
+      },
+      "dualOverlapPixels": 0,
+      "guid": "cfda7f56c5a2d3658f789418426f0b96",
+      "sha256": "f18e46524802e162d8ef330a04d2f4fb50dcc7c121426aa4704e504bbb2c80fc"
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_tomato_cucumber_onion_Mustard",
+      "base": "DLC11_Salad_tomato_cucumber_onion",
+      "source": {
+        "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/DLC11_Salad_tomato_cucumber_onion.png",
+        "sha256": "e6901915b77463b5d9f8b321c18b5fc7c65f4b22cf4fd00c94890ff9d92fb790",
+        "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/DLC11_Salad_tomato_cucumber_onion.png"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2438,
+      "visibleSauceColorPixels": {
+        "Mustard": 1865
+      },
+      "dualOverlapPixels": 0,
+      "guid": "54f666c054fc1f7f6ada280668fa2547",
+      "sha256": "f3c01ead61708dce676e0c27e0d544518406a55662618f727fafe920cf2fc41b"
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_tomato_cucumber_onion_KetchupMustard",
+      "base": "DLC11_Salad_tomato_cucumber_onion",
+      "source": {
+        "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/DLC11_Salad_tomato_cucumber_onion.png",
+        "sha256": "e6901915b77463b5d9f8b321c18b5fc7c65f4b22cf4fd00c94890ff9d92fb790",
+        "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/DLC11_Salad_tomato_cucumber_onion.png"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 3042,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1188,
+        "Mustard": 1127
+      },
+      "dualOverlapPixels": 114,
+      "guid": "bcc0c40db23c4d2acd517ec61ed34f11",
+      "sha256": "e40134bac109c0bf1090a16d9132ecf86dcbff672ad8782754b8c4de2a2ff683"
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_tomato_onion_Ketchup",
+      "base": "DLC11_Salad_tomato_onion",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomato.png",
+        "sha256": "3ccb62d6212ade57dd3fe0c84b7afa3067730b5abc5256d1d3448d4240cde634",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2501,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1937
+      },
+      "dualOverlapPixels": 0,
+      "guid": "54e1b7d4fa44461416dd5ce22e52d3a9",
+      "sha256": "21064b70b1d7d60d8e04b8e74ece20546a0192bf9c9fd7e9e4ffcfe8e9858ec8"
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_tomato_onion_Mustard",
+      "base": "DLC11_Salad_tomato_onion",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomato.png",
+        "sha256": "3ccb62d6212ade57dd3fe0c84b7afa3067730b5abc5256d1d3448d4240cde634",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2433,
+      "visibleSauceColorPixels": {
+        "Mustard": 1755
+      },
+      "dualOverlapPixels": 0,
+      "guid": "1b852f33545fbdddbbfe31ef70a67db5",
+      "sha256": "8209fcfe6ba9045140195800203027ee5a94d38978a500ca0d134c999886ddda"
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_tomato_onion_KetchupMustard",
+      "base": "DLC11_Salad_tomato_onion",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomato.png",
+        "sha256": "3ccb62d6212ade57dd3fe0c84b7afa3067730b5abc5256d1d3448d4240cde634",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 3006,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1224,
+        "Mustard": 1058
+      },
+      "dualOverlapPixels": 114,
+      "guid": "ae7743fd19dad5c35b51777543d89e8c",
+      "sha256": "79de6d67a9c3029a21fa6412fee26e6872f7a4bf2f0e1787f91535702fa5c092"
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_tomato_corn_onion_Ketchup",
+      "base": "DLC11_Salad_tomato_corn_onion",
+      "source": {
+        "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/DLC11_Salad_tomato_corn_onion.png",
+        "sha256": "823eba5639059d5a251b1ea4f60fdaf058e7384373871c69ee13ab6a01e0fced",
+        "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/DLC11_Salad_tomato_corn_onion.png"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2518,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1901
+      },
+      "dualOverlapPixels": 0,
+      "guid": "76194aba16353288475b261835b46d85",
+      "sha256": "58e96484699dfbb1e70141355748d104b03a9c3408b0280233d4b008f6826121"
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_tomato_corn_onion_Mustard",
+      "base": "DLC11_Salad_tomato_corn_onion",
+      "source": {
+        "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/DLC11_Salad_tomato_corn_onion.png",
+        "sha256": "823eba5639059d5a251b1ea4f60fdaf058e7384373871c69ee13ab6a01e0fced",
+        "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/DLC11_Salad_tomato_corn_onion.png"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2417,
+      "visibleSauceColorPixels": {
+        "Mustard": 1803
+      },
+      "dualOverlapPixels": 0,
+      "guid": "a467501efff70628d8a4a1f758cd8abb",
+      "sha256": "01c1702e6e01f2889c7f9d130451c55a3537d9483319fe0baa84a9f89df5bfd3"
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_tomato_corn_onion_KetchupMustard",
+      "base": "DLC11_Salad_tomato_corn_onion",
+      "source": {
+        "path": "layout-editor/scripts/data/salad-sauce-icons/official-bases/DLC11_Salad_tomato_corn_onion.png",
+        "sha256": "823eba5639059d5a251b1ea4f60fdaf058e7384373871c69ee13ab6a01e0fced",
+        "origin": "official extracted PNG: layout-editor/web/public/icons/recipes/DLC11_Salad_tomato_corn_onion.png"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 3003,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1195,
+        "Mustard": 1088
+      },
+      "dualOverlapPixels": 110,
+      "guid": "7f15f6361755d01d5ad5b8a1cab295d7",
+      "sha256": "54bd9abfad6aa00d12407669985fe424fd512adde0ba48917601d72b4a3e0710"
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_cucumber_tomato_onion_Ketchup",
+      "base": "DLC11_Salad_cucumber_tomato_onion",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomatoCucumber.png",
+        "sha256": "f52c8622c4fefb9fda0df241551d59c0b285f7bf26a1cc67263a14f9d1e0c221",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2539,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1868
+      },
+      "dualOverlapPixels": 0,
+      "guid": "6e9a3052ceb56a130dc384b9b5f3a47a",
+      "sha256": "eb18e2295465290085f3d6e7b7b8b0403e38d48af97b19bab8ce5a2ee72dc15b"
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_cucumber_tomato_onion_Mustard",
+      "base": "DLC11_Salad_cucumber_tomato_onion",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomatoCucumber.png",
+        "sha256": "f52c8622c4fefb9fda0df241551d59c0b285f7bf26a1cc67263a14f9d1e0c221",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2457,
+      "visibleSauceColorPixels": {
+        "Mustard": 1805
+      },
+      "dualOverlapPixels": 0,
+      "guid": "94086011ee0f619a69b5bb449e777ed0",
+      "sha256": "d6677a7e926186c0afbb9c4253d24bf388e23ff866657cd6a5faad23a75c8c06"
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_cucumber_tomato_onion_KetchupMustard",
+      "base": "DLC11_Salad_cucumber_tomato_onion",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomatoCucumber.png",
+        "sha256": "f52c8622c4fefb9fda0df241551d59c0b285f7bf26a1cc67263a14f9d1e0c221",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 3050,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1175,
+        "Mustard": 1097
+      },
+      "dualOverlapPixels": 114,
+      "guid": "f9e4f7e4779dbf2f49db20c7fe94b333",
+      "sha256": "0c9f574ba2d79975067725961c2e0f00a901505148f5d8ec3763c760fb1fe821"
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_cucumber_onion_Ketchup",
+      "base": "DLC11_Salad_cucumber_onion",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceCucumber.png",
+        "sha256": "9e62d73eff1179d1e8f03f8830cd8eed2fa2a572c037fbe10b3cf5f39903489b",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        350,
+        285
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 14164,
+      "visibleSauceColorPixels": {
+        "Ketchup": 11538
+      },
+      "dualOverlapPixels": 0,
+      "guid": "34994890c3a5953c6fa4c62287692b32",
+      "sha256": "2756504c95148366b4187914d7e9edebe3a01ceec09a0b020418717e3f1b2bca"
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_cucumber_onion_Mustard",
+      "base": "DLC11_Salad_cucumber_onion",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceCucumber.png",
+        "sha256": "9e62d73eff1179d1e8f03f8830cd8eed2fa2a572c037fbe10b3cf5f39903489b",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        350,
+        285
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13878,
+      "visibleSauceColorPixels": {
+        "Mustard": 11152
+      },
+      "dualOverlapPixels": 0,
+      "guid": "68830ae1750d764ef5895a5569bb94a5",
+      "sha256": "b3fc87f9a7175b50b0d4f52476c024c3aa505a15367713361a6d5cd1a710999a"
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_cucumber_onion_KetchupMustard",
+      "base": "DLC11_Salad_cucumber_onion",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceCucumber.png",
+        "sha256": "9e62d73eff1179d1e8f03f8830cd8eed2fa2a572c037fbe10b3cf5f39903489b",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        350,
+        285
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 17346,
+      "visibleSauceColorPixels": {
+        "Ketchup": 7173,
+        "Mustard": 6806
+      },
+      "dualOverlapPixels": 526,
+      "guid": "560e8be56c10e91e390e38988a971e15",
+      "sha256": "841063c00ddebd083f1e15d8e4d4bd01e2ff9b682537bab4fec3ef88a35e812e"
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_corn_onion_Ketchup",
+      "base": "DLC11_Salad_corn_onion",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceCorn.png",
+        "sha256": "e6901915b77463b5d9f8b321c18b5fc7c65f4b22cf4fd00c94890ff9d92fb790",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2550,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1898
+      },
+      "dualOverlapPixels": 0,
+      "guid": "d9d4a3f0452ad0c1060dd39c1566c4b6",
+      "sha256": "f18e46524802e162d8ef330a04d2f4fb50dcc7c121426aa4704e504bbb2c80fc"
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_corn_onion_Mustard",
+      "base": "DLC11_Salad_corn_onion",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceCorn.png",
+        "sha256": "e6901915b77463b5d9f8b321c18b5fc7c65f4b22cf4fd00c94890ff9d92fb790",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2438,
+      "visibleSauceColorPixels": {
+        "Mustard": 1865
+      },
+      "dualOverlapPixels": 0,
+      "guid": "82df2f05fc321ff6a57bfaf8153bb7ab",
+      "sha256": "f3c01ead61708dce676e0c27e0d544518406a55662618f727fafe920cf2fc41b"
+    },
+    {
+      "id": "Web_SauceSalad_DLC11_Salad_corn_onion_KetchupMustard",
+      "base": "DLC11_Salad_corn_onion",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceCorn.png",
+        "sha256": "e6901915b77463b5d9f8b321c18b5fc7c65f4b22cf4fd00c94890ff9d92fb790",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 3042,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1188,
+        "Mustard": 1127
+      },
+      "dualOverlapPixels": 114,
+      "guid": "eda3b3f5001e1286aefc8806953c7c24",
+      "sha256": "e40134bac109c0bf1090a16d9132ecf86dcbff672ad8782754b8c4de2a2ff683"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Lettuce_Ketchup",
+      "base": "Web_LSalad_Lettuce",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Lettuce.png",
+        "sha256": "231c26bcc58aee61a5f7e5024bc4400f63c7374b084ba1c54efb3b25e4010129",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2566,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1812
+      },
+      "dualOverlapPixels": 0,
+      "guid": "4b29dc501d7e9f4a9ce17b85db465287",
+      "sha256": "d53f96a91e93fa309cb64c01274db000006786ad98c8f57ce89f6641de2e7d8d"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Lettuce_Mustard",
+      "base": "Web_LSalad_Lettuce",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Lettuce.png",
+        "sha256": "231c26bcc58aee61a5f7e5024bc4400f63c7374b084ba1c54efb3b25e4010129",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2459,
+      "visibleSauceColorPixels": {
+        "Mustard": 1844
+      },
+      "dualOverlapPixels": 0,
+      "guid": "06b5eeddd6cf26cbfcf202d20dc6faee",
+      "sha256": "65f38ab2160a419380b9d06e86f7d0a785708a3fb3c4ee003f553a2de462c6ee"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Lettuce_KetchupMustard",
+      "base": "Web_LSalad_Lettuce",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Lettuce.png",
+        "sha256": "231c26bcc58aee61a5f7e5024bc4400f63c7374b084ba1c54efb3b25e4010129",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 3062,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1133,
+        "Mustard": 1105
+      },
+      "dualOverlapPixels": 114,
+      "guid": "a5aac0ca715d9bbc29a02622226db6fb",
+      "sha256": "43f7acdeb6a85aefc31372fd1f3bb87c8e1dd8851170d3f93a7ff550ee07dd27"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_TomatoCucumberCorn_Ketchup",
+      "base": "Web_Salad_TomatoCucumberCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_TomatoCucumberCorn.png",
+        "sha256": "77323ce94bfb66461a7a8fc39c7ac9f415a36f9b9c5089c407d4824c494ce9f6",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        347,
+        280
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13704,
+      "visibleSauceColorPixels": {
+        "Ketchup": 11606
+      },
+      "dualOverlapPixels": 0,
+      "guid": "8e6b725fd15593a5f692dbfb65517cda",
+      "sha256": "a26ed2bc4fe619977e17db958f42ab20742002c23df5a12f111aa4d9116eaec1"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_TomatoCucumberCorn_Mustard",
+      "base": "Web_Salad_TomatoCucumberCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_TomatoCucumberCorn.png",
+        "sha256": "77323ce94bfb66461a7a8fc39c7ac9f415a36f9b9c5089c407d4824c494ce9f6",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        347,
+        280
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13453,
+      "visibleSauceColorPixels": {
+        "Mustard": 10812
+      },
+      "dualOverlapPixels": 0,
+      "guid": "4a9334a7624de0f84f7c38697929be46",
+      "sha256": "aa08be6c3c6edabe73526425be66c740110f3172c3c07b88ca800802c8451c73"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_TomatoCucumberCorn_KetchupMustard",
+      "base": "Web_Salad_TomatoCucumberCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_TomatoCucumberCorn.png",
+        "sha256": "77323ce94bfb66461a7a8fc39c7ac9f415a36f9b9c5089c407d4824c494ce9f6",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        347,
+        280
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 16705,
+      "visibleSauceColorPixels": {
+        "Ketchup": 7104,
+        "Mustard": 6575
+      },
+      "dualOverlapPixels": 485,
+      "guid": "2f6f511783bcc6045b0fe6db0a9e96dd",
+      "sha256": "a3b645a1d3745386c9fb1134a207ac605857d45154ab27e103ae46742cefa378"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Tomato_Ketchup",
+      "base": "Web_Salad_Tomato",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Tomato.png",
+        "sha256": "3feebb85d71ea115c615c8b6c4acdf737fb55048889ffb428909114a042b10fc",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        347,
+        285
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13850,
+      "visibleSauceColorPixels": {
+        "Ketchup": 11794
+      },
+      "dualOverlapPixels": 0,
+      "guid": "9a583b5067a110bd97c3e67c616c697b",
+      "sha256": "a0b05d95865ec9d2c931f9bc8b83cad19140d7d8f076d88ededdcb3fafe3693e"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Tomato_Mustard",
+      "base": "Web_Salad_Tomato",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Tomato.png",
+        "sha256": "3feebb85d71ea115c615c8b6c4acdf737fb55048889ffb428909114a042b10fc",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        347,
+        285
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13743,
+      "visibleSauceColorPixels": {
+        "Mustard": 10884
+      },
+      "dualOverlapPixels": 0,
+      "guid": "a77908ad8842ba45c3357ad2a516b663",
+      "sha256": "b5ad0dba8a7b6c69842c83dab39612d3db8b215c5c0ccf8511f04cf90609b0a8"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Tomato_KetchupMustard",
+      "base": "Web_Salad_Tomato",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Tomato.png",
+        "sha256": "3feebb85d71ea115c615c8b6c4acdf737fb55048889ffb428909114a042b10fc",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        347,
+        285
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 17082,
+      "visibleSauceColorPixels": {
+        "Ketchup": 7302,
+        "Mustard": 6664
+      },
+      "dualOverlapPixels": 492,
+      "guid": "c9fc20bf5d298e3e220c9ca5cb29de28",
+      "sha256": "4d3499af69e79a212bc63cfbb8eadada3f8de18e3ba4694c9240158eadba0e68"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Cucumber_Ketchup",
+      "base": "Web_Salad_Cucumber",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Cucumber.png",
+        "sha256": "d397459c4c1c5e727eb463838f27c0e4427ee7be7a06d4d29082a2e24ff0318f",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        346,
+        282
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13854,
+      "visibleSauceColorPixels": {
+        "Ketchup": 11418
+      },
+      "dualOverlapPixels": 0,
+      "guid": "f121eec34637a3a9244bf77caf2b6cd3",
+      "sha256": "bb6db2d5587a3d1bd0713653915f045e78c8f87eeacbdc89a66a26ab866a8149"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Cucumber_Mustard",
+      "base": "Web_Salad_Cucumber",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Cucumber.png",
+        "sha256": "d397459c4c1c5e727eb463838f27c0e4427ee7be7a06d4d29082a2e24ff0318f",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        346,
+        282
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13600,
+      "visibleSauceColorPixels": {
+        "Mustard": 10882
+      },
+      "dualOverlapPixels": 0,
+      "guid": "4070b3e817e44eb39fabec43b04ad817",
+      "sha256": "75ca34811dfc38cf1a5ae6a093146d3ed7d4aaee6e567d186d2dfa7a6ec2cc3a"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Cucumber_KetchupMustard",
+      "base": "Web_Salad_Cucumber",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Cucumber.png",
+        "sha256": "d397459c4c1c5e727eb463838f27c0e4427ee7be7a06d4d29082a2e24ff0318f",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        346,
+        282
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 16945,
+      "visibleSauceColorPixels": {
+        "Ketchup": 6986,
+        "Mustard": 6638
+      },
+      "dualOverlapPixels": 459,
+      "guid": "e167ef352f2822702c253ee65e9bee22",
+      "sha256": "80247c67f257e5e7ca3080f75122092820a17fde78042b2292a51ba54f2a42c2"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_CucumberCorn_Ketchup",
+      "base": "Web_Salad_CucumberCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_CucumberCorn.png",
+        "sha256": "03fb02097e00a227e683397f8a941ada2c78d713095d0f9ae2af2c9ac346157f",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        346,
+        292
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 14339,
+      "visibleSauceColorPixels": {
+        "Ketchup": 11897
+      },
+      "dualOverlapPixels": 0,
+      "guid": "d962ffc635e501c86e4dbb2414d968f5",
+      "sha256": "b170e6ccccda5e50d6e55e3411d325ddccb3674e2cc1a299d074e37b79ab2e92"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_CucumberCorn_Mustard",
+      "base": "Web_Salad_CucumberCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_CucumberCorn.png",
+        "sha256": "03fb02097e00a227e683397f8a941ada2c78d713095d0f9ae2af2c9ac346157f",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        346,
+        292
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13908,
+      "visibleSauceColorPixels": {
+        "Mustard": 11470
+      },
+      "dualOverlapPixels": 0,
+      "guid": "04dc615cbd6ae1e40853624d280426a0",
+      "sha256": "4702552c5015abac714c3292a1801f339926b00f3395443354dd7004bf617bd0"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_CucumberCorn_KetchupMustard",
+      "base": "Web_Salad_CucumberCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_CucumberCorn.png",
+        "sha256": "03fb02097e00a227e683397f8a941ada2c78d713095d0f9ae2af2c9ac346157f",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        346,
+        292
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 17441,
+      "visibleSauceColorPixels": {
+        "Ketchup": 7345,
+        "Mustard": 6936
+      },
+      "dualOverlapPixels": 473,
+      "guid": "0430822387a3d052ffd4f5d99ca67e48",
+      "sha256": "e07161ba5845b05c18e892c25f4db80613dcd9934a5ff8863455add135daf87b"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_TomatoCucumber_Ketchup",
+      "base": "Web_LSalad_TomatoCucumber",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_TomatoCucumber.png",
+        "sha256": "92cdd22c6fd32c0bc8c6c3a60922547c671b4ec457364dd5453e3285fbb2d914",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2532,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1864
+      },
+      "dualOverlapPixels": 0,
+      "guid": "83cb9eabc20f3ddfef2eca1b3a2821c2",
+      "sha256": "7f5c90b2e465c6d387675b8f46a1e99c477469c42224a02b712e6e9db47db0d0"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_TomatoCucumber_Mustard",
+      "base": "Web_LSalad_TomatoCucumber",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_TomatoCucumber.png",
+        "sha256": "92cdd22c6fd32c0bc8c6c3a60922547c671b4ec457364dd5453e3285fbb2d914",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2465,
+      "visibleSauceColorPixels": {
+        "Mustard": 1791
+      },
+      "dualOverlapPixels": 0,
+      "guid": "ab5c06cbadf083e827fe7c20431f2b61",
+      "sha256": "c8c025dfe26923a89678cb3dbbd4e9e6d47a46a95b2322cee78b98304e517a6b"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_TomatoCucumber_KetchupMustard",
+      "base": "Web_LSalad_TomatoCucumber",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_TomatoCucumber.png",
+        "sha256": "92cdd22c6fd32c0bc8c6c3a60922547c671b4ec457364dd5453e3285fbb2d914",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 3036,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1182,
+        "Mustard": 1094
+      },
+      "dualOverlapPixels": 114,
+      "guid": "b3222317f8442ecaf088623065c60728",
+      "sha256": "a328907d502fdd4056f0eeaa322f0fb747cd17da0408c194aa3c535d47d460cf"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_TomatoCucumberCorn_Ketchup",
+      "base": "Web_LSalad_TomatoCucumberCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_TomatoCucumberCorn.png",
+        "sha256": "821de8cd91b1fa082a77d859292e571486dd2f98714e497842cc6f4c811af466",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        350,
+        284
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 14061,
+      "visibleSauceColorPixels": {
+        "Ketchup": 11725
+      },
+      "dualOverlapPixels": 0,
+      "guid": "72065d760e6024f05beaf5c36f6adf54",
+      "sha256": "f043be5f5ad40b0e3d8ab8b08c02ae94e20d09fc154b45a46ced06b6f184d602"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_TomatoCucumberCorn_Mustard",
+      "base": "Web_LSalad_TomatoCucumberCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_TomatoCucumberCorn.png",
+        "sha256": "821de8cd91b1fa082a77d859292e571486dd2f98714e497842cc6f4c811af466",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        350,
+        284
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13720,
+      "visibleSauceColorPixels": {
+        "Mustard": 11125
+      },
+      "dualOverlapPixels": 0,
+      "guid": "be10e2d2380fbadc72c8dd79d196ec14",
+      "sha256": "aae6114cde5aebde197cb8aebcd8a93bfd3500fffdb2a3a59b4cbf9ac602e6b0"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_TomatoCucumberCorn_KetchupMustard",
+      "base": "Web_LSalad_TomatoCucumberCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_TomatoCucumberCorn.png",
+        "sha256": "821de8cd91b1fa082a77d859292e571486dd2f98714e497842cc6f4c811af466",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        350,
+        284
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 16992,
+      "visibleSauceColorPixels": {
+        "Ketchup": 7323,
+        "Mustard": 6724
+      },
+      "dualOverlapPixels": 520,
+      "guid": "c830250a51fffd2e947ff2ab99ff03fb",
+      "sha256": "a438d3fc39997fc4653083dd99beab9be5e5bad254fabc25bd0474d75c9142c1"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Tomato_Ketchup",
+      "base": "Web_LSalad_Tomato",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Tomato.png",
+        "sha256": "3a3df943b21adf675c326f6c48884376594026df418d9ff50ce58670107e01ee",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2523,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1888
+      },
+      "dualOverlapPixels": 0,
+      "guid": "df1e6730616f7a97209ebc65509afd2f",
+      "sha256": "61f816a0b56b037c8078a0d7c9824107e2711f2591816bebd22d7452fe7129dc"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Tomato_Mustard",
+      "base": "Web_LSalad_Tomato",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Tomato.png",
+        "sha256": "3a3df943b21adf675c326f6c48884376594026df418d9ff50ce58670107e01ee",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 2442,
+      "visibleSauceColorPixels": {
+        "Mustard": 1756
+      },
+      "dualOverlapPixels": 0,
+      "guid": "4051f252ef685213f3ad8d366ac5881d",
+      "sha256": "b4fa44054bff65292d617f427d38b86dff3ba7901e2ebfcdf4478825b3b8f3b1"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Tomato_KetchupMustard",
+      "base": "Web_LSalad_Tomato",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Tomato.png",
+        "sha256": "3a3df943b21adf675c326f6c48884376594026df418d9ff50ce58670107e01ee",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        128,
+        120
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 3025,
+      "visibleSauceColorPixels": {
+        "Ketchup": 1206,
+        "Mustard": 1072
+      },
+      "dualOverlapPixels": 114,
+      "guid": "8ed6c549e4711cec017c32df5dc877c3",
+      "sha256": "487dfd46426b8954e9edcefdc9f9703744bb900447afd73d7285a70c9b25e0a0"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_TomatoCorn_Ketchup",
+      "base": "Web_LSalad_TomatoCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_TomatoCorn.png",
+        "sha256": "c9b7a35efb31e09af520227dbf9a32a820b760c1d02c054ffbcdaf47cad6a89f",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        346,
+        291
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 14021,
+      "visibleSauceColorPixels": {
+        "Ketchup": 11997
+      },
+      "dualOverlapPixels": 0,
+      "guid": "b08c0f0cd75e1c8111f296dcd435cca8",
+      "sha256": "88c480e8284dc7ce892b8e87ac00da14ae8810ea2058c532fb929baaf43efb31"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_TomatoCorn_Mustard",
+      "base": "Web_LSalad_TomatoCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_TomatoCorn.png",
+        "sha256": "c9b7a35efb31e09af520227dbf9a32a820b760c1d02c054ffbcdaf47cad6a89f",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        346,
+        291
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13759,
+      "visibleSauceColorPixels": {
+        "Mustard": 11113
+      },
+      "dualOverlapPixels": 0,
+      "guid": "c325de475e85f338460f779ee411865d",
+      "sha256": "f5f6eec3c86f6175a9c2bf2281def601477f8c29566d038cb7bf6272a483074b"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_TomatoCorn_KetchupMustard",
+      "base": "Web_LSalad_TomatoCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_TomatoCorn.png",
+        "sha256": "c9b7a35efb31e09af520227dbf9a32a820b760c1d02c054ffbcdaf47cad6a89f",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        346,
+        291
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 17088,
+      "visibleSauceColorPixels": {
+        "Ketchup": 7421,
+        "Mustard": 6747
+      },
+      "dualOverlapPixels": 470,
+      "guid": "577932cae749687e8a1ed6afea7c3202",
+      "sha256": "21eff67f434b7e159c7c5cec6806de50522b9fc135a038e399985b606350df91"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Cucumber_Ketchup",
+      "base": "Web_LSalad_Cucumber",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Cucumber.png",
+        "sha256": "7e46c5f9159ba94d426dba1837d0be4285de71096337615e7b97e28de4552a48",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        339,
+        291
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 14007,
+      "visibleSauceColorPixels": {
+        "Ketchup": 11411
+      },
+      "dualOverlapPixels": 0,
+      "guid": "c70a70d91cc023d4a33066bc0e52efd2",
+      "sha256": "12c9159d43541e811de1fa08309271198a8b1ca231e3a89eb78c4a1c3acb048f"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Cucumber_Mustard",
+      "base": "Web_LSalad_Cucumber",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Cucumber.png",
+        "sha256": "7e46c5f9159ba94d426dba1837d0be4285de71096337615e7b97e28de4552a48",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        339,
+        291
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13692,
+      "visibleSauceColorPixels": {
+        "Mustard": 11016
+      },
+      "dualOverlapPixels": 0,
+      "guid": "e1801834cda71baffbd9f5c5fade7b44",
+      "sha256": "892fa9e10666062f9942c84851251b455959da2e054887e037f2b2a65ce3a7f9"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Cucumber_KetchupMustard",
+      "base": "Web_LSalad_Cucumber",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Cucumber.png",
+        "sha256": "7e46c5f9159ba94d426dba1837d0be4285de71096337615e7b97e28de4552a48",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        339,
+        291
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 17099,
+      "visibleSauceColorPixels": {
+        "Ketchup": 7002,
+        "Mustard": 6727
+      },
+      "dualOverlapPixels": 506,
+      "guid": "47a48927e44a8112a46022144914408a",
+      "sha256": "a036acebde8a5c6e5461aceb083963fec60152197fb057845b2a70f881f10cfc"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_CucumberCorn_Ketchup",
+      "base": "Web_LSalad_CucumberCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_CucumberCorn.png",
+        "sha256": "136ebf6d3dbb7b9212d4ceabfc00ecbf50caf08d560fc7a7a22255e4990d4696",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        351,
+        286
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 14315,
+      "visibleSauceColorPixels": {
+        "Ketchup": 11752
+      },
+      "dualOverlapPixels": 0,
+      "guid": "dede70a2ed3ea0b19f5d0912dcb3253a",
+      "sha256": "3aebeaecdcca5ecac8a32e7b4afa0d696178562814152ae1bb2960f025ce3df1"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_CucumberCorn_Mustard",
+      "base": "Web_LSalad_CucumberCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_CucumberCorn.png",
+        "sha256": "136ebf6d3dbb7b9212d4ceabfc00ecbf50caf08d560fc7a7a22255e4990d4696",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        351,
+        286
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13903,
+      "visibleSauceColorPixels": {
+        "Mustard": 11308
+      },
+      "dualOverlapPixels": 0,
+      "guid": "698bd5c5754cf745fc54ee498a4f5ee2",
+      "sha256": "f495444baaeb121a721b6bc4df76db7da980f1c3109345e125969b81575bd052"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_CucumberCorn_KetchupMustard",
+      "base": "Web_LSalad_CucumberCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_CucumberCorn.png",
+        "sha256": "136ebf6d3dbb7b9212d4ceabfc00ecbf50caf08d560fc7a7a22255e4990d4696",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        351,
+        286
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 17379,
+      "visibleSauceColorPixels": {
+        "Ketchup": 7181,
+        "Mustard": 6929
+      },
+      "dualOverlapPixels": 491,
+      "guid": "ea7ad6f786379a341120c88b14073bf3",
+      "sha256": "54c5f5eb63f7cd359759b1b51990fed510ed197f0a36edbc35035d8a0703bd06"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Corn_Ketchup",
+      "base": "Web_LSalad_Corn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Corn.png",
+        "sha256": "a44fb386e0bf946d2db28e2420de50acf2571be3fae544dcb8d67ee64e1aed06",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        346,
+        290
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 14227,
+      "visibleSauceColorPixels": {
+        "Ketchup": 11863
+      },
+      "dualOverlapPixels": 0,
+      "guid": "5d3d57958792de807d513bfe7d93ea9d",
+      "sha256": "5ad731b43f103e8bca483172be6fddd21b99ac8ba0d19d26d96a58f4b34b5a0a"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Corn_Mustard",
+      "base": "Web_LSalad_Corn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Corn.png",
+        "sha256": "a44fb386e0bf946d2db28e2420de50acf2571be3fae544dcb8d67ee64e1aed06",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        346,
+        290
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13631,
+      "visibleSauceColorPixels": {
+        "Mustard": 11379
+      },
+      "dualOverlapPixels": 0,
+      "guid": "88a4c0683ad00d939f5ca11495f181bc",
+      "sha256": "06d12db5fddce72b97cde1dff50ea0b36c724fb89443bd2a0ed016b4dbce8898"
+    },
+    {
+      "id": "Web_SauceSalad_Web_LSalad_Corn_KetchupMustard",
+      "base": "Web_LSalad_Corn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_LSalad_Corn.png",
+        "sha256": "a44fb386e0bf946d2db28e2420de50acf2571be3fae544dcb8d67ee64e1aed06",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        346,
+        290
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 17207,
+      "visibleSauceColorPixels": {
+        "Ketchup": 7264,
+        "Mustard": 6853
+      },
+      "dualOverlapPixels": 466,
+      "guid": "d47b04158ece3cedf80dbcb13467d65c",
+      "sha256": "a639c26c72075fc8ea8e810849a8163dca597d74c1c0a4fc97008137526143d3"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_LettuceTomatoCorn_Ketchup",
+      "base": "Web_Salad_LettuceTomatoCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomatoCorn.png",
+        "sha256": "184ea2f4aa9461cdef3d0e1445e3276af2c264876db84bfec1e5d3ca43c1730d",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        346,
+        294
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 14205,
+      "visibleSauceColorPixels": {
+        "Ketchup": 12196
+      },
+      "dualOverlapPixels": 0,
+      "guid": "297411fd036dcea6569158cb39e2917b",
+      "sha256": "ca8981a3a804cf214f0e2ef0b3b52317bba83fc542ff0e7b3c92efc6e1668439"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_LettuceTomatoCorn_Mustard",
+      "base": "Web_Salad_LettuceTomatoCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomatoCorn.png",
+        "sha256": "184ea2f4aa9461cdef3d0e1445e3276af2c264876db84bfec1e5d3ca43c1730d",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        346,
+        294
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13969,
+      "visibleSauceColorPixels": {
+        "Mustard": 11275
+      },
+      "dualOverlapPixels": 0,
+      "guid": "212983aa3c8ce886d0cedd91110e346c",
+      "sha256": "402dd4739af2226f511014b06bfec0e89e382d3704120c327a13f373f8146f00"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_LettuceTomatoCorn_KetchupMustard",
+      "base": "Web_Salad_LettuceTomatoCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomatoCorn.png",
+        "sha256": "184ea2f4aa9461cdef3d0e1445e3276af2c264876db84bfec1e5d3ca43c1730d",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        346,
+        294
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 17351,
+      "visibleSauceColorPixels": {
+        "Ketchup": 7521,
+        "Mustard": 6836
+      },
+      "dualOverlapPixels": 472,
+      "guid": "7723cc05da1e7608862812a63d19c849",
+      "sha256": "3f50ab49a78e5dfc0c1b374fe9e04469467e5b9cedbaa62eb24889f84f7c4453"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_LettuceCucumberCorn_Ketchup",
+      "base": "Web_Salad_LettuceCucumberCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceCucumberCorn.png",
+        "sha256": "5db432aa5602ade6d9027020b90653720ba79b46009268024e1530c58afffd21",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        351,
+        288
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 14387,
+      "visibleSauceColorPixels": {
+        "Ketchup": 11939
+      },
+      "dualOverlapPixels": 0,
+      "guid": "4f2f2f73958a53c1f1facbbec857ac2b",
+      "sha256": "cc15ced3d2bf0bf521ed4329c02f5864aef49c99e38a02411573b3623f3cf103"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_LettuceCucumberCorn_Mustard",
+      "base": "Web_Salad_LettuceCucumberCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceCucumberCorn.png",
+        "sha256": "5db432aa5602ade6d9027020b90653720ba79b46009268024e1530c58afffd21",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        351,
+        288
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13989,
+      "visibleSauceColorPixels": {
+        "Mustard": 11433
+      },
+      "dualOverlapPixels": 0,
+      "guid": "7b5acb77b9d43a860ed28817217b3240",
+      "sha256": "42c8a81b1ddc9a0385de0e2844a8c3d2769711eebb62210a3422628cbfd46424"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_LettuceCucumberCorn_KetchupMustard",
+      "base": "Web_Salad_LettuceCucumberCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceCucumberCorn.png",
+        "sha256": "5db432aa5602ade6d9027020b90653720ba79b46009268024e1530c58afffd21",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        351,
+        288
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 17513,
+      "visibleSauceColorPixels": {
+        "Ketchup": 7289,
+        "Mustard": 6979
+      },
+      "dualOverlapPixels": 490,
+      "guid": "22cc37782784b8ac2c7af55894019248",
+      "sha256": "6fa396094a6a68ed888c40f821e0bc2f954ada5284a98871c9fd411fc9b55532"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Lettuce_Ketchup",
+      "base": "Web_Salad_Lettuce",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Lettuce.png",
+        "sha256": "0a83698f81a6c8ea1aad3194898074603f7f979d860169a5159148c258978d5a",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        346,
+        278
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13641,
+      "visibleSauceColorPixels": {
+        "Ketchup": 11329
+      },
+      "dualOverlapPixels": 0,
+      "guid": "ed1cbe4a723a89bfaf379a9b654aa66e",
+      "sha256": "6f130c149b706ea5a82bd4a9a8427f956ac4c4320aa9896dc1011795f22fb1a1"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Lettuce_Mustard",
+      "base": "Web_Salad_Lettuce",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Lettuce.png",
+        "sha256": "0a83698f81a6c8ea1aad3194898074603f7f979d860169a5159148c258978d5a",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        346,
+        278
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13361,
+      "visibleSauceColorPixels": {
+        "Mustard": 10735
+      },
+      "dualOverlapPixels": 0,
+      "guid": "f4c371bf3cbd9b0cd714ba357036eb27",
+      "sha256": "e5dce1afa1083a833c825ce8df97c197fe9993110b92c75e6a6a8a5e932b3054"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Lettuce_KetchupMustard",
+      "base": "Web_Salad_Lettuce",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Lettuce.png",
+        "sha256": "0a83698f81a6c8ea1aad3194898074603f7f979d860169a5159148c258978d5a",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        346,
+        278
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 16629,
+      "visibleSauceColorPixels": {
+        "Ketchup": 6910,
+        "Mustard": 6523
+      },
+      "dualOverlapPixels": 445,
+      "guid": "a479724f36df3fe98c6051a2fe95ad6b",
+      "sha256": "f3541fcbbff37274563aa53a8620db3f35d103c1ecd24eae12e9185b3b1610a8"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_LettuceTomatoCucumberCorn_Ketchup",
+      "base": "Web_Salad_LettuceTomatoCucumberCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomatoCucumberCorn.png",
+        "sha256": "c4c78a187d27485c2c96ab5d4321ffed7aaabe147352aa81c4ff3bf2d08979f5",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        350,
+        288
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 14216,
+      "visibleSauceColorPixels": {
+        "Ketchup": 11928
+      },
+      "dualOverlapPixels": 0,
+      "guid": "acc2e00a4e3e09ab5948e643b79be9dd",
+      "sha256": "9d19b2322051e3ba7fd0130bf763413bd5812772762b6b586f5367c1e50fb8e1"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_LettuceTomatoCucumberCorn_Mustard",
+      "base": "Web_Salad_LettuceTomatoCucumberCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomatoCucumberCorn.png",
+        "sha256": "c4c78a187d27485c2c96ab5d4321ffed7aaabe147352aa81c4ff3bf2d08979f5",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        350,
+        288
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13926,
+      "visibleSauceColorPixels": {
+        "Mustard": 11315
+      },
+      "dualOverlapPixels": 0,
+      "guid": "02aac02066281ca7194eb87f1c6e8e3e",
+      "sha256": "52ae039236d5890da9bf60fb853dfd4b9c4dd1d16c9f45c4478902e09f9fc4e9"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_LettuceTomatoCucumberCorn_KetchupMustard",
+      "base": "Web_Salad_LettuceTomatoCucumberCorn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_LettuceTomatoCucumberCorn.png",
+        "sha256": "c4c78a187d27485c2c96ab5d4321ffed7aaabe147352aa81c4ff3bf2d08979f5",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        350,
+        288
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 17365,
+      "visibleSauceColorPixels": {
+        "Ketchup": 7352,
+        "Mustard": 6962
+      },
+      "dualOverlapPixels": 526,
+      "guid": "2ef1b779db19a516235b010c23dd0793",
+      "sha256": "a67d24d60816203199b7b398705d87ff794d63109cc852b0d1956c5f6e459da3"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Corn_Ketchup",
+      "base": "Web_Salad_Corn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Corn.png",
+        "sha256": "c4824b501d33f22a3909c4bc3d8614a77d623cd82a0e4e30ffa6d69eb3357b48",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        348,
+        281
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13876,
+      "visibleSauceColorPixels": {
+        "Ketchup": 11677
+      },
+      "dualOverlapPixels": 0,
+      "guid": "eb831ec6e331954e331f0816a0cd5f23",
+      "sha256": "8409c423ec2bb81055642bf5d9f2988ea5dbe8ce9f56636cedd51b94565a452e"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Corn_Mustard",
+      "base": "Web_Salad_Corn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Corn.png",
+        "sha256": "c4824b501d33f22a3909c4bc3d8614a77d623cd82a0e4e30ffa6d69eb3357b48",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        348,
+        281
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 13315,
+      "visibleSauceColorPixels": {
+        "Mustard": 11099
+      },
+      "dualOverlapPixels": 0,
+      "guid": "54c1457379c6f1c77aef8f7cba809b47",
+      "sha256": "5aa5cc2e0cfe70600397f792d463abf77eac481839d7e89310bf14d342ee6546"
+    },
+    {
+      "id": "Web_SauceSalad_Web_Salad_Corn_KetchupMustard",
+      "base": "Web_Salad_Corn",
+      "source": {
+        "path": "Assets/commonW3/custom_recipes/salad/icons/Web_Salad_Corn.png",
+        "sha256": "c4824b501d33f22a3909c4bc3d8614a77d623cd82a0e4e30ffa6d69eb3357b48",
+        "origin": "original 21 icon / ingredient-equivalent alias"
+      },
+      "size": [
+        348,
+        281
+      ],
+      "alphaUnchanged": true,
+      "baseOutsideSauceUnchanged": true,
+      "changedPixels": 16785,
+      "visibleSauceColorPixels": {
+        "Ketchup": 7137,
+        "Mustard": 6802
+      },
+      "dualOverlapPixels": 525,
+      "guid": "b9967f97ea05b40b7a80305b5864f530",
+      "sha256": "00422dba5b35ae4eb6ed317eb57cd723cd64969a1279a83da99978cdc64f42ac"
+    }
+  ],
+  "layout": {
+    "sourceAlphaMultiplier": 1.0,
+    "opaqueSauceInterior": true,
+    "singleScale": 1.2,
+    "dualScale": 1.3,
+    "rgbMultipliers": [
+      0.9,
+      0.88,
+      0.84
+    ],
+    "foodMask": "saturated food + dilation, intersect inner ellipse and base alpha",
+    "dualOverlapPixels": 8506
+  }
+}

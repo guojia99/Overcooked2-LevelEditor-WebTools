@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 10,
+  "schemaVersion": 11,
   "group": "core",
   "itemCount": 57,
   "recipes": [
@@ -31,6 +31,9 @@
             "TomatoSO"
           ]
         }
+      ],
+      "saladSubgroups": [
+        "non_dlc11_official"
       ],
       "icon": true
     },
@@ -307,6 +310,9 @@
             "CucumberSO"
           ]
         }
+      ],
+      "saladSubgroups": [
+        "non_dlc11_official"
       ],
       "icon": true
     },
@@ -938,6 +944,9 @@
             "LettuceSO"
           ]
         }
+      ],
+      "saladSubgroups": [
+        "non_dlc11_official"
       ],
       "icon": true
     },

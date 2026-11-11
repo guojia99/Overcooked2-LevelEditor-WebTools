@@ -344,7 +344,9 @@ public static class SceneLayoutExporter
             nearClip = cam.nearClipPlane,
             farClip = cam.farClipPlane,
             splitScreen = split,
-            splitScreenCameras = splitCameras
+            splitScreenCameras = splitCameras,
+            // 进场动画（按 Animator 现状反推；自定义模式从 IntroSource 还原全参数）。
+            intro = CameraIntroBakery.Collect(cam)
         };
     }
 

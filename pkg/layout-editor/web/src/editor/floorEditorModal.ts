@@ -34,6 +34,7 @@ import {
   reanchorFloorCenterEnteringRaft,
   applySolidPlaneMeshFields,
   floorMatSummary,
+  floorRenderModeLabelZh,
   effectiveMaterialTiling,
   resolveFloorMaterial,
   syncFloorMaterialFromCatalog,
@@ -269,6 +270,34 @@ function wireSolidMaterialPicker(f: EditorFloor, activeTab: string): void {
   });
 }
 
+/** 表面参数（PBR + 渲染模式覆盖）行：仅实心材质地板。未启用时控件灰显材质基线值
+ *  （SceneFloorExporter 读到的 _Metallic/_Glossiness/_Mode）；启用后写回烘焙进
+ *  变体材质（_rm#/_m##_s## 名后缀，与 _tilingWxH 同通道回读）。渲染模式四态 =
+ *  Unity Standard：0 不透明 / 1 镂空 / 2 渐隐 / 3 透明（预乘）。 */
+function buildFloorPbrRowHtml(f: EditorFloor): string {
+  const on = !!f.pbrOverride;
+  const rmOn = !!f.renderModeOverride;
+  const mPct = Math.round((f.metallic ?? 0) * 100);
+  const sPct = Math.round((f.smoothness ?? 0) * 100);
+  const rm = f.renderMode ?? 0;
+  const rmOpts = [0, 1, 2, 3]
+    .map((v) => `<option value="${v}"${v === rm ? " selected" : ""}>${floorRenderModeLabelZh(v)}</option>`)
+    .join("");
+  return `<div class="floor-edit-row">
+      <label class="modal-check" title="启用后写回生成带金属度/光滑度覆盖的变体材质；未启用跟随材质默认"><input type="checkbox" id="fe-pbr-enable"${on ? " checked" : ""}/> 金属度/光滑度</label>
+      <label>金属度 <input type="range" id="fe-metallic" min="0" max="100" step="1" value="${mPct}"${on ? "" : " disabled"} style="width:100px"/></label>
+      <span id="fe-metallic-val" class="muted" style="font-size:11px;align-self:center">${mPct}%</span>
+      <label>光滑度 <input type="range" id="fe-smoothness" min="0" max="100" step="1" value="${sPct}"${on ? "" : " disabled"} style="width:100px"/></label>
+      <span id="fe-smoothness-val" class="muted" style="font-size:11px;align-self:center">${sPct}%</span>
+    </div>
+    <div class="floor-edit-row">
+      <label class="modal-check" title="启用后写回按 Standard 四态配方烘焙混合/深度写/关键字/渲染队列；未启用跟随材质默认"><input type="checkbox" id="fe-rm-enable"${rmOn ? " checked" : ""}/> 渲染模式</label>
+      <select id="fe-rm"${rmOn ? "" : " disabled"}>${rmOpts}</select>
+      <span class="muted" style="font-size:11px;align-self:center">不透明 / 镂空 / 渐隐 / 透明 · 渐隐与透明需贴图/颜色自带 alpha · 写回烘焙进材质</span>
+      ${mBtnHtml("重置", "default", { id: "fe-pbr-reset", style: "font-size:11px;padding:3px 8px;" })}
+    </div>`;
+}
+
 export function openFloorEditorModal(f: EditorFloor) {
   const matchedMat = syncFloorMaterialFromCatalog(f);
   const areaCells = f._wCells * f._dCells;
@@ -370,6 +399,7 @@ export function openFloorEditorModal(f: EditorFloor) {
       <label>深 <input type="number" min="1" id="fe-tiling-d" value="${tiling.d}" /></label>
       <span class="muted" style="font-size:11px;align-self:center">与地板尺寸一致时每格一贴图 · 改尺寸时自动同步</span>
     </div>` : ""}
+    ${isPlainSolid ? buildFloorPbrRowHtml(f) : ""}
     <div class="mat-pick-title">地板类型</div>
     <div class="mat-pick-list type-row">
       <button type="button" class="mat-pick${isPlainSolid ? " active" : ""}" data-kind="solid"><span class="mat-id">⬛ 实心地板</span><span class="mat-sub">单块 Plane + 材质</span></button>
@@ -447,6 +477,78 @@ export function openFloorEditorModal(f: EditorFloor) {
   feTilingD?.addEventListener("input", applyTilingLive);
   feTilingW?.addEventListener("change", applyTilingLive);
   feTilingD?.addEventListener("change", applyTilingLive);
+
+  // 表面参数（PBR 覆盖）：仅实心材质地板。启用开关 + 金属度/光滑度滑杆 + 重置。
+  const fePbrEnable = document.getElementById("fe-pbr-enable") as HTMLInputElement | null;
+  const feMetallic = document.getElementById("fe-metallic") as HTMLInputElement | null;
+  const feSmoothness = document.getElementById("fe-smoothness") as HTMLInputElement | null;
+  const feMetallicVal = document.getElementById("fe-metallic-val");
+  const feSmoothnessVal = document.getElementById("fe-smoothness-val");
+  let pbrPushed = false;
+  const applyPbrLive = () => {
+    if (!f.pbrOverride) return;
+    const mv = parseInt(feMetallic?.value ?? "", 10);
+    const sv = parseInt(feSmoothness?.value ?? "", 10);
+    if (!Number.isFinite(mv) || !Number.isFinite(sv)) return;
+    if (!pbrPushed) {
+      pushHistory();
+      pbrPushed = true;
+    }
+    f.metallic = Math.max(0, Math.min(1, mv / 100));
+    f.smoothness = Math.max(0, Math.min(1, sv / 100));
+    S.dirty = true;
+    if (feMetallicVal) feMetallicVal.textContent = `${mv}%`;
+    if (feSmoothnessVal) feSmoothnessVal.textContent = `${sv}%`;
+    draw();
+    refreshMatSummary();
+  };
+  feMetallic?.addEventListener("input", applyPbrLive);
+  feSmoothness?.addEventListener("input", applyPbrLive);
+  fePbrEnable?.addEventListener("change", () => {
+    pushHistory();
+    f.pbrOverride = fePbrEnable.checked;
+    if (f.pbrOverride) {
+      if (f.metallic == null) f.metallic = 0;
+      if (f.smoothness == null) f.smoothness = 0.5;
+    }
+    if (feMetallic) feMetallic.disabled = !f.pbrOverride;
+    if (feSmoothness) feSmoothness.disabled = !f.pbrOverride;
+    S.dirty = true;
+    draw();
+    refreshMatSummary();
+  });
+  // 渲染模式（Unity Standard 四态：不透明/镂空/渐隐/透明）。
+  const feRmEnable = document.getElementById("fe-rm-enable") as HTMLInputElement | null;
+  const feRm = document.getElementById("fe-rm") as HTMLSelectElement | null;
+  feRmEnable?.addEventListener("change", () => {
+    pushHistory();
+    f.renderModeOverride = feRmEnable.checked;
+    if (f.renderModeOverride && f.renderMode == null) f.renderMode = 0;
+    if (feRm) feRm.disabled = !f.renderModeOverride;
+    S.dirty = true;
+    draw();
+    refreshMatSummary();
+  });
+  feRm?.addEventListener("change", () => {
+    const v = parseInt(feRm.value, 10);
+    if (!Number.isFinite(v) || v < 0 || v > 3) return;
+    pushHistory();
+    f.renderMode = v;
+    S.dirty = true;
+    draw();
+    refreshMatSummary();
+  });
+  document.getElementById("fe-pbr-reset")?.addEventListener("click", () => {
+    if (!f.pbrOverride && !f.renderModeOverride) return;
+    pushHistory();
+    f.pbrOverride = false;
+    f.renderModeOverride = false;
+    f.renderModeOverride = false;
+    S.dirty = true;
+    draw();
+    refreshMatSummary();
+    openFloorEditorModal(f);
+  });
 
   const feRot = document.getElementById("fe-rot") as HTMLInputElement | null;
   let rotPushed = false;
@@ -537,6 +639,8 @@ export function openFloorEditorModal(f: EditorFloor) {
     f.airFloor = false;
     if (f.parentPath === "Design/Collision") f.parentPath = "Art/Ground";
     f.tintEnabled = true;
+    f.pbrOverride = false;
+    f.renderModeOverride = false;
     f.imageTexturePath = undefined;
     f.imageMode = undefined;
     f.imageRotation = undefined;
@@ -560,6 +664,8 @@ export function openFloorEditorModal(f: EditorFloor) {
     f.airFloor = false;
     if (f.parentPath === "Design/Collision") f.parentPath = "Art/Ground";
     f.tintEnabled = false;
+    f.pbrOverride = false;
+    f.renderModeOverride = false;
     f.prefabGuid = undefined;
     f.prefabAssetPath = undefined;
     if (!f.imageMode) f.imageMode = "stretch";
@@ -579,6 +685,8 @@ export function openFloorEditorModal(f: EditorFloor) {
     f.surfaceKind = "raft";
     f.airFloor = false;
     f.tintEnabled = false;
+    f.pbrOverride = false;
+    f.renderModeOverride = false;
     f.imageTexturePath = undefined;
     f.imageMode = undefined;
     f.imageRotation = undefined;
@@ -607,6 +715,8 @@ export function openFloorEditorModal(f: EditorFloor) {
     f.displayName = cat.id;
     f.airFloor = false;
     f.tintEnabled = false;
+    f.pbrOverride = false;
+    f.renderModeOverride = false;
     f.imageTexturePath = undefined;
     f.imageMode = undefined;
     f.imageRotation = undefined;
@@ -623,6 +733,8 @@ export function openFloorEditorModal(f: EditorFloor) {
     f.surfaceKind = "solid";
     f.tintEnabled = false;
     f.tintColor = undefined;
+    f.pbrOverride = false;
+    f.renderModeOverride = false;
     f.imageTexturePath = undefined;
     f.imageMode = undefined;
     f.imageRotation = undefined;
@@ -656,6 +768,9 @@ export function openFloorEditorModal(f: EditorFloor) {
       f.displayName = cat.id;
       f.airFloor = false;
       f.tintEnabled = false;
+      f.pbrOverride = false;
+      f.renderModeOverride = false;
+    f.renderModeOverride = false;
       f.imageTexturePath = undefined;
       f.imageMode = undefined;
       f.imageRotation = undefined;

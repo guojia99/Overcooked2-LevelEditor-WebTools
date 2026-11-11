@@ -459,6 +459,20 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            if (path == "/api/recipes/salad-sauce" && (request.HttpMethod == "GET" || request.HttpMethod == "POST"))
+            {
+                string operation = request.QueryString["operation"];
+                if (operation == "build" && request.HttpMethod == "POST")
+                    WriteJson(response, 200, LayoutEditorSaladSauceFactory.StartBundleBuild());
+                else if (operation == "status" && request.HttpMethod == "GET")
+                    WriteJson(response, 200, LayoutEditorSaladSauceFactory.BundleBuildStatus());
+                else if (!string.IsNullOrEmpty(operation))
+                    WriteJson(response, 400, "{\"ok\":false,\"error\":\"Unknown salad factory operation/method\"}");
+                else
+                    WriteJson(response, 200, LayoutEditorSaladSauceFactory.Run(request.HttpMethod == "POST" ? "rebuild" : "validate"));
+                return;
+            }
+
             if (path == "/api/env/status" && request.HttpMethod == "GET")
             {
                 // 启动环境一次性自检：音频导出、游戏 bundle、dump 清单等
@@ -668,6 +682,16 @@ public class LayoutEditorHttpServer
 
             if (path == "/api/scene/layout" && request.HttpMethod == "POST")
             {
+                // 写回入口：先看 Play，再解析和校验。Play 中整次拒绝，不进入后续写盘。
+                var playBlock = LayoutEditorSafety.PlayModeWriteBlockReason();
+                if (!string.IsNullOrEmpty(playBlock))
+                {
+                    ReadBody(request);
+                    LayoutEditorLog.LogWarning("[LayoutEditor] " + playBlock);
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = playBlock }));
+                    return;
+                }
+
                 var body = ReadBody(request);
                 var doc = LayoutEditorJson.ParseLayoutDocument(body);
                 LogDispenserTrace("POST /api/scene/layout 解析", doc);
@@ -962,6 +986,14 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            if (path == "/api/level/delete-preview-batch" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelDeleteBatchDto>(body);
+                WriteJson(response, 200, LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.PreviewDeleteLevels(dto)));
+                return;
+            }
+
             if (path == "/api/level/create" && request.HttpMethod == "POST")
             {
                 var body = ReadBody(request);
@@ -1074,11 +1106,42 @@ public class LayoutEditorHttpServer
                 return;
             }
 
+            if (path == "/api/level/delete-batch" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelDeleteBatchDto>(body);
+                var err = LayoutEditorLevelAdminApi.DeleteLevels(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
             if (path == "/api/level/reorder" && request.HttpMethod == "POST")
             {
                 var body = ReadBody(request);
                 var dto = JsonUtility.FromJson<LevelReorderDto>(body);
                 var err = LayoutEditorLevelAdminApi.ReorderLevels(dto);
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            // ---------- 关卡分组（关卡 data 目录 group~/group.json，4.0.0.19（原 4.8.0）；仅展示覆盖层） ----------
+
+            if (path == "/api/level/group" && request.HttpMethod == "GET")
+            {
+                LevelGroupResultDto result;
+                var err = LayoutEditorLevelAdminApi.ReadLevelGroup(request.QueryString["assetPath"], out result);
+                if (!string.IsNullOrEmpty(err))
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                else
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(result));
+                return;
+            }
+
+            if (path == "/api/level/group-save" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelGroupSaveDto>(body);
+                var err = LayoutEditorLevelAdminApi.SaveLevelGroups(dto);
                 WriteAdminResult(response, err);
                 return;
             }
@@ -1102,6 +1165,14 @@ public class LayoutEditorHttpServer
 
             if (path == "/api/scene/death" && request.HttpMethod == "POST")
             {
+                var playBlock = LayoutEditorSafety.PlayModeWriteBlockReason();
+                if (!string.IsNullOrEmpty(playBlock))
+                {
+                    ReadBody(request);
+                    LayoutEditorLog.LogWarning("[LayoutEditor] " + playBlock);
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = playBlock }));
+                    return;
+                }
                 var body = ReadBody(request);
                 var dto = JsonUtility.FromJson<DeathThemeDto>(body);
                 // 写回历史：归并进同一次逻辑写回的进行中记录（心跳 + endpoints 登记）。
@@ -1113,6 +1184,14 @@ public class LayoutEditorHttpServer
 
             if (path == "/api/scene/killplane" && request.HttpMethod == "POST")
             {
+                var playBlock = LayoutEditorSafety.PlayModeWriteBlockReason();
+                if (!string.IsNullOrEmpty(playBlock))
+                {
+                    ReadBody(request);
+                    LayoutEditorLog.LogWarning("[LayoutEditor] " + playBlock);
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = playBlock }));
+                    return;
+                }
                 var body = ReadBody(request);
                 var dto = JsonUtility.FromJson<KillPlaneBoundsDto>(body);
                 LayoutEditorWriteBackHistory.Touch("killplane", dto != null ? dto.sceneAssetPath : null);
@@ -1277,6 +1356,52 @@ public class LayoutEditorHttpServer
                     WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
                 else
                     WriteJson(response, 200, LayoutEditorJson.ToJson(new AssignmentResultDto { exists = false, json = "" }));
+                return;
+            }
+
+            // ---------- 订单顺序（关卡 data 目录 order_seq~/order_seq.json，4.0.0.18（原 4.7.0）；
+            //              场景载体由写回/导出时 LayoutEditorOrderSequenceBake 烘焙） ----------
+
+            if (path == "/api/level/order-sequence" && request.HttpMethod == "GET")
+            {
+                OrderSequenceResultDto result;
+                var err = LayoutEditorLevelAdminApi.ReadLevelOrderSequence(request.QueryString["assetPath"], out result);
+                if (!string.IsNullOrEmpty(err))
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                else
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(result));
+                return;
+            }
+
+            if (path == "/api/level/order-sequence-save" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<OrderSequenceSaveDto>(body);
+                var err = dto == null
+                    ? "缺少参数。"
+                    : LayoutEditorLevelAdminApi.SaveLevelOrderSequence(dto.assetPath, dto.json);
+                if (!string.IsNullOrEmpty(err))
+                {
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                    return;
+                }
+                OrderSequenceResultDto result;
+                LayoutEditorLevelAdminApi.ReadLevelOrderSequence(dto.assetPath, out result);
+                WriteJson(response, 200, LayoutEditorJson.ToJson(result));
+                return;
+            }
+
+            if (path == "/api/level/order-sequence-clear" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request);
+                var dto = JsonUtility.FromJson<LevelAssetPathDto>(body);
+                var err = dto == null
+                    ? "缺少参数。"
+                    : LayoutEditorLevelAdminApi.ClearLevelOrderSequence(dto.assetPath);
+                if (!string.IsNullOrEmpty(err))
+                    WriteJson(response, 400, LayoutEditorJson.ToJson(new ApiErrorDto { error = err }));
+                else
+                    WriteJson(response, 200, LayoutEditorJson.ToJson(new OrderSequenceResultDto { exists = false, json = "" }));
                 return;
             }
 
@@ -2011,6 +2136,13 @@ public class LayoutEditorHttpServer
             return null;
         }
 
+        var playBlock = LayoutEditorSafety.PlayModeWriteBlockReason();
+        if (!string.IsNullOrEmpty(playBlock))
+        {
+            error = playBlock;
+            return null;
+        }
+
         var levelInfo = LayoutEditorLevelInfoResolver.ResolveForScene(doc.sceneAssetPath);
         string levelSet = null;
         if (levelInfo != null)
@@ -2153,6 +2285,9 @@ public class LayoutEditorHttpServer
         }
         if (name == "oc2_commit_scene")
         {
+            var playBlock = LayoutEditorSafety.PlayModeWriteBlockReason();
+            if (!string.IsNullOrEmpty(playBlock))
+                throw new InvalidOperationException(playBlock);
             if (!args.confirm)
                 throw new InvalidOperationException("写回场景必须传 confirm=true");
             if (args.document == null)
@@ -2167,6 +2302,13 @@ public class LayoutEditorHttpServer
             if (!string.IsNullOrEmpty(err))
                 throw new InvalidOperationException(err);
             return LayoutEditorJson.ToJson(result);
+        }
+        if (name == "oc2_salad_sauce_bundles")
+        {
+            if (args.operation == "status") return LayoutEditorSaladSauceFactory.BundleBuildStatus();
+            if (args.operation != "build" || !args.confirm)
+                throw new InvalidOperationException("operation=build requires confirm=true, or use operation=status");
+            return LayoutEditorSaladSauceFactory.StartBundleBuild();
         }
         if (name == "oc2_start_export")
         {
@@ -2269,8 +2411,45 @@ public class LayoutEditorHttpServer
             });
         }
 
-        scenes.Sort((a, b) => string.Compare(a.assetPath, b.assetPath, StringComparison.Ordinal));
+        // 编辑器顶栏下拉与关卡管理列表对齐：按 LevelSetInfoSO.levelInfos 的游戏内顺序，
+        // 而不是场景路径字母序（s_ 前缀会把第 1 关排到后面）。
+        // 未登记进 levelInfos 的游离场景排在该集末尾，再按场景名。
+        var orderBySet = new Dictionary<string, Dictionary<string, int>>();
+        for (int i = 0; i < scenes.Count; i++)
+        {
+            var setName = scenes[i].levelSet;
+            if (string.IsNullOrEmpty(setName) || orderBySet.ContainsKey(setName))
+                continue;
+            orderBySet[setName] = LayoutEditorLevelAdminApi.SceneNameOrder(setName);
+        }
+
+        scenes.Sort((a, b) =>
+        {
+            int setCmp = string.Compare(a.levelSet ?? "", b.levelSet ?? "", StringComparison.Ordinal);
+            if (setCmp != 0)
+                return setCmp;
+            int ia = SceneOrderIndex(orderBySet, a);
+            int ib = SceneOrderIndex(orderBySet, b);
+            if (ia != ib)
+                return ia.CompareTo(ib);
+            return string.Compare(a.sceneName ?? "", b.sceneName ?? "", StringComparison.Ordinal);
+        });
         return new LevelSetSceneListDto { scenes = scenes.ToArray() };
+    }
+
+    private static int SceneOrderIndex(
+        Dictionary<string, Dictionary<string, int>> orderBySet,
+        LevelSetSceneDto scene)
+    {
+        if (scene == null || string.IsNullOrEmpty(scene.levelSet) || string.IsNullOrEmpty(scene.sceneName))
+            return int.MaxValue;
+        Dictionary<string, int> map;
+        if (!orderBySet.TryGetValue(scene.levelSet, out map) || map == null)
+            return int.MaxValue;
+        int idx;
+        if (!map.TryGetValue(scene.sceneName, out idx))
+            return int.MaxValue;
+        return idx;
     }
 
     private static bool TryServeStatic(string path, string query, HttpListenerResponse response)

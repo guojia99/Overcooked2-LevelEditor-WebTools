@@ -1,4 +1,4 @@
-import { GUIDE_TREE } from "./guide/content";
+﻿import { GUIDE_TREE } from "./guide/content";
 import type { SharedLibraryId } from "./devMode";
 
 export type NavPage =
@@ -8,6 +8,7 @@ export type NavPage =
   | "custom-content"
   | "burger-maker"
   | "filling-maker"
+  | "sandwich-maker"
   | "recipes"
   | "guide"
   | "dependencies"
@@ -22,6 +23,7 @@ export type AppPage =
   | "custom-content"
   | "burger-maker"
   | "filling-maker"
+  | "sandwich-maker"
   | "guide";
 
 export interface ParsedRoute {
@@ -39,6 +41,8 @@ export interface ParsedRoute {
   burgerId?: string;
   /** /custom-recipes/filling-maker/{set}/{fillingId}；保留字 "new" = 新建。 */
   fillingId?: string;
+  /** /custom-recipes/sandwich-maker/{set}/{sandwichId}。 */
+  sandwichId?: string;
   /** /dependencies/{set}/{levelId}、/manage/{set}/{levelId}、/assignment/{set}/{levelId}（关卡数据目录名）。 */
   levelId?: string;
   /** /manage/{set}/{levelId}/summary（汇总页）；缺省 = 关卡详细编辑。 */
@@ -132,6 +136,13 @@ export function burgerPath(set?: string, burgerId?: string): string {
   return burgerId
     ? `/custom-recipes/burger-maker/${encSeg(set)}/${encSeg(burgerId)}`
     : `/custom-recipes/burger-maker/${encSeg(set)}`;
+}
+
+export function sandwichPath(set?: string, sandwichId?: string): string {
+  if (!set) return "/custom-recipes/sandwich-maker";
+  return sandwichId
+    ? `/custom-recipes/sandwich-maker/${encSeg(set)}/${encSeg(sandwichId)}`
+    : `/custom-recipes/sandwich-maker/${encSeg(set)}`;
 }
 
 export function fillingPath(set?: string, fillingId?: string): string {
@@ -242,6 +253,12 @@ export function parseRoute(pathname = location.pathname): ParsedRoute {
   if (m) return { page: "burger-maker", setId: seg(m[1]) };
   if (path === "/custom-recipes/burger-maker") return { page: "burger-maker" };
 
+  m = /^\/custom-recipes\/sandwich-maker\/([^/]+)\/([^/]+)$/.exec(path);
+  if (m) return { page: "sandwich-maker", setId: seg(m[1]), sandwichId: seg(m[2]) };
+  m = /^\/custom-recipes\/sandwich-maker\/([^/]+)$/.exec(path);
+  if (m) return { page: "sandwich-maker", setId: seg(m[1]) };
+  if (path === "/custom-recipes/sandwich-maker") return { page: "sandwich-maker" };
+
   m = /^\/custom-recipes\/filling-maker\/([^/]+)\/([^/]+)$/.exec(path);
   if (m) return { page: "filling-maker", setId: seg(m[1]), fillingId: seg(m[2]) };
   m = /^\/custom-recipes\/filling-maker\/([^/]+)$/.exec(path);
@@ -275,6 +292,7 @@ export function pathFor(page: NavPage): string {
   if (page === "recipes") return "/recipes";
   if (page === "burger-maker") return "/custom-recipes/burger-maker";
   if (page === "filling-maker") return "/custom-recipes/filling-maker";
+  if (page === "sandwich-maker") return "/custom-recipes/sandwich-maker";
   if (page === "custom-content") return "/custom-content";
   if (page === "guide") return `/guide/${defaultGuidePageId()}`;
   return `/${page}`;

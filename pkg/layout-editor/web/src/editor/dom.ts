@@ -1,4 +1,4 @@
-import { navHtml } from "../nav";
+﻿import { navHtml } from "../nav";
 import { migrateLegacyUrl, parseRoute, type ParsedRoute } from "../route";
 import { S } from "./state";
 
@@ -16,6 +16,7 @@ export const CUSTOM_RECIPES_ACTIVE = _route.page === "custom-recipes";
 export const CUSTOM_CONTENT_ACTIVE = _route.page === "custom-content";
 export const BURGER_MAKER_ACTIVE = _route.page === "burger-maker";
 export const FILLING_MAKER_ACTIVE = _route.page === "filling-maker";
+export const SANDWICH_MAKER_ACTIVE = _route.page === "sandwich-maker";
 export const GUIDE_ACTIVE = _route.page === "guide";
 export const GUIDE_PAGE_ID = _route.guidePageId;
 
@@ -44,7 +45,7 @@ export const dom = {
 /** 布局视图的完整 DOM 模板 + 元素引用填充（仅 layout 视图调用；manage/custom-recipes 返回空）。 */
 export function buildLayoutDom(): void {
   dom.app = document.getElementById("app")!;
-  if (MANAGE_ACTIVE || DEPENDENCIES_ACTIVE || ASSIGNMENT_ACTIVE || CUSTOM_RECIPES_ACTIVE || CUSTOM_CONTENT_ACTIVE || BURGER_MAKER_ACTIVE || FILLING_MAKER_ACTIVE || GUIDE_ACTIVE) return;
+  if (MANAGE_ACTIVE || DEPENDENCIES_ACTIVE || ASSIGNMENT_ACTIVE || CUSTOM_RECIPES_ACTIVE || CUSTOM_CONTENT_ACTIVE || BURGER_MAKER_ACTIVE || FILLING_MAKER_ACTIVE || SANDWICH_MAKER_ACTIVE || GUIDE_ACTIVE) return;
   document.body.classList.remove("manage-bg");
   dom.app.innerHTML = `
   ${navHtml("layout")}
@@ -106,13 +107,14 @@ export function buildLayoutDom(): void {
         <button type="button" id="btn-grid-align" title="一键把当前层全部物件对齐到最近的格子、填满整格（如 1×1 中心落 6.00/-1.20 整格点而非 6.60/-1.80 半格位；可 Ctrl+Z 撤回）">🧭 一键对齐</button>
       </div>
       <div class="vis-wrap config-wrap">
-        <button type="button" id="btn-view-config" title="吸附、网格、桌台皮肤、相机视野、坐标系、重叠与自动中间产物">显示配置</button>
+        <button type="button" id="btn-view-config" title="吸附、网格、桌台皮肤、相机视野、场景灯光、坐标系、重叠、自动中间产物与 Unity 实时画面">显示配置</button>
         <div id="view-config-popover" class="vis-popover view-config-popover hidden">
           <label title="距半格网格 0.1 内自动吸附到网格，其余位置按所选精度自由摆放"><input type="checkbox" id="snap-grid" checked /> 🧲 吸附格子</label>
           <label><input type="checkbox" id="show-grid" checked /> 👁 显示网格</label>
           <label title="画布桌台按所选皮肤材质主色着色（默认皮肤保持原配色；需先运行 Unity 菜单提取材质球）"><input type="checkbox" id="counter-skin-paint" /> 🎨 桌台皮肤</label>
           <label title="在画布上显示游戏相机视野的大致范围（FOV 视锥与地面的交线，16:9 估算）"><input type="checkbox" id="show-camera-fov" ${S.showCameraFov ? "checked" : ""} /> 🎥 相机视野</label>
           <label title="在画布上显示 Art/Lights 灯光位置与朝向（灯光层编辑时建议开启）"><input type="checkbox" id="show-scene-lights" ${S.showSceneLights ? "checked" : ""} /> 💡 场景灯光</label>
+          <label title="右下角悬浮 Unity 游戏相机实时画面：进关加载完 / 写回后自动抓取，🔄 手动刷新，点击图片放大"><input type="checkbox" id="show-unity-preview" ${S.showUnityPreview ? "checked" : ""} /> 🎮 Unity 实时画面</label>
           <label><input type="checkbox" id="show-coords" checked /> 📏 坐标系</label>
           <label title="勾选后允许工作台重叠时仍然写回"><input type="checkbox" id="allow-ws-overlap" /> ⚠ 允许工作台重叠</label>
           <label title="补齐锅具时自动分配中间产物（煎肉排/面糊/炸物等）到对应锅具的 allowedIngredientSOs"><input type="checkbox" id="chk-auto-intermediates" ${S.autoIntermediates ? "checked" : ""} /> 🧩 自动中间产物</label>
@@ -208,6 +210,18 @@ export function buildLayoutDom(): void {
         </div>
         <div class="hint hint-2d">拖拽空白框选 · Shift 加选 · Ctrl+C/V/X 复制/粘贴/裁切 · Ctrl+Z 撤回 · Ctrl+Shift+Z 重做 · 重叠点击弹出选择 · 空格+拖动平移 · 右键微移/旋转/改参数 · Del 删除 · R/Shift+R 旋转90° · 滚轮缩放</div>
         <div class="hint hint-3d">左键拖空白=框选 · 左键拖物体=移动 · 右键拖=旋转视角 · 中键/空格+左键拖=平移（或用右下方向盘） · 滚轮=以鼠标位置为准缩放 · 右键点击=菜单 · Shift 加选 · ⬆Y轴=升降 · 角柄拖拽=改尺寸 · Ctrl+C/V/X · Ctrl+Z · Del · R 旋转90°</div>
+        <div id="unity-preview" class="unity-preview hidden" role="region" aria-label="Unity 实时画面">
+          <div class="unity-preview-head">
+            <span class="unity-preview-title" title="Unity 游戏相机实时画面：进关加载完 / 写回后自动抓取一张，🔄 手动刷新，点击图片放大">🎮 Unity 实时画面</span>
+            <button type="button" id="unity-preview-refresh" title="重新抓取 Unity 游戏相机画面（1920×1080）">🔄</button>
+            <button type="button" id="unity-preview-collapse" title="收起预览面板">➖</button>
+          </div>
+          <div class="unity-preview-body">
+            <img id="unity-preview-img" class="hidden" alt="Unity 游戏相机画面" title="点击放大">
+            <div id="unity-preview-empty" class="unity-preview-empty">尚未获取画面，点 🔄 抓取</div>
+          </div>
+        </div>
+        <button type="button" id="unity-preview-restore" class="unity-preview-restore hidden" title="展开 Unity 实时画面">🎮</button>
       </div>
       <div id="anim-dock" class="anim-dock hidden" role="region" aria-label="动画与联动编排台">
         <div class="anim-dock-grip" id="anim-dock-grip" title="拖动调整编排台高度"></div>

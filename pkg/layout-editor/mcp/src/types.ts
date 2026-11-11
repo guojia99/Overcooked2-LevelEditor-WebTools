@@ -49,6 +49,8 @@ export type LevelSummary = {
   sceneAssetPath: string;
   hasScreenshot: boolean;
   hasScene: boolean;
+  /** 分组名（data/<level>/group~/group.json；"" / 缺省 = 未分组）。 */
+  group?: string;
   [key: string]: unknown;
 };
 

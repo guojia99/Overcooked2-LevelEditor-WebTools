@@ -114,8 +114,25 @@
     "0cbe46b4f4e64863b6214b2204ddd3b0": { "color": "#574859", "file": "PlateReturn_Wood13.png", "id": "PlateReturnWood13SO" },
     "42953571827adcba1e4704e4129eb495": { "color": "#81301e", "file": "CounterCorner_Wood13.png", "id": "CounterCornerWood13SO" },
     "6a047abaf8aaafd3b6ab3997c2b75974": { "color": "#785853", "file": "Sink_Wood13.png", "id": "SinkWood13SO" },
+    "7f5b52d5ad32e1578c20dbe80c129517": { "color": "#eedbcf", "file": "Sink_Circus4.png", "id": "SinkCircus4SO" },
+    "4e8368278793f6a11971227159ccc651": { "color": "#7b6854", "file": "CounterCorner_Medieval2.png", "id": "CounterCornerMedieval2SO" },
+    "3a24e7bf2b007259a90e75bb4f554ae1": { "color": "#eedbcf", "file": "Sink_Medieval4.png", "id": "SinkMedieval4SO" },
+    "c9ddd531f5d5df4243548035dad43ce3": { "color": "#7b6854", "file": "Counter_Medieval3.png", "id": "CounterMedieval3SO" },
+    "607eace8d1bc863bd312aa54e3f9fdc8": { "color": "#7b6854", "file": "Counter_Medieval2.png", "id": "CounterMedieval2SO" },
+    "400b52f3f58a784efefdcb1b44734c27": { "color": "#5c514c", "file": "Oven_Medieval.png", "id": "OvenMedievalSO" },
+    "5b39d99ee7cf84c999e93afedf6d14c5": { "color": "#7b6854", "file": "Mixer_Medieval.png", "id": "MixerMedievalSO" },
+    "fee5fab743f6c2282e0b814125eef346": { "color": "#eedbcf", "file": "Sink_Medieval2.png", "id": "SinkMedieval2SO" },
+    "e7f86f2e98c2d489ee42a645566e0c7e": { "color": "#7b6854", "file": "ChoppingCounter_Medieval3.png", "id": "ChoppingCounterMedieval3SO" },
+    "15cef34683ae6c1a583c738ec0152f73": { "color": "#7b6854", "file": "ChoppingCounter_Medieval2.png", "id": "ChoppingCounterMedieval2SO" },
     "4ca6af2a458abb1dcdd951edbc609001": { "color": "#734d4a", "file": "Counter_Anniversary.png", "id": "CounterAnniversarySO" },
-    "f003394d7dffb22700efedd141e3da21": { "color": "#b38241", "file": "Counter_Jungle.png", "id": "CounterJungleSO" }
+    "f003394d7dffb22700efedd141e3da21": { "color": "#b38241", "file": "Counter_Jungle.png", "id": "CounterJungleSO" },
+    "0839e011bc99a0c1236922544e2670c4": { "color": "#37241d", "file": "Dispenser_Wood13.png", "id": "DispenserWood13SO" },
+    "c0d8a1bf646090cb5c55fcea981624a3": { "color": "#37241d", "file": "Dispenser_Medieval.png", "id": "DispenserMedievalSO" },
+    "f3ceada80f7fba999b1df8399b7fcfee": { "color": "#3e240a", "file": "Dispenser_Christmas.png", "id": "DispenserChristmasSO" },
+    "c0c0d8f595d92729fc8e1920cc490271": { "color": "#6e4f30", "file": "Dispenser_Firewood.png", "id": "DispenserFirewoodSO" },
+    "e4822bdca1075451cf86345f922da943": { "color": "#37241d", "file": "Dispenser_Circus.png", "id": "DispenserCircusSO" },
+    "82d3beb09aa94e18ff944809c445f6da": { "color": "#3e240a", "file": "Dispenser_Winter.png", "id": "DispenserWinterSO" },
+    "98e4be4aea2bf45e19440a6dc77d318b": { "color": "#6d3736", "file": "Cooker_Wood13.png", "id": "CookerWood13SO" }
   },
   "failures": {
   }

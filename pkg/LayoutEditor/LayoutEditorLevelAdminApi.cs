@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -341,11 +341,24 @@ public static class LayoutEditorLevelAdminApi
     private static void SetAssetBundleName(string assetPath, string bundleName)
     {
         var importer = AssetImporter.GetAtPath(assetPath);
-        if (importer != null && importer.assetBundleName != bundleName)
-        {
-            importer.assetBundleName = bundleName;
-            importer.SaveAndReimport();
-        }
+        if (importer == null || importer.assetBundleName == bundleName)
+            return;
+        var previous = importer.assetBundleName;
+        importer.assetBundleName = bundleName;
+        importer.SaveAndReimport();
+        RemoveBundleNameIfUnused(previous);
+    }
+
+    /// <summary>场景改名后清掉已经没有任何资产的旧 bundle 名，避免打包列表里留下
+    /// &lt;set&gt;/s_旧场景名。</summary>
+    private static void RemoveBundleNameIfUnused(string bundleName)
+    {
+        if (string.IsNullOrEmpty(bundleName))
+            return;
+        var left = AssetDatabase.GetAssetPathsFromAssetBundle(bundleName);
+        if (left != null && left.Length > 0)
+            return;
+        AssetDatabase.RemoveAssetBundleName(bundleName, false);
     }
 
     /// <summary>确保关卡集根目录的 AssetBundle 名为 "&lt;set&gt;/info_&lt;set&gt;"（Docs/zh 构建步骤 3）。
@@ -442,7 +455,8 @@ public static class LayoutEditorLevelAdminApi
                 sceneAssetPath = sceneAssetPath,
                 hasScreenshot = so.screenshot != null,
                 screenshotPath = so.screenshot != null ? AssetDatabase.GetAssetPath(so.screenshot) : "",
-                hasScene = File.Exists(AbsPath(sceneAssetPath))
+                hasScene = File.Exists(AbsPath(sceneAssetPath)),
+                group = ReadLevelGroupName(path)
             });
         }
 
@@ -473,6 +487,25 @@ public static class LayoutEditorLevelAdminApi
             return string.Compare(a.levelName, b.levelName, StringComparison.Ordinal);
         });
         return new LevelListDto { levels = list.ToArray() };
+    }
+
+    /// <summary>关卡集内场景名 → 游戏内顺序（LevelSetInfoSO.levelInfos 下标）。
+    /// 未登记的场景不出现在字典里。与 ScanLevels 使用同一顺序。</summary>
+    public static Dictionary<string, int> SceneNameOrder(string setName)
+    {
+        var map = new Dictionary<string, int>();
+        var setInfo = FindSetInfo(setName);
+        if (setInfo == null || setInfo.levelInfos == null)
+            return map;
+        for (int i = 0; i < setInfo.levelInfos.Length; i++)
+        {
+            var li = setInfo.levelInfos[i];
+            if (li == null || string.IsNullOrEmpty(li.sceneName))
+                continue;
+            if (!map.ContainsKey(li.sceneName))
+                map.Add(li.sceneName, i);
+        }
+        return map;
     }
 
     public static LevelDetailDto GetLevel(string assetPath)
@@ -537,7 +570,8 @@ public static class LayoutEditorLevelAdminApi
         "0cff7c13895ab9e47a5e02d4619cc3b9", // PseudoPrefabSO
         "753d9e70603f6a140b05f30f176ec2dd", // PseudoPrefabSORecipe
         "83fb008bcc8e793429b02c178c430815", // CustomRecipeSO
-        "60297950c88d0d646ac0eca5dc831262"  // CustomRecipeOptionalPizzaSO
+        "60297950c88d0d646ac0eca5dc831262", // CustomRecipeOptionalPizzaSO
+        "1dceb690bde9e10439e48644df81e9c9"  // CustomRecipeOptionalSandwichSO
     };
 
     private static Dictionary<string, List<string>> _bundleManifest;
@@ -1597,57 +1631,156 @@ public static class LayoutEditorLevelAdminApi
     {
         if (dto == null || string.IsNullOrEmpty(dto.setName) || string.IsNullOrEmpty(dto.levelId))
             return "缺少关卡集或关卡标识。";
-        var setName = dto.setName;
-        var levelId = SanitizeName(dto.levelId);
-        if (string.IsNullOrEmpty(levelId))
-            return "关卡标识无效。";
-        if (levelId.Equals("LevelSetInfo", StringComparison.OrdinalIgnoreCase))
-            return "不能删除关卡集配置。";
+        var batch = new LevelDeleteBatchDto();
+        batch.setName = dto.setName;
+        batch.levelIds = new[] { dto.levelId };
+        return DeleteLevels(batch);
+    }
 
-        var setDir = LevelSetsRoot + "/" + setName;
-        var levelDataDir = setDir + "/data/" + levelId;
-        if (!AssetDatabase.IsValidFolder(levelDataDir))
-            return "关卡不存在：" + levelId;
-
-        // sceneName 不再强制 s_ 前缀：以 LevelInfoSO.sceneName 为锚点定位场景（可空）。
-        var scenePath = ResolveLevelScenePath(setName, levelId, levelDataDir);
-        if (!string.IsNullOrEmpty(scenePath) && EditorSceneManager.GetActiveScene().path == scenePath)
+    /// <summary>批量删除预览：逐关复用单关预览逻辑，按关卡分组返回待删文件清单。
+    /// 非法标识 / LevelSetInfo / 重复项静默跳过（前端只展示数据目录名）。</summary>
+    public static LevelDeletePreviewBatchDto PreviewDeleteLevels(LevelDeleteBatchDto dto)
+    {
+        var result = new LevelDeletePreviewBatchDto();
+        result.levels = new LevelDeletePreviewItemDto[0];
+        if (dto == null || string.IsNullOrEmpty(dto.setName) || dto.levelIds == null)
+            return result;
+        var list = new List<LevelDeletePreviewItemDto>();
+        var seen = new HashSet<string>();
+        foreach (var raw in dto.levelIds)
         {
-            var fallback = FindFallbackScene(setName, scenePath);
+            var levelId = SanitizeName(raw);
+            if (string.IsNullOrEmpty(levelId) || levelId.Equals("LevelSetInfo", StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (!seen.Add(levelId))
+                continue;
+            var item = new LevelDeletePreviewItemDto();
+            item.levelId = levelId;
+            item.paths = PreviewDeleteLevel(dto.setName, levelId).paths;
+            list.Add(item);
+        }
+        result.levels = list.ToArray();
+        return result;
+    }
+
+    /// <summary>批量删除关卡：先全量校验（任一关卡不存在则不删任何文件），再统一删除
+    /// 场景与 data/&lt;level&gt; 目录，LevelSetInfoSO.levelInfos 只剔除成功删除的条目，
+    /// 末尾只执行一次 SaveAssets → Refresh → ReloadPseudo。
+    /// 当前打开的场景命中待删场景时，先切到批外场景（没有则新建空场景）。</summary>
+    public static string DeleteLevels(LevelDeleteBatchDto dto)
+    {
+        if (dto == null || string.IsNullOrEmpty(dto.setName) || dto.levelIds == null || dto.levelIds.Length == 0)
+            return "缺少关卡集或关卡标识。";
+
+        var setName = dto.setName;
+        var levelIds = new List<string>();
+        var seen = new HashSet<string>();
+        foreach (var raw in dto.levelIds)
+        {
+            var levelId = SanitizeName(raw);
+            if (string.IsNullOrEmpty(levelId))
+                return "关卡标识无效。";
+            if (levelId.Equals("LevelSetInfo", StringComparison.OrdinalIgnoreCase))
+                return "不能删除关卡集配置。";
+            if (!seen.Add(levelId))
+                continue;
+            levelIds.Add(levelId);
+        }
+        if (levelIds.Count == 0)
+            return "缺少关卡集或关卡标识。";
+
+        // 先全量校验，避免删到一半才发现关卡不存在。
+        var setDir = LevelSetsRoot + "/" + setName;
+        var dataDirs = new Dictionary<string, string>();
+        var scenePaths = new Dictionary<string, string>();
+        var missing = new List<string>();
+        foreach (var levelId in levelIds)
+        {
+            var levelDataDir = setDir + "/data/" + levelId;
+            if (!AssetDatabase.IsValidFolder(levelDataDir))
+            {
+                missing.Add(levelId);
+                continue;
+            }
+            dataDirs[levelId] = levelDataDir;
+            // sceneName 不再强制 s_ 前缀：以 LevelInfoSO.sceneName 为锚点定位场景（可空）。
+            scenePaths[levelId] = ResolveLevelScenePath(setName, levelId, levelDataDir);
+        }
+        if (missing.Count > 0)
+            return "关卡不存在：" + string.Join("、", missing.ToArray());
+
+        // 当前打开的场景在被删列表中 → 先切到批外场景。
+        var deletingScenes = new HashSet<string>();
+        foreach (var scenePath in scenePaths.Values)
+        {
+            if (!string.IsNullOrEmpty(scenePath))
+                deletingScenes.Add(scenePath);
+        }
+        var activePath = EditorSceneManager.GetActiveScene().path;
+        if (!string.IsNullOrEmpty(activePath) && deletingScenes.Contains(activePath))
+        {
+            var fallback = FindFallbackScene(setName, deletingScenes);
             if (!string.IsNullOrEmpty(fallback))
                 EditorSceneManager.OpenScene(fallback);
             else
                 EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         }
 
+        // 删除前记录 LevelInfoSO → 资产路径，删除后再按成功删除的目录过滤，
+        // 避免个别目录删除失败时把 LevelInfo 条目一起丢掉。
         var setInfo = FindSetInfo(setName);
+        var infoPaths = new List<KeyValuePair<LevelInfoSO, string>>();
+        if (setInfo != null && setInfo.levelInfos != null)
+        {
+            foreach (var li in setInfo.levelInfos)
+            {
+                if (li == null)
+                    continue;
+                infoPaths.Add(new KeyValuePair<LevelInfoSO, string>(li, AssetDatabase.GetAssetPath(li)));
+            }
+        }
+
+        var deletedIds = new HashSet<string>();
+        var failed = new List<string>();
+        foreach (var levelId in levelIds)
+        {
+            var scenePath = scenePaths[levelId];
+            if (!string.IsNullOrEmpty(scenePath) && File.Exists(AbsPath(scenePath)))
+                AssetDatabase.DeleteAsset(scenePath);
+            if (AssetDatabase.DeleteAsset(dataDirs[levelId]))
+                deletedIds.Add(levelId);
+            else
+                failed.Add(levelId);
+        }
+
         if (setInfo != null)
         {
             var kept = new List<LevelInfoSO>();
-            if (setInfo.levelInfos != null)
+            foreach (var pair in infoPaths)
             {
-                foreach (var li in setInfo.levelInfos)
+                var p = pair.Value == null ? "" : pair.Value.Replace('\\', '/');
+                var removed = false;
+                foreach (var levelId in deletedIds)
                 {
-                    if (li == null)
-                        continue;
-                    var p = AssetDatabase.GetAssetPath(li);
-                    if (p != null && p.StartsWith(levelDataDir + "/", StringComparison.Ordinal))
-                        continue;
-                    kept.Add(li);
+                    if (p.StartsWith(dataDirs[levelId] + "/", StringComparison.Ordinal))
+                    {
+                        removed = true;
+                        break;
+                    }
                 }
+                if (!removed)
+                    kept.Add(pair.Key);
             }
-            Undo.RecordObject(setInfo, "Remove Level");
+            Undo.RecordObject(setInfo, "Remove Levels");
             setInfo.levelInfos = kept.ToArray();
             EditorUtility.SetDirty(setInfo);
         }
 
-        if (!string.IsNullOrEmpty(scenePath) && File.Exists(AbsPath(scenePath)))
-            AssetDatabase.DeleteAsset(scenePath);
-        AssetDatabase.DeleteAsset(levelDataDir);
-
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         ReloadPseudo();
+        if (failed.Count > 0)
+            return "部分关卡删除失败（目录可能被占用）：" + string.Join("、", failed.ToArray());
         return null;
     }
 
@@ -1683,17 +1816,15 @@ public static class LayoutEditorLevelAdminApi
 
     // ==================== Levels (rename) ====================
 
-    /// <summary>重命名关卡 id（原子改名，2026-09-22）：
-    /// ① scenes/&lt;旧场景名&gt;.unity → scenes/&lt;newId&gt;.unity（旧 s_ 前缀关卡顺势迁移到无前缀新约定；
-    ///    MoveAsset 保 GUID，场景内 stub.levelInfo / Animator 引用不断链）；
-    /// ② 场景 AssetBundle 名显式覆盖为 &lt;set&gt;/&lt;newId&gt;（EnsureSceneBundleNames 只补空值，必须显式改）；
-    /// ③ data/&lt;oldId&gt;/ → data/&lt;newId&gt;/，内部 LevelInfo_&lt;实际名&gt;.asset → LevelInfo_&lt;newId&gt;.asset
-    ///    （config/截图/summary_bg~ / assignment~ / readme~ 全部随目录迁移）；
-    /// ④ LevelInfoSO.sceneName = newId；
-    /// ⑤ animations/ 下旧场景名前缀资产改 &lt;newId&gt;_ 前缀（GUID 保持，改名不留孤儿资产）；
-    /// ⑥ writeback_history/&lt;set&gt;/&lt;oldId&gt;/ 目录搬移。
-    /// LevelSetInfoSO.levelInfos 为 GUID 引用，文件移动不影响，无需改写。
-    /// 全部校验通过后才动第一个文件；重命名后玩家侧 zip 需重新导出。</summary>
+    /// <summary>重命名关卡场景名（可保留 s_ 前缀）：
+    /// ① scenes/&lt;旧场景名&gt;.unity → scenes/&lt;新场景名&gt;.unity（MoveAsset 保 GUID）；
+    /// ② 场景 AssetBundle 名显式覆盖为 &lt;set&gt;/&lt;新场景名&gt;，并清掉已空的旧 bundle 名；
+    /// ③ 目录名：场景原本是 s_+目录 时，新目录 = 新场景名去掉一层 s_；场景名原本就等于目录时，目录跟着新场景名；
+    ///    两者本来就对不上（如 horde）时目录不动，只改场景和打包名；
+    /// ④ LevelInfo 资产文件名随目录；sceneName = 新场景名；
+    /// ⑤ animations/ 前缀从旧场景名改到新场景名；
+    /// ⑥ writeback_history 随目录搬移。
+    /// 目录名未变但场景仍带 s_ 时也会改场景文件和 bundle（不再把「目录未变」当成无操作）。</summary>
     public static string RenameLevel(LevelRenameDto dto)
     {
         if (dto == null || string.IsNullOrEmpty(dto.setName) || string.IsNullOrEmpty(dto.levelId))
@@ -1702,22 +1833,20 @@ public static class LayoutEditorLevelAdminApi
         var oldId = SanitizeName(dto.levelId);
         if (string.IsNullOrEmpty(oldId))
             return "关卡标识无效。";
-        var newId = dto.newLevelId == null ? "" : dto.newLevelId.Trim();
-        if (!IsLowerIdent(newId))
-            return "新关卡标识只能包含小写字母、数字和下划线。";
-        if (oldId == newId)
-            return null;
-        if (newId.Equals("LevelSetInfo", StringComparison.OrdinalIgnoreCase))
-            return "新关卡标识非法。";
+
+        var newSceneName = dto.newSceneName == null ? "" : dto.newSceneName.Trim();
+        if (string.IsNullOrEmpty(newSceneName))
+            newSceneName = dto.newLevelId == null ? "" : dto.newLevelId.Trim();
+        if (!IsLowerIdent(newSceneName))
+            return "新场景名只能包含小写字母、数字和下划线。";
+        if (newSceneName.Equals("LevelSetInfo", StringComparison.OrdinalIgnoreCase))
+            return "新场景名非法。";
 
         var setDir = LevelSetsRoot + "/" + setName;
         var oldDataDir = setDir + "/data/" + oldId;
         if (!AssetDatabase.IsValidFolder(oldDataDir))
             return "关卡不存在：" + oldId;
-        if (AssetDatabase.IsValidFolder(setDir + "/data/" + newId))
-            return "目标关卡已存在：" + newId;
 
-        // ---- 定位 LevelInfoSO（文件名允许历史偏差，如 LevelInfo_Test_1.asset）----
         LevelInfoSO info = null;
         var infoPath = "";
         foreach (var guid in AssetDatabase.FindAssets("t:LevelInfoSO", new[] { oldDataDir }))
@@ -1734,14 +1863,55 @@ public static class LayoutEditorLevelAdminApi
         if (info == null)
             return "未找到该关卡的 LevelInfoSO。";
 
-        // ---- 定位旧场景（sceneName 为锚点；失联时按新旧两种约定兜底）----
         var oldScenePath = ResolveLevelScenePath(setName, oldId, oldDataDir);
-        var newScenePath = setDir + "/scenes/" + newId + ".unity";
-        if (File.Exists(AbsPath(newScenePath)))
-            return "目标场景已存在：" + newId + ".unity";
+        var oldSceneName = "";
+        if (!string.IsNullOrEmpty(oldScenePath))
+            oldSceneName = Path.GetFileNameWithoutExtension(oldScenePath);
+        if (string.IsNullOrEmpty(oldSceneName))
+            oldSceneName = info.sceneName ?? "";
 
-        // 目标场景正被打开时先切走（MoveAsset 不允许移动打开中的场景）
-        if (!string.IsNullOrEmpty(oldScenePath) && EditorSceneManager.GetActiveScene().path == oldScenePath)
+        var explicitScene = dto.newSceneName != null && dto.newSceneName.Trim().Length > 0;
+        var newFolderId = explicitScene
+            ? FolderIdForRename(oldId, oldSceneName, newSceneName)
+            : newSceneName;
+        if (string.Equals(oldId, newFolderId, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(oldId, newFolderId, StringComparison.Ordinal))
+            newFolderId = oldId;
+        // 存量目录可以是 OC2_Story_01 这种大写 id；只有真正新建的目录名才要求小写。
+        if (!string.Equals(newFolderId, oldId, StringComparison.Ordinal) && !IsLowerIdent(newFolderId))
+            return "推导出的关卡目录名非法：" + newFolderId;
+        if (newFolderId.Equals("LevelSetInfo", StringComparison.OrdinalIgnoreCase))
+            return "新场景名非法。";
+
+        var folderChanges = !string.Equals(oldId, newFolderId, StringComparison.Ordinal);
+        var newDataDir = setDir + "/data/" + newFolderId;
+        if (folderChanges && AssetDatabase.IsValidFolder(newDataDir))
+            return "目标关卡已存在：" + newFolderId;
+
+        var newScenePath = setDir + "/scenes/" + newSceneName + ".unity";
+        var sceneChanges = !string.IsNullOrEmpty(oldScenePath)
+            && !string.Equals(NormAssetPath(oldScenePath), NormAssetPath(newScenePath), StringComparison.Ordinal);
+        if (sceneChanges && File.Exists(AbsPath(newScenePath)))
+            return "目标场景已存在：" + newSceneName + ".unity";
+
+        var sceneNameChanges = !string.Equals(info.sceneName ?? "", newSceneName, StringComparison.Ordinal);
+        var expectedBundle = setName + "/" + newSceneName;
+        var bundleProbe = !string.IsNullOrEmpty(oldScenePath) ? oldScenePath : "";
+        if (string.IsNullOrEmpty(bundleProbe) && File.Exists(AbsPath(newScenePath)))
+            bundleProbe = newScenePath;
+        var bundleChanges = false;
+        if (!string.IsNullOrEmpty(bundleProbe))
+        {
+            var probeImp = AssetImporter.GetAtPath(bundleProbe);
+            var currentBundle = probeImp != null ? probeImp.assetBundleName : "";
+            bundleChanges = !string.Equals(currentBundle, expectedBundle, StringComparison.Ordinal);
+        }
+
+        if (!folderChanges && !sceneChanges && !sceneNameChanges && !bundleChanges
+            && (string.IsNullOrEmpty(oldSceneName) || oldSceneName == newSceneName))
+            return null;
+
+        if (sceneChanges && EditorSceneManager.GetActiveScene().path == oldScenePath)
         {
             var fallback = FindFallbackScene(setName, oldScenePath);
             if (!string.IsNullOrEmpty(fallback))
@@ -1750,64 +1920,92 @@ public static class LayoutEditorLevelAdminApi
                 EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         }
 
-        var oldSceneName = !string.IsNullOrEmpty(oldScenePath)
-            ? Path.GetFileNameWithoutExtension(oldScenePath)
-            : "";
-
-        // ---- 1. 场景改名 + 显式覆盖 bundle 名 ----
-        if (!string.IsNullOrEmpty(oldScenePath))
+        var finalScenePath = oldScenePath;
+        if (sceneChanges)
         {
             var errScene = AssetDatabase.MoveAsset(oldScenePath, newScenePath);
             if (!string.IsNullOrEmpty(errScene))
                 return "场景改名失败：" + errScene;
-            SetAssetBundleName(newScenePath, setName + "/" + newId);
+            finalScenePath = newScenePath;
         }
+        if (!string.IsNullOrEmpty(finalScenePath))
+            SetAssetBundleName(finalScenePath, expectedBundle);
 
-        // ---- 2. data 目录改名 + LevelInfo 资产改名 ----
-        var newDataDir = setDir + "/data/" + newId;
-        var errDir = AssetDatabase.MoveAsset(oldDataDir, newDataDir);
-        if (!string.IsNullOrEmpty(errDir))
-            return "关卡数据目录改名失败：" + errDir;
-        var infoFileName = infoPath.Substring(infoPath.LastIndexOf('/') + 1);
-        var newInfoPath = newDataDir + "/LevelInfo_" + newId + ".asset";
-        var currentInfoPath = newDataDir + "/" + infoFileName;
-        if (!string.Equals(currentInfoPath, newInfoPath, StringComparison.Ordinal))
+        if (folderChanges)
         {
-            var errInfo = AssetDatabase.MoveAsset(currentInfoPath, newInfoPath);
-            if (!string.IsNullOrEmpty(errInfo))
-                return "LevelInfo 资产改名失败：" + errInfo;
-        }
-
-        // ---- 3. LevelInfoSO.sceneName 同步 ----
-        Undo.RecordObject(info, "Rename Level");
-        info.sceneName = newId;
-        EditorUtility.SetDirty(info);
-
-        // ---- 4. animations/ 前缀迁移（GUID 保持，场景 Animator 引用不断链）----
-        if (!string.IsNullOrEmpty(oldSceneName))
-            MigratePrefixedAssets(setDir + "/animations", oldSceneName + "_", newId + "_");
-
-        // ---- 5. 写回历史目录搬移（非 Unity 资产，直接文件系统移动）----
-        try
-        {
-            var histRoot = Path.Combine(Path.Combine(Application.dataPath, ".."), "writeback_history");
-            var oldHist = Path.Combine(Path.Combine(histRoot, setName), oldId);
-            if (Directory.Exists(oldHist))
+            var errDir = AssetDatabase.MoveAsset(oldDataDir, newDataDir);
+            if (!string.IsNullOrEmpty(errDir))
+                return "关卡数据目录改名失败：" + errDir;
+            var infoFileName = infoPath.Substring(infoPath.LastIndexOf('/') + 1);
+            var newInfoPath = newDataDir + "/LevelInfo_" + newFolderId + ".asset";
+            var currentInfoPath = newDataDir + "/" + infoFileName;
+            if (!string.Equals(currentInfoPath, newInfoPath, StringComparison.Ordinal))
             {
-                var newHist = Path.Combine(Path.Combine(histRoot, setName), newId);
-                if (!Directory.Exists(newHist))
-                    Directory.Move(oldHist, newHist);
+                var errInfo = AssetDatabase.MoveAsset(currentInfoPath, newInfoPath);
+                if (!string.IsNullOrEmpty(errInfo))
+                    return "LevelInfo 资产改名失败：" + errInfo;
             }
         }
-        catch (Exception e)
+
+        if (sceneNameChanges)
         {
-            Debug.LogWarning("[LevelAdmin] 写回历史目录搬移失败（不影响关卡本身）：" + e.Message);
+            Undo.RecordObject(info, "Rename Level");
+            info.sceneName = newSceneName;
+            EditorUtility.SetDirty(info);
+        }
+
+        if (!string.IsNullOrEmpty(oldSceneName) && oldSceneName != newSceneName)
+            MigratePrefixedAssets(setDir + "/animations", oldSceneName + "_", newSceneName + "_");
+
+        if (folderChanges)
+        {
+            try
+            {
+                var histRoot = Path.Combine(Path.Combine(Application.dataPath, ".."), "writeback_history");
+                var oldHist = Path.Combine(Path.Combine(histRoot, setName), oldId);
+                if (Directory.Exists(oldHist))
+                {
+                    var newHist = Path.Combine(Path.Combine(histRoot, setName), newFolderId);
+                    if (!Directory.Exists(newHist))
+                        Directory.Move(oldHist, newHist);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[LevelAdmin] 写回历史目录搬移失败（不影响关卡本身）：" + e.Message);
+            }
         }
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         ReloadPseudo();
+        Debug.Log("[LevelAdmin] 关卡已改名 scene " + oldSceneName + " → " + newSceneName
+            + "，bundle " + expectedBundle
+            + (folderChanges ? "，目录 " + oldId + " → " + newFolderId : ""));
         return null;
+    }
+
+    /// <summary>场景名与 data/ 目录的对应。
+    /// 场景原本等于 s_+目录，或场景名原本就等于目录：新目录 = 新场景名去掉一层开头的 s_（没有 s_ 则目录=场景名）。
+    /// 否则目录保持不动，避免把 OC2_DLC07_B01 这类与场景名无关的目录改掉。</summary>
+    private static string FolderIdForRename(string oldFolderId, string oldSceneName, string newSceneName)
+    {
+        var historical = !string.IsNullOrEmpty(oldSceneName)
+            && string.Equals(oldSceneName, "s_" + oldFolderId, StringComparison.OrdinalIgnoreCase);
+        var unified = !string.IsNullOrEmpty(oldSceneName)
+            && string.Equals(oldSceneName, oldFolderId, StringComparison.OrdinalIgnoreCase);
+        if (!historical && !unified)
+            return oldFolderId;
+        if (newSceneName.StartsWith("s_", StringComparison.Ordinal) && newSceneName.Length > 2)
+            return newSceneName.Substring(2);
+        return newSceneName;
+    }
+
+    private static string NormAssetPath(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return "";
+        return path.Replace('\\', '/');
     }
 
     /// <summary>把 animDir 下 oldPrefix 开头的动画资产（.controller/.anim，目录平铺无子层级）
@@ -1913,6 +2111,9 @@ public static class LayoutEditorLevelAdminApi
 
     public static string SetDeathTheme(string sceneAssetPath, string theme)
     {
+        var playBlock = LayoutEditorSafety.PlayModeWriteBlockReason();
+        if (!string.IsNullOrEmpty(playBlock))
+            return playBlock;
         if (string.IsNullOrEmpty(sceneAssetPath))
             return "缺少场景路径。";
         OpenScene(sceneAssetPath);
@@ -1940,6 +2141,9 @@ public static class LayoutEditorLevelAdminApi
 
     public static string SetKillPlaneBounds(string sceneAssetPath, float cx, float cz, float sx, float sz)
     {
+        var playBlock = LayoutEditorSafety.PlayModeWriteBlockReason();
+        if (!string.IsNullOrEmpty(playBlock))
+            return playBlock;
         if (string.IsNullOrEmpty(sceneAssetPath))
             return "缺少场景路径。";
         OpenScene(sceneAssetPath);
@@ -2050,13 +2254,21 @@ public static class LayoutEditorLevelAdminApi
 
     private static string FindFallbackScene(string setName, string excludePath)
     {
+        var exclude = new HashSet<string>();
+        if (!string.IsNullOrEmpty(excludePath))
+            exclude.Add(excludePath);
+        return FindFallbackScene(setName, exclude);
+    }
+
+    private static string FindFallbackScene(string setName, HashSet<string> excludePaths)
+    {
         var scenesDir = LevelSetsRoot + "/" + setName + "/scenes";
         if (!AssetDatabase.IsValidFolder(scenesDir))
             return null;
         foreach (var guid in AssetDatabase.FindAssets("t:Scene", new[] { scenesDir }))
         {
             var p = AssetDatabase.GUIDToAssetPath(guid);
-            if (p != excludePath && File.Exists(AbsPath(p)))
+            if (p != null && !excludePaths.Contains(p) && File.Exists(AbsPath(p)))
                 return p;
         }
         return null;
@@ -2844,6 +3056,109 @@ public static class LayoutEditorLevelAdminApi
         return ClearLevelDataDir(levelInfoAssetPath, AssignmentDirName);
     }
 
+    // ==================== 订单顺序配置（order_seq~/order_seq.json，4.0.0.18（原 4.7.0）） ====================
+
+    private const string OrderSeqDirName = "order_seq~";
+    private const string OrderSeqFileName = "order_seq.json";
+    private const int OrderSeqMaxBytes = 256 * 1024;
+
+    /** 读取订单顺序配置（order_seq~/order_seq.json 原文，镜像 ReadLevelAssignment）。 */
+    public static string ReadLevelOrderSequence(string levelInfoAssetPath, out OrderSequenceResultDto result)
+    {
+        result = new OrderSequenceResultDto();
+        var err = ValidateLevelInfoPath(levelInfoAssetPath);
+        if (err != null)
+            return err;
+        result.json = ReadLevelDataText(levelInfoAssetPath, OrderSeqDirName, OrderSeqFileName, out result.exists);
+        return null;
+    }
+
+    /** 解析订单顺序配置（文件缺失/损坏返回 null）。 */
+    public static OrderSequenceConfigDto LoadLevelOrderSequence(string levelInfoAssetPath)
+    {
+        OrderSequenceResultDto result;
+        ReadLevelOrderSequence(levelInfoAssetPath, out result);
+        if (!result.exists || string.IsNullOrEmpty(result.json))
+            return null;
+        try
+        {
+            return JsonUtility.FromJson<OrderSequenceConfigDto>(result.json);
+        }
+        catch (Exception e)
+        {
+            LayoutEditorLog.LogWarning("[OrderSeq] order_seq.json 解析失败（忽略配置）: " + e.Message);
+            return null;
+        }
+    }
+
+    /** 保存订单顺序配置：结构校验（JsonUtility 解析 + 组/菜谱 guid 合法性），
+     *  通过才落盘。guid 必须能解析为菜谱 SO；不在本关 recipes 集合的仅告警
+     *  （菜谱集合后续可独立变更，烘焙/运行时按 uID 兜底跳过）。 */
+    public static string SaveLevelOrderSequence(string levelInfoAssetPath, string json)
+    {
+        var trimmed = json == null ? "" : json.Trim();
+        if (trimmed.Length > 0 && trimmed[0] != '{')
+            return "订单顺序配置必须是 JSON 对象。";
+        if (trimmed.Length > 0)
+        {
+            OrderSequenceConfigDto cfg;
+            try
+            {
+                cfg = JsonUtility.FromJson<OrderSequenceConfigDto>(trimmed);
+            }
+            catch (Exception e)
+            {
+                return "订单顺序配置解析失败: " + e.Message;
+            }
+            var err = ValidateOrderSequenceConfig(cfg);
+            if (err != null)
+                return err;
+        }
+        return WriteLevelDataText(levelInfoAssetPath, OrderSeqDirName, OrderSeqFileName, trimmed, OrderSeqMaxBytes);
+    }
+
+    /** 清除订单顺序配置（删除整个 order_seq~ 目录；场景载体由写回/导出清理）。 */
+    public static string ClearLevelOrderSequence(string levelInfoAssetPath)
+    {
+        return ClearLevelDataDir(levelInfoAssetPath, OrderSeqDirName);
+    }
+
+    /** 配置结构校验：enabled 时至少 1 组、每组至少 1 个 guid、guid 可解析为
+     *  菜谱 SO、mode/endBehavior/batchSize 取值合法。 */
+    private static string ValidateOrderSequenceConfig(OrderSequenceConfigDto cfg)
+    {
+        if (cfg == null || !cfg.enabled)
+            return null; // 禁用态不校验内部结构（允许保存半成品）
+        if (cfg.groups == null || cfg.groups.Length == 0)
+            return "至少需要 1 个菜单组。";
+        var end = cfg.endBehavior ?? "";
+        if (end != "loop" && end != "pingpong" && end != "stop")
+            return "结束行为必须是 loop / pingpong / stop。";
+        for (int i = 0; i < cfg.groups.Length; i++)
+        {
+            var g = cfg.groups[i];
+            if (g == null)
+                return "第 " + (i + 1) + " 组数据缺失。";
+            if (g.recipeGuids == null || g.recipeGuids.Length == 0)
+                return "第 " + (i + 1) + " 组至少需要 1 道菜谱。";
+            if (g.mode != 0 && g.mode != 1)
+                return "第 " + (i + 1) + " 组模式必须是 0（按序）或 1（随机）。";
+            if (g.batchSize < 0 || g.batchSize > 999)
+                return "第 " + (i + 1) + " 组抽菜数必须在 0~999。";
+            for (int j = 0; j < g.recipeGuids.Length; j++)
+            {
+                var guid = g.recipeGuids[j];
+                var path = string.IsNullOrEmpty(guid) ? "" : AssetDatabase.GUIDToAssetPath(guid);
+                if (string.IsNullOrEmpty(path))
+                    return "第 " + (i + 1) + " 组第 " + (j + 1) + " 个菜谱 guid 无法解析。";
+                var so = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
+                if (!(so is PseudoPrefabSORecipe) && !(so is CustomRecipeSO))
+                    return "第 " + (i + 1) + " 组第 " + (j + 1) + " 项不是菜谱资产: " + path;
+            }
+        }
+        return null;
+    }
+
     /** 读取工作量推测配置（workload~/workload.json 原文）。 */
     public static string ReadLevelWorkload(string levelInfoAssetPath, out WorkloadResultDto result)
     {
@@ -2908,6 +3223,82 @@ public static class LayoutEditorLevelAdminApi
         return ClearLevelDataDir(levelInfoAssetPath, ReadmeDirName);
     }
 
+    // ==================== 关卡分组（关卡 data 目录 group~/group.json，4.0.0.19（原 4.8.0）） ====================
+
+    /// <summary>关卡分组目录 <c>group~</c>。与 assignment~/readme~ 同范式：`~` 目录被 Unity 完全忽略，
+    ///  不导入、无 .meta、不进 AssetBundle，但仍在 Assets 树内随 git 版本管理。
+    ///  分组仅为「展示覆盖层」：只记录每关属于哪个组，不改变 LevelSetInfoSO.levelInfos 的实际顺序；
+    ///  组顺序与组内顺序由前端按「首次出现 + 关卡顺序」推导。</summary>
+    private const string GroupDirName = "group~";
+    private const string GroupFileName = "group.json";
+    private const int GroupMaxBytes = 16 * 1024;
+
+    /// <summary>读取某关的分组名（group~/group.json → group 字段；缺失/损坏返回 ""）。</summary>
+    public static string ReadLevelGroupName(string levelInfoAssetPath)
+    {
+        bool exists;
+        var raw = ReadLevelDataText(levelInfoAssetPath, GroupDirName, GroupFileName, out exists);
+        if (!exists || string.IsNullOrEmpty(raw))
+            return "";
+        try
+        {
+            var file = JsonUtility.FromJson<LevelGroupFileDto>(raw);
+            return file == null || file.group == null ? "" : file.group;
+        }
+        catch
+        {
+            // 坏文件按未分组处理（不阻塞列表）
+            return "";
+        }
+    }
+
+    /** 读取单关分组（group~/group.json → group 字段）。 */
+    public static string ReadLevelGroup(string levelInfoAssetPath, out LevelGroupResultDto result)
+    {
+        result = new LevelGroupResultDto();
+        var err = ValidateLevelInfoPath(levelInfoAssetPath);
+        if (err != null)
+            return err;
+        result.group = ReadLevelGroupName(levelInfoAssetPath);
+        result.exists = !string.IsNullOrEmpty(result.group);
+        return null;
+    }
+
+    /** 批量保存关卡分组：仅对发生变化（由前端筛出）的关卡写入 group~/group.json；
+     *  group 为空则删除该关 group~ 目录。返回首个错误（成功为 null）。 */
+    public static string SaveLevelGroups(LevelGroupSaveDto dto)
+    {
+        if (dto == null || dto.items == null || dto.items.Length == 0)
+            return "缺少分组数据。";
+        for (int i = 0; i < dto.items.Length; i++)
+        {
+            var item = dto.items[i];
+            if (item == null)
+                continue;
+            var assetPath = item.assetPath == null ? "" : item.assetPath.Trim();
+            if (assetPath.Length == 0)
+                return "缺少关卡资源路径。";
+            string err;
+            if (string.IsNullOrEmpty(item.group))
+            {
+                err = ClearLevelDataDir(assetPath, GroupDirName);
+            }
+            else
+            {
+                var file = new LevelGroupFileDto();
+                file.schemaVersion = 1;
+                file.group = item.group;
+                err = WriteLevelDataText(assetPath, GroupDirName, GroupFileName, JsonUtility.ToJson(file), GroupMaxBytes);
+            }
+            if (err != null)
+            {
+                var label = string.IsNullOrEmpty(item.levelId) ? assetPath : item.levelId;
+                return "[" + label + "] " + err;
+            }
+        }
+        return null;
+    }
+
     // ==================== Custom Recipe Management ====================
 
     private const string CustomRecipesDir = "custom_recipes";
@@ -2965,6 +3356,7 @@ public static class LayoutEditorLevelAdminApi
     public const string CustomRecipeScriptGuid = "83fb008bcc8e793429b02c178c430815";
     public const string OptionalBurgerScriptGuid = "e7bb274eb901e2042b1c49a42ecec9df";
     public const string OptionalPizzaScriptGuid = "60297950c88d0d646ac0eca5dc831262";
+    public const string OptionalSandwichScriptGuid = LayoutEditorOptionalRecipe.SandwichScriptGuid;
     public const string PseudoPrefabScriptGuid = "0cff7c13895ab9e47a5e02d4619cc3b9";
     public const string OriginalRecipeScriptGuid = "753d9e70603f6a140b05f30f176ec2dd";
 
@@ -2979,7 +3371,7 @@ public static class LayoutEditorLevelAdminApi
     {
         get
         {
-            return new[] { CustomRecipeScriptGuid, OptionalBurgerScriptGuid, OptionalPizzaScriptGuid };
+            return new[] { CustomRecipeScriptGuid, OptionalBurgerScriptGuid, OptionalPizzaScriptGuid, OptionalSandwichScriptGuid };
         }
     }
 
@@ -3364,6 +3756,8 @@ public static class LayoutEditorLevelAdminApi
         foreach (var asset in ScanCustomRecipeAssets(recipesDir))
         {
             var path = asset.assetPath;
+            if (LayoutEditorCatalogApi.IsInternalRecipe(Path.GetFileNameWithoutExtension(path)))
+                continue;
             var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(path);
             if (so == null)
                 continue;
@@ -3474,6 +3868,7 @@ public static class LayoutEditorLevelAdminApi
             RecipeEntryDto entry;
             entryById.TryGetValue(id, out entry);
 
+            var sandwich = so as CustomRecipeOptionalSandwichSO;
             Vector3 bsz;
             list.Add(new CustomRecipeSummaryDto
             {
@@ -3488,10 +3883,8 @@ public static class LayoutEditorLevelAdminApi
                 category = category,
                 subcategory = subcategory,
                 type = so.type.ToString(),
-                optionalKind = so is CustomRecipeOptionalBurgerSO ? "burger"
-                    : so is CustomRecipeOptionalPizzaSO ? "pizza" : "",
-                isFinishedBurger = !(so is CustomRecipeOptionalBurgerSO)
-                    && !(so is CustomRecipeOptionalPizzaSO)
+                optionalKind = LayoutEditorOptionalRecipe.KindOf(so),
+                isFinishedBurger = !LayoutEditorOptionalRecipe.IsAssembly(so)
                     && LayoutEditorBurgerApi.IsFinishedBurgerRecipe(so),
                 compositionIds = compIds.ToArray(),
                 ingredients = entry != null ? entry.ingredients : new string[0],
@@ -3520,11 +3913,43 @@ public static class LayoutEditorLevelAdminApi
                 boundsMinY = ModelBoundsOf(so.model, out bsz).min.y,
                 boundsSizeX = bsz.x,
                 boundsSizeY = bsz.y,
-                boundsSizeZ = bsz.z
+                boundsSizeZ = bsz.z,
+                toastId = sandwich != null ? AssetIdOf(sandwich.toastSO) : null,
+                fillingIds = sandwich != null ? AssetIdsOf(sandwich.optionalSOs) : null,
+                sauceIds = sandwich != null ? AssetIdsOf(sandwich.sauceSOs) : null,
+                sandwichCapacity = sandwich != null ? sandwich.ingredientContainerCapacity : 0,
+                ingredientModelIds = sandwich != null ? AssetIdsOf(sandwich.ingredientModels) : null,
+                ingredientModelSoIds = sandwich != null ? AssetIdsOf(sandwich.ingredientModelSOs) : null,
+                sauceInPlateModelIds = sandwich != null ? AssetIdsOf(sandwich.sauceInPlateModels) : null,
+                sauceOnToastModelIds = sandwich != null ? AssetIdsOf(sandwich.sauceOnToastModels) : null,
+                wrongSauceInPlateId = sandwich != null ? AssetIdOf(sandwich.wrongSauceInPlateModel) : null,
+                wrongSauceOnToastId = sandwich != null ? AssetIdOf(sandwich.wrongSauceOnToastModel) : null
             });
         }
 
         list.Sort((a, b) => string.Compare(a.nameZh, b.nameZh, StringComparison.Ordinal));
+        return list.ToArray();
+    }
+
+    private static string AssetIdOf(UnityEngine.Object obj)
+    {
+        if (obj == null)
+            return null;
+        var path = AssetDatabase.GetAssetPath(obj);
+        return string.IsNullOrEmpty(path) ? null : Path.GetFileNameWithoutExtension(path);
+    }
+
+    private static string[] AssetIdsOf(UnityEngine.Object[] objs)
+    {
+        if (objs == null)
+            return null;
+        var list = new List<string>();
+        for (int i = 0; i < objs.Length; i++)
+        {
+            var id = AssetIdOf(objs[i]);
+            if (!string.IsNullOrEmpty(id))
+                list.Add(id);
+        }
         return list.ToArray();
     }
 
@@ -4381,6 +4806,10 @@ public static class LayoutEditorLevelAdminApi
             && (resolvedComps == null || resolvedComps.Length != 1 || !(resolvedComps[0] is PseudoPrefabSO)))
             return "Ingredient / Item 类型必须且只能选择一个食材/道具 PseudoPrefabSO 作为组成项。";
 
+        var isSandwich = string.Equals(dto.optionalKind, "sandwich", StringComparison.Ordinal);
+        if (isSandwich && string.IsNullOrEmpty(dto.toastGuid))
+            return "Sandwich 必须选择 toast 底层食材（PseudoPrefabSO）。";
+
         var categoryDir = recipesDir + "/" + category;
         if (!AssetFolderExists(categoryDir))
         {
@@ -4402,7 +4831,9 @@ public static class LayoutEditorLevelAdminApi
         } while (IsUidConflicting(uid));
         EditorUtility.SetDirty(config);
 
-        var so = ScriptableObject.CreateInstance<CustomRecipeSO>();
+        var so = isSandwich
+            ? ScriptableObject.CreateInstance<CustomRecipeOptionalSandwichSO>()
+            : ScriptableObject.CreateInstance<CustomRecipeSO>();
         so.recipeName = recipeName;
         so.uID = uid;
         so.score = dto.score;
@@ -4459,11 +4890,16 @@ public static class LayoutEditorLevelAdminApi
                 if (oldSO != null && !string.IsNullOrEmpty(oldSO.assetPath))
                     model = AssetDatabase.LoadAssetAtPath<GameObject>(oldSO.assetPath);
             }
+            if (model == null)
+                model = LoadGameObjectGuid(dto.modelPrefabId);
             so.model = model;
             so.modelSO = null;
         }
 
-        so.optionalSOs = new ScriptableObject[0];
+        if (isSandwich)
+            ApplySandwichFields((CustomRecipeOptionalSandwichSO)so, dto);
+        else
+            so.optionalSOs = new ScriptableObject[0];
 
         var assetPath = categoryDir + "/" + recipeName + ".asset";
         AssetDatabase.CreateAsset(so, assetPath);
@@ -4565,9 +5001,15 @@ public static class LayoutEditorLevelAdminApi
                 if (oldSO != null && !string.IsNullOrEmpty(oldSO.assetPath))
                     model = AssetDatabase.LoadAssetAtPath<GameObject>(oldSO.assetPath);
             }
+            if (model == null)
+                model = LoadGameObjectGuid(dto.modelPrefabId);
             so.model = model;
             so.modelSO = null;
         }
+
+        var sandwichSo = so as CustomRecipeOptionalSandwichSO;
+        if (sandwichSo != null)
+            ApplySandwichFields(sandwichSo, dto);
 
         EditorUtility.SetDirty(so);
 
@@ -4578,6 +5020,141 @@ public static class LayoutEditorLevelAdminApi
         AssetDatabase.SaveAssets();
         ApplyModelTransform(so);
         return null;
+    }
+
+    /// <summary>Sandwich 可选组装字段落地（2026-11 上游 CustomRecipeOptionalSandwichSO）。
+    ///  更新时 null 数组表示“保持原值”，空数组表示显式清空。</summary>
+    private static void ApplySandwichFields(CustomRecipeOptionalSandwichSO so, CustomRecipeEditDto dto)
+    {
+        if (so == null || dto == null)
+            return;
+        so.type = CustomRecipeSO.RecipeType.Composite;
+        so.cookingStepSO = null;
+        so.cookingStepIconSO = null;
+        // 组装定义由 toast/optional/sauce 表达；compositionSOs 保持空数组，避免下游
+        // 某些代码假定非 null 时 NRE。
+        so.compositionSOs = new ScriptableObject[0];
+
+        var toast = LoadPseudoPrefabGuid(dto.toastGuid);
+        if (toast != null || dto.toastGuid != null)
+            so.toastSO = toast;
+        // 未单独指定装盘模型时，用 toast prefab 兜底，避免运行时 CloneAsInactivePrefab(null) NRE。
+        if (so.model == null && so.modelSO == null && so.toastSO != null)
+            so.model = so.toastSO.asset as GameObject;
+        if (dto.ingredientContainerCapacity > 0)
+            so.ingredientContainerCapacity = dto.ingredientContainerCapacity;
+
+        var fillings = LoadSoArray(dto.fillingGuids);
+        if (fillings != null)
+            so.optionalSOs = fillings;
+        else if (so.optionalSOs == null)
+            so.optionalSOs = new ScriptableObject[0];
+        var sauces = LoadSoArray(dto.sauceGuids);
+        if (sauces != null)
+            so.sauceSOs = sauces;
+        else if (so.sauceSOs == null)
+            so.sauceSOs = new ScriptableObject[0];
+
+        var modelSOs = LoadPseudoPrefabArray(dto.ingredientModelSoGuids);
+        if (modelSOs != null)
+            so.ingredientModelSOs = modelSOs;
+        var models = LoadGameObjectArray(dto.ingredientModelGuids);
+        if (models != null)
+            so.ingredientModels = models;
+        var sauceInPlate = LoadGameObjectArray(dto.sauceInPlateModelGuids);
+        if (sauceInPlate != null)
+            so.sauceInPlateModels = sauceInPlate;
+        var sauceOnToast = LoadGameObjectArray(dto.sauceOnToastModelGuids);
+        if (sauceOnToast != null)
+            so.sauceOnToastModels = sauceOnToast;
+
+        if (dto.wrongSauceInPlateGuid != null)
+            so.wrongSauceInPlateModel = LoadGameObjectGuid(dto.wrongSauceInPlateGuid);
+        if (dto.wrongSauceOnToastGuid != null)
+            so.wrongSauceOnToastModel = LoadGameObjectGuid(dto.wrongSauceOnToastGuid);
+    }
+
+    private static ScriptableObject LoadSoGuid(string idOrGuid)
+    {
+        if (string.IsNullOrEmpty(idOrGuid))
+            return null;
+        var path = AssetDatabase.GUIDToAssetPath(idOrGuid);
+        if (!string.IsNullOrEmpty(path))
+            return AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
+        // 兼容前端传 asset id（references.ingredients 等只有 id）。
+        return FindPseudoPrefabOrCustomRecipe(idOrGuid);
+    }
+
+    private static PseudoPrefabSO LoadPseudoPrefabGuid(string guid)
+    {
+        return LoadSoGuid(guid) as PseudoPrefabSO;
+    }
+
+    private static GameObject LoadGameObjectGuid(string idOrGuid)
+    {
+        if (string.IsNullOrEmpty(idOrGuid))
+            return null;
+        var path = AssetDatabase.GUIDToAssetPath(idOrGuid);
+        if (!string.IsNullOrEmpty(path))
+            return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        var byRecipe = FindCustomRecipeModelByRecipeId(idOrGuid);
+        if (byRecipe != null)
+            return byRecipe;
+        // 最后按文件名精确匹配（sauceInPlate/onToast 等模型可能不在菜谱 models 目录）。
+        var guids = AssetDatabase.FindAssets(idOrGuid, new[] { "Assets" });
+        for (int i = 0; i < guids.Length; i++)
+        {
+            var p = AssetDatabase.GUIDToAssetPath(guids[i]);
+            if (string.Equals(Path.GetFileNameWithoutExtension(p), idOrGuid, StringComparison.Ordinal))
+            {
+                var go = AssetDatabase.LoadAssetAtPath<GameObject>(p);
+                if (go != null)
+                    return go;
+            }
+        }
+        return null;
+    }
+
+    private static ScriptableObject[] LoadSoArray(string[] guids)
+    {
+        if (guids == null)
+            return null;
+        var list = new List<ScriptableObject>();
+        for (int i = 0; i < guids.Length; i++)
+        {
+            var so = LoadSoGuid(guids[i]);
+            if (so != null)
+                list.Add(so);
+        }
+        return list.ToArray();
+    }
+
+    private static PseudoPrefabSO[] LoadPseudoPrefabArray(string[] guids)
+    {
+        if (guids == null)
+            return null;
+        var list = new List<PseudoPrefabSO>();
+        for (int i = 0; i < guids.Length; i++)
+        {
+            var so = LoadPseudoPrefabGuid(guids[i]);
+            if (so != null)
+                list.Add(so);
+        }
+        return list.ToArray();
+    }
+
+    private static GameObject[] LoadGameObjectArray(string[] guids)
+    {
+        if (guids == null)
+            return null;
+        var list = new List<GameObject>();
+        for (int i = 0; i < guids.Length; i++)
+        {
+            var go = LoadGameObjectGuid(guids[i]);
+            if (go != null)
+                list.Add(go);
+        }
+        return list.ToArray();
     }
 
     public static string DeleteCustomRecipe(string assetPath)
@@ -5638,6 +6215,11 @@ public static class LayoutEditorLevelAdminApi
     }
 
     /// <summary>全项目自定义菜谱查找目录（官方 + commonW2 Burger大全 + 全部关卡集）。</summary>
+    internal static List<string> AllCustomRecipeFolders()
+    {
+        return CustomRecipeSearchFolders();
+    }
+
     private static List<string> CustomRecipeSearchFolders()
     {
         var folders = new List<string>();
@@ -5744,7 +6326,14 @@ public static class LayoutEditorLevelAdminApi
         if (found != null)
             return found;
 
-        return FindAssetByIdInFolders(id, CustomRecipeScriptGuid, CustomRecipeSearchFolders());
+        var folders = CustomRecipeSearchFolders();
+        foreach (var scriptGuid in CustomRecipeScriptGuids)
+        {
+            found = FindAssetByIdInFolders(id, scriptGuid, folders);
+            if (found != null)
+                return found;
+        }
+        return null;
     }
 
     internal static PseudoPrefabSO FindPseudoPrefabById(string id)

@@ -62,7 +62,7 @@ import {
   renderRightPanel,
   updatePanelTabButtons
 } from "../panels";
-import { findGroupByItemId, waypointInfo, deleteWaypoint } from "../animControl";
+import { findGroupByItemId, waypointInfo, deleteWaypoint, ensureCtrlPoint, clearCtrlPoint } from "../animControl";
 import { itemVariantHtml, wireItemVariant } from "../itemVariants";
 import {
   selectionHeightRowHtml,
@@ -687,6 +687,8 @@ export function showWaypointContextMenu(wpId: string, clientX: number, clientY: 
     <div class="ctx-actions">
       ${evtMove && !inRoute ? `<button type="button" class="ctx-btn" data-wp-act="add-route">＋ 编入当前事件路线</button>` : ""}
       ${inRoute ? `<button type="button" class="ctx-btn" data-wp-act="remove-route">从当前事件路线移除</button>` : ""}
+      ${inRoute && !wp.ctrlHas ? `<button type="button" class="ctx-btn" data-wp-act="add-ctrl">〰 段弧线（拉出控制点）</button>` : ""}
+      ${wp.ctrlHas ? `<button type="button" class="ctx-btn" data-wp-act="clear-ctrl">〰 段弧线改回直线</button>` : ""}
       <button type="button" class="ctx-btn danger" data-wp-act="delete">删除路点</button>
     </div>
     <p class="close-hint">长按顶部拖动 · 点击外部或 Esc 关闭</p>
@@ -728,6 +730,20 @@ export function showWaypointContextMenu(wpId: string, clientX: number, clientY: 
   };
   document.getElementById("wp-ctx-x")?.addEventListener("change", applyWorldPos);
   document.getElementById("wp-ctx-z")?.addEventListener("change", applyWorldPos);
+  dom.ctxMenuEl.querySelector('[data-wp-act="add-ctrl"]')?.addEventListener("click", () => {
+    pushHistory();
+    ensureCtrlPoint(group, wpId);
+    hideContextMenu();
+    renderRightPanel();
+    draw();
+  });
+  dom.ctxMenuEl.querySelector('[data-wp-act="clear-ctrl"]')?.addEventListener("click", () => {
+    pushHistory();
+    clearCtrlPoint(group, wpId);
+    hideContextMenu();
+    renderRightPanel();
+    draw();
+  });
   dom.ctxMenuEl.querySelector('[data-wp-act="delete"]')?.addEventListener("click", () => {
     pushHistory();
     deleteWaypoint(group, wpId);

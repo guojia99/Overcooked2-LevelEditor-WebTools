@@ -18,7 +18,7 @@ const toolDefinitions = [
     },
     {
         name: "oc2_list_levels",
-        description: "列出指定关卡集中的关卡。使用 setName，不要传仓库绝对路径。只读。",
+        description: "列出指定关卡集中的关卡（含分组名 group 字段，分组用于归类，组顺序按关卡顺序推导）。使用 setName，不要传仓库绝对路径。只读。",
         inputSchema: { type: "object", properties: { setName: { type: "string", minLength: 1 } }, required: ["setName"], additionalProperties: false },
     },
     {
@@ -38,7 +38,7 @@ const toolDefinitions = [
     },
     {
         name: "oc2_get_level_recipe_context",
-        description: "读取关卡绑定菜谱和完整菜谱目录，供 AI 规划订单和设备。只读。",
+        description: "读取关卡绑定菜谱和完整菜谱目录，供 AI 规划订单和设备。目录排除 Web_SauceSalad_Optional_ 内部锚点，保留 optional 登记；saladSubgroups 的 non_dlc11_official 独占剧情食材沙拉及其酱扩展，其余按互斥酱料组和可交叉的 official 来源组，按菜谱 id 去重计数。只读。",
         inputSchema: { type: "object", properties: { assetPath: { type: "string", minLength: 1 }, levelSet: { type: "string" } }, required: ["assetPath"], additionalProperties: false },
     },
     {
@@ -78,7 +78,7 @@ const toolDefinitions = [
     },
     {
         name: "oc2_commit_scene_draft",
-        description: "将经过验证的场景草稿写回 Unity 场景。会保存场景并可能触发 Reload；必须显式 confirm=true。",
+        description: "将经过验证的场景草稿写回 Unity 场景。会保存场景并可能触发 Reload；必须显式 confirm=true。Unity 处于 Play 模式时整次拒绝，不改场景。",
         inputSchema: { type: "object", properties: { draftId: { type: "string", minLength: 1 }, confirm: { type: "boolean", const: true }, snap: { type: "number", minimum: 0 }, syncWalkable: { type: "boolean" }, only: { type: "string", enum: ["", "items", "decor", "floors"] } }, required: ["draftId", "confirm"], additionalProperties: false },
     },
     {
@@ -105,6 +105,11 @@ const toolDefinitions = [
         name: "oc2_get_custom_content_catalog",
         description: "读取关卡集自定义内容的动态素材面板条目。只读。",
         inputSchema: { type: "object", properties: { setName: { type: "string", minLength: 1 } }, required: ["setName"], additionalProperties: false },
+    },
+    {
+        name: "oc2_salad_sauce_bundles",
+        description: "仅构建 commonw3 和 webcustomstub_runtime 的 Windows bundle，输出 Library/SaladSauceBundleBuild/Windows；不保存场景/LevelInfo，不发布。build 需 confirm=true；先返回 queued，随后用 status 读取状态及产物验证。构建阻塞 Unity 主线程时 HTTP 可能超时，先读 Library/SaladSauceBundleBuild/result.json，禁止盲目重试 build。",
+        inputSchema: { type: "object", properties: { operation: { type: "string", enum: ["build", "status"] }, confirm: { type: "boolean" } }, required: ["operation"], additionalProperties: false },
     },
     {
         name: "oc2_start_export",
@@ -258,11 +263,13 @@ async function handle(name, input) {
     if (name === "oc2_get_level_recipe_context") {
         const assetPath = stringArg(input, "assetPath");
         const levelSet = typeof input.levelSet === "string" ? input.levelSet : "";
-        const [recipes, catalog] = await Promise.all([
+        const [recipes, catalog, orderSequence] = await Promise.all([
             bridge.get(`/api/level-recipes?assetPath=${encodeURIComponent(assetPath)}`),
             bridge.get(`/api/recipes?levelSet=${encodeURIComponent(levelSet)}`),
+            // 订单顺序（4.0.0）：只读回显（order_seq~/order_seq.json）；旧桥无该端点时为 null。
+            bridge.get(`/api/level/order-sequence?assetPath=${encodeURIComponent(assetPath)}`).catch(() => null),
         ]);
-        return result(name, { levelRecipes: recipes, catalog }, "read", "read", 10000, { sceneAssetPath: assetPath });
+        return result(name, { levelRecipes: recipes, catalog, orderSequence }, "read", "read", 10000, { sceneAssetPath: assetPath });
     }
     if (name === "oc2_analyze_level_dependencies") {
         const assetPath = stringArg(input, "assetPath");
@@ -344,6 +351,16 @@ async function handle(name, input) {
     if (name === "oc2_get_custom_content_catalog") {
         const setName = stringArg(input, "setName");
         return result(name, await bridge.get(`/api/custom-content/catalog?setName=${encodeURIComponent(setName)}`), "read", "read", 5000);
+    }
+    if (name === "oc2_salad_sauce_bundles") {
+        const operation = stringArg(input, "operation");
+        if (operation !== "build" && operation !== "status")
+            throw new Error("operation 必须为 build/status");
+        if (operation === "build" && input.confirm !== true)
+            throw new Error("构建必须传 confirm=true");
+        const endpoint = `/api/recipes/salad-sauce?operation=${operation}`;
+        const data = operation === "build" ? await bridge.post(endpoint, {}) : await bridge.get(endpoint);
+        return result(name, data, operation === "build" ? "build" : "read", operation === "build" ? "build" : "read", operation === "build" ? 300000 : 1000);
     }
     if (name === "oc2_start_export") {
         if (input.confirm !== true)

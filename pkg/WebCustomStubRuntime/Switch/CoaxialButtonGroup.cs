@@ -148,6 +148,22 @@ namespace CustomStub
                 (m_targetNames != null ? m_targetNames.Length : 0) + " 个（" +
                 JoinNames() + "）");
 
+            // 成员全部属于互锁对时，同轴的「超时弹回 / 集齐全员回绿」会把互锁按下侧
+            // 也 Reset。互锁 Disable 另一只按钮还会被看成第二次按压，立刻集齐成功，
+            // 两只同时变回可按，状态机却只收抬起侧——来回按几次才碰到会动的那一只。
+            int interlockOwned = 0;
+            for (int i = 0; i < m_members.Count; i++)
+            {
+                if (ButtonLogicRelay.OwnsButton(m_members[i].rootName))
+                    interlockOwned++;
+            }
+            if (interlockOwned == m_members.Count)
+            {
+                StubLog.LogWarn("[CoaxialButtonGroup] " + name +
+                    " 成员全部属于互锁按钮，同轴组不接管回绿、不计数按压（外观由互锁负责）");
+                yield break;
+            }
+
             // ---- 主循环：下降沿检测 + 窗口超时
             while (true)
             {
@@ -213,6 +229,8 @@ namespace CustomStub
 
         private void HandlePress(Member m)
         {
+            if (ButtonLogicRelay.OwnsButton(m.rootName))
+                return; // 互锁按下侧的 Disable 不是玩家按压
             if (Time.time < m_lockUntil)
                 return; // 锁定窗口内的迟到按压（正常应已被禁用收不到）
             if (m_roundStart < 0f)
@@ -288,6 +306,8 @@ namespace CustomStub
         private void SendEnable(Member m)
         {
             if (m.child == null) return;
+            if (ButtonLogicRelay.OwnsButton(m.rootName))
+                return;
             GameApi.SendTrigger(m.child, m.enableTrigger);
         }
 

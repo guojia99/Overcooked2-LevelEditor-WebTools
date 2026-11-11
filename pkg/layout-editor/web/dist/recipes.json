@@ -1,8 +1,9 @@
 {
-  "generatedAt": "2026-11-03T06:40:44.490Z",
-  "schemaVersion": 10,
-  "itemCount": 190,
+  "generatedAt": "2026-11-10T14:59:19.483Z",
+  "schemaVersion": 11,
+  "itemCount": 289,
   "groups": [
+    "commonw3",
     "core",
     "custom",
     "dlc02",
@@ -15,6 +16,7 @@
     "dlc13"
   ],
   "groupFiles": {
+    "commonw3": "recipes/commonw3.json",
     "core": "recipes/core.json",
     "custom": "recipes/custom.json",
     "dlc02": "recipes/dlc02.json",

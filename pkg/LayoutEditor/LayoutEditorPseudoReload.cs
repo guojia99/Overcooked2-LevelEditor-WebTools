@@ -26,8 +26,20 @@ static class LayoutEditorSceneCleanup
     }
 }
 
+/// <summary>导出准备失败（没有 PseudoPrefabManager，或 DeInit 抛错）。导出必须中止，
+/// 不能在临时物体还在的情况下保存或构建。</summary>
+public class LayoutEditorExportPrepareException : Exception
+{
+    public LayoutEditorExportPrepareException(string message) : base(message)
+    {
+    }
+}
+
 public static class LayoutEditorPseudoReload
 {
+    /// <summary>导出正在 BuildAssetBundles。期间 LayoutEditor 的场景打开/延迟回调
+    /// 不得再改场景或挂临时物体。</summary>
+    public static bool ExportBuildInProgress;
     /// <summary>写回 SaveScene 前清掉 CleanPlateStackSeeder 的 DontSave 预览（防实例修改落盘）。</summary>
     public static void ClearCleanPlateStackPreviews()
     {
@@ -110,6 +122,67 @@ public static class LayoutEditorPseudoReload
             prepared = 1;
         }
         Debug.Log("[SetExporter] Prepare For Building：已 DeInit 清除临时物体（" + prepared + " 个 manager）");
+    }
+
+    /// <summary>导出专用：强制 Toggle Prepare For Building 的 ON 侧（标志置 true 并 DeInit）。
+    /// 不因标志已经是 true 而跳过。requireManager 为 true 且场景没有管理器、或 DeInit 失败时抛
+    /// <see cref="LayoutEditorExportPrepareException"/>，调用方不得继续保存或构建。</summary>
+    public static void ForcePrepareForExportStrict(bool requireManager)
+    {
+        ClearCleanPlateStackPreviews();
+        var prepared = 0;
+        var scene = SceneManager.GetActiveScene();
+        var scenePath = scene.IsValid() ? scene.path : "";
+        if (scene.IsValid())
+        {
+            var roots = scene.GetRootGameObjects();
+            for (var i = 0; i < roots.Length; i++)
+            {
+                var manager = roots[i] != null ? roots[i].GetComponent<PseudoPrefabManager>() : null;
+                if (manager == null)
+                    continue;
+                ForcePrepareManagerStrict(manager, scenePath);
+                prepared++;
+            }
+        }
+        if (prepared == 0)
+        {
+            var instance = PseudoPrefabManager.Instance;
+            if (instance != null && scene.IsValid() && instance.gameObject != null
+                && instance.gameObject.scene == scene)
+            {
+                ForcePrepareManagerStrict(instance, scenePath);
+                prepared = 1;
+            }
+        }
+        if (prepared == 0)
+        {
+            if (requireManager)
+                throw new LayoutEditorExportPrepareException(
+                    "Prepare For Building：场景没有 PseudoPrefabManager，无法清除临时物体：" + scenePath);
+            Debug.Log("[SetExporter] Prepare For Building：当前场景无 PseudoPrefabManager，跳过 DeInit"
+                + (string.IsNullOrEmpty(scenePath) ? "" : "（" + scenePath + "）"));
+            return;
+        }
+        Debug.Log("[SetExporter] Prepare For Building：已 DeInit 并等待调用方确认（"
+            + prepared + " 个 manager）" + (string.IsNullOrEmpty(scenePath) ? "" : "：" + scenePath));
+    }
+
+    private static void ForcePrepareManagerStrict(PseudoPrefabManager manager, string scenePath)
+    {
+        manager.prepareForBuilding = true;
+        try
+        {
+            manager.DeInit();
+        }
+        catch (Exception ex)
+        {
+            throw new LayoutEditorExportPrepareException(
+                "Prepare For Building DeInit 失败（" + scenePath + "）：" + ex.Message);
+        }
+        if (!manager.prepareForBuilding)
+            throw new LayoutEditorExportPrepareException(
+                "Prepare For Building 未能保持开启：" + scenePath);
     }
 
     private static void ForcePrepareManager(PseudoPrefabManager manager)
@@ -568,7 +641,7 @@ static class LayoutEditorPseudoMaterialRepairHook
 
     static void OnDelay()
     {
-        if (Application.isPlaying)
+        if (Application.isPlaying || LayoutEditorPseudoReload.ExportBuildInProgress)
             return;
         var activeScene = SceneManager.GetActiveScene();
         if (activeScene.IsValid())

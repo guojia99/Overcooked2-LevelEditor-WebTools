@@ -29,6 +29,10 @@ namespace CustomStub
 
         private bool m_built;
         private bool m_shielded;
+        private bool m_suspended;
+        private bool m_sawRound;
+        private float m_nextRoundPoll;
+        private Component m_flowController;
         private int m_origCullingMask;
         private CameraClearFlags m_origClearFlags;
         private float m_origDepth;
@@ -128,6 +132,11 @@ namespace CustomStub
         private void Update()
         {
             if (m_original == null)
+                return;
+
+            PollRoundState();
+
+            if (m_suspended)
                 return;
 
             // 目标被销毁时 MultiplayerCamera 会访问空 Transform：每帧做 4 个 Transform 的有效性检查，
@@ -240,6 +249,78 @@ namespace CustomStub
                 StubLog.Log("[CustomStub] 分屏相机样本: pos=" + c0.transform.position
                     + " rect=" + c0.rect + " mask=" + c0.cullingMask
                     + " fov=" + c0.fieldOfView + " enabled=" + c0.enabled);
+            }
+        }
+
+        /// <summary>结算/重开兜底：Harmony 补丁失败或时序错开时，低频读 InRound。
+        /// 只有“进过对局后再变成 false”才暂停，避免开局 intro 阶段误判。</summary>
+        private void PollRoundState()
+        {
+            if (Time.unscaledTime < m_nextRoundPoll)
+                return;
+            m_nextRoundPoll = Time.unscaledTime + 0.5f;
+
+            if (m_flowController == null || m_flowController.gameObject == null)
+            {
+                if (GameApi.ClientFlowControllerBaseType == null)
+                    return;
+                m_flowController = UnityEngine.Object.FindObjectOfType(GameApi.ClientFlowControllerBaseType) as Component;
+                if (m_flowController == null)
+                    return;
+            }
+            if (GameApi.ClientInRoundProperty == null)
+                return;
+
+            try
+            {
+                var value = GameApi.ClientInRoundProperty.GetValue(m_flowController, null);
+                var inRound = value is bool && (bool)value;
+                if (inRound)
+                {
+                    m_sawRound = true;
+                    if (m_suspended)
+                        SetSuspended(false);
+                }
+                else if (m_sawRound && !m_suspended)
+                {
+                    SetSuspended(true);
+                }
+            }
+            catch
+            {
+                // 属性读取失败不阻断分屏。
+            }
+        }
+
+        /// <summary>暂停/恢复分屏：暂停时销毁分屏相机与框线、恢复原版主相机（结算屏），
+        /// 恢复时重新屏蔽主相机并按当前玩家重建分屏。</summary>
+        public void SetSuspended(bool suspended)
+        {
+            if (m_suspended == suspended)
+                return;
+            m_suspended = suspended;
+            if (suspended)
+            {
+                CleanupSplitCameras();
+                RestoreOriginal();
+                if (m_backgroundCamera != null)
+                    m_backgroundCamera.enabled = false;
+                m_built = false;
+                m_builtCount = 0;
+                m_viewports = new Rect[0];
+                m_colors = new Color[0];
+                StubLog.Log("[CustomStub] 分屏暂停（结算/非对局）：主镜头接管");
+            }
+            else
+            {
+                if (m_backgroundCamera != null)
+                    m_backgroundCamera.enabled = true;
+                m_built = false;
+                m_builtCount = 0;
+                m_nextCheck = 0f;
+                CheckAndBuild();
+                EnsureUiCamera();
+                StubLog.Log("[CustomStub] 分屏恢复（新对局）");
             }
         }
 
@@ -374,6 +455,7 @@ namespace CustomStub
                 m_splitMultiplayerCameras.Add(mp);
                 m_splitCameras.Add(cam);
                 m_targets.Add(target);
+                SplitScreenCamera.RegisterViewCamera(cam, target);
 
                 rig.SetActive(true);
                 // 激活后再落一次 FOV/rect/aspect：避免 Camera.OnEnable 重算覆盖。
@@ -385,6 +467,7 @@ namespace CustomStub
 
         private void CleanupSplitCameras()
         {
+            SplitScreenCamera.ClearViewCameras();
             for (int i = 0; i < m_splitMultiplayerCameras.Count; i++)
                 SplitScreenCamera.UnregisterTarget(m_splitMultiplayerCameras[i]);
             for (int i = 0; i < m_splitRigs.Count; i++)
@@ -648,7 +731,7 @@ namespace CustomStub
 
         private void OnGUI()
         {
-            if (!m_built || m_viewports.Length == 0 || m_colors.Length == 0)
+            if (m_suspended || !m_built || m_viewports.Length == 0 || m_colors.Length == 0)
                 return;
             if (Event.current == null || Event.current.type != EventType.Repaint)
                 return;

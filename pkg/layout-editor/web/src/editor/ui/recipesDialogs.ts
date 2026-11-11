@@ -1,4 +1,4 @@
-import { cancelBtnHtml, primaryBtnHtml, modalBtnHtml } from "../../ui/views/button";
+﻿import { cancelBtnHtml, primaryBtnHtml, modalBtnHtml } from "../../ui/views/button";
 import {
   S,
   CELL,
@@ -72,7 +72,9 @@ import {
   saveOptionalItems,
   saveMatchlists,
   fetchMatchlistSuggestion,
-  saveLevelRecipes
+  saveLevelRecipes,
+  fetchLevelOrderSequence,
+  saveLevelOrderSequence
 } from "../../api";
 import {
   NODE_INGREDIENT_SOURCES,
@@ -80,6 +82,7 @@ import {
   equivalentCrateIds,
   BUN_CORE_ID,
   BUN_DLC8_ID,
+  groupSalads,
 } from "../../recipeGroups";
 import { rlCardHtml, rlCompactCardHtml, STEP_ICON_SRC } from "../../recipeCard";
 import { itemInCurrentPart } from "../partLevel";
@@ -97,9 +100,9 @@ import {
   type RecipePickerFilterState,
   type ScoreFilter,
 } from "../../recipePickerFilters";
-import type { RecipeEntry, LevelOptionalItem, LevelRecipes, OptionalPresets, MatchlistSuggestion } from "../../types";
+import type { RecipeEntry, LevelOptionalItem, LevelRecipes, LevelOrderSequence, OrderSequenceGroup, OptionalPresets, MatchlistSuggestion } from "../../types";
 
-export type RecipeTab = "select" | "selected" | "autofill" | "optional" | "matchlist";
+export type RecipeTab = "select" | "selected" | "autofill" | "optional" | "matchlist" | "orderseq";
 
 export interface RecipesDialogOptions {
   openTab?: RecipeTab;
@@ -113,6 +116,7 @@ const TAB_META: Record<RecipeTab, { label: string; emoji: string; needScene: boo
   autofill: { label: "自动填充道具", emoji: "🧺", needScene: true },
   optional: { label: "Optional 参数", emoji: "🧩", needScene: true },
   matchlist: { label: "Matchlist", emoji: "📋", needScene: true },
+  orderseq: { label: "订单顺序", emoji: "🧾", needScene: true },
 };
 
 // 打开前要等健康检查 + 菜谱目录 + 关卡菜谱三个请求，首次较慢；
@@ -185,6 +189,23 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     .catch(() => {
       // 候选不可用（旧桥）时 tab 内提示，已保存条目仍可查看/删除。
     });
+  // ---------- 订单顺序状态（order_seq~/order_seq.json，懒加载） ----------
+  let orderSeq: LevelOrderSequence | null = null;
+  let orderSeqLoaded = false;
+  let orderSeqDirty = false;
+  if (level?.levelInfoAssetPath) {
+    void fetchLevelOrderSequence(level.levelInfoAssetPath)
+      .then((s) => {
+        orderSeq = s ?? { enabled: false, endBehavior: "loop", groups: [] };
+        orderSeqLoaded = true;
+        if (activeTab === "orderseq" && document.getElementById("rw-content")) render();
+      })
+      .catch(() => {
+        orderSeq = { enabled: false, endBehavior: "loop", groups: [] };
+        orderSeqLoaded = true;
+        if (activeTab === "orderseq" && document.getElementById("rw-content")) render();
+      });
+  }
   // 默认屏蔽重复 DLC 换皮（同一道菜的多个 DLC 皮肤只保留首选一版，已选的不隐藏）。
   let blockDupDlc = true;
   let pickerFilters: RecipePickerFilterState = emptyRecipePickerFilters();
@@ -222,6 +243,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
         (!r.intermediate || r.isCustom) &&
         r.optionalKind !== "burger" &&
         r.optionalKind !== "pizza" &&
+        r.optionalKind !== "sandwich" &&
         !(r.intermediate && (r.assetPath ?? "").includes("/commonW2/")),
     );
     S.intermediatesCache = utensilIntermediateRecipes(recipes);
@@ -298,13 +320,13 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
         push({ guid: r.guid, id: r.id, nameZh: r.nameZh ?? "", group: r.group, kind: "recipe" });
         continue;
       }
-      if (r.optionalKind === "burger" || r.optionalKind === "pizza") {
+      if (r.optionalKind === "burger" || r.optionalKind === "pizza" || r.optionalKind === "sandwich") {
         push({
           guid: r.guid,
           id: r.id,
           nameZh: r.nameZh ?? "",
           group: r.group ?? "",
-          kind: r.optionalKind === "pizza" ? "pizza-optional" : "burger-optional",
+          kind: r.optionalKind === "pizza" ? "pizza-optional" : r.optionalKind === "sandwich" ? "sandwich-optional" : "burger-optional",
         });
       }
     }
@@ -323,6 +345,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       if (!kind) {
         if (r.optionalKind === "burger") kind = "burger-optional";
         else if (r.optionalKind === "pizza") kind = "pizza-optional";
+        else if (r.optionalKind === "sandwich") kind = "sandwich-optional";
         else if (r.isCustom) kind = "custom-recipe";
         else kind = "node";
       }
@@ -349,8 +372,8 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       selected.delete(guid);
       const r = byGuid.get(guid);
       if (r) {
-        const anySame = [...selected].some((g) => byGuid.get(g)?.id === r.id);
-        if (!anySame) selectedIds.delete(r.id);
+        for (const g of selected) if (byGuid.get(g)?.id === r.id) selected.delete(g);
+        selectedIds.delete(r.id);
       }
     }
   };
@@ -395,7 +418,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     const opts = cardOpts(r);
     const cardHtml = compactCardMode ? rlCompactCardHtml(r, opts) : rlCardHtml(r, opts);
     return `<label class="rw-recipe-pick" data-name="${escHtml(searchable)}">
-      <input type="checkbox" value="${r.guid}" ${checked}>
+      <input type="checkbox" value="${r.guid}" data-recipe-id="${escHtml(r.id)}" ${checked}>
       ${cardHtml}
     </label>`;
   }
@@ -472,7 +495,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     const popoverItems = leafIds
       .map((id) => {
         const on = pickerFilters.ingredients.has(id);
-        return `<label class="rw-ing-pick-item"><input type="checkbox" data-ing-id="${escHtml(id)}" ${on ? "checked" : ""}><img src="/icons/ingredients/${encodeURIComponent(id)}.png" alt="" onerror="this.style.display='none'"><span>${escHtml(ingNameOf(id))}</span></label>`;
+        return `<label class="rw-ing-pick-item"><input type="checkbox" data-ing-id="${escHtml(id)}" ${on ? "checked" : ""}><span class="rw-ing-pick-icon"><img src="/icons/ingredients/${encodeURIComponent(id)}.png" alt="" onerror="this.parentElement.classList.add('is-missing')"></span><span class="rw-ing-pick-name">${escHtml(ingNameOf(id))}</span></label>`;
       })
       .join("");
     const clearAllBtn =
@@ -523,16 +546,30 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
           <div class="rw-ing-chips">${selectedIngChips}</div>
         </div>
         <div class="rw-ing-popover${ingPopoverOpen ? "" : " hidden"}" id="rw-ing-popover">
+          <div class="rw-ing-popover-head">
+            <span class="rw-ing-popover-title">选择原材料</span>
+            <span class="rw-ing-popover-note">须同时包含</span>
+          </div>
           <input type="search" id="rw-ing-search" class="ing-search" placeholder="搜索食材…" autocomplete="off">
-          <div class="rw-ing-popover-list" id="rw-ing-popover-list">${popoverItems}</div>
+          <div class="rw-ing-popover-list" id="rw-ing-popover-list">${popoverItems || '<span class="modal-hint">没有可筛选的原材料</span>'}</div>
         </div>
       </div>` : ""}`;
   }
 
   function typeGroupHtml(cat: string, type: string, items: RecipeEntry[]): string {
-    const cards = items.map(recipeCard).join("");
+    const cards = type === "salad"
+      ? groupSalads(items).map(([label, list]) =>
+        `<div class="rl-subsection" style="width:100%;grid-column:1/-1;min-width:0"><h3 class="rl-subsection-title">${escHtml(label)}<span class="rl-section-count">${list.length}</span></h3><div class="rl-grid">${list.map(recipeCard).join("")}</div></div>`
+      ).join("")
+      : items.map(recipeCard).join("");
+    const ids = [...new Set(items.map((r) => r.id))];
+    const selCount = ids.filter((id) => selectedIds.has(id)).length;
+    const allSelected = ids.length > 0 && selCount === ids.length;
+    const selectAllBtn = activeTab === "select"
+      ? `<button type="button" class="rw-group-select-all${allSelected ? " active" : ""}" title="${allSelected ? "取消勾选本组全部可见菜谱" : "勾选本组全部可见菜谱"}">${allSelected ? "取消全选" : "全选"}</button>`
+      : "";
     return `<div class="rw-group" data-cat="${escHtml(cat)}" data-type="${escHtml(type)}">
-      <div class="rw-group-header"><span class="rw-group-name">${escHtml(recipeTypeLabel(type))}</span><span class="rw-group-count"><span class="rw-group-sel">0</span>/<span class="rw-group-total">${items.length}</span></span></div>
+      <div class="rw-group-header"><span class="rw-group-name">${escHtml(recipeTypeLabel(type))}</span><span class="rw-group-count"><span class="rw-group-sel">${selCount}</span>/<span class="rw-group-total">${ids.length}</span></span>${selectAllBtn}</div>
       <div class="rl-grid">${cards}</div>
     </div>`;
   }
@@ -542,9 +579,15 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     // 用传入的 items（已选/已搜索过滤后的子集）分组，而不是预计算的全量 catGroups
     const groups = groupRecipesByType(items).map(([type, arr]) => typeGroupHtml(cat, type, arr)).join("");
     if (!groups) return "";
+    const ids = [...new Set(items.map((r) => r.id))];
+    const selCount = ids.filter((id) => selectedIds.has(id)).length;
+    const allSelected = ids.length > 0 && selCount === ids.length;
+    const selectAllBtn = activeTab === "select"
+      ? `<button type="button" class="rw-cat-select-all${allSelected ? " active" : ""}" title="${allSelected ? "取消勾选本分类下全部可见菜谱" : "勾选本分类下全部可见菜谱"}">${allSelected ? "取消本类" : "全选本类"}</button>`
+      : "";
     return `<div class="rw-cat" data-cat="${cat}">
       <div class="rw-cat-header" style="border-color:${meta.color}">
-        <span>${meta.emoji} ${meta.label}</span><span class="rw-cat-count">${items.length}</span>
+        <span class="rw-cat-title">${meta.emoji} ${meta.label}</span><span class="rw-cat-actions" style="--rw-cat-accent:${meta.color}"><span class="rw-cat-count">${ids.length}</span>${selectAllBtn}</span>
       </div>
       ${groups}
     </div>`;
@@ -641,10 +684,14 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       (r.ingredients ?? []).forEach((i) =>
         leafIngredientIds(i).forEach((leaf) => reqIngs.add(crateIngredientId(leaf, r)))
       );
-      if (r.cookingStep) steps.add(r.cookingStep);
+      if (r.cookingStep) steps.add(r.type === "sushi" && r.cookingStep === "Steamer" ? "Pot" : r.cookingStep);
       // 套餐等无主步骤的菜谱：加工步骤在 cookingGroups 里（FryingPan 煎肉 /
-      // DeepFatFryer 炸薯条洋葱圈芝士条），据此要求煎锅/炸锅工作台
-      for (const g of r.cookingGroups ?? []) if (g.step) steps.add(g.step);
+      // DeepFatFryer 炸薯条洋葱圈芝士条），据此要求煎锅/炸锅工作台。
+      // 寿司只产生煮锅，不因分组里残留的 Steamer 去补蒸笼。
+      for (const g of r.cookingGroups ?? []) {
+        if (!g.step) continue;
+        steps.add(r.type === "sushi" && g.step === "Steamer" ? "Pot" : g.step);
+      }
       if (r.platingStep) platingSteps.add(r.platingStep);
     }
     const haveDisp = existingDispenserIngIds();
@@ -1147,18 +1194,43 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       autofill: currentRecipes().length,
       optional: optionalItems.length,
       matchlist: matchlistKeys.size,
+      orderseq: orderSeq?.groups.length ?? 0,
     };
     return (Object.keys(TAB_META) as RecipeTab[])
       .map((k) => {
         const m = TAB_META[k];
-        const cnt = ` <span class="rw-tab-cnt">${counts[k]}${k === "optional" && optionalDirty ? "*" : ""}${k === "matchlist" && matchlistDirty ? "*" : ""}</span>`;
+        const cnt = ` <span class="rw-tab-cnt">${counts[k]}${k === "optional" && optionalDirty ? "*" : ""}${k === "matchlist" && matchlistDirty ? "*" : ""}${k === "orderseq" && orderSeqDirty ? "*" : ""}</span>`;
         const title = m.needScene && !hasScene ? "需要先选择场景" : "";
         return `<button type="button" class="rw-tab${activeTab === k ? " active" : ""}" data-tab="${k}" title="${title}">${m.emoji} ${m.label}${cnt}</button>`;
       })
       .join("");
   };
 
-  const render = () => {
+  const render = (opts: { preserveScroll?: boolean } = {}) => {
+    // 订单顺序内的增删/切组/改模式只重绘局部内容，保留滚动位置与搜索焦点，
+    // 避免每次点选都跳回弹窗顶部。
+    const panelBody = document.querySelector<HTMLElement>(".modal-panel.rw-recipes .modal-body");
+    const prevScrollTop = panelBody?.scrollTop ?? 0;
+    const prevAddScrollTop = document.getElementById("rw-os-add-grid")?.scrollTop ?? 0;
+    const activeEl = document.activeElement;
+    const focusEl =
+      opts.preserveScroll &&
+      activeEl &&
+      (activeEl instanceof HTMLInputElement ||
+        activeEl instanceof HTMLTextAreaElement ||
+        activeEl instanceof HTMLSelectElement) &&
+      activeEl.id.startsWith("rw-os-")
+        ? activeEl
+        : null;
+    let focusSel: [number, number] | null = null;
+    if (
+      (focusEl instanceof HTMLInputElement || focusEl instanceof HTMLTextAreaElement) &&
+      focusEl.selectionStart != null &&
+      focusEl.selectionEnd != null
+    ) {
+      focusSel = [focusEl.selectionStart, focusEl.selectionEnd];
+    }
+
     const tabsEl = document.getElementById("rw-tabs");
     if (tabsEl) tabsEl.innerHTML = tabsHtml();
     wireTabs();
@@ -1187,8 +1259,32 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       if (!hasScene) { el.innerHTML = '<p class="modal-hint">请先在关卡编辑器中选择场景，再使用「Matchlist 管理」。</p>'; renderFooter(); return; }
       el.innerHTML = matchlistTabHtml();
       wireMatchlist();
+    } else if (activeTab === "orderseq") {
+      if (!hasScene) { el.innerHTML = '<p class="modal-hint">请先在关卡编辑器中选择场景，再使用「订单顺序」。</p>'; renderFooter(); return; }
+      el.innerHTML = orderSeqTabHtml();
+      wireOrderSeq();
     }
     renderFooter();
+
+    if (!opts.preserveScroll) return;
+    if (panelBody) panelBody.scrollTop = prevScrollTop;
+    const addGrid = document.getElementById("rw-os-add-grid");
+    if (addGrid) addGrid.scrollTop = prevAddScrollTop;
+    if (focusEl) {
+      const next = document.getElementById(focusEl.id);
+      if (next instanceof HTMLInputElement || next instanceof HTMLTextAreaElement) {
+        next.focus();
+        if (focusSel) {
+          try {
+            next.setSelectionRange(focusSel[0], focusSel[1]);
+          } catch {
+            // number/select 等控件不支持选区，忽略。
+          }
+        }
+      } else if (next instanceof HTMLSelectElement) {
+        next.focus();
+      }
+    }
   };
 
   /** 搜索输入：只重建列表区（不触碰工具栏/搜索框），避免焦点丢失导致只能输入一个字。 */
@@ -1299,7 +1395,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       const lower = q.trim().toLowerCase();
       document.querySelectorAll<HTMLElement>(".rw-ing-pick-item").forEach((row) => {
         const id = row.querySelector<HTMLInputElement>("input")?.dataset.ingId ?? "";
-        const name = row.querySelector("span")?.textContent ?? "";
+        const name = row.querySelector(".rw-ing-pick-name")?.textContent ?? "";
         const show = !lower || id.toLowerCase().includes(lower) || name.toLowerCase().includes(lower);
         row.classList.toggle("hidden", !show);
       });
@@ -1344,16 +1440,27 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       if (card) card.classList.toggle("selected", cb.checked);
       cb.addEventListener("change", () => {
         toggleSelect(cb.value, cb.checked);
-        card?.classList.toggle("selected", cb.checked);
-        updateGroupCounts();
-        // 轻量刷新：只更新 tab 计数，不重建列表（保持滚动位置与搜索框焦点）
-        const tabsEl = document.getElementById("rw-tabs");
-        if (tabsEl) { tabsEl.innerHTML = tabsHtml(); wireTabs(); }
+        syncListSelectionUi();
       });
     });
     listEl.querySelectorAll<HTMLElement>(".rw-group-header").forEach((hdr) => {
       hdr.addEventListener("click", () => hdr.parentElement?.classList.toggle("collapsed"));
     });
+    listEl.querySelectorAll<HTMLButtonElement>(".rw-cat-select-all").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const cat = btn.closest<HTMLElement>(".rw-cat");
+        if (cat) toggleBulkSelection(cat);
+      });
+    });
+    listEl.querySelectorAll<HTMLButtonElement>(".rw-group-select-all").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const grp = btn.closest<HTMLElement>(".rw-group");
+        if (grp) toggleBulkSelection(grp);
+      });
+    });
+    updateSelectAllButtons();
   };
 
   const renderFooter = () => {
@@ -1399,6 +1506,10 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       el.innerHTML = `${cancelBtnHtml("关闭")} ${modalBtnHtml(`写回 Matchlist${matchlistDirty ? `（${matchlistKeys.size} 个*）` : `（${matchlistKeys.size} 个）`}`, "modal-btn primary", { id: "rw-save-matchlist" })}`;
       document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
       document.getElementById("rw-save-matchlist")?.addEventListener("click", doSaveMatchlist);
+    } else if (activeTab === "orderseq") {
+      el.innerHTML = `${cancelBtnHtml("关闭")} ${modalBtnHtml(`保存订单顺序${orderSeqDirty ? "*" : ""}`, "modal-btn primary", { id: "rw-save-orderseq" })}`;
+      document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+      document.getElementById("rw-save-orderseq")?.addEventListener("click", doSaveOrderSeq);
     } else {
       el.innerHTML = `${cancelBtnHtml("关闭")}`;
       document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
@@ -1425,12 +1536,81 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     listEl.querySelectorAll<HTMLElement>(".rw-group").forEach((grp) => {
       const selEl = grp.querySelector<HTMLElement>(".rw-group-sel");
       if (!selEl) return;
-      let selectedCount = 0;
+      const selectedInGroup = new Set<string>();
       grp.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {
-        if (cb.checked) selectedCount++;
+        if (cb.checked) selectedInGroup.add(cb.dataset.recipeId ?? cb.value);
       });
-      selEl.textContent = String(selectedCount);
+      selEl.textContent = String(selectedInGroup.size);
     });
+  };
+
+  const updateSelectAllButtons = () => {
+    const listEl = document.getElementById("rw-list");
+    if (!listEl) return;
+    const statsOf = (root: Element) => {
+      const ids = new Set<string>();
+      root.querySelectorAll<HTMLInputElement>("input[data-recipe-id]").forEach((cb) => {
+        const id = cb.dataset.recipeId;
+        if (id) ids.add(id);
+      });
+      let selected = 0;
+      for (const id of ids) if (selectedIds.has(id)) selected++;
+      return { total: ids.size, selected };
+    };
+    listEl.querySelectorAll<HTMLElement>(".rw-cat-select-all").forEach((btn) => {
+      const cat = btn.closest<HTMLElement>(".rw-cat");
+      if (!cat) return;
+      const { total, selected } = statsOf(cat);
+      const allSelected = total > 0 && selected === total;
+      btn.textContent = allSelected ? "取消本类" : "全选本类";
+      btn.title = allSelected ? "取消勾选本分类下全部可见菜谱" : "勾选本分类下全部可见菜谱";
+      btn.classList.toggle("active", allSelected);
+    });
+    listEl.querySelectorAll<HTMLElement>(".rw-group-select-all").forEach((btn) => {
+      const grp = btn.closest<HTMLElement>(".rw-group");
+      if (!grp) return;
+      const { total, selected } = statsOf(grp);
+      const allSelected = total > 0 && selected === total;
+      btn.textContent = allSelected ? "取消全选" : "全选";
+      btn.title = allSelected ? "取消勾选本组全部可见菜谱" : "勾选本组全部可见菜谱";
+      btn.classList.toggle("active", allSelected);
+    });
+  };
+
+  const syncListSelectionUi = () => {
+    const listEl = document.getElementById("rw-list");
+    if (!listEl) return;
+    // The official view repeats sauce-group cards; selection is keyed by recipe id.
+    listEl.querySelectorAll<HTMLInputElement>("input[data-recipe-id]").forEach((other) => {
+      other.checked = selectedIds.has(other.dataset.recipeId!);
+      other.closest(".rw-recipe-pick")?.classList.toggle("selected", other.checked);
+    });
+    updateGroupCounts();
+    updateSelectAllButtons();
+    // 轻量刷新：只更新 tab 计数，不重建列表（保持滚动位置与搜索框焦点）
+    const tabsEl = document.getElementById("rw-tabs");
+    if (tabsEl) { tabsEl.innerHTML = tabsHtml(); wireTabs(); }
+  };
+
+  const toggleBulkSelection = (root: HTMLElement) => {
+    const inputs = [...root.querySelectorAll<HTMLInputElement>("input[data-recipe-id]")];
+    const ids = new Set<string>();
+    for (const cb of inputs) {
+      const id = cb.dataset.recipeId;
+      if (id) ids.add(id);
+    }
+    if (ids.size === 0) return;
+    const allSelected = [...ids].every((id) => selectedIds.has(id));
+    const check = !allSelected;
+    for (const cb of inputs) {
+      const id = cb.dataset.recipeId!;
+      if (check) {
+        if (!selectedIds.has(id)) toggleSelect(cb.value, true);
+      } else if (selectedIds.has(id)) {
+        toggleSelect(cb.value, false);
+      }
+    }
+    syncListSelectionUi();
   };
 
   /** 局部刷新自动填充内容（不动 tabs/footer），补齐后保持弹窗开启。 */
@@ -1550,6 +1730,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     if (c.kind === "hotdog-optional" || c.kind === "condiment" || c.kind === "boiledfrankfurter") return "hotdog";
     if (c.kind === "pizza-optional") return "pizza";
     if (c.kind === "burger-optional") return "burger";
+    if (c.kind === "sandwich-optional") return "sandwich";
     if (c.kind === "recipe") return c.group || "dlc";
     return "other";
   };
@@ -1561,6 +1742,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     if (cands.some((c) => optCandCategory(c) === "hotdog")) chips.push({ id: "hotdog", label: "热狗/酱料" });
     if (cands.some((c) => optCandCategory(c) === "pizza")) chips.push({ id: "pizza", label: "披萨部件" });
     if (cands.some((c) => optCandCategory(c) === "burger")) chips.push({ id: "burger", label: "汉堡组装" });
+    if (cands.some((c) => optCandCategory(c) === "sandwich")) chips.push({ id: "sandwich", label: "三明治组装" });
     const dlcGroups = [...new Set(cands.filter((c) => c.kind === "recipe").map((c) => c.group).filter(Boolean))].sort();
     for (const g of dlcGroups) chips.push({ id: g, label: foodGroupLabel(g as never) || g });
     return chips;
@@ -1573,6 +1755,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     "boiledfrankfurter": { label: "煮肠", cls: "kind-condiment" },
     "pizza-optional": { label: "披萨部件", cls: "kind-pizza" },
     "burger-optional": { label: "汉堡组装", cls: "kind-custom" },
+    "sandwich-optional": { label: "三明治组装", cls: "kind-custom" },
     "custom-recipe": { label: "本关成品", cls: "kind-finished" },
     "node": { label: "节点", cls: "kind-node" },
   };
@@ -1879,7 +2062,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     for (const g of selected) if (normalizeGuid(g) === ng) return true;
     const r = byGuid.get(it.guid) ?? [...byGuid.values()].find((x) => normalizeGuid(x.guid) === ng);
     if (!r || !r.isCustom) return false;
-    if (r.optionalKind === "burger" || r.optionalKind === "pizza") return false;
+    if (r.optionalKind === "burger" || r.optionalKind === "pizza" || r.optionalKind === "sandwich") return false;
     if ((r.score ?? 0) > 0) return false;
     if (legitBurgerSubs.has(r.id)) return false;
     return true;
@@ -1977,6 +2160,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     if (optFilter === "levelset") return optCandCategory(c) === "levelset";
     if (optFilter === "hotdog") return optCandCategory(c) === "hotdog";
     if (optFilter === "pizza") return optCandCategory(c) === "pizza";
+    if (optFilter === "sandwich") return optCandCategory(c) === "sandwich";
     if (optFilter === "burger") return optCandCategory(c) === "burger";
     return c.group === optFilter;
   };
@@ -2002,6 +2186,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
     band("本关自定义成品菜", byCat("levelset"));
     band("热狗可选 / 酱料 / 煮肠", byCat("hotdog"));
     band("披萨部件", byCat("pizza"));
+    band("三明治组装", byCat("sandwich"));
     band("汉堡组装定义", byCat("burger"));
 
     const dlcGroups = [...new Set(filtered.filter((c) => c.kind === "recipe").map((c) => c.group).filter(Boolean))].sort();
@@ -2012,7 +2197,7 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
 
     const other = filtered.filter((c) => {
       const cat = optCandCategory(c);
-      return cat !== "levelset" && cat !== "hotdog" && cat !== "pizza" && cat !== "burger" && c.kind !== "recipe";
+      return cat !== "levelset" && cat !== "hotdog" && cat !== "pizza" && cat !== "burger" && cat !== "sandwich" && c.kind !== "recipe";
     });
     band("其它节点", other);
 
@@ -2313,6 +2498,695 @@ async function openRecipesDialogInner(opts: RecipesDialogOptions = {}) {
       matchlistDirty = false;
       setStatus(`Matchlist 已写回（${keys.length} 个）`);
       render();
+    } catch (e) {
+      setStatus((e as Error).message, false);
+    }
+  };
+
+  // ---------- 订单顺序 tab（order_seq~/order_seq.json；写回/导出时烘焙进场景） ----------
+
+  // 交互状态：当前组 tab / 添加面板开合、多选临时选择与搜索词；
+  // 折叠状态和选中集合放在闭包里，整页重绘后不丢。
+  let osActiveGroup = 0;
+  let osAddOpen = false;
+  let osAddQuery = "";
+  const osAddPicked = new Set<string>();
+  const osAddCollapsedCats = new Set<string>();
+  const osAddCollapsedTypes = new Set<string>();
+
+  // 组配色：组 tab 圆点与出单序列 token 共用，相邻组尽量高对比。
+  const OS_GROUP_COLORS = [
+    "#60a5fa", "#f59e0b", "#34d399", "#f472b6", "#a78bfa",
+    "#22d3ee", "#fb923c", "#a3e635", "#e879f9", "#f87171",
+  ];
+  const osGroupColor = (gi: number): string =>
+    OS_GROUP_COLORS[((gi % OS_GROUP_COLORS.length) + OS_GROUP_COLORS.length) % OS_GROUP_COLORS.length];
+
+  const ensureOrderSeq = (): LevelOrderSequence => {
+    if (!orderSeq) orderSeq = { enabled: false, endBehavior: "loop", groups: [] };
+    return orderSeq;
+  };
+
+  const osRecipeLabel = (guid: string): string => {
+    const r = byGuid.get(guid);
+    return r ? r.nameZh || r.id : guid.slice(0, 8) + "…";
+  };
+
+  /** 与「选择菜谱」同一张完整菜谱卡；缺目录时用同壳占位，避免顺序网格高低不齐。 */
+  const osRecipeCardHtml = (guid: string): string => {
+    const r = byGuid.get(guid);
+    if (r) return rlCardHtml(r, cardOpts(r));
+    const label = osRecipeLabel(guid);
+    return `<article class="rl-card os-missing-card">
+      <div class="rl-product">
+        <img src="/icons/_placeholder.png" alt="">
+        <div class="rl-prod-name">${escHtml(label)}<span class="rl-prod-en">不在本关菜谱目录</span></div>
+        <div class="rl-prod-badges"><span class="rl-badge rl-badge-warn">需修正</span></div>
+      </div>
+    </article>`;
+  };
+
+  /** 菜谱卡片（与选择菜谱同款 rl-card；拖拽排序 + 序号 + ✕ 移除）。 */
+  const osCardHtml = (i: number, guid: string): string => {
+    const r = byGuid.get(guid);
+    const invalid = !r;
+    return `<div class="os-card${invalid ? " invalid" : ""}" draggable="true" data-guid="${escHtml(guid)}" data-osi="${i}"`
+      + ` title="${escHtml(osRecipeLabel(guid))}${invalid ? "（不在本关菜谱目录，保存前请修正）" : " · 拖拽调整顺序"}">`
+      + `<span class="os-card-idx">${i + 1}</span>`
+      + `<button type="button" class="os-card-del" data-osi="${i}" draggable="false" title="移除">✕</button>`
+      + osRecipeCardHtml(guid)
+      + `</div>`;
+  };
+
+  /** 组 tab 栏：点击切换 · 拖拽排序 · ✕ 删除；🎲=随机 / →=按序，圆点颜色与序列预览一致。 */
+  const osGroupTabsHtml = (seq: LevelOrderSequence): string =>
+    `<div class="os-gtabs" id="rw-os-gtabs">`
+    + seq.groups
+        .map(
+          (g, gi) =>
+            `<div class="os-gtab${gi === osActiveGroup ? " active" : ""}" draggable="true" data-gi="${gi}"`
+            + ` title="点击切换 · 拖拽排序 · ${g.mode === 1 ? `随机${g.batchSize > 0 ? `抽${g.batchSize}道` : "全部出完"}` : "按序出"}">`
+            + `<span class="os-gtab-dot" style="background:${osGroupColor(gi)}" aria-hidden="true"></span>`
+            + `<span class="os-gtab-tag">${g.mode === 1 ? "🎲" : "→"}</span>组 ${gi + 1}`
+            + `<span class="os-gtab-cnt">${g.recipeGuids.length}</span>`
+            + `<span class="os-gtab-del" data-gi="${gi}" title="删除该组">✕</span>`
+            + `</div>`,
+        )
+        .join("")
+    + `<div class="os-gtab os-gtab-add" id="rw-os-addgroup" title="新增菜单组">＋</div>`
+    + `</div>`;
+
+  // ---------- 添加面板：按一级分类 / 二级类型（沙拉再分子组）分组批量选择 ----------
+
+  type OsAddCat = "levelset" | "officialBurger" | "core";
+  const OS_ADD_CATS: OsAddCat[] = ["levelset", "officialBurger", "core"];
+  const osAddCatOf = (r: RecipeEntry): OsAddCat =>
+    r.group === "levelset" ? "levelset" : isOfficialBurger(r) ? "officialBurger" : "core";
+  const osAddPool = (): RecipeEntry[] =>
+    [...selected].map((g) => byGuid.get(g)).filter((r): r is RecipeEntry => !!r);
+  const osAddFilteredPool = (): RecipeEntry[] => {
+    const pool = osAddPool();
+    const q = osAddQuery.trim().toLowerCase();
+    if (!q) return pool;
+    return pool.filter(
+      (r) => (r.nameZh || "").toLowerCase().includes(q) || r.id.toLowerCase().includes(q),
+    );
+  };
+  const osAddStatsOfItems = (items: RecipeEntry[]): { total: number; picked: number } => {
+    const guids = new Set(items.map((r) => r.guid));
+    let picked = 0;
+    for (const guid of guids) if (osAddPicked.has(guid)) picked++;
+    return { total: guids.size, picked };
+  };
+  const osAddStats = (root: ParentNode): { total: number; picked: number } => {
+    const guids = new Set<string>();
+    root.querySelectorAll<HTMLElement>(".os-add-item").forEach((item) => {
+      const guid = item.dataset.guid ?? "";
+      if (guid) guids.add(guid);
+    });
+    let picked = 0;
+    for (const guid of guids) if (osAddPicked.has(guid)) picked++;
+    return { total: guids.size, picked };
+  };
+  const osAddCardHtml = (r: RecipeEntry): string => {
+    const picked = osAddPicked.has(r.guid);
+    return `<div class="rw-recipe-pick os-add-item${picked ? " picked selected" : ""}" data-guid="${escHtml(r.guid)}" title="${escHtml(r.nameZh || r.id)}（${escHtml(r.id)}）">`
+      + osRecipeCardHtml(r.guid)
+      + `</div>`;
+  };
+  const osAddTypeGroupHtml = (cat: OsAddCat, type: string, items: RecipeEntry[], searching: boolean): string => {
+    const collapsed = !searching && osAddCollapsedTypes.has(`${cat}:${type}`);
+    const stats = osAddStatsOfItems(items);
+    const all = stats.total > 0 && stats.picked === stats.total;
+    const cards = type === "salad"
+      ? groupSalads(items)
+          .map(
+            ([label, list]) =>
+              `<div class="rl-subsection os-add-subsection"><h3 class="rl-subsection-title">${escHtml(label)}<span class="rl-section-count">${list.length}</span></h3><div class="rl-grid">${list.map(osAddCardHtml).join("")}</div></div>`,
+          )
+          .join("")
+      : `<div class="rl-grid">${items.map(osAddCardHtml).join("")}</div>`;
+    return `<div class="rw-group${collapsed ? " collapsed" : ""}" data-type="${escHtml(type)}">
+      <div class="rw-group-header">
+        <span class="rw-group-name">${escHtml(recipeTypeLabel(type))}</span>
+        <span class="rw-group-count"><span class="rw-group-sel">${stats.picked}</span>/<span class="rw-group-total">${stats.total}</span></span>
+        <button type="button" class="rw-group-select-all${all ? " active" : ""}" title="勾选/取消本组全部可见菜谱">${all ? "取消全选" : "全选"}</button>
+      </div>
+      ${cards}
+    </div>`;
+  };
+  const osAddCatHtml = (cat: OsAddCat, items: RecipeEntry[], searching: boolean): string => {
+    if (!items.length) return "";
+    const meta = catMeta[cat];
+    const collapsed = !searching && osAddCollapsedCats.has(cat);
+    const stats = osAddStatsOfItems(items);
+    const all = stats.total > 0 && stats.picked === stats.total;
+    const groups = groupRecipesByType(items)
+      .map(([type, arr]) => osAddTypeGroupHtml(cat, type, arr, searching))
+      .join("");
+    return `<div class="rw-cat${collapsed ? " collapsed" : ""}" data-cat="${cat}">
+      <div class="rw-cat-header" style="border-color:${meta.color}">
+        <span class="rw-cat-title">${meta.emoji} ${meta.label}</span>
+        <span class="rw-cat-actions" style="--rw-cat-accent:${meta.color}">
+          <span class="rw-cat-count"><span class="rw-cat-sel">${stats.picked}</span>/<span class="rw-cat-total">${stats.total}</span></span>
+          <button type="button" class="rw-cat-select-all${all ? " active" : ""}" title="勾选/取消本分类下全部可见菜谱">${all ? "取消本类" : "全选本类"}</button>
+        </span>
+      </div>
+      ${groups}
+    </div>`;
+  };
+
+  /** 多选添加面板网格（本关已选菜谱池，按分类/类型分组，支持搜索、批量点选）。 */
+  const osAddGridHtml = (): string => {
+    const pool = osAddFilteredPool();
+    if (!pool.length) return '<span class="modal-hint">（无匹配菜谱——先在「选择菜谱」tab 勾选本关菜谱并保存）</span>';
+    const searching = osAddQuery.trim().length > 0;
+    const byCat: Record<OsAddCat, RecipeEntry[]> = { levelset: [], officialBurger: [], core: [] };
+    for (const r of pool) byCat[osAddCatOf(r)].push(r);
+    return OS_ADD_CATS.map((cat) => osAddCatHtml(cat, byCat[cat], searching)).join("");
+  };
+
+  const osAddConfirmHtml = (): string =>
+    `<button type="button" class="modal-btn${osAddPicked.size ? " primary" : ""}" id="rw-os-add-confirm"${osAddPicked.size ? "" : " disabled"}>＋ 添加选中（${osAddPicked.size}）</button>`;
+
+  const osAddPanelHtml = (): string => {
+    const pool = osAddPool();
+    const visible = osAddFilteredPool();
+    const pickedVisible = visible.filter((r) => osAddPicked.has(r.guid)).length;
+    const allVisible = visible.length > 0 && pickedVisible === visible.length;
+    return `<div class="os-add-panel" id="rw-os-addpanel">`
+      + `<div class="os-add-head">`
+      + `<div class="os-add-head-copy">`
+      + `<span class="os-add-title">从本关菜谱添加</span>`
+      + `<span class="modal-hint">点选多道后一次加入，同一道可以重复出现</span>`
+      + `</div>`
+      + `<div class="os-add-bulk">`
+      + `<span class="os-add-picked-count" id="rw-os-add-picked">已选 ${osAddPicked.size} / 共 ${pool.length}</span>`
+      + `<button type="button" class="os-chip-btn" id="rw-os-add-all"${visible.length ? "" : " disabled"}>${allVisible ? `取消全选（${visible.length}）` : `全选全部（${visible.length}）`}</button>`
+      + `<button type="button" class="os-chip-btn" id="rw-os-add-clear"${osAddPicked.size ? "" : " disabled"}>清空选择</button>`
+      + `</div>`
+      + `</div>`
+      + `<input type="search" id="rw-os-add-search" class="rw-search" value="${escHtml(osAddQuery)}" placeholder="搜索菜谱…" autocomplete="off">`
+      + `<div class="os-add-grid rw-list" id="rw-os-add-grid">${osAddGridHtml()}</div>`
+      + `<div class="os-add-foot">${osAddConfirmHtml()}</div>`
+      + `</div>`;
+  };
+
+  /** 当前组面板：模式 / 抽菜数（全部出完=0 或 自定义 N） / 卡片网格 / 添加入口。 */
+  const osGroupPanelHtml = (seq: LevelOrderSequence): string => {
+    const gi = osActiveGroup;
+    const g = seq.groups[gi];
+    if (!g) return '<p class="modal-hint">（无组）</p>';
+    const batchCustom = g.batchSize > 0;
+    return `<div class="os-panel">`
+      + `<div class="os-panel-bar">`
+      + `<label class="os-mode">模式 <select data-osa="mode">`
+      + `<option value="0"${g.mode === 0 ? " selected" : ""}>按序出（列表顺序，可重复）</option>`
+      + `<option value="1"${g.mode === 1 ? " selected" : ""}>随机（原版防重复加权）</option>`
+      + `</select></label>`
+      + (g.mode === 1
+          ? `<label class="os-batch">抽菜数 `
+            + `<select id="rw-os-batch-mode"><option value="all"${batchCustom ? "" : " selected"}>全部出完（N = 本组数量）</option><option value="custom"${batchCustom ? " selected" : ""}>抽 N 道…</option></select>`
+            + (batchCustom ? ` <input type="number" min="1" max="999" value="${g.batchSize}" id="rw-os-batch-n" title="N = 1~999；大于组内菜谱数时重复抽取补足">` : "")
+            + `</label>`
+          : "")
+      + `<button type="button" class="os-chip-btn os-group-del" data-osa="gdel" title="删除该组">✕ 删除组</button>`
+      + `</div>`
+      + `<div class="os-cards rw-list${g.mode === 1 ? " random" : ""}" id="rw-os-cards">`
+      + (g.recipeGuids.length
+          ? g.recipeGuids.map((guid, i) => osCardHtml(i, guid)).join("")
+          : '<p class="modal-hint os-empty">（空组——点下方按钮添加菜谱）</p>')
+      + `</div>`
+      + `<div class="os-add-bar">`
+      + `<button type="button" class="os-chip-btn" id="rw-os-toggle-add">＋ 添加菜谱${osAddOpen ? " ▴" : " ▾"}</button>`
+      + `<span class="modal-hint">${g.mode === 1 ? "随机组出满 N 单换下一组（列表仅决定候选池）" : "按卡片顺序出单，同一菜谱可多次出现"}</span>`
+      + `</div>`
+      + (osAddOpen ? osAddPanelHtml() : "")
+      + `</div>`;
+  };
+
+  interface OsPreviewToken {
+    gi: number;
+    text: string;
+    title: string;
+  }
+
+  /** 一组在当前方向上的示意 token：最多展示两道菜；随机组只展示抽菜数量。
+   *  ordered 倒放时菜序也倒过来（与 OrderSequenceDirector：s_cursor 从尾开始、s_dir 为负一致）。 */
+  const osPreviewGroupToken = (gi: number, g: OrderSequenceGroup, dir: 1 | -1): OsPreviewToken => {
+    const allNames = g.recipeGuids.map(osRecipeLabel);
+    const fullTitle = allNames.length > 12
+      ? `${allNames.slice(0, 12).join("、")}…（共 ${allNames.length} 道）`
+      : allNames.join("、");
+    if (g.mode === 1) {
+      const distinct = new Set(g.recipeGuids).size;
+      const n = g.batchSize > 0 ? g.batchSize : distinct;
+      return {
+        gi,
+        text: n > 0 ? `🎲 随机 ${n} 道` : "🎲 空组",
+        title: `组 ${gi + 1}：随机抽取 ${n} 道${fullTitle ? `（候选：${fullTitle}）` : ""}`,
+      };
+    }
+    const guids = dir < 0 ? [...g.recipeGuids].reverse() : g.recipeGuids;
+    if (!guids.length) return { gi, text: "空组", title: `组 ${gi + 1}：空组` };
+    const shown = guids.slice(0, 2).map((guid) => escHtml(osRecipeLabel(guid)));
+    const more = guids.length - shown.length;
+    return {
+      gi,
+      text: shown.join(" · ") + (more > 0 ? ` +${more}` : ""),
+      title: `组 ${gi + 1}：${fullTitle}`,
+    };
+  };
+
+  /** 序列展开预览。组推进与运行时 AdvanceGroup 相同：钟摆在端点翻转方向后从相邻组继续，
+   *  端点组不连播两次（两组即 A B A B…，不是 A B B A）。loop 两轮，stop 一轮，最多 24 项。 */
+  const osPreviewTokens = (): { tokens: OsPreviewToken[]; truncated: boolean } => {
+    const seq = orderSeq;
+    if (!seq || seq.groups.length === 0) return { tokens: [], truncated: false };
+    const groups = seq.groups;
+    const n = groups.length;
+    const all: OsPreviewToken[] = [];
+    let gi = 0;
+    let dir: 1 | -1 = 1;
+    const maxVisits = seq.endBehavior === "stop" ? n : seq.endBehavior === "loop" ? n * 2 : n * 2 + 1;
+    for (let visits = 0; visits < maxVisits; visits++) {
+      all.push(osPreviewGroupToken(gi, groups[gi], dir));
+      let next = gi + dir;
+      if (next < 0 || next >= n) {
+        if (seq.endBehavior === "pingpong") {
+          dir = dir === 1 ? -1 : 1;
+          next = gi + dir;
+          if (next < 0 || next >= n) next = gi;
+        } else if (seq.endBehavior === "loop") {
+          dir = 1;
+          next = 0;
+        } else {
+          break;
+        }
+      }
+      gi = next;
+    }
+    const cap = 24;
+    return { tokens: all.slice(0, cap), truncated: all.length > cap };
+  };
+
+  const orderSeqTabHtml = (): string => {
+    if (!orderSeqLoaded) return '<p class="modal-hint">订单顺序配置加载中…</p>';
+    const seq = ensureOrderSeq();
+    if (osActiveGroup >= seq.groups.length) osActiveGroup = Math.max(0, seq.groups.length - 1);
+    const preview = osPreviewTokens();
+    return `<div class="rw-toolbar os-top">`
+      + `<label class="os-enable"><input type="checkbox" id="rw-os-enabled"${seq.enabled ? " checked" : ""}> 启用自定义订单顺序</label>`
+      + `<label class="os-end">全部播完后 <select id="rw-os-end">`
+      + `<option value="loop"${seq.endBehavior === "loop" ? " selected" : ""}>循环重播</option>`
+      + `<option value="pingpong"${seq.endBehavior === "pingpong" ? " selected" : ""}>倒序回放（钟摆 A B C D C B A…）</option>`
+      + `<option value="stop"${seq.endBehavior === "stop" ? " selected" : ""}>停止出单</option>`
+      + `</select></label>`
+      + `<span class="modal-hint">未启用 = 原版加权随机出单</span>`
+      + `</div>`
+      + (seq.groups.length
+          ? osGroupTabsHtml(seq) + osGroupPanelHtml(seq)
+          : '<p class="modal-hint">尚未配置菜单组——点击下方按钮创建第一个组。</p>'
+            + '<button type="button" class="os-chip-btn" id="rw-os-addgroup">＋ 新增菜单组</button>')
+      + (preview.tokens.length
+          ? `<div class="os-preview"><div class="os-preview-head">出单序列示意</div><div class="os-preview-flow">`
+            + preview.tokens
+                .map(
+                  (t) =>
+                    `<span class="os-preview-token" style="--os-g-color:${osGroupColor(t.gi)}" title="${escHtml(t.title)}">`
+                    + `<span class="os-preview-gi">${t.gi + 1}</span>${t.text}</span>`,
+                )
+                .join('<span class="os-preview-sep">→</span>')
+            + (preview.truncated
+                ? '<span class="os-preview-sep">→</span><span class="os-preview-token os-preview-more">…</span>'
+                : "")
+            + `</div></div>`
+          : "")
+      + `<p class="modal-hint">保存写入 data/&lt;关卡&gt;/order_seq~/；随写回或导出自动烘焙进场景，编辑器 Play / 真机同路径生效。</p>`;
+  };
+
+  /** 通用拖拽（burgerMaker 范式：不依赖 drop 事件——dragover 实时换位 DOM，dragend
+   *  按 DOM 现有顺序回写并重绘；嵌套按钮结构下 drop 经常不触发）。 */
+  const wireOsDrag = (list: HTMLElement, itemSel: string, commit: () => void): void => {
+    let dragEl: HTMLElement | null = null;
+    list.querySelectorAll<HTMLElement>(itemSel).forEach((el) => {
+      el.addEventListener("dragstart", (e) => {
+        dragEl = el;
+        el.classList.add("dragging");
+        const dt = (e as DragEvent).dataTransfer;
+        if (dt) {
+          dt.effectAllowed = "move";
+          dt.setData("text/plain", el.dataset.guid ?? el.dataset.gi ?? ""); // Firefox 必须 setData
+        }
+      });
+      el.addEventListener("dragend", () => {
+        el.classList.remove("dragging");
+        dragEl = null;
+        commit();
+      });
+      el.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        if (!dragEl || dragEl === el) return;
+        const rect = el.getBoundingClientRect();
+        const ev = e as DragEvent;
+        // 完整菜谱卡会换行：离中心更远的那一轴决定插到前面还是后面。
+        const nx = (ev.clientX - rect.left) / Math.max(rect.width, 1) - 0.5;
+        const ny = (ev.clientY - rect.top) / Math.max(rect.height, 1) - 0.5;
+        const before = Math.abs(ny) > Math.abs(nx) ? ny < 0 : nx < 0;
+        const anchor = before ? el : el.nextSibling;
+        if (anchor === dragEl) return;
+        list.insertBefore(dragEl, anchor);
+      });
+    });
+  };
+
+  const commitOsCards = (): void => {
+    const seq = ensureOrderSeq();
+    const g = seq.groups[osActiveGroup];
+    const cardsEl = document.getElementById("rw-os-cards");
+    if (!g || !cardsEl) return;
+    const order = Array.from(cardsEl.querySelectorAll<HTMLElement>(".os-card")).map((c) => c.dataset.guid ?? "");
+    if (order.length !== g.recipeGuids.length) return;
+    if (order.join("\u0000") === g.recipeGuids.join("\u0000")) return;
+    g.recipeGuids = order;
+    orderSeqDirty = true;
+    render({ preserveScroll: true }); // 序号 / 预览 / tab 计数同步
+  };
+
+  const commitOsGroups = (dragGi: number): void => {
+    const seq = ensureOrderSeq();
+    const tabsEl = document.getElementById("rw-os-gtabs");
+    if (!tabsEl) return;
+    const order = Array.from(tabsEl.querySelectorAll<HTMLElement>(".os-gtab[data-gi]")).map((t) =>
+      Number(t.dataset.gi),
+    );
+    if (order.length !== seq.groups.length) return;
+    const next = order.map((i) => seq.groups[i]);
+    if (next.some((x) => x == null)) return;
+    seq.groups = next;
+    const at = order.indexOf(dragGi);
+    osActiveGroup = at >= 0 ? at : Math.min(osActiveGroup, next.length - 1);
+    orderSeqDirty = true;
+    render({ preserveScroll: true });
+  };
+
+  /** 添加面板条目点选（局部刷新选中态/计数，不整页重绘）。 */
+  const wireOsAddItems = (): void => {
+    document.querySelectorAll<HTMLElement>("#rw-os-add-grid .os-add-item").forEach((item) => {
+      item.addEventListener("click", () => {
+        const guid = item.dataset.guid ?? "";
+        if (!guid) return;
+        if (osAddPicked.has(guid)) osAddPicked.delete(guid);
+        else osAddPicked.add(guid);
+        syncOsAddBulkUi();
+      });
+    });
+  };
+
+  const wireOsAddConfirm = (): void => {
+    document.getElementById("rw-os-add-confirm")?.addEventListener("click", () => {
+      const g = ensureOrderSeq().groups[osActiveGroup];
+      if (!g || !osAddPicked.size) return;
+      for (const guid of osAddPicked) g.recipeGuids.push(guid);
+      osAddOpen = false;
+      osAddPicked.clear();
+      orderSeqDirty = true;
+      render({ preserveScroll: true });
+    });
+  };
+
+  /** 批量选择后只同步选中态、计数与按钮文案，保持搜索框焦点和滚动位置。 */
+  const syncOsAddBulkUi = (): void => {
+    const grid = document.getElementById("rw-os-add-grid");
+    if (!grid) return;
+    grid.querySelectorAll<HTMLElement>(".os-add-item").forEach((item) => {
+      const on = osAddPicked.has(item.dataset.guid ?? "");
+      item.classList.toggle("picked", on);
+      item.classList.toggle("selected", on);
+    });
+    const updateBulk = (
+      btn: Element | null,
+      stats: { total: number; picked: number },
+      label: (all: boolean, total: number) => string,
+    ): void => {
+      if (!(btn instanceof HTMLButtonElement)) return;
+      const all = stats.total > 0 && stats.picked === stats.total;
+      btn.textContent = label(all, stats.total);
+      btn.disabled = stats.total === 0;
+      btn.classList.toggle("active", all);
+    };
+    grid.querySelectorAll<HTMLElement>(".rw-cat").forEach((cat) => {
+      const stats = osAddStats(cat);
+      const sel = cat.querySelector<HTMLElement>(".rw-cat-sel");
+      if (sel) sel.textContent = String(stats.picked);
+      const total = cat.querySelector<HTMLElement>(".rw-cat-total");
+      if (total) total.textContent = String(stats.total);
+      updateBulk(cat.querySelector(".rw-cat-select-all"), stats, (all) => (all ? "取消本类" : "全选本类"));
+    });
+    grid.querySelectorAll<HTMLElement>(".rw-group").forEach((grp) => {
+      const stats = osAddStats(grp);
+      const sel = grp.querySelector<HTMLElement>(".rw-group-sel");
+      if (sel) sel.textContent = String(stats.picked);
+      const total = grp.querySelector<HTMLElement>(".rw-group-total");
+      if (total) total.textContent = String(stats.total);
+      updateBulk(grp.querySelector(".rw-group-select-all"), stats, (all) => (all ? "取消全选" : "全选"));
+    });
+    const allStats = osAddStats(grid);
+    updateBulk(
+      document.getElementById("rw-os-add-all"),
+      allStats,
+      (all, total) => (all ? `取消全选（${total}）` : `全选全部（${total}）`),
+    );
+    const pickedEl = document.getElementById("rw-os-add-picked");
+    if (pickedEl) pickedEl.textContent = `已选 ${osAddPicked.size} / 共 ${osAddPool().length}`;
+    const clearBtn = document.getElementById("rw-os-add-clear");
+    if (clearBtn instanceof HTMLButtonElement) clearBtn.disabled = osAddPicked.size === 0;
+    const confirmBtn = document.getElementById("rw-os-add-confirm");
+    if (confirmBtn) confirmBtn.outerHTML = osAddConfirmHtml();
+    wireOsAddConfirm();
+  };
+
+  /** 全选/取消全选一个分组（可见卡片范围）。 */
+  const toggleOsAddBulk = (root: ParentNode): void => {
+    const { total, picked } = osAddStats(root);
+    if (!total) return;
+    const check = picked < total;
+    root.querySelectorAll<HTMLElement>(".os-add-item").forEach((item) => {
+      const guid = item.dataset.guid ?? "";
+      if (!guid) return;
+      if (check) osAddPicked.add(guid);
+      else osAddPicked.delete(guid);
+    });
+    syncOsAddBulkUi();
+  };
+
+  /** 添加面板网格接线：条目点选、分类/类型折叠、分组批量选择。 */
+  const wireOsAddGrid = (): void => {
+    wireOsAddItems();
+    document.querySelectorAll<HTMLElement>("#rw-os-add-grid .rw-cat-header").forEach((hdr) => {
+      hdr.addEventListener("click", (e) => {
+        if ((e.target as HTMLElement).closest("button")) return;
+        const cat = hdr.closest<HTMLElement>(".rw-cat");
+        const key = cat?.dataset.cat ?? "";
+        if (!key) return;
+        if (osAddCollapsedCats.has(key)) osAddCollapsedCats.delete(key);
+        else osAddCollapsedCats.add(key);
+        cat?.classList.toggle("collapsed", osAddCollapsedCats.has(key));
+      });
+    });
+    document.querySelectorAll<HTMLElement>("#rw-os-add-grid .rw-group-header").forEach((hdr) => {
+      hdr.addEventListener("click", (e) => {
+        if ((e.target as HTMLElement).closest("button")) return;
+        const grp = hdr.closest<HTMLElement>(".rw-group");
+        const cat = grp?.closest<HTMLElement>(".rw-cat")?.dataset.cat ?? "";
+        const key = `${cat}:${grp?.dataset.type ?? ""}`;
+        if (osAddCollapsedTypes.has(key)) osAddCollapsedTypes.delete(key);
+        else osAddCollapsedTypes.add(key);
+        grp?.classList.toggle("collapsed", osAddCollapsedTypes.has(key));
+      });
+    });
+    document.querySelectorAll<HTMLButtonElement>("#rw-os-add-grid .rw-cat-select-all").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const cat = btn.closest<HTMLElement>(".rw-cat");
+        if (cat) toggleOsAddBulk(cat);
+      });
+    });
+    document.querySelectorAll<HTMLButtonElement>("#rw-os-add-grid .rw-group-select-all").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const grp = btn.closest<HTMLElement>(".rw-group");
+        if (grp) toggleOsAddBulk(grp);
+      });
+    });
+    syncOsAddBulkUi();
+  };
+
+  /** 添加面板顶部全局按钮（整页重绘时重挂一次）。 */
+  const wireOsAddPanel = (): void => {
+    document.getElementById("rw-os-add-all")?.addEventListener("click", () => {
+      const grid = document.getElementById("rw-os-add-grid");
+      if (grid) toggleOsAddBulk(grid);
+    });
+    document.getElementById("rw-os-add-clear")?.addEventListener("click", () => {
+      osAddPicked.clear();
+      syncOsAddBulkUi();
+    });
+  };
+
+  /** 添加面板局部刷新：只重建网格（搜索框保持焦点）。 */
+  const refreshOsAddGrid = (): void => {
+    const grid = document.getElementById("rw-os-add-grid");
+    if (grid) {
+      grid.innerHTML = osAddGridHtml();
+      grid.scrollTop = 0;
+    }
+    wireOsAddGrid();
+  };
+
+  /** 删除菜单组：非空组二次确认，避免误删已配置的整组菜谱。 */
+  const deleteOsGroup = (gi: number): void => {
+    const seq = ensureOrderSeq();
+    const g = seq.groups[gi];
+    if (!g) return;
+    if (
+      g.recipeGuids.length > 0 &&
+      !window.confirm(`删除组 ${gi + 1}？组内 ${g.recipeGuids.length} 道菜将一并移除。`)
+    ) {
+      return;
+    }
+    const wasActive = gi === osActiveGroup;
+    seq.groups.splice(gi, 1);
+    if (gi < osActiveGroup) osActiveGroup -= 1;
+    if (osActiveGroup >= seq.groups.length) osActiveGroup = Math.max(0, seq.groups.length - 1);
+    if (wasActive || seq.groups.length === 0) {
+      osAddOpen = false;
+      osAddPicked.clear();
+    }
+    orderSeqDirty = true;
+    render({ preserveScroll: true });
+  };
+
+  const wireOrderSeq = () => {
+    document.getElementById("rw-os-enabled")?.addEventListener("change", (e) => {
+      ensureOrderSeq().enabled = (e.target as HTMLInputElement).checked;
+      orderSeqDirty = true;
+      render({ preserveScroll: true });
+    });
+    document.getElementById("rw-os-end")?.addEventListener("change", (e) => {
+      ensureOrderSeq().endBehavior = (e.target as HTMLSelectElement).value as LevelOrderSequence["endBehavior"];
+      orderSeqDirty = true;
+      render({ preserveScroll: true });
+    });
+    document.getElementById("rw-os-addgroup")?.addEventListener("click", () => {
+      ensureOrderSeq().groups.push({ mode: 0, batchSize: 0, recipeGuids: [] });
+      osActiveGroup = ensureOrderSeq().groups.length - 1;
+      osAddOpen = true; // 新组直接展开添加面板
+      osAddPicked.clear();
+      orderSeqDirty = true;
+      render({ preserveScroll: true });
+      requestAnimationFrame(() => {
+        document.querySelector(".os-panel")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      });
+    });
+
+    const seq = ensureOrderSeq();
+    const g = seq.groups[osActiveGroup];
+    if (!g) return;
+
+    // 组 tab：点击切换 / ✕ 删除（✕ 命中时不当切换处理）
+    document.querySelectorAll<HTMLElement>("#rw-os-gtabs .os-gtab[data-gi]").forEach((tab) => {
+      tab.addEventListener("click", (e) => {
+        if ((e.target as HTMLElement).closest(".os-gtab-del")) {
+          deleteOsGroup(Number(tab.dataset.gi));
+          return;
+        }
+        osActiveGroup = Number(tab.dataset.gi);
+        osAddOpen = false;
+        osAddPicked.clear();
+        render({ preserveScroll: true });
+      });
+    });
+    const tabsEl = document.getElementById("rw-os-gtabs");
+    if (tabsEl) {
+      let dragTabGi = -1;
+      tabsEl.querySelectorAll<HTMLElement>(".os-gtab[data-gi]").forEach((el) => {
+        el.addEventListener("dragstart", () => {
+          dragTabGi = Number(el.dataset.gi);
+        });
+      });
+      wireOsDrag(tabsEl, ".os-gtab[data-gi]", () => commitOsGroups(dragTabGi));
+    }
+
+    // 面板工具条：模式 / 抽菜数 / 删除组
+    document.querySelector<HTMLElement>('[data-osa="mode"]')?.addEventListener("change", (e) => {
+      g.mode = (e.target as HTMLSelectElement).value === "1" ? 1 : 0;
+      orderSeqDirty = true;
+      render({ preserveScroll: true });
+    });
+    document.querySelector<HTMLElement>('[data-osa="gdel"]')?.addEventListener("click", () => {
+      deleteOsGroup(osActiveGroup);
+    });
+    document.getElementById("rw-os-batch-mode")?.addEventListener("change", (e) => {
+      g.batchSize = (e.target as HTMLSelectElement).value === "custom" ? Math.max(1, g.batchSize || 3) : 0;
+      orderSeqDirty = true;
+      render({ preserveScroll: true });
+    });
+    document.getElementById("rw-os-batch-n")?.addEventListener("change", (e) => {
+      g.batchSize = Math.max(1, Math.min(999, parseInt((e.target as HTMLInputElement).value || "0", 10) || 1));
+      (e.target as HTMLInputElement).value = String(g.batchSize);
+      orderSeqDirty = true;
+      render({ preserveScroll: true }); // tab 标签（抽 N 道）与预览同步
+    });
+
+    // 菜谱卡片：移除 / 拖拽排序
+    document.querySelectorAll<HTMLElement>("#rw-os-cards .os-card-del").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const i = Number(btn.dataset.osi);
+        g.recipeGuids.splice(i, 1);
+        orderSeqDirty = true;
+        render({ preserveScroll: true });
+      });
+    });
+    const cardsEl = document.getElementById("rw-os-cards");
+    if (cardsEl) wireOsDrag(cardsEl, ".os-card", commitOsCards);
+
+    // 多选添加面板：开合 / 搜索（局部刷新保焦点）/ 点选 / 确认
+    document.getElementById("rw-os-toggle-add")?.addEventListener("click", () => {
+      osAddOpen = !osAddOpen;
+      osAddPicked.clear();
+      render({ preserveScroll: true });
+    });
+    const addSearch = document.getElementById("rw-os-add-search") as HTMLInputElement | null;
+    addSearch?.addEventListener("input", () => {
+      osAddQuery = addSearch.value;
+      refreshOsAddGrid();
+    });
+    wireOsAddPanel();
+    wireOsAddGrid();
+  };
+
+  const doSaveOrderSeq = async () => {
+    if (!level?.levelInfoAssetPath) return;
+    const seq = ensureOrderSeq();
+    if (seq.enabled) {
+      if (seq.groups.length === 0) { setStatus("启用订单顺序至少需要 1 个菜单组", false); return; }
+      for (let i = 0; i < seq.groups.length; i++) {
+        if (seq.groups[i].recipeGuids.length === 0) {
+          setStatus(`第 ${i + 1} 组至少需要 1 道菜谱`, false);
+          return;
+        }
+      }
+    }
+    try {
+      await saveLevelOrderSequence(level.levelInfoAssetPath, seq);
+      orderSeqDirty = false;
+      setStatus(
+        seq.enabled
+          ? `订单顺序已保存（${seq.groups.length} 组）——写回本关或导出关卡集后生效`
+          : "订单顺序已保存（未启用 = 原版随机出单）",
+      );
+      render({ preserveScroll: true });
     } catch (e) {
       setStatus((e as Error).message, false);
     }

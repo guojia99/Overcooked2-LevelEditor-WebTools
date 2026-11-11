@@ -54,6 +54,7 @@ import { openUtensilManager } from "./ui/utensilManager";
 import { openCounterSkinManager, ensureCounter3dLoaded } from "./ui/counterSkinManager";
 import { openWebAssetsExportModal } from "./ui/webAssetsExportModal";
 import { openCameraLightModal } from "./cameraLight";
+import { initUnityPreview, applyUnityPreviewVisibility, refreshUnityPreview } from "./ui/unityPreview";
 import { buildLightPalette } from "./lightPalette";
 import {
   applyPanelCollapse,
@@ -183,6 +184,7 @@ function syncViewConfigPopover(): void {
   set("counter-skin-paint", S.counterSkinPaint);
   set("show-camera-fov", S.showCameraFov);
   set("show-scene-lights", S.showSceneLights);
+  set("show-unity-preview", S.showUnityPreview);
   set("show-coords", S.showCoords);
   set("allow-ws-overlap", S.allowWorkstationOverlap);
   set("chk-auto-intermediates", S.autoIntermediates);
@@ -766,6 +768,14 @@ export async function init() {
     draw();
   });
 
+  document.getElementById("show-unity-preview")!.addEventListener("change", (e) => {
+    S.showUnityPreview = (e.target as HTMLInputElement).checked;
+    localStorage.setItem("unityPreview", S.showUnityPreview ? "1" : "0");
+    applyUnityPreviewVisibility();
+    // 开启即抓一张（关闭 = 面板整体隐藏，不抓取）；进行中的抓取会被合并。
+    if (S.showUnityPreview) void refreshUnityPreview();
+  });
+
   document.getElementById("show-coords")!.addEventListener("change", (e) => {
     S.showCoords = (e.target as HTMLInputElement).checked;
     if (!S.showCoords) {
@@ -848,6 +858,7 @@ export async function init() {
   initPaletteGroupActions();
   wireVisibilityPopover();
   wireViewConfigPopover();
+  initUnityPreview();
   wireGridAlign();
   setupCanvas();
   initContextMenuDrag();

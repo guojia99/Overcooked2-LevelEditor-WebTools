@@ -33,6 +33,45 @@ export interface RecipeLike {
 
 export interface IntermediateLike extends RecipeLike {}
 
+export const SALAD_SUBGROUPS = [
+  { id: "mustard_only", label: "仅芥末酱" },
+  { id: "ketchup_only", label: "仅番茄酱" },
+  { id: "both_sauces", label: "双酱" },
+  { id: "no_sauce", label: "无酱" },
+  { id: "official", label: "官方沙拉" },
+  { id: "non_dlc11_official", label: "非DLC11官方沙拉" },
+] as const;
+
+export type SaladSubgroup = (typeof SALAD_SUBGROUPS)[number]["id"];
+
+/** Built-in salads only; mirrors build-catalog.mjs / ComputeSaladSubgroups.
+ *  Story-ingredient salads (including sauce extensions) form an exclusive group.
+ *  Remaining sauce membership is exclusive; official provenance is an independent view.
+ *  Compute locally as well so existing catalog snapshots need no migration. */
+export function deriveSaladSubgroups(r: RecipeLike & { group?: string; assetPath?: string }): SaladSubgroup[] {
+  if (r.type !== "salad" || r.group === "levelset" ||
+      (r.assetPath ?? "").replace(/\\/g, "/").startsWith("Assets/LevelSets/")) return [];
+  const ingredients = r.ingredients ?? [];
+  const leaves = ingredients.filter((id) => !["mustard", "DLC08_Mustard", "dlc11_mustard", "ketchup", "DLC08_Ketchup", "dlc11_ketchup"].includes(id));
+  if (leaves.length > 0 && leaves.every((id) => ["LettuceSO", "TomatoSO", "CucumberSO"].includes(id)))
+    return ["non_dlc11_official"];
+  const mustard = ingredients.some((id) => ["mustard", "DLC08_Mustard", "dlc11_mustard"].includes(id));
+  const ketchup = ingredients.some((id) => ["ketchup", "DLC08_Ketchup", "dlc11_ketchup"].includes(id));
+  const groups: SaladSubgroup[] = [mustard ? (ketchup ? "both_sauces" : "mustard_only") : (ketchup ? "ketchup_only" : "no_sauce")];
+  if (r.isCustom === false) groups.push("official");
+  return groups;
+}
+
+export function groupSalads<T extends RecipeLike & { id: string; group?: string; assetPath?: string }>(items: T[]): [string, T[]][] {
+  const unique = [...new Map(items.map((r) => [r.id, r])).values()];
+  const memberships = new Map(unique.map((r) => [r.id, deriveSaladSubgroups(r)]));
+  return [
+    ...SALAD_SUBGROUPS.map(({ id, label }): [string, T[]] =>
+      [label, unique.filter((r) => memberships.get(r.id)!.includes(id))]),
+    ["本关沙拉", unique.filter((r) => memberships.get(r.id)!.length === 0)] as [string, T[]],
+  ].filter(([, list]) => list.length > 0);
+}
+
 /** Mirrors STEP_UTENSILS in build-catalog.mjs / LayoutEditorRecipeKnowledge.cs. */
 export const STEP_UTENSILS: Record<string, string[]> = {
   Pot: ["Cooker", "Pot"],
@@ -408,6 +447,7 @@ export function deriveCookingGroups(r: RecipeLike, allRecipes: IntermediateLike[
   // 蛋糕/布丁同族：全部食材一起搅拌 + 烤箱（与松饼/烧麦同一展示语义）
   const cakeLike = r.type === "cake" || r.type === "pudding";
   if (r.type === "sushi") {
+    // 实际菜谱：寿司米进煮锅（BoiledSushiRice = Pot），鱼/虾/海苔生食，不进蒸笼。
     for (const ing of ingredients) prep.set(ing, ing === "SushiRiceSO" || ing === "RiceSO" ? "Pot" : "");
   } else if (r.type === "burrito") {
     for (const ing of ingredients) {

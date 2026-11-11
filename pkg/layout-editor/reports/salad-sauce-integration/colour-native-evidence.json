@@ -1,0 +1,231 @@
+{
+  "ok": true,
+  "nativeNodes": [
+    {
+      "family": "dlc08",
+      "uid": 17094,
+      "name": "Mustard",
+      "icon": "Mustard_Icon",
+      "iconMeanRgb": [
+        222.64197443683355,
+        220.4011722335993,
+        192.634842172163
+      ],
+      "colour": {
+        "r": 0.9019608497619629,
+        "g": 0.7058823704719543,
+        "b": 0.0941176563501358,
+        "a": 1.0
+      },
+      "pathId": 4553582140256377644
+    },
+    {
+      "family": "dlc08",
+      "uid": 158482,
+      "name": "Ketchup",
+      "icon": "Ketchup_Icon",
+      "iconMeanRgb": [
+        224.46444460136996,
+        187.33549890544452,
+        189.1060659557941
+      ],
+      "colour": {
+        "r": 0.803921639919281,
+        "g": 0.1568627506494522,
+        "b": 0.0,
+        "a": 1.0
+      },
+      "pathId": 2079775487155804518
+    },
+    {
+      "family": "dlc11",
+      "uid": 890076,
+      "name": "DLC11_Mustard",
+      "icon": "Mustard_Icon",
+      "iconMeanRgb": [
+        222.64197443683355,
+        220.4011722335993,
+        192.634842172163
+      ],
+      "colour": {
+        "r": 0.9019608497619629,
+        "g": 0.7058823704719543,
+        "b": 0.0941176563501358,
+        "a": 1.0
+      },
+      "pathId": -3616709745086337682
+    },
+    {
+      "family": "dlc11",
+      "uid": 890084,
+      "name": "DLC11_Ketchup",
+      "icon": "Ketchup_Icon",
+      "iconMeanRgb": [
+        224.46444460136996,
+        187.33549890544452,
+        189.1060659557941
+      ],
+      "colour": {
+        "r": 0.803921639919281,
+        "g": 0.1568627506494522,
+        "b": 0.0,
+        "a": 1.0
+      },
+      "pathId": -5484690186904147785
+    }
+  ],
+  "machines": [
+    {
+      "family": "dlc08",
+      "slots": [
+        {
+          "slot": 0,
+          "uid": 17094,
+          "trigger": "Condiment1",
+          "effect": "MustardSquirt",
+          "mesh": "Condiment_1",
+          "material": "mat_dlc08_gameplayobjects_01",
+          "texture": "t_dlc08_gameplayobjects_01_d",
+          "uvMeanRgb": [
+            199.69461077844312,
+            188.8323353293413,
+            107.88023952095809
+          ]
+        },
+        {
+          "slot": 1,
+          "uid": 158482,
+          "trigger": "Condiment2",
+          "effect": "KetchupSquirt",
+          "mesh": "Condiment_2",
+          "material": "mat_dlc08_gameplayobjects_01",
+          "texture": "t_dlc08_gameplayobjects_01_d",
+          "uvMeanRgb": [
+            190.79341317365268,
+            137.26347305389223,
+            99.54491017964072
+          ]
+        }
+      ]
+    },
+    {
+      "family": "dlc11",
+      "slots": [
+        {
+          "slot": 0,
+          "uid": 890076,
+          "trigger": "Condiment1",
+          "effect": "MustardSquirt",
+          "mesh": "Condiment_1",
+          "material": "mat_dlc08_gameplayobjects_01",
+          "texture": "t_dlc08_gameplayobjects_01_d",
+          "uvMeanRgb": [
+            199.69461077844312,
+            188.8323353293413,
+            107.88023952095809
+          ]
+        },
+        {
+          "slot": 1,
+          "uid": 890084,
+          "trigger": "Condiment2",
+          "effect": "KetchupSquirt",
+          "mesh": "Condiment_2",
+          "material": "mat_dlc08_gameplayobjects_01",
+          "texture": "t_dlc08_gameplayobjects_01_d",
+          "uvMeanRgb": [
+            190.79341317365268,
+            137.26347305389223,
+            99.54491017964072
+          ]
+        }
+      ]
+    }
+  ],
+  "hotdogs": [
+    {
+      "family": "dlc08",
+      "recipe": "Hotdog_Ketchup",
+      "sauce": "ketchup",
+      "mesh": "m_dlc8_recipe_hotdog_f_k_01",
+      "material": "mat_dlc8_ingredients_01",
+      "texture": "t_dlc8_ingredients_01_d",
+      "uvMeanRgb": [
+        145.8243430152144,
+        67.91286307053942,
+        35.86445366528354
+      ]
+    },
+    {
+      "family": "dlc08",
+      "recipe": "Hotdog_Mustard",
+      "sauce": "mustard",
+      "mesh": "m_dlc8_recipe_hotdog_f_m_01",
+      "material": "mat_dlc8_ingredients_01",
+      "texture": "t_dlc8_ingredients_01_d",
+      "uvMeanRgb": [
+        161.43702770780857,
+        100.78841309823677,
+        43.70780856423174
+      ]
+    },
+    {
+      "family": "dlc11",
+      "recipe": "DLC11_Hotdog_Ketchup",
+      "sauce": "ketchup",
+      "mesh": "m_dlc8_recipe_hotdog_f_k_01",
+      "material": "mat_dlc8_ingredients_01",
+      "texture": "t_dlc8_ingredients_01_d",
+      "uvMeanRgb": [
+        145.8243430152144,
+        67.91286307053942,
+        35.86445366528354
+      ]
+    },
+    {
+      "family": "dlc11",
+      "recipe": "DLC11_Hotdog_Mustard",
+      "sauce": "mustard",
+      "mesh": "m_dlc8_recipe_hotdog_f_m_01",
+      "material": "mat_dlc8_ingredients_01",
+      "texture": "t_dlc8_ingredients_01_d",
+      "uvMeanRgb": [
+        161.43702770780857,
+        100.78841309823677,
+        43.70780856423174
+      ]
+    }
+  ],
+  "saladTextures": [
+    {
+      "name": "SaladKetchup",
+      "meanRgb": [
+        232.95258331298828,
+        31.876484870910645,
+        7.6849775314331055
+      ],
+      "source": "/Users/guojia/Desktop/oc2_editor/backup_rebuild_20260917_132624/酱料/黄芥末.fbx",
+      "sourceSha256": "e03c8e9f8f56dea86aadfc21621cc325a0955178b9e11f10598c8952d54a6a1d",
+      "sourceEmbeddedDecodedRgb": [
+        0.970867395401001,
+        0.12298852205276489,
+        0.03023625910282135
+      ]
+    },
+    {
+      "name": "SaladMustard",
+      "meanRgb": [
+        251.13216018676758,
+        153.62389469146729,
+        10.153460502624512
+      ],
+      "source": "/Users/guojia/Desktop/oc2_editor/backup_rebuild_20260917_132624/酱料/番茄.fbx",
+      "sourceSha256": "3aae53437eb29c8dc81ebc6a533ea179ac48f9f030c5eaf69a07dbc4a24fac95",
+      "sourceEmbeddedDecodedRgb": [
+        0.9955784678459167,
+        0.6116183400154114,
+        0.038029346615076065
+      ]
+    }
+  ]
+}

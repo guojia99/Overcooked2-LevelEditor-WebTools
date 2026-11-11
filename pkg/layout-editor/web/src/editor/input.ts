@@ -45,6 +45,7 @@ import { showBatchHeightMenu, showContextMenu, showWaypointContextMenu } from ".
 import { selectionHeightTargetCount } from "./selectionHeight";
 import { batchNudgeSelected, batchRotateSelected, batchTransformCount } from "./selectionTransform";
 import { openFloorEditorModal } from "./floorEditorModal";
+import { applyCameraTargetPick, cancelCameraTargetPick } from "./cameraLight";
 import { updateFloorBar } from "./floorPalette";
 import {
   addFloorAt,
@@ -94,7 +95,7 @@ import { hitTestAll, hitTestItemResizeHandle } from "./renderItems";
 import { hitTestFloorsAll, type FloorHit } from "./renderFloors";
 import { floorWalkY, floorLayerIndex } from "./floorHeight";
 import { updateMarqueeSelection } from "./render";
-import { hitTestWaypoints, waypointInfo, deleteWaypoint, activeGroup, updateAnimPickBar, exitAnimMode, removeSelectedMembers, toggleAnimPreview } from "./animControl";
+import { hitTestWaypoints, waypointInfo, deleteWaypoint, activeGroup, updateAnimPickBar, exitAnimMode, removeSelectedMembers, toggleAnimPreview, hitTestOrbitCenter, hitTestCtrlPoint } from "./animControl";
 import { renderRightPanel, updatePanelTabButtons } from "./panels";
 import { isPlayerItem } from "./renderItems";
 import { isAirWallItem } from "./stubControls";
@@ -389,6 +390,16 @@ export function setupCanvas() {
     hidePickTip();
     clearWorkstationOverlapAlert();
 
+    // 进场动画目标选点（聚焦点 / 巡回 A/B）：一次性消耗任意图层的左键点击
+    // （相机弹窗「进场动画」tab 的画布选点发起，坐标按当前吸附步长取整）。
+    if (S.pendingCameraTargetPick) {
+      const pickWhich = S.pendingCameraTargetPick;
+      S.pendingCameraTargetPick = "";
+      dom.canvas.style.cursor = "";
+      applyCameraTargetPick(pickWhich, snapValue(wx, S.freeSnapStep), snapValue(wz, S.freeSnapStep));
+      return;
+    }
+
     if (S.currentLayer === "lights") {
       hideDetail();
       hideContextMenu();
@@ -429,6 +440,26 @@ export function setupCanvas() {
       // floors under them can be picked.
       const inMembersMode =
         onAnimLayer && S.animMode === "members" && !!activeGroup();
+
+      // 激活组专属句柄优先于路点：orbit 圆心十字 / 贝塞尔控制点菱形（左键拖拽）。
+      if (onAnimLayer && activeGroup() && e.button === 0) {
+        const ocIdx = hitTestOrbitCenter(wx, wz);
+        if (ocIdx !== null) {
+          S.dragSnapshot = snapshotState();
+          S.draggingOrbitCenter = ocIdx;
+          S.activeAnimEventIdx = ocIdx;
+          draw();
+          return;
+        }
+        const cpId = hitTestCtrlPoint(wx, wz);
+        if (cpId) {
+          S.dragSnapshot = snapshotState();
+          S.draggingCtrlPoint = cpId;
+          S.selectedWaypointId = cpId;
+          draw();
+          return;
+        }
+      }
 
       if (!inMembersMode) {
         // 0.5 格内的路点视为重合：命中多个时弹出选点列表（与物品选点一致）。
@@ -1086,6 +1117,32 @@ export function setupCanvas() {
       return;
     }
 
+    if (S.draggingOrbitCenter !== null) {
+      const { x: wx, z: wz } = canvasToWorld(mx, my);
+      const group = activeGroup();
+      const evt = group?.events[S.draggingOrbitCenter];
+      if (evt && evt.type === "orbit") {
+        evt.orbitCenterX = snapValue(wx, S.freeSnapStep);
+        evt.orbitCenterZ = snapValue(wz, S.freeSnapStep);
+        S.dirty = true;
+      }
+      draw();
+      return;
+    }
+
+    if (S.draggingCtrlPoint) {
+      const { x: wx, z: wz } = canvasToWorld(mx, my);
+      const group = activeGroup();
+      const wp = group?.waypoints.find((w) => w.id === S.draggingCtrlPoint);
+      if (wp && wp.ctrlHas) {
+        wp.ctrlX = snapValue(wx, S.freeSnapStep);
+        wp.ctrlZ = snapValue(wz, S.freeSnapStep);
+        S.dirty = true;
+      }
+      draw();
+      return;
+    }
+
     if (S.dragFloorKey) {
       if (S.dragFloorMode === "resize") dom.canvas.style.cursor = "grabbing";
       if (isSurfaceLayerGroupDrag() || S.dragFloorGroupKeys.length > 1) {
@@ -1201,6 +1258,14 @@ export function setupCanvas() {
       S.draggingWaypointId = null;
       S.dirty = true;
       commitDragSnapshot();
+      draw();
+    }
+    if (S.draggingOrbitCenter !== null || S.draggingCtrlPoint) {
+      S.draggingOrbitCenter = null;
+      S.draggingCtrlPoint = null;
+      S.dirty = true;
+      commitDragSnapshot();
+      renderRightPanel();
       draw();
     }
     if (S.dragFloorKey) {
@@ -1402,11 +1467,14 @@ export function setupCanvas() {
       S.pendingNewFloor = false;
       S.pendingNewFloorCat = null;
       S.pendingNewAirFloor = false;
+      const hadFocusPick = !!S.pendingCameraTargetPick;
+      S.pendingCameraTargetPick = "";
       dom.canvas.style.cursor = "";
       if (hadPending) {
         setStatus("已取消放置");
         updateFloorBar();
       }
+      if (hadFocusPick) cancelCameraTargetPick();
       if (S.animMode !== "none") exitAnimMode();
     }
 

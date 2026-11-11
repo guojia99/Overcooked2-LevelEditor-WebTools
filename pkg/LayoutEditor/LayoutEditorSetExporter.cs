@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -23,13 +23,14 @@ using UnityEngine.SceneManagement;
 /// [InitializeOnLoad] 续跑器自动重启导出——不再报「请等 Unity 编译结束后重试」。
 ///
 /// 逐关卡选择性导出（v1 仅单集）：selectedLevels = 场景名清单，null/空 = 全量。
-/// 实现要点：① prepare 只打开入选场景（被排除场景不打开不准备；其落盘场景由
-/// 写回链路保证无临时伪 prefab 实例，磁盘增量构建安全，且绝不进 zip）；② 构建前把
-/// LevelSetInfoSO.levelInfos 临时过滤为入选关卡（玩家侧 OC2DIYLevel 按 levelInfos
-/// 枚举关卡，只从 zip 剔除 s_* 会留下打不开的死关），构建后立即还原；③ 崩溃自愈：
-/// 改写前先做磁盘级备份（LayoutEditorExports/._setinfo_backup_&lt;set&gt;），域加载 /
-/// 下次导出前检测残留备份即还原；④ 被排除场景保留 bundle 名照常增量构建（近零
-/// 成本），仅 zip 组装时过滤 s_* 文件——构建产物目录始终保持全量，无需临时目录。</summary>
+/// 实现要点：① prepare 只打开入选场景（被排除场景不打开不准备，也不进入本次
+/// AssetBundleBuild 清单）；② 构建前把 LevelSetInfoSO.levelInfos 临时过滤为入选关卡
+/// （玩家侧 OC2DIYLevel 按 levelInfos 枚举关卡，只从 zip 剔除 s_* 会留下打不开的死关），
+/// 构建后立即还原；③ 崩溃自愈：改写前先做磁盘级备份
+/// （LayoutEditorExports/._setinfo_backup_&lt;set&gt;），域加载 / 下次导出前检测残留备份即还原；
+/// ④ BuildAssetBundles 只传入本次关卡集（及勾选场景）的 bundle，不重打 common/common01–04
+/// 与其他关卡集。commonW 与统一运行时只在 all/deps 时强制重打。部分勾选不删除未选场景的
+/// 已有产物。</summary>
 [InitializeOnLoad]
 public static class LayoutEditorSetExporter
 {
@@ -107,6 +108,27 @@ public static class LayoutEditorSetExporter
      *  防续跑轮询误清挂起任务）。 */
     private static bool _deferredCompile;
 
+    // ---- 导出准备按场景让出一帧（等 sceneOpened 的 delayCall 落定后再 DeInit/保存）----
+    private static bool _exportYielding;
+    private static bool _commonWMenuBusy;
+    private static bool _depsYield;
+    private static string _resumePrevActive;
+    private static List<string> _prepareSetNames;
+    private static string _prepareJoinedName;
+    private static HashSet<string> _prepareIncluded;
+    private static List<KeyValuePair<string, List<string>>> _preparePerSetScenes;
+    private static List<string> _prepareStubLines;
+    private static List<ExportSceneStep> _prepareSteps;
+    private static int _prepareIndex;
+
+    private class ExportSceneStep
+    {
+        public string setName;
+        public string scenePath;
+        public int index;
+        public int total;
+    }
+
     static LayoutEditorSetExporter()
     {
         // 域重载后自动续跑挂起的导出（统一运行时自动编译闭环的收尾）
@@ -124,7 +146,7 @@ public static class LayoutEditorSetExporter
         "RandomCrate|", "WebBackpack|", "WebKillerGhost|", "TimedSwitch|", "PushablePot|", "SwitchReenable|", "WorldMapDressing|",
         "UtensilTiming|", "CameraOffset|", "SplitScreen|", "TravelatorReverse|", "TeleportalExitOnly|", "RatHeist|",
         "ConveyorDirectionSync|", "ConveyorServe|", "BLRelay|", "Coaxial|", "RandomTrigger|", "SpeedCtl|", "SpawnerBatch|", "Kettle|",
-        "DirtyTeacup|", "SwitchTint|",
+        "DirtyTeacup|", "SwitchTint|", "OrderSeq|",
     };
 
     /// <summary>tag 前缀 → 清单特征（v3.5.0 stub_levels.txt 数据源之一）。
@@ -156,6 +178,7 @@ public static class LayoutEditorSetExporter
         { "Kettle|", "kettle" },
         { "DirtyTeacup|", "stub" },
         { "SwitchTint|", "switch" },
+        { "OrderSeq|", "orderseq" },
     };
 
     /// <summary>CustomStub 命名空间组件名 → 清单特征（双通道兜底：tag 缺失/旧格式时
@@ -194,6 +217,9 @@ public static class LayoutEditorSetExporter
         // 在 EntryPoint 安装时无条件挂载；特征只负责清单激活）。
         { "TeacupSinkRebuilder", "stub" },
         { "DirtyTeacupMergeWatcher", "stub" },
+        // 订单顺序（4.0.0.18（原 4.7.0））：关卡级出单序列接管（PseudoPrefabManager 物体上的
+        // 纯数据组件 + OrderSeq| tag）。
+        { "OrderSequenceSettings", "orderseq" },
     };
 
     /// <summary>扫描当前打开的场景是否用到 CustomStub（= 逐场景特征收集的非空判定）。
@@ -218,6 +244,9 @@ public static class LayoutEditorSetExporter
     public static List<string> CollectActiveSceneStubFeatures()
     {
         var feats = new HashSet<string>(StringComparer.Ordinal);
+        var saladInfo = LayoutEditorLevelInfoResolver.ResolveForScene(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().path);
+        if (LayoutEditorSaladSauceFactory.UsesSauces(saladInfo)) feats.Add("saladsauce");
 
         // ① tag 通道
         foreach (var tag in UnityEngine.Object.FindObjectsOfType<LevelEditorStub.SpecificPseudoPrefabTag>())
@@ -418,12 +447,50 @@ public static class LayoutEditorSetExporter
         if (custom.compositionSOs != null)
             foreach (var c in custom.compositionSOs)
                 if (ReferencesCustomContentDeep(c, seen)) return true;
-        if (custom.optionalSOs != null)
+        if (LayoutEditorOptionalRecipe.IsAssembly(custom))
+        {
+            var refs = new System.Collections.Generic.List<UnityEngine.ScriptableObject>();
+            LayoutEditorOptionalRecipe.CollectAssemblySoRefs(custom, refs);
+            for (int i = 0; i < refs.Count; i++)
+                if (ReferencesCustomContentDeep(refs[i], seen)) return true;
+            var sandwich = custom as CustomRecipeOptionalSandwichSO;
+            if (sandwich != null)
+            {
+                if (ReferencesCustomContentGo(sandwich.ingredientModels)) return true;
+                if (ReferencesCustomContentGo(sandwich.sauceInPlateModels)) return true;
+                if (ReferencesCustomContentGo(sandwich.sauceOnToastModels)) return true;
+                if (ReferencesCustomContentGo(sandwich.wrongSauceInPlateModel)) return true;
+                if (ReferencesCustomContentGo(sandwich.wrongSauceOnToastModel)) return true;
+            }
+        }
+        else if (custom.optionalSOs != null)
             foreach (var c in custom.optionalSOs)
                 if (ReferencesCustomContentDeep(c, seen)) return true;
         if (ReferencesCustomContentDeep(custom.modelSO, seen)) return true;
         if (ReferencesCustomContentDeep(custom.cookingStepSO, seen)) return true;
         if (ReferencesCustomContentDeep(custom.platingStepSO, seen)) return true;
+        return false;
+    }
+
+    private static bool ReferencesCustomContentGo(GameObject go)
+    {
+        if (go == null)
+            return false;
+        var path = AssetDatabase.GetAssetPath(go);
+        return !string.IsNullOrEmpty(path)
+            && (path.IndexOf("/custom_content/", StringComparison.Ordinal) >= 0
+                || path.StartsWith("Assets/common04", StringComparison.Ordinal));
+    }
+
+    private static bool ReferencesCustomContentGo(UnityEngine.Object[] arr)
+    {
+        if (arr == null)
+            return false;
+        for (int i = 0; i < arr.Length; i++)
+        {
+            if (ReferencesCustomContentGo(arr[i] as GameObject))
+                return true;
+        }
         return false;
     }
 
@@ -653,10 +720,14 @@ public static class LayoutEditorSetExporter
             if (_selectedLevels != null)
                 selectedLevels = new List<string>(_selectedLevels);
         }
-        var prevActive = EditorSceneManager.GetActiveScene().path;
+        _resumePrevActive = EditorSceneManager.GetActiveScene().path;
+        _exportYielding = false;
+        _depsYield = false;
         try
         {
-            RunExportCore(setNames, selectedLevels);
+            var yielded = RunExportCore(setNames, selectedLevels);
+            if (yielded)
+                return;
             lock (_lock) { _status = "done"; }
         }
         catch (Exception ex)
@@ -668,24 +739,79 @@ public static class LayoutEditorSetExporter
                 _error = ex.Message;
             }
         }
-        finally
+        if (_exportYielding)
+            return;
+        FinishExportSession();
+    }
+
+    private static void ScheduleExportContinuation()
+    {
+        _exportYielding = true;
+        EditorApplication.delayCall -= ContinueExportAfterPrepare;
+        EditorApplication.delayCall += ContinueExportAfterPrepare;
+    }
+
+    /// <summary>上一帧已经 DeInit。本帧先让已排队的场景回调跑完，再 DeInit 一次并继续。</summary>
+    private static void ContinueExportAfterPrepare()
+    {
+        if (!_exportYielding)
+            return;
+        _exportYielding = false;
+        try
         {
-            EditorUtility.ClearProgressBar();
-            // 逐关卡导出兜底还原（正常路径 RunExportCore 内已还原；此处防异常逃逸）
-            RestoreSetInfoMutation();
-            // 回到导出前的活动场景并重载伪 prefab（失败不中断导出结果）。
-            try
+            bool yielded;
+            if (_depsYield)
             {
-                if (!string.IsNullOrEmpty(prevActive) && File.Exists(AbsPath(prevActive))
-                    && EditorSceneManager.GetActiveScene().path != prevActive)
-                    EditorSceneManager.OpenScene(prevActive);
-                LayoutEditorPseudoReload.ReloadPseudoAssetsFull();
+                _depsYield = false;
+                LayoutEditorPseudoReload.ForcePrepareForExportStrict(false);
+                ExportDepsOnly(_prepareSetNames != null && _prepareSetNames.Count > 0
+                    ? _prepareSetNames[0] : _setNames[0], _depsVersion);
+                yielded = false;
             }
-            catch (Exception ex)
+            else
             {
-                Debug.LogWarning("[SetExporter] 恢复场景失败：" + ex.Message);
+                yielded = SettleCurrentAndMaybeContinue();
+            }
+            if (yielded)
+                return;
+            lock (_lock) { _status = "done"; }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogException(ex);
+            lock (_lock)
+            {
+                _status = "error";
+                _error = ex.Message;
             }
         }
+        if (_exportYielding)
+            return;
+        FinishExportSession();
+    }
+
+    private static void FinishExportSession()
+    {
+        LayoutEditorPseudoReload.ExportBuildInProgress = false;
+        EditorUtility.ClearProgressBar();
+        // 逐关卡导出兜底还原（正常路径 FinishPreparedExport 内已还原；此处防异常逃逸）
+        RestoreSetInfoMutation();
+        try
+        {
+            if (!string.IsNullOrEmpty(_resumePrevActive) && File.Exists(AbsPath(_resumePrevActive))
+                && EditorSceneManager.GetActiveScene().path != _resumePrevActive)
+                EditorSceneManager.OpenScene(_resumePrevActive);
+            LayoutEditorPseudoReload.ReloadPseudoAssetsFull();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[SetExporter] 恢复场景失败：" + ex.Message);
+        }
+        _prepareSteps = null;
+        _prepareStubLines = null;
+        _preparePerSetScenes = null;
+        _prepareIncluded = null;
+        _prepareSetNames = null;
     }
 
     /// <summary>导出前统一运行时就绪闸口。true=就绪继续导出；false=已挂起（编译已
@@ -860,7 +986,8 @@ public static class LayoutEditorSetExporter
         ResumePendingExport();
     }
 
-    private static void RunExportCore(List<string> setNames, List<string> selectedLevels)
+    /// <summary>返回 true 表示已让出一帧，调用方不要收尾。</summary>
+    private static bool RunExportCore(List<string> setNames, List<string> selectedLevels)
     {
         var mode = _mode;
         var joinedName = string.Join("+", setNames.ToArray());
@@ -878,8 +1005,11 @@ public static class LayoutEditorSetExporter
         // ---- 依赖包模式（deps）：不碰关卡场景，仅打包 OC2DIYLevelRuntimeWLoader/ 依赖 ----
         if (mode == "deps")
         {
-            ExportDepsOnly(setNames[0], _depsVersion);
-            return;
+            _prepareSetNames = setNames;
+            LayoutEditorPseudoReload.ForcePrepareForExportStrict(false);
+            _depsYield = true;
+            ScheduleExportContinuation();
+            return true;
         }
 
         // ---- 1. prepare：逐集逐场景 Open → 清临时物体 → 重打 stub tag → Save ----
@@ -921,6 +1051,10 @@ public static class LayoutEditorSetExporter
                 if (!string.IsNullOrEmpty(orphanSummary))
                     Debug.Log("[SetExporter] 导出前孤儿脚本清理:\n" + orphanSummary);
             }
+            catch (LayoutEditorExportPrepareException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 Debug.LogWarning("[SetExporter] 孤儿脚本清理异常（继续导出）: " + ex.Message);
@@ -940,114 +1074,181 @@ public static class LayoutEditorSetExporter
                 if (!string.IsNullOrEmpty(dualStubSummary))
                     Debug.Log("[SetExporter] 导出前双 stub 修复:\n" + dualStubSummary);
             }
+            catch (LayoutEditorExportPrepareException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 Debug.LogWarning("[SetExporter] 双 stub 修复异常（继续导出）: " + ex.Message);
             }
         }
 
-        var i = 0;
+        _prepareSetNames = setNames;
+        _prepareJoinedName = joinedName;
+        _prepareIncluded = includedSceneNames;
+        _preparePerSetScenes = perSetScenes;
+        _prepareStubLines = stubManifestLines;
+        _prepareSteps = new List<ExportSceneStep>();
+        var stepIndex = 0;
         foreach (var pair in perSetScenes)
         {
             foreach (var scenePath in pair.Value)
             {
-                i++;
-                SetPhase("prepare", "准备场景 " + i + "/" + totalScenes + "（" + pair.Key + "）："
-                    + Path.GetFileName(scenePath));
-                EditorUtility.DisplayProgressBar("导出关卡集 " + joinedName,
-                    "准备场景 " + i + "/" + totalScenes + "…", (float)i / (totalScenes + 1));
-                var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
-                // commonW6 去本地化：把 SO 指向的游戏 bundle 补进 LevelInfo.dependencies，
-                // 否则真机/编辑器 PseudoPrefabManager 找不到 bundle。
-                LayoutEditorCommonW6Dependencies.SyncForScene(
-                    scene, LayoutEditorLevelInfoResolver.ResolveForScene(scenePath));
-                // 一次性迁移兜底：旧关卡茶杯回收台仍带着旧默认 returnClean=true 时
-                // 在保存前改回 false（标记在 SaveScene 成功后落盘）。
-                var migratedTeacupReturns = LayoutEditorLayoutMigrations.ApplyToOpenScene(scene);
-                if (migratedTeacupReturns > 0)
-                    EditorSceneManager.MarkSceneDirty(scene);
-                // 派生运行时兜底（不依赖双 stub 预检）：旧场景有派生 stub 但没
-                // 运行时（茶杯回收台）时，导出前补齐并保存。
-                var promotedRuntimes = LayoutEditorStubIO.PromoteAllDerivedStubsInScene();
-                if (promotedRuntimes > 0)
-                    EditorSceneManager.MarkSceneDirty(scene);
-                // OpenScene 后 OnEnable 常 Init 挂上临时子物体；须在烘焙/落盘前强制 DeInit
-                //（与教程 Toggle ON 一致，且不因 prepareForBuilding 已为 true 而跳过）。
-                LayoutEditorPseudoReload.ForcePrepareForBuildingForExport();
-                var hudWarn = LayoutEditorHudOrderLimits.BakeActiveScene();
-                if (!string.IsNullOrEmpty(hudWarn))
-                    Debug.LogWarning("[SetExporter] " + hudWarn);
-                // 打包时自动给 web CustomStub 道具重打 tag（组件→最新格式 tag，覆盖旧格式/
-                // 补齐缺失），保证 loader 场景自愈可靠、无陈旧/缺失 tag。
-                var retagged = LayoutEditorStubIO.RefreshStubTagsInActiveScene();
-                if (retagged > 0)
-                    Debug.Log("[SetExporter] 已重打 " + retagged + " 个 stub tag：" + scenePath);
-                // v3.5.0 逐场景特征收集（stub_levels.txt 数据源；tag 重打之后扫，
-                // 与运行时自愈将看到的内容一致）。逐关卡导出时循环体只含入选场景
-                //（上方已过滤），被排除关卡自然不进清单、不进 zip。
-                var feats = CollectActiveSceneStubFeatures();
-                // web 特征补充：LevelInfoSO 引用 commonW 素材（commonW3 菜谱可能只进
-                // 订单不经场景，见 ④ 通道注释）。
-                if (!feats.Contains("web") && LevelInfoReferencesCommonW(scenePath))
-                    feats.Add("web");
-                if (feats.Count > 0)
-                {
-                    stubManifestLines.Add(pair.Key + "|" + Path.GetFileNameWithoutExtension(scenePath)
-                        + "|" + string.Join(",", feats.ToArray()));
-                    if (!_usesCustomStub)
-                    {
-                        _usesCustomStub = true;
-                        Debug.Log("[SetExporter] 检测到 CustomStub 用法（tag/组件/无 tag 内容）：" + scenePath);
-                    }
-                }
-                if (scene.isDirty || retagged > 0)
-                {
-                    LayoutEditorMissingScriptCleanup.RemoveMissingScripts(scene);
-                    if (!EditorSceneManager.SaveScene(scene))
-                        throw new Exception("SaveScene 失败（Console 可能有 Could not extract GUID / Broken PPtr）："
-                            + scenePath);
-                }
-                else
-                    Debug.Log("[SetExporter] 场景无磁盘变更，跳过 SaveScene：" + scenePath);
-                LayoutEditorLayoutMigrations.CommitPending();
-                foreach (var w in ValidateSceneForPlayerBuild(scenePath))
-                    Debug.LogWarning("[SetExporter] Player 构建校验: " + w);
-                var commonW1Info = DescribeCommonW1PrefabRefs(scenePath);
-                if (!string.IsNullOrEmpty(commonW1Info))
-                    Debug.Log("[SetExporter] " + commonW1Info);
+                stepIndex++;
+                var step = new ExportSceneStep();
+                step.setName = pair.Key;
+                step.scenePath = scenePath;
+                step.index = stepIndex;
+                step.total = totalScenes;
+                _prepareSteps.Add(step);
             }
         }
+        if (_prepareSteps.Count == 0)
+            throw new Exception("没有可导出的场景。");
+        _prepareIndex = 0;
+        OpenAndPrimeCurrentScene();
+        ScheduleExportContinuation();
+        return true;
+    }
+
+
+    private static void OpenAndPrimeCurrentScene()
+    {
+        var step = _prepareSteps[_prepareIndex];
+        SetPhase("prepare", "准备场景 " + step.index + "/" + step.total + "（" + step.setName + "）："
+            + Path.GetFileName(step.scenePath));
+        EditorUtility.DisplayProgressBar("导出关卡集 " + _prepareJoinedName,
+            "准备场景 " + step.index + "/" + step.total + "…", (float)step.index / (step.total + 1));
+        var scene = EditorSceneManager.OpenScene(step.scenePath, OpenSceneMode.Single);
+        LayoutEditorCommonW6Dependencies.SyncForScene(
+            scene, LayoutEditorLevelInfoResolver.ResolveForScene(step.scenePath));
+        LayoutEditorIngredientSplitterMigration.MigrateOpenScene();
+        var migratedTeacupReturns = LayoutEditorLayoutMigrations.ApplyToOpenScene(scene);
+        if (migratedTeacupReturns > 0)
+            EditorSceneManager.MarkSceneDirty(scene);
+        var promotedRuntimes = LayoutEditorStubIO.PromoteAllDerivedStubsInScene();
+        if (promotedRuntimes > 0)
+            EditorSceneManager.MarkSceneDirty(scene);
+        LayoutEditorPseudoReload.ForcePrepareForExportStrict(true);
+    }
+
+    /// <summary>返回 true 表示又让出一帧。</summary>
+    private static bool SettleCurrentAndMaybeContinue()
+    {
+        SettleCurrentScene();
+        _prepareIndex++;
+        if (_prepareIndex < _prepareSteps.Count)
+        {
+            OpenAndPrimeCurrentScene();
+            ScheduleExportContinuation();
+            return true;
+        }
+        FinishPreparedExport();
+        return false;
+    }
+
+    private static void SettleCurrentScene()
+    {
+        var step = _prepareSteps[_prepareIndex];
+        SetPhase("prepare", "确认构建准备 " + step.index + "/" + step.total + "："
+            + Path.GetFileName(step.scenePath));
+        var scene = EditorSceneManager.GetActiveScene();
+        if (!scene.IsValid() || scene.path != step.scenePath)
+            scene = EditorSceneManager.OpenScene(step.scenePath, OpenSceneMode.Single);
+        LayoutEditorPseudoReload.ForcePrepareForExportStrict(true);
+        var hudWarn = LayoutEditorHudOrderLimits.BakeActiveScene();
+        if (!string.IsNullOrEmpty(hudWarn))
+            Debug.LogWarning("[SetExporter] " + hudWarn);
+        // 订单顺序（4.0.0.18（原 4.7.0））：导出前幂等烘焙（order_seq~/order_seq.json 为权威，
+        // 禁用/缺失即清理场景残留）；必须在 CollectActiveSceneStubFeatures 之前——
+        // orderseq 特征靠场景载体（组件/tag）识别。
+        try
+        {
+            var orderInfo = LayoutEditorLevelInfoResolver.ResolveForScene(step.scenePath);
+            if (orderInfo != null)
+            {
+                var orderSeqWarn = LayoutEditorOrderSequenceBake.ApplyForOpenScene(orderInfo);
+                if (!string.IsNullOrEmpty(orderSeqWarn))
+                    Debug.LogWarning("[SetExporter] " + orderSeqWarn);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("[SetExporter] 订单顺序烘焙失败（按现状导出）: " + e.Message);
+        }
+        var retagged = LayoutEditorStubIO.RefreshStubTagsInActiveScene();
+        if (retagged > 0)
+            Debug.Log("[SetExporter] 已重打 " + retagged + " 个 stub tag：" + step.scenePath);
+        var feats = CollectActiveSceneStubFeatures();
+        if (!feats.Contains("web") && LevelInfoReferencesCommonW(step.scenePath))
+            feats.Add("web");
+        if (feats.Count > 0)
+        {
+            _prepareStubLines.Add(step.setName + "|" + Path.GetFileNameWithoutExtension(step.scenePath)
+                + "|" + string.Join(",", feats.ToArray()));
+            if (!_usesCustomStub)
+            {
+                _usesCustomStub = true;
+                Debug.Log("[SetExporter] 检测到 CustomStub 用法（tag/组件/无 tag 内容）：" + step.scenePath);
+            }
+        }
+        if (scene.isDirty || retagged > 0)
+        {
+            LayoutEditorMissingScriptCleanup.RemoveMissingScripts(scene);
+            if (!EditorSceneManager.SaveScene(scene))
+                throw new Exception("SaveScene 失败（Console 可能有 Could not extract GUID / Broken PPtr）："
+                    + step.scenePath);
+        }
+        else
+            Debug.Log("[SetExporter] 场景无磁盘变更，跳过 SaveScene：" + step.scenePath);
+        LayoutEditorLayoutMigrations.CommitPending();
+        foreach (var w in ValidateSceneForPlayerBuild(step.scenePath))
+            Debug.LogWarning("[SetExporter] Player 构建校验: " + w);
+        var commonW1Info = DescribeCommonW1PrefabRefs(step.scenePath);
+        if (!string.IsNullOrEmpty(commonW1Info))
+            Debug.Log("[SetExporter] " + commonW1Info);
+    }
+
+    private static void FinishPreparedExport()
+    {
         AssetDatabase.SaveAssets();
 
         // ---- 1.5 逐关卡导出：levelInfos 临时过滤（info_<set> 构建产物随之为部分集；
         //      构建完成后在 finally 还原源资产，崩溃自愈见 RecoverSetInfoBackups）----
-        if (includedSceneNames != null)
-            ApplyLevelSelectionFilter(setNames[0], includedSceneNames);
+        if (_prepareIncluded != null)
+            ApplyLevelSelectionFilter(_prepareSetNames[0], _prepareIncluded);
 
         try
         {
-        // ---- 2. clean：逐集仅删除本集旧产物目录（其他目录不动）----
-        foreach (var setName in setNames)
+        // ---- 2. clean：整集导出删除本集旧产物目录；部分勾选只删即将重打的文件 ----
+        var partialLevels = _prepareIncluded != null;
+        if (!partialLevels)
         {
-            foreach (var outDir in CollectSetBundleOutputDirs(setName))
+            foreach (var setName in _prepareSetNames)
             {
-                var absOutDir = AbsPath(outDir);
-                SetPhase("clean", "清理旧构建产物：" + outDir);
-                if (AssetDatabase.IsValidFolder(outDir))
-                    AssetDatabase.DeleteAsset(outDir);
-                else if (Directory.Exists(absOutDir))
-                    Directory.Delete(absOutDir, true);
-                var absDirMeta = absOutDir + ".meta";
-                if (File.Exists(absDirMeta))
-                    File.Delete(absDirMeta);
+                foreach (var outDir in CollectSetBundleOutputDirs(setName))
+                {
+                    var absOutDir = AbsPath(outDir);
+                    SetPhase("clean", "清理旧构建产物：" + outDir);
+                    if (AssetDatabase.IsValidFolder(outDir))
+                        AssetDatabase.DeleteAsset(outDir);
+                    else if (Directory.Exists(absOutDir))
+                        Directory.Delete(absOutDir, true);
+                    var absDirMeta = absOutDir + ".meta";
+                    if (File.Exists(absDirMeta))
+                        File.Delete(absDirMeta);
+                }
             }
+            AssetDatabase.Refresh();
         }
-        AssetDatabase.Refresh();
+        else
+            Debug.Log("[SetExporter] 部分关卡导出：不删除未选场景的已有 bundle。");
 
-        // ---- 3. build：构建 AssetBundle（阻塞，约 3-5 分钟；一次全量构建覆盖所有集）----
-        SetPhase("build", "构建 AssetBundle（约 3-5 分钟"
-            + (includedSceneNames != null ? "，本次打包 " + includedSceneNames.Count + " 关" : "") + "）…");
-        foreach (var pair in perSetScenes)
+        // ---- 3. build：只构建本次关卡集（及 all 模式的 commonW / 运行时）----
+        SetPhase("build", "构建本次 AssetBundle"
+            + (_prepareIncluded != null ? "（" + _prepareIncluded.Count + " 关）" : "") + "…");
+        foreach (var pair in _preparePerSetScenes)
         {
             LayoutEditorLevelAdminApi.EnsureSetInfoBundle(pair.Key);
             EnsureSceneBundleNames(pair.Key, pair.Value);
@@ -1055,14 +1256,33 @@ public static class LayoutEditorSetExporter
                 Debug.LogWarning("[SetExporter] " + w);
         }
         if (BeforeBuild != null)
-            BeforeBuild(setNames[0]); // 钩子为统一运行时 staging，与集名无关，只调一次
-        if (!Directory.Exists(AbsPath(BundlesRoot)))
-            Directory.CreateDirectory(AbsPath(BundlesRoot));
-        var manifest = BuildPipeline.BuildAssetBundles(
-            BundlesRoot, BuildAssetBundleOptions.None, BuildTarget.StandaloneWindows);
-        if (manifest == null)
-            throw new Exception("BuildPipeline.BuildAssetBundles 返回 null，构建失败（详见 Console）。");
-        foreach (var setName in setNames)
+            BeforeBuild(_prepareSetNames[0]); // 钩子为统一运行时 staging，与集名无关，只调一次
+        var bundleNames = CollectLevelBundleNames(_preparePerSetScenes, partialLevels);
+        if (_mode == "all")
+        {
+            var depNames = CollectDependencyBundleNames();
+            for (int d = 0; d < depNames.Count; d++)
+            {
+                AddBundleName(bundleNames, depNames[d]);
+                DeleteBuiltBundle(depNames[d]);
+            }
+        }
+        if (partialLevels)
+        {
+            for (int b = 0; b < bundleNames.Count; b++)
+                DeleteBuiltBundle(bundleNames[b]);
+        }
+        if (partialLevels || _mode == "all")
+            AssetDatabase.Refresh();
+        BuildListedBundles(bundleNames, true);
+        if (_mode == "all")
+        {
+            var missingW = ValidateCommonWProducts();
+            if (missingW.Count > 0)
+                throw new Exception("commonW 构建产物缺失: " + string.Join("、", missingW.ToArray())
+                    + "（源目录存在但未产出）");
+        }
+        foreach (var setName in _prepareSetNames)
         {
             if (ResolveBuiltSetBundleDir(setName) == null)
                 throw new Exception("构建完成但没有输出目录 " + BundlesRoot + "/" + setName
@@ -1071,7 +1291,7 @@ public static class LayoutEditorSetExporter
 
         // ---- 4. package：逐集删除 .manifest / *.meta 等带后缀文件 ----
         SetPhase("package", "清理 manifest 与 meta 文件…");
-        foreach (var setName in setNames)
+        foreach (var setName in _prepareSetNames)
         {
             var builtDir = ResolveBuiltSetBundleDir(setName);
             if (builtDir == null)
@@ -1092,12 +1312,12 @@ public static class LayoutEditorSetExporter
 
         // 逐关卡导出：入选场景的构建产物文件名集合（产物文件名 = assetBundleName 末段；
         // 改名关卡可能保留历史 bundle 名，故从 importer 解析而非想当然用场景文件名）。
-        // perSetScenes 已在头部过滤为仅入选场景。
+        // _preparePerSetScenes 已在头部过滤为仅入选场景。
         HashSet<string> selectedBundleFiles = null;
-        if (includedSceneNames != null)
+        if (_prepareIncluded != null)
         {
             selectedBundleFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var scenePath in perSetScenes[0].Value)
+            foreach (var scenePath in _preparePerSetScenes[0].Value)
             {
                 var imp = AssetImporter.GetAtPath(scenePath);
                 var bn = imp != null ? imp.assetBundleName : null;
@@ -1107,7 +1327,7 @@ public static class LayoutEditorSetExporter
         }
 
         var entries = new List<LayoutEditorZipWriter.ZipEntrySource>();
-        foreach (var setName in setNames)
+        foreach (var setName in _prepareSetNames)
         {
             var absOutDir = ResolveBuiltSetBundleDir(setName);
             if (absOutDir == null)
@@ -1119,15 +1339,18 @@ public static class LayoutEditorSetExporter
             payloads.RemoveAll(p =>
                 string.Equals(Path.GetFileName(p), "runtime", StringComparison.OrdinalIgnoreCase));
             // 逐关卡导出：只保留入选关卡的场景 bundle（info_<set> 恒保留；多集导出
-            // 无选择，不进此分支）。
+            // 无选择，不进此分支）。custom_content / custom_recipes bundle 是 info 依赖
+            // 登记项，剔除会导致真机加载失败，必须一并保留。
             if (selectedBundleFiles != null)
             {
                 var infoFileSel = "info_" + setName;
+                var customBundles = new[] { "custom_content", "custom_recipes" };
                 payloads.RemoveAll(p =>
                 {
                     var fn = Path.GetFileName(p);
                     return !string.Equals(fn, infoFileSel, StringComparison.OrdinalIgnoreCase)
-                        && !selectedBundleFiles.Contains(fn);
+                        && !selectedBundleFiles.Contains(fn)
+                        && Array.IndexOf(customBundles, fn) < 0;
                 });
             }
             if (payloads.Count == 0)
@@ -1154,7 +1377,7 @@ public static class LayoutEditorSetExporter
             // 零介入闸门（清单未命中的场景不扫描/不探测/不装补丁）与按特征挂载。
             // 每个集都写（含空清单）——文件缺失会被 loader 按「旧版导出」处理。
             var prefix = setName + "|";
-            var levelLines = stubManifestLines.FindAll(l => l.StartsWith(prefix, StringComparison.Ordinal));
+            var levelLines = _prepareStubLines.FindAll(l => l.StartsWith(prefix, StringComparison.Ordinal));
             var manifestAbs = WriteStubLevelsFile(setName, levelLines);
             if (!string.IsNullOrEmpty(manifestAbs))
                 entries.Add(new LayoutEditorZipWriter.ZipEntrySource(
@@ -1162,10 +1385,10 @@ public static class LayoutEditorSetExporter
         }
 
         // all 模式：附带依赖包 OC2DIYLevelRuntimeWLoader/（commonW2 随任一集引用按需）
-        if (mode == "all")
-            AddDependencyEntries(entries, setNames, false);
+        if (_mode == "all")
+            AddDependencyEntries(entries, _prepareSetNames, false);
 
-        var zipFileName = BuildZipFileName(setNames, mode);
+        var zipFileName = BuildZipFileName(_prepareSetNames, _mode);
         var zipAbsPath = ExportRootAbsPath() + "/" + zipFileName;
         SetPhase("zip", "生成 zip：" + zipFileName + "（" + entries.Count + " 个文件）…");
         LayoutEditorZipWriter.WriteZip(zipAbsPath, entries);
@@ -1184,6 +1407,181 @@ public static class LayoutEditorSetExporter
             RestoreSetInfoMutation();
         }
         AssetDatabase.Refresh();
+    }
+
+    private static void AddBundleName(List<string> names, string bundleName)
+    {
+        if (names == null || string.IsNullOrEmpty(bundleName))
+            return;
+        var normalized = bundleName.Replace('\\', '/').ToLowerInvariant();
+        for (int i = 0; i < names.Count; i++)
+        {
+            if (string.Equals(names[i], normalized, StringComparison.OrdinalIgnoreCase))
+                return;
+        }
+        names.Add(normalized);
+    }
+
+    /// <summary>本次关卡集要构建的 bundle。partial 时不含未勾选的纯场景包。</summary>
+    private static List<string> CollectLevelBundleNames(
+        List<KeyValuePair<string, List<string>>> scenesBySet, bool partial)
+    {
+        var names = new List<string>();
+        var all = AssetDatabase.GetAllAssetBundleNames();
+        if (scenesBySet == null)
+            return names;
+        foreach (var pair in scenesBySet)
+        {
+            var keepScenes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var scenePath in pair.Value)
+            {
+                var imp = AssetImporter.GetAtPath(scenePath);
+                if (imp == null || string.IsNullOrEmpty(imp.assetBundleName))
+                    continue;
+                AddBundleName(names, imp.assetBundleName);
+                keepScenes.Add(imp.assetBundleName);
+            }
+            var prefix = pair.Key + "/";
+            if (all == null)
+                continue;
+            for (int i = 0; i < all.Length; i++)
+            {
+                var bundleName = all[i];
+                if (string.IsNullOrEmpty(bundleName)
+                    || !bundleName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                if (partial && BundleContainsOnlyScenes(bundleName) && !keepScenes.Contains(bundleName))
+                    continue;
+                AddBundleName(names, bundleName);
+            }
+        }
+        return names;
+    }
+
+    private static bool BundleContainsOnlyScenes(string bundleName)
+    {
+        var paths = AssetDatabase.GetAssetPathsFromAssetBundle(bundleName);
+        if (paths == null || paths.Length == 0)
+            return false;
+        for (int i = 0; i < paths.Length; i++)
+        {
+            if (!paths[i].EndsWith(".unity", StringComparison.OrdinalIgnoreCase))
+                return false;
+        }
+        return true;
+    }
+
+    /// <summary>commonW1–6（含子 bundle）与 webcustomstub_runtime。</summary>
+    private static List<string> CollectDependencyBundleNames()
+    {
+        var names = new List<string>();
+        var all = AssetDatabase.GetAllAssetBundleNames();
+        foreach (var index in CollectCommonWSourceIndices())
+        {
+            var folder = "Assets/commonW" + index;
+            var folderImp = AssetImporter.GetAtPath(folder);
+            if (folderImp != null && !string.IsNullOrEmpty(folderImp.assetBundleName))
+                AddBundleName(names, folderImp.assetBundleName);
+            var prefix = folder + "/";
+            if (all == null)
+                continue;
+            for (int i = 0; i < all.Length; i++)
+            {
+                var bundleName = all[i];
+                if (string.IsNullOrEmpty(bundleName))
+                    continue;
+                var paths = AssetDatabase.GetAssetPathsFromAssetBundle(bundleName);
+                if (paths == null || paths.Length == 0)
+                    continue;
+                var assetPath = paths[0].Replace('\\', '/');
+                if (assetPath.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    AddBundleName(names, bundleName);
+            }
+        }
+        AddBundleName(names, RuntimeBundleName);
+        return names;
+    }
+
+    private static void DeleteBuiltBundle(string bundleName)
+    {
+        if (string.IsNullOrEmpty(bundleName))
+            return;
+        var abs = AbsPath(BundlesRoot) + "/" + bundleName.Replace('\\', '/');
+        try
+        {
+            if (File.Exists(abs))
+            {
+                File.Delete(abs);
+                Debug.Log("[SetExporter] 已删除旧产物: " + bundleName);
+            }
+            if (File.Exists(abs + ".manifest"))
+                File.Delete(abs + ".manifest");
+            if (File.Exists(abs + ".meta"))
+                File.Delete(abs + ".meta");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[SetExporter] 删除 " + bundleName + " 旧产物失败: " + ex.Message);
+        }
+    }
+
+    /// <summary>只构建列出的 bundle。构建前再强制 DeInit 一次，期间禁止场景回调改场景。</summary>
+    private static void BuildListedBundles(List<string> bundleNames, bool requireManager)
+    {
+        var builds = new List<AssetBundleBuild>();
+        var logNames = new List<string>();
+        if (bundleNames != null)
+        {
+            for (int i = 0; i < bundleNames.Count; i++)
+            {
+                var name = bundleNames[i];
+                var paths = AssetDatabase.GetAssetPathsFromAssetBundle(name);
+                if (paths == null || paths.Length == 0)
+                {
+                    Debug.LogWarning("[SetExporter] bundle 无资产，跳过: " + name);
+                    continue;
+                }
+                var kept = new List<string>();
+                for (int p = 0; p < paths.Length; p++)
+                {
+                    if (AssetDatabase.IsValidFolder(paths[p]))
+                        continue;
+                    kept.Add(paths[p]);
+                }
+                if (kept.Count == 0)
+                {
+                    Debug.LogWarning("[SetExporter] bundle 只有文件夹，跳过: " + name);
+                    continue;
+                }
+                var build = new AssetBundleBuild();
+                build.assetBundleName = name;
+                build.assetNames = kept.ToArray();
+                builds.Add(build);
+                logNames.Add(name);
+            }
+        }
+        if (builds.Count == 0)
+            throw new Exception("没有可构建的 AssetBundle。");
+        var shown = string.Join(", ", logNames.ToArray());
+        if (shown.Length > 1500)
+            shown = shown.Substring(0, 1500) + "…";
+        Debug.Log("[SetExporter] 本次只构建 " + builds.Count
+            + " 个 bundle（不含 common/common01-04 与未选关卡集）: " + shown);
+        if (!Directory.Exists(AbsPath(BundlesRoot)))
+            Directory.CreateDirectory(AbsPath(BundlesRoot));
+        LayoutEditorPseudoReload.ExportBuildInProgress = true;
+        try
+        {
+            LayoutEditorPseudoReload.ForcePrepareForExportStrict(requireManager);
+            var manifest = BuildPipeline.BuildAssetBundles(
+                BundlesRoot, builds.ToArray(), BuildAssetBundleOptions.None, BuildTarget.StandaloneWindows);
+            if (manifest == null)
+                throw new Exception("BuildPipeline.BuildAssetBundles 返回 null，构建失败（详见 Console）。");
+        }
+        finally
+        {
+            LayoutEditorPseudoReload.ExportBuildInProgress = false;
+        }
     }
 
     // ==================== 逐关卡导出：LevelSetInfo 临时过滤 / 还原 / 崩溃自愈 ====================
@@ -1364,9 +1762,8 @@ public static class LayoutEditorSetExporter
         return baseName + modeSuffix + "_" + DateTime.Now.ToString("yyyyMMdd") + ".zip";
     }
 
-    /// <summary>依赖包（deps）模式：不构建关卡场景，仅打包 OC2DIYLevelRuntimeWLoader/
-    /// （Loader.dll + webcustomstub_runtime + commonW1 + 按需 commonW2）。产物为预构建
-    /// bundle + web/public/Loader.dll，无需 BuildAssetBundles，快速导出。
+    /// <summary>依赖包（deps）模式：不构建关卡场景，只重打 commonW 与统一运行时。
+    /// 调用方已在上一帧做过 Prepare For Building，这里在 BuildAssetBundles 前再做一次。
     /// depsVersion = 依赖包打包版本（独立于运行时 SSOT 版本，用于 zip 命名与
     /// package_version.txt；装一次即可长期复用，版本变更即提示玩家更新）。</summary>
     private static void ExportDepsOnly(string setName, string depsVersion)
@@ -1376,40 +1773,22 @@ public static class LayoutEditorSetExporter
         if (BeforeBuild != null)
             BeforeBuild(setName);
 
-        // 当前打开的场景若仍有临时伪 prefab 实例（未 Prepare For Building），
-        // BuildAssetBundles 会把这些临时实例拉进构建并中途丢失 instanceID
-        // （"Asset has disappeared while building player" 崩溃）。构建前先对活动场景
-        // Prepare For Building（DeInit 清临时物体），与 all 模式逐场景准备同理。
-        try
-        {
-            LayoutEditorPseudoReload.EnsurePrepareForBuilding();
-        }
-        catch (Exception ex)
-        {
-            Debug.LogWarning("[SetExporter] 依赖导出前 Prepare For Building 失败（继续尝试构建）: " + ex.Message);
-        }
-
-        // 删除 commonW1/commonW2/commonW3 旧构建产物（+ .manifest），随后重新打包，
-        // 保证依赖包里的 commonW* 是最新的、不含遗留。
-        // 2026-10-06 加固：删产物前先补回丢失的根 bundle 名（.meta 误动后 BuildAssetBundles
-        // 会静默不产出）；重建后校验产物齐全，缺失即阻断导出（此前仅 LogWarning，
-        // 打出的依赖包缺 commonW3 会让老鼠模型/新菜谱等素材失效）。
+        // 删产物前先补回丢失的根 bundle 名（.meta 误动后不会产出）；
+        // 只重打 commonW 与统一运行时，不构建关卡场景和 common01-04。
         var fixedWNames = EnsureCommonWBundleNames();
         if (fixedWNames != null)
             Debug.Log("[SetExporter] 导出前已补回 commonW 根目录 bundle 名: " + fixedWNames);
-        SetPhase("clean", "清理 commonW1/commonW2/… 旧产物…");
-        // 按源目录自动发现（commonW1..N，含 commonW4/W5），避免新增库漏删旧产物。
-        foreach (var wIndex in CollectCommonWSourceIndices())
-            DeleteBundleProduct("commonw" + wIndex);
+        SetPhase("clean", "清理 commonW 与统一运行时旧产物…");
+        var depNames = CollectDependencyBundleNames();
+        for (int i = 0; i < depNames.Count; i++)
+            DeleteBuiltBundle(depNames[i]);
+        for (int w = 0; w < 32; w++)
+            DeleteBundleProduct("commonw" + (w + 1));
+        DeleteBundleProduct(RuntimeBundleName);
+        AssetDatabase.Refresh();
 
-        // 重新构建 AssetBundle（增量：仅重建被删/变更的 commonW1/W2 与统一运行时）。
-        SetPhase("build", "重新打包 commonW1 / commonW2 / 统一运行时…");
-        if (!Directory.Exists(AbsPath(BundlesRoot)))
-            Directory.CreateDirectory(AbsPath(BundlesRoot));
-        var depManifest = BuildPipeline.BuildAssetBundles(
-            BundlesRoot, BuildAssetBundleOptions.None, BuildTarget.StandaloneWindows);
-        if (depManifest == null)
-            throw new Exception("BuildPipeline.BuildAssetBundles 返回 null，commonW1/W2 重新打包失败（详见 Console）。");
+        SetPhase("build", "重新打包 commonW 与统一运行时…");
+        BuildListedBundles(depNames, false);
         var missingW = ValidateCommonWProducts();
         if (missingW.Count > 0)
             throw new Exception("commonW 构建产物缺失: " + string.Join("、", missingW.ToArray())
@@ -1530,6 +1909,11 @@ public static class LayoutEditorSetExporter
     [MenuItem("Layout Editor/CustomStub（关卡代码分发）/重新打包 commonW 素材包 (Rebuild commonW Bundles)", false, 13)]
     public static void RebuildCommonWBundlesMenu()
     {
+        if (_commonWMenuBusy)
+        {
+            EditorUtility.DisplayDialog("重新打包 commonW", "已有 commonW 打包在进行，请等待完成。", "确定");
+            return;
+        }
         if (EditorApplication.isCompiling || EditorApplication.isUpdating)
         {
             EditorUtility.DisplayDialog("重新打包 commonW", "Unity 正在编译/导入脚本，请等待完成后再构建。", "确定");
@@ -1546,8 +1930,8 @@ public static class LayoutEditorSetExporter
             names.Add("commonw" + index);
         if (!EditorUtility.DisplayDialog("重新打包 commonW",
             "将删除并重建 " + indices.Count + " 个 commonW 素材包（"
-            + string.Join("、", names.ToArray()) + "）的构建产物。\n"
-            + "BuildAssetBundles 为增量构建：其余 bundle（关卡集/统一运行时等）不受影响。\n继续？",
+            + string.Join("、", names.ToArray()) + "）以及统一运行时。\n"
+            + "不构建关卡场景，也不构建 common/common01-04。\n继续？",
             "开始", "取消"))
             return;
         try
@@ -1555,25 +1939,45 @@ public static class LayoutEditorSetExporter
             var fixedNames = EnsureCommonWBundleNames();
             if (fixedNames != null)
                 Debug.Log("[SetExporter] 已补回 commonW 根目录 bundle 名: " + fixedNames);
-            LayoutEditorPseudoReload.EnsurePrepareForBuilding();
-            foreach (var name in names)
-                DeleteBundleProduct(name);
-            EditorUtility.DisplayProgressBar("重新打包 commonW", "BuildAssetBundles 增量构建…", 0.5f);
-            if (!Directory.Exists(AbsPath(BundlesRoot)))
-                Directory.CreateDirectory(AbsPath(BundlesRoot));
-            var manifest = BuildPipeline.BuildAssetBundles(
-                BundlesRoot, BuildAssetBundleOptions.None, BuildTarget.StandaloneWindows);
-            if (manifest == null)
-                throw new Exception("BuildPipeline.BuildAssetBundles 返回 null（详见 Console）。");
+            LayoutEditorPseudoReload.ForcePrepareForExportStrict(false);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogException(ex);
+            EditorUtility.DisplayDialog("重新打包 commonW", "Prepare For Building 失败:\n" + ex.Message, "确定");
+            return;
+        }
+        _commonWMenuBusy = true;
+        EditorApplication.delayCall -= RebuildCommonWAfterPrepare;
+        EditorApplication.delayCall += RebuildCommonWAfterPrepare;
+    }
+
+    private static void RebuildCommonWAfterPrepare()
+    {
+        try
+        {
+            LayoutEditorPseudoReload.ForcePrepareForExportStrict(false);
+            var depNames = CollectDependencyBundleNames();
+            for (int i = 0; i < depNames.Count; i++)
+                DeleteBuiltBundle(depNames[i]);
+            foreach (var index in CollectCommonWSourceIndices())
+                DeleteBundleProduct("commonw" + index);
+            DeleteBundleProduct(RuntimeBundleName);
+            AssetDatabase.Refresh();
+            EditorUtility.DisplayProgressBar("重新打包 commonW", "只构建 commonW 与统一运行时…", 0.5f);
+            BuildListedBundles(depNames, false);
             var missing = ValidateCommonWProducts();
             if (missing.Count > 0)
                 throw new Exception("以下 commonW 源目录存在但构建产物缺失: "
                     + string.Join("、", missing.ToArray())
                     + "\n（常见原因：目录内无可打包内容，或 bundle 名异常——请查看 Console 的构建告警）");
             var sb = new System.Text.StringBuilder();
-            foreach (var name in names)
+            foreach (var index in CollectCommonWSourceIndices())
             {
+                var name = "commonw" + index;
                 var abs = AbsPath(BundlesRoot) + "/" + name;
+                if (!File.Exists(abs))
+                    continue;
                 sb.Append(name).Append(": ")
                     .Append((new FileInfo(abs).Length / 1024f / 1024f).ToString("F2")).Append(" MB（")
                     .Append(File.GetLastWriteTime(abs).ToString("MM-dd HH:mm")).Append("）\n");
@@ -1587,6 +1991,7 @@ public static class LayoutEditorSetExporter
         }
         finally
         {
+            _commonWMenuBusy = false;
             EditorUtility.ClearProgressBar();
         }
     }
@@ -1638,7 +2043,7 @@ public static class LayoutEditorSetExporter
         if (File.Exists(debugDllAbs))
         {
             entries.Add(new LayoutEditorZipWriter.ZipEntrySource(depDir + "debugLog.dll", debugDllAbs));
-            Debug.Log("[SetExporter] 附带 debugLog.dll（v2.0.0，会话日志/BepInEx 捕捉）");
+            Debug.Log("[SetExporter] 附带 debugLog.dll（v2.0.1，会话日志/BepInEx 捕捉）");
         }
         else
         {

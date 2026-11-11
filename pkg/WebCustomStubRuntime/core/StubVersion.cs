@@ -1,4 +1,4 @@
-namespace CustomStub
+﻿namespace CustomStub
 {
     /// <summary>
     /// CustomStub / WebCustomStubRuntime 统一权威版本号（SSOT · semver）。
@@ -6,6 +6,7 @@ namespace CustomStub
     /// 唯一锚点：EntryPoint / RandomCrate 的日志金丝雀、staging 写入的运行时版本、
     /// Loader 的 PluginVersion 与关卡集 requires.txt 门控，全部以本常量为准。
     /// 改版本号只改这一处（Loader 侧同步 PluginVersion，构建期一致性校验兜底）。
+    /// 发布版本号变更只由用户决定；日常迭代仅记录内部修订（4.0.0.N + 日期时间）。
     ///
     /// 语义（版本门控）：关卡集导出时把本值写进 levels/&lt;set&gt;/requires.txt；
     /// Loader 用自身 PluginVersion 与之 semver 比较——已装依赖 &gt;= 关卡集 requires
@@ -13,7 +14,35 @@ namespace CustomStub
     /// </summary>
     public static class StubVersion
     {
-        /// <summary>权威 semver 版本号（形如 2.0.0）。
+        /// <summary>权威发布版本号（semver）。
+        ///
+        /// 4.0.0（2026-11-10 首个发布版 · 收敛内部迭代 4.0.0–4.8.0）：
+        ///  - 发布号统一为 4.0.0；原 4.0.1–4.8.0 全部并入本版，不再对外单独发号。
+        ///  - 包含：commonW5 增量库（BGM/桌台皮肤/自定义食材/卷饼/茶杯/热水器）、
+        ///    传送带方向/停稳系列修复、多镜头分屏、Web 寿司含虾组合、互锁按钮修复、
+        ///    动画组 fade、清单键改名免疫 + 屏幕点探针、上游 sandwich/optional 同步、
+        ///    订单顺序自定义、普通传送带可上菜。
+        ///  - requires.txt 写入 4.0.0；内部修订仅以 4.0.0.N（日期时间）记录在
+        ///    changelog/package_version，不写入 Value/PluginVersion，不参与门控。
+        ///  - ⚠ 改本文件后须 Unity 重编译 + 重新 staging webcustomstub_runtime。
+        ///
+        /// 内部修订索引（倒序；明细见下方「内部修订明细」）：
+        ///  4.0.0.21（2026-11-10 19:06）commonW3 酱沙拉：26 基底 / 78 成品；
+        ///    部分沙拉接酱、空盘/重复酱前置拒绝、服务端复核、DLC08 沙拉专用 UID
+        ///    归一化；原版外观查找表私有克隆追加红黄视觉（无新网络实体/帧扫描）。
+        ///  4.0.0.20（2026-11-10）热水器联动开关接水后未复位（按钮按一次永红）
+        ///  4.0.0.19（2026-11-09，原 4.8.0）普通传送带可上菜 + 几何方向/高度判定
+        ///  4.0.0.18（2026-11-09，原 4.7.0）订单顺序自定义
+        ///  4.0.0.17（2026-11-08，原 4.6.0）上游 sandwich / optional 同步
+        ///  4.0.0.16（2026-11-08，原 4.5.0）清单键改名免疫 + 屏幕点探针
+        ///  4.0.0.15（2026-11-08，原 4.3.0）动画组 fade
+        ///  4.0.0.14（2026-11-05，原 4.2.2）互锁按钮同轴组修复
+        ///  4.0.0.13（2026-11-05，原 4.2.1）互锁按钮同帧完成修复
+        ///  4.0.0.12（2026-11-05，原 4.2.0）Web 寿司含虾组合
+        ///  4.0.0.11（2026-11-04，原 4.1.0）多镜头分屏
+        ///  4.0.0.1–.10（2026-11-04，原 4.0.1–4.0.10）传送带系列修复
+        ///
+        /// 以下 3.x 条目为历史记录。
         /// 3.7.0（2026-10-06 真机「部分关卡进图永久卡加载」双根因修复）：
         ///  - 修复①（双 stub 强转崩溃·真机卡加载主因）：编辑器 wrapper 升级路径
         ///    （酱料机/饮料机、上菜台/回收台变体）补挂派生 stub 后残留基础
@@ -443,14 +472,27 @@ namespace CustomStub
         ///    TriggerTimer 同步 UI + 三态动画）→ Active 才可接一杯热水（CanHandlePlacement
         ///    前缀门禁）→ 冷却复位开关；接水食材 = 本库 Node_HotWater（uID 100000004）。
         ///    特征 kettle；Harmony 组 .kettle（门禁/接水/客户端表现三补丁，按需装）。
-        /// 4.0.10（2026-11-04 开局 DelayRefreshStartConveying NRE）：
+        /// 内部修订明细（原 4.x.y 内部号，发布号统一 4.0.0；仅追溯用）
+        /// 4.0.0.20（2026-11-10）热水器联动开关接水后未复位（真机「按钮按一次永红」）：
+        ///  - 根因：原版 Switch 按压链 Interactable("Switch") → TriggerAdapter(Switch→Disable)
+        ///    → TriggerDisableScript 禁用 Interactable，只有显式 Reset（m_enableTrigger）
+        ///    才回绿。写回侧热水器联动主动摘除 SwitchReenable（约定 Kettle 冷却复位），
+        ///    但 Kettle.OnServerFilled 实际未发 Reset。编辑器 Play 的 0.35s 回弹只是
+        ///    LayoutEditorSwitchReenableRelay（仅编辑器存在），真机没有 → 按钮保持红、
+        ///    只能按一次，接走水也不恢复。
+        ///  - 修复：Kettle 绑定 TriggerDisableScript + m_enableTrigger；服务端任一联动壶
+        ///    接水冷却时补发一次 Reset（多壶共用一开关 = 任一壶接走即回绿，用户决策
+        ///    2026-11-10；开关已启用时跳过防重复投递）。编辑器 Play 对 Kettle 目标
+        ///    同样不再挂 0.35s 回绿中继，行为与真机一致。
+        ///  - 运行时逻辑变更；发布号仍 4.0.0（内部修订 4.0.0.20），需重编译 + staging。
+        /// 4.0.0.10（2026-11-04，原 4.0.10）开局 DelayRefreshStartConveying NRE：
         ///  - 4.0.9 的高频/整 90° 兜底可能在 ServerConveyorStation.StartSynchronising
         ///    之前调用 UpdateAdjacentReceiver()，宿主 SetAdjacentReceiver 启动协程，
         ///    下一帧 m_selfReceiver 仍为 null → RefreshConveyTo() NRE
         ///    （ServerConveyorStation.cs:121）。刷新前增加同步器就绪门禁：
         ///    m_selfReceiver 已由 StartSynchronising 赋值才允许刷新；pending 保留。
         ///  - Loader 仅同步版本号。
-        /// 4.0.9（2026-11-04 传送带整 90° 兜底被 moved 标志挡住）：
+        /// 4.0.0.9（2026-11-04，原 4.0.9）传送带整 90° 兜底被 moved 标志挡住：
         ///  - 4.0.8 状态轨迹实锤：180° 站已回到 idlehold_1（idle=True），但随后
         ///    仍未刷新；怀疑位姿「本帧仍在动」标志长期为真，在 pending 后提前
         ///    return，使 Idle/整 90° 兜底都排不上。现在「站体停在整 90° 朝向」
@@ -460,14 +502,14 @@ namespace CustomStub
         ///  - 诊断日志统一带完整层级路径（同名站 Design/Conveyors/ConveyorStation (1)
         ///    与传送带阵内的 ConveyorStation (1) 不再混淆）。
         ///  - Loader 仅同步版本号。
-        /// 4.0.8（2026-11-04 传送带节点动画卡在 FlipOn 的诊断/兜底）：
+        /// 4.0.0.8（2026-11-04，原 4.0.8）传送带节点动画卡在 FlipOn 的诊断/兜底：
         ///  - 4.0.7 日志显示 180° 站（阵1·2）检测到动画开始后，Animator 再未回到
         ///    Idle（位姿/Idle 双兜底都不触发），模型停在新朝向、投递目标不刷新。
         ///    新增动画状态轨迹（AniState=当前/下一 clip、是否过渡、是否 Idle，每站
         ///    前 16 次）+ 卡死超时兜底：节点动画超过 1.5s 仍未离开当前状态时强制
         ///    刷新投递目标一次。位姿检测/Idle 停稳/卡死超时三路任一命中即刷新。
         ///  - Loader 仅同步版本号。
-        /// 4.0.7（2026-11-04 传送带方向刷新不依赖位姿比较）：
+        /// 4.0.0.7（2026-11-04，原 4.0.7）传送带方向刷新不依赖位姿比较：
         ///  - 真机日志实锤：180° 站（阵1·2）的模型已转、但 ConveyorDirectionSync
         ///    连「位姿变化」都没检测到（既无刷新日志也无阻塞告警），而其余三站正常。
         ///    方向刷新改为双触发：① 原有位姿停稳；② 节点环 Animator 从节点动画
@@ -475,7 +517,7 @@ namespace CustomStub
         ///    后者不依赖「动画到底转了哪个 Transform」，可覆盖伪预制实例化/包装层级
         ///    造成的检测盲区。首次检测到节点动画播放 / 按停稳兜底刷新均有日志。
         ///  - Loader 仅同步版本号。
-        /// 4.0.6（2026-11-04 传送带按方向刷新被共享垃圾桶永久挡死）：
+        /// 4.0.0.6（2026-11-04，原 4.0.6）传送带按方向刷新被共享垃圾桶永久挡死：
         ///  - ConveyorDirectionSync 空闲门控曾检查【下游】m_adjacentReceiver.IsReceiving()。
         ///    共享垃圾桶同时被另一条传送带喂入时该标志几乎常真，方向切换动画完成后
         ///    刷新被永久阻塞，食物继续沿旧目标全部送进垃圾桶（阵中「绑定按钮的第二个
@@ -488,34 +530,34 @@ namespace CustomStub
         ///    近零首键改为只修正 w 符号并按后续键决定是否整段取反；含 Y=180°
         ///    传送带的关卡需再写回一次以重生 .anim/.controller。
         ///  - Loader 仅同步版本号。
-        /// 4.0.5（2026-11-04 部分传送带送菜方向和皮带模型相反）：
+        /// 4.0.0.5（2026-11-04，原 4.0.5）部分传送带送菜方向和皮带模型相反：
         ///  - 停稳后若原方向前方没有接收器，会把 Leftwards/Rightwards 翻到对面。
         ///    皮带模型不转，食物走到箭头反方向。枚举保持原样，食物沿站体 -right
         ///    （与模型同向）；前方是空格就冲出皮带。
         ///  - Loader 仅同步版本号。
-        /// 4.0.4（2026-11-04 传送带第一次按压转到新朝向后立刻弹回）：
+        /// 4.0.0.4（2026-11-04，原 4.0.4）传送带第一次按压转到新朝向后立刻弹回：
         ///  - 节点环对账在 QueueEvent 入队时就加权威步，SetTrigger 还要等队列
         ///    到点。开局第一次按压时对账抢先 Play 下一格 Idle，真正的 BLPress
         ///    从那一格再播返回动画，所有传送带都转 90° 后弹回开局朝向；对账
         ///    把本地步数记超前，后续按压不再被改写所以才正常。尚未 SetTrigger
         ///    的权威步不再补步。
         ///  - Loader 仅同步版本号。
-        /// 4.0.3（2026-11-04 Y=180° 传送带逆时针转到一半被拉回）：
+        /// 4.0.0.3（2026-11-04，原 4.0.3）Y=180° 传送带逆时针转到一半被拉回：
         ///  - 4.0.2 用欧拉角把站体朝向再写回包装，180° 附近欧拉角会翻成另一套，
         ///    节点环播到一半被盖回开局角。吸附也不再改 Animator 正在驱动的包装。
         ///  - 旋转曲线烘焙：首键 w&gt;=0，后续键与前一键同半球，避免 180° 键被
         ///    Unity 翻号后走 270° 长弧。需对含 Y=180° 传送带的关卡再写回一次。
         ///  - Loader 仅同步版本号。
-        /// 4.0.2（2026-11-04 传送带转完食物仍沿旧方向冲出皮带）：
+        /// 4.0.0.2（2026-11-04，原 4.0.2）传送带转完食物仍沿旧方向冲出皮带：
         ///  - GetNextGridIndex 读站体 transform.right，按钮动画转的是包装。停稳后把
         ///    站体 Y 朝向对齐包装，再调用宿主 UpdateAdjacentReceiver（不直接写
         ///    m_adjacentReceiver，避免拆掉投递回调）。原方向正前方是空格、对面有
         ///    接收器时改 Leftwards/Rightwards，食物改去工作台而不是冲出皮带。
         ///  - Loader 仅同步版本号。
-        /// 4.0.1（2026-11-04 传送带旋转后食物不跟皮带走）：
+        /// 4.0.0.1（2026-11-04，原 4.0.1）传送带旋转后食物不跟皮带走：
         ///  - 曾按 -right 直接改接收器；会拆掉 SetAdjacentReceiver 的回调，且站体
         ///    朝向没对齐时仍沿旧方向送。4.0.2 改回宿主刷新。
-        /// 4.0.0（2026-10-28 commonW5 版本门控断点）：
+        /// 4.0.0 基线（2026-10-28，commonW5 版本门控断点；已并入首个发布版）：
         ///  - 本版运行时主内容 = commonW5 增量库：OC1/AYCE 主题 BGM 30 首
         ///    （audio/music，PseudoPrefabSO 直引）、桌台皮肤 丛林/生日
         ///    （counters + CounterJungleSO/CounterAnniversarySO）、自定义食材
@@ -534,13 +576,109 @@ namespace CustomStub
         ///  - Loader PluginVersion 同步 4.0.0（requires.txt 门控与依赖包版本对齐）。
         ///  - ⚠ 改 StubVersion 后须 Unity 重编译并重新 staging
         ///    RuntimeDll/WebCustomStubRuntime.dll.bytes（导出新鲜度守卫会拦过期包）。
-        /// 4.1.0（2026-11-04 多镜头分屏）：
+        /// 4.0.0.11（2026-11-04，原 4.1.0）多镜头分屏：
         ///  - 新增 SplitScreenCamera：SplitScreen|1 tag 自愈；按本地厨师数量
         ///    自动 1/2/3/4 镜头（单人双厨师=2）；原版镜头屏蔽（保留 Camera.main/
         ///    AudioListener），每个分屏镜头单目标复用 MultiplayerCamera 运镜；
         ///    分屏时忽略 CameraOffset|；彩色框线 + 3 人黑边布局。
         ///  - 编辑器 CameraInfoDto.splitScreen 往返；导出特征 camera。
         ///  - Loader 仅同步版本号。
-        public const string Value = "4.1.0";
+        /// 4.0.0.19（2026-11-09，原 4.8.0）普通传送带可选「可上菜」+ 几何方向/高度判定：
+        ///  - 核心层普通「传送带站」新增「可上菜」开关（LayoutConveyorStubDto.serve）：
+        ///    勾选后写 CustomStub.ConveyorServe 组件 + tag ConveyorServe|（与方向切换
+        ///    按钮联动时 ConveyorServe|dir），与专用 web_conveyor_station_serve 共用
+        ///    同一运行时；未勾选 / 普通传送带行为完全不变（含传送带互链）。
+        ///  - ConveyorServe 目标检测改为几何判定：沿传送方向正前方（真实「下一格」
+        ///    方向，尊重 Leftwards/Rightwards 与按钮旋转）取上菜台【上菜口】
+        ///    （ServerAttachStation.GetAttachPoint），要求**仅相邻格**（≈1.2m，即前沿外
+        ///    ≤0.6m）、横向 ≤0.8m（半格 0.6 留容差）、与传送带落点高度差 ≤1m
+        ///    （同一格内）的最近者；方向背离 / 非相邻 / 跨层的上菜台不再被误判。
+        ///    上菜台列表约 1s TTL 缓存（热路径不做高频 FindObjectsOfType）。
+        ///  - 旧的「按下一格占用找上菜台」网格判定及其 2×1 跨格 / 包围盒兜底已移除。
+        ///  - ⚠ 改 StubVersion 后须 Unity 重编译并重新 staging
+        ///    RuntimeDll/WebCustomStubRuntime.dll.bytes（导出新鲜度守卫会拦过期包）。
+        /// 4.0.0.18（2026-11-09，原 4.7.0）订单顺序自定义：
+        ///  - 新增 CustomStub.OrderSequenceSettings（Assets/WebCustomStubRuntime/
+        ///    OrderSequence/）：关卡级订单顺序配置组件，烘焙在场景
+        ///    PseudoPrefabManager 物体上；载体双通道 = 组件字段（权威）+
+        ///    OrderSeq| tag（全标量 uID 编码，可无损自愈重建）。
+        ///  - 新增 OrderSequenceDirector 状态机 + RoundData.GetNextRecipe 前缀
+        ///    （按需安装，首行静态放行）：组序列出单——ordered 组按序（可重复）、
+        ///    random 组抽批内跑原版防重复公式（批 N>池则有放回补足，出满 N 单
+        ///    换组）；结束行为 loop 循环 / pingpong 钟摆倒序（A B C D C B A…，
+        ///    ordered 组指针倒放、random 组重抽）/ stop 停单（空数组）。
+        ///    Entry 按 OrderDefinitionNode.m_uID 在关卡 RecipeList 解析，与
+        ///    编辑器 LevelConfigSetup / 真机 OC2DIYLevel 两条构建链同源，
+        ///    运行时零资产加载；查不到的 uID 跳过该单并告警一次。
+        ///  - 编辑器侧：data/&lt;level&gt;/order_seq~/order_seq.json 镜像配置
+        ///    （GET/POST /api/level/order-sequence），写回/导出时
+        ///    LayoutEditorOrderSequenceBake 幂等烘焙进场景；导出特征 orderseq。
+        ///  - Loader 仅同步版本号。
+        ///  - ⚠ 改 StubVersion 后须 Unity 重编译并重新 staging
+        ///    RuntimeDll/WebCustomStubRuntime.dll.bytes（导出新鲜度守卫会拦过期包）。
+        /// 4.0.0.17（2026-11-08，原 4.6.0）上游 DIYLevel 同步：
+        ///  - 配合上游 ICustomRecipeOptional / CustomRecipeOptionalSandwichSO；
+        ///  - IngredientSplitter.outputPrefabSO + optional 输出（RecipeHelper.GetIngredientPrefabForOptional）；
+        ///  - LevelEditorStub / IngredientSplitterRuntime 需随依赖包重新导出。
+        /// 4.0.0.16（2026-11-08，原 4.5.0）文件夹改名致 stub 清单静默失效修复：
+        ///  - 修复主体在 Loader 4.0.0.16（原 4.5.0）侧：stub_levels 清单条目键由磁盘文件夹名
+        ///    改为 info_&lt;set&gt; 推断的【内部集名】（与 bundle 内场景路径
+        ///    assets/levelsets/&lt;set&gt;/ 同源）——玩家给 levels/&lt;set&gt;/ 文件夹改名
+        ///    （2026-11-08 社区 18 个 stub 关卡集 17 个中招：竹子/foryou 大锅消失、
+        ///    夏千语锅具时间不生效等）不再导致火锅/随机箱/传送门/锅具时间等
+        ///    stub 玩法静默失效；EntryPoint 查表逻辑与清单格式零变更，已分发
+        ///    关卡集无需重导出。
+        ///  - 运行时新增【屏幕点探针】（core/ScreenPointProbe.cs，仅 BepInEx 配置
+        ///    [Logging] Verbose=true 时安装）：真机排障呆喵喵图（Dmm/s_dmm_10，
+        ///    camera 特征 + 非 16:9 显示器）每帧刷原生错误 "Screen position out
+        ///    of view frustum"（无托管堆栈、不可定位）——探针给 Camera 的屏幕/
+        ///    视口点 API 挂只观察前缀，越界调用上报**调用方托管堆栈**（同调用点
+        ///    首报一次 + 30 秒计数汇总，恒放行原方法，默认零介入零开销）。
+        ///    相机 rect 0,144,2332,1312 = 原版 FixedAspectRatioCamera 的 16:9
+        ///    letterbox，属正常；调用方疑为上游 OC2DIYLevel 模组或第三方模组
+        ///    （OC2StageThumbnailPreview 同机在装），待探针日志点名。
+        ///  - 对齐后导出的 requires.txt/依赖包 zip 名统一为 4.0.0，与 Loader.dll
+        ///    一致（v3.5.9 同款对齐惯例）。
+        ///  - ⚠ 改 StubVersion 后须 Unity 重编译并重新 staging
+        ///    RuntimeDll/WebCustomStubRuntime.dll.bytes（导出新鲜度守卫会拦过期包）。
+        /// 4.0.0.15（2026-11-08，原 4.3.0）动画组 fade 淡入淡出/隐身显型：
+        ///  - 新增 CustomStub.FadeDriver（Assets/WebCustomStubRuntime/Anim/）：
+        ///    fade 事件 clip 动画本组件公开字段 alpha，组件把 alpha 写入成员
+        ///    子树全部 Renderer 的材质颜色 alpha（惰性实例化、淡出期 0.5s 周期
+        ///    重扫捕获运行时实例化的 bundle child；半透明切 Transparent 队列、
+        ///    alpha≤0.01 直接关 renderer——opaque shader 两端恒正确，透明 shader
+        ///    全程渐变）；网格占位与碰撞体不受影响。
+        ///  - 编辑器侧 AnimGroupBakery fade 事件（fadeTo 0~1/fadeSeconds/easing/
+        ///    loop/pingpong）对含 fade 事件的组成员反射挂载本组件；类型缺失
+        ///    （旧依赖包）安全降级为无淡出。
+        ///  - Loader 仅同步版本号。
+        /// 4.0.0.14（2026-11-05，原 4.2.2）互锁按钮被空目标同轴组弹成两只都可按：
+        ///  - jia_level_kevin_3 的 Switch_BL1/BL2 同时挂了 BtnPair 与
+        ///    Coax（T: 空）。同轴把互锁 Disable 当成第二次按压，集齐后全员 Reset，
+        ///    超时也会把按下侧弹回。两只都可按时状态机仍只收抬起侧，来回按几次
+        ///    才碰到会播动画的那一只。成员全部属于互锁时同轴组让出回绿与计数。
+        ///  - Loader 仅同步版本号。
+        /// 4.0.0.13（2026-11-05，原 4.2.1）互锁一侧绑两组、同帧完成时按钮永久按下：
+        ///  - ButtonLogicRelay 换状态时清空全部 BLDone。两组同帧结束，状态机
+        ///    一帧只能吃掉一条完成过渡并进入 AWait/BWait，另一条被这次清空吃掉，
+        ///    等待态不再换手，两侧按钮停在 Disable。进入 AND 等待态时保留完成触发。
+        ///    存量关卡不用重写回；编辑器 Play 重编译即生效，真机需重新导出依赖包。
+        ///  - Loader 仅同步版本号。
+        /// 4.0.0.12（2026-11-05，原 4.2.0）Web 寿司含虾组合装盘视觉：
+        ///  - 新增 Sushi/SushiPrawnCombos：Harmony prefix ComboCosmeticDecisions.Start，
+        ///    克隆 SushiCosmeticPrefabs 组合查找表并追加条目（节点复用表内原版
+        ///    uID 节点）——成品三条：[海苔+米饭+虾]→m_recipe_sushi_01、
+        ///    [+青瓜]→m_recipe_sushi_03、[+鱼+青瓜]→m_recipe_sushi_04；
+        ///    中间态：含「鱼+虾」且无海苔 → 鱼虾拼盘（单鱼盘+虾片并排组合模板，
+        ///    整体缩小 30%；+青瓜=拼盘+散黄瓜片）；有海苔 → 寿司卷
+        ///    （Plated_Seaweed_Rice）。
+        ///    组合模板隐藏防世界原点幽灵，载体挂 SushiComboActivator 按名兜底激活。
+        ///    修复两问题：含虾成品落 Plated_Sushi_Wrong_01（"卷"兜底）；
+        ///    鱼+虾中间组合跨原版两张 OptionalSushi 通配表无节点可匹配 → 黑块
+        ///    （配套 Web_Sushi_OptionalCombo 五材通配 + 编辑器保存菜谱
+        ///    SyncSushiOptionalCombo 自动注册 optionalRecipeMatchListItems）。
+        ///    并修正三道 Web 寿司 modelSO（03=黄瓜寿司、04=什锦寿司）。
+        ///  - Loader 仅同步版本号。
+        public const string Value = "4.0.0";
     }
 }

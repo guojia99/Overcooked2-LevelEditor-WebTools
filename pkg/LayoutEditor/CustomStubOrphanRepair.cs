@@ -236,6 +236,9 @@ public static class CustomStubOrphanRepair
     /// <summary>清单内已打开且脏的目标场景先保存（文本改写与内存副本不打架）。</summary>
     private static void SaveDirtyOpenTargets(List<string> targets)
     {
+        var active = EditorSceneManager.GetActiveScene();
+        if (active.IsValid() && active.isDirty && targets.Contains(active.path))
+            LayoutEditorPseudoReload.ForcePrepareForExportStrict(true);
         for (int i = 0; i < EditorSceneManager.sceneCount; i++)
         {
             var s = EditorSceneManager.GetSceneAt(i);

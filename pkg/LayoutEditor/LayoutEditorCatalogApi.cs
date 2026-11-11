@@ -83,6 +83,21 @@ public static class LayoutEditorCatalogApi
                     assetPath = path,
                     group = FoodGroupOf(path)
                 };
+                // 关卡集 custom_content 自定义食材：显示名/图标取自 CustomContentConfig
+                //（用户输入的中英文名 + 上传图标），优先于 ManualLookup 的裸 id 回退——
+                // 食材箱/食材选择器里可按中文名与自定义图标辨认。
+                if (path.IndexOf("/custom_content/", StringComparison.Ordinal) >= 0)
+                {
+                    string ccZh;
+                    string ccEn;
+                    string ccIcon;
+                    if (LayoutEditorCustomContentApi.TryGetIngredientDisplay(path, out ccZh, out ccEn, out ccIcon))
+                    {
+                        entry.nameZh = ccZh;
+                        entry.nameEn = ccEn;
+                        entry.iconUrl = ccIcon;
+                    }
+                }
                 // 数据保留全部条目（Web 内置源库 + 关卡集副本）：
                 // 已放置的场景物品可能引用任一 guid，去重只在 UI 展示层进行。
                 list.Add(entry);
@@ -294,6 +309,12 @@ public static class LayoutEditorCatalogApi
         return assetPath.Replace('\\', '/').StartsWith(prefix, StringComparison.Ordinal);
     }
 
+    // Partial-state anchors remain available to optional registration and serialization.
+    internal static bool IsInternalRecipe(string id)
+    {
+        return id != null && id.StartsWith("Web_SauceSalad_Optional_", StringComparison.Ordinal);
+    }
+
     public static RecipeCatalogDto ScanRecipes(string levelSet)
     {        var list = new List<RecipeEntryDto>();
         var folders = new List<string>
@@ -352,6 +373,8 @@ public static class LayoutEditorCatalogApi
                     continue;
 
                 var path = asset.assetPath;
+                if (IsInternalRecipe(Path.GetFileNameWithoutExtension(path)))
+                    continue;
                 var so = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
                 if (so == null)
                     continue;
@@ -485,8 +508,7 @@ public static class LayoutEditorCatalogApi
                     subtype = (group == "burger" && IsCommonW2BurgerCategory(path)) ? BurgerSubtypeOfPath(path) : "",
                     intermediate = score <= 0 && !orderable,
                     mixing = isCustom && custom.type == CustomRecipeSO.RecipeType.Mixed,
-                    optionalKind = custom is CustomRecipeOptionalBurgerSO ? "burger"
-                        : custom is CustomRecipeOptionalPizzaSO ? "pizza" : ""
+                    optionalKind = LayoutEditorOptionalRecipe.KindOf(custom)
                 });
             }
         }
@@ -563,6 +585,7 @@ public static class LayoutEditorCatalogApi
         foreach (var r in list)
         {
             r.cookingGroups = LayoutEditorRecipeKnowledge.ComputeCookingGroups(r, list);
+            r.saladSubgroups = LayoutEditorRecipeKnowledge.ComputeSaladSubgroups(r);
         }
 
         list.Sort((a, b) => string.Compare(a.nameZh, b.nameZh, StringComparison.Ordinal));
@@ -685,6 +708,8 @@ public static class LayoutEditorCatalogApi
         // 本关 PizzaOptional_*（与 stock 同型）必须先于 CustomRecipeSO 通用分支
         if (so is CustomRecipeOptionalPizzaSO)
             return "pizza-optional";
+        if (so is CustomRecipeOptionalSandwichSO)
+            return "sandwich-optional";
         if (so is CustomRecipeSO)
             return "custom-recipe";
         if (Array.IndexOf(PizzaOptionalGuids, AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(so))) >= 0)
@@ -828,6 +853,11 @@ public static class LayoutEditorCatalogApi
         // score=0 条目，此处在其后补回）。
         SyncMilkTeaIntermediate(info, recipes);
         SyncCustomSubRecipeOptionals(info, recipes);
+        // Web 寿司组合通配（同上：须在 EnsureWebDependencies 之前，optional 项的
+        // commonW5 依赖要一并算入）：所选含 Web 寿司成品时确保通配节点在
+        // optionalRecipeMatchListItems——鱼+虾中间组合否则盘上黑块。
+        SyncSushiOptionalCombo(info, recipes);
+        LayoutEditorSaladSauceFactory.SyncOptionals(info);
 
         // DLC 匹配表自动补全（必须在 EnsureWebDependencies 之前：后者靠读
         // includeRecipeMatchLists 注册 bundle 依赖，晚了就漏包）。
@@ -1220,6 +1250,31 @@ public static class LayoutEditorCatalogApi
             }
         }
 
+        // Sandwich 组装定义（2026-11 上游 ICustomRecipeOptional）：本关/共享库里的
+        // CustomRecipeOptionalSandwichSO 都可作为 optionalRecipeMatchListItems 候选。
+        foreach (var folder in LayoutEditorLevelAdminApi.AllCustomRecipeFolders())
+        {
+            if (!LayoutEditorLevelAdminApi.AssetFolderExists(folder))
+                continue;
+            foreach (var asset in LayoutEditorLevelAdminApi.ScanAssetsByScript(
+                         folder, LayoutEditorLevelAdminApi.OptionalSandwichScriptGuid))
+            {
+                if (items.Exists(x => x.guid == asset.guid))
+                    continue;
+                var so = AssetDatabase.LoadAssetAtPath<CustomRecipeOptionalSandwichSO>(asset.assetPath);
+                var id = Path.GetFileNameWithoutExtension(asset.assetPath);
+                var nameZh = so != null && !string.IsNullOrEmpty(so.recipeName) ? so.recipeName : id;
+                items.Add(new OptionalPresetItemDto
+                {
+                    guid = asset.guid,
+                    id = id,
+                    group = FoodGroupOf(asset.assetPath),
+                    kind = "sandwich-optional",
+                    nameZh = nameZh
+                });
+            }
+        }
+
         // Web 意面家族（commonW5/pasta）：煎寿司鱼/虾中间产物预设——注册进
         // optionalRecipeMatchListItems 后，煎好的鱼/虾可单独装盘上菜
         // （GameUtils.GetOrderPlatingPrefab 命中其 m_platingPrefab）。
@@ -1401,6 +1456,48 @@ public static class LayoutEditorCatalogApi
         merged.Add(inter);
         info.optionalRecipeMatchListItems = merged.ToArray();
         LayoutEditorLog.Log("[MilkTea] 已自动加入热水中间产物到 optionalRecipeMatchListItems（杯中清水显示）");
+    }
+
+    /// <summary>Web 寿司通配可选同步：所选含 Web_Sushi_* 成品（score&gt;0）时，
+    /// 把 Web_Sushi_OptionalCombo（optional=[海苔,米饭,青瓜,鱼,虾]、装盘=原版
+    /// CompositeSushi 载体）加进 optionalRecipeMatchListItems（幂等，只增不删）。
+    /// 含「鱼+虾」的组合跨原版两张 OptionalSushi 通配表、无节点可匹配 →
+    /// GetOrderPlatingPrefab=null → 盘上黑块；本通配让任意中间组合都落到载体，
+    /// 由（运行时扩展过的）SushiCosmeticPrefabs 查找表渲染卷/成品视觉。</summary>
+    private static void SyncSushiOptionalCombo(LevelInfoSO info, System.Collections.Generic.List<ScriptableObject> recipes)
+    {
+        if (info == null || recipes == null)
+            return;
+        bool hasFinal = false;
+        bool explicitlySelected = false;
+        for (int i = 0; i < recipes.Count; i++)
+        {
+            var cr = recipes[i] as CustomRecipeSO;
+            if (cr == null || string.IsNullOrEmpty(cr.recipeName))
+                continue;
+            if (!cr.recipeName.StartsWith("Web_Sushi_", System.StringComparison.Ordinal))
+                continue;
+            if (cr.recipeName == "Web_Sushi_OptionalCombo")
+                explicitlySelected = true;
+            else if (cr.score > 0)
+                hasFinal = true;
+        }
+        if (!hasFinal || explicitlySelected)
+            return;
+        var combo = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(
+            "Assets/commonW5/custom_recipes/sushi/Web_Sushi_OptionalCombo.asset");
+        if (combo == null)
+            return;
+        var old = info.optionalRecipeMatchListItems ?? new ScriptableObject[0];
+        for (int i = 0; i < old.Length; i++)
+        {
+            if (old[i] == combo)
+                return;
+        }
+        var merged = new System.Collections.Generic.List<ScriptableObject>(old);
+        merged.Add(combo);
+        info.optionalRecipeMatchListItems = merged.ToArray();
+        LayoutEditorLog.Log("[Sushi] 已自动加入寿司组合通配到 optionalRecipeMatchListItems（鱼+虾中间组合装盘视觉）");
     }
 
     /// <summary>所选菜谱树中的 0 分自定义搅拌子菜谱（面团/面糊等）幂等注入
@@ -2075,9 +2172,9 @@ public static class LayoutEditorCatalogApi
         var entries = new List<ScriptableObject>();
         if (so.compositionSOs != null)
             entries.AddRange(so.compositionSOs);
-        var optionalBurger = so as CustomRecipeOptionalBurgerSO;
-        var optionalPizza = so as CustomRecipeOptionalPizzaSO;
-        if (optionalBurger == null && optionalPizza == null && so.optionalSOs != null)
+        if (LayoutEditorOptionalRecipe.IsAssembly(so))
+            LayoutEditorOptionalRecipe.CollectAssemblyIngredientRefs(so, entries);
+        else if (so.optionalSOs != null)
             entries.AddRange(so.optionalSOs);
         if (entries.Count == 0)
             return null;

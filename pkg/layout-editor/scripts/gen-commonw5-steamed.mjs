@@ -31,9 +31,10 @@ const GUID = {
   steamer: readGuid("Assets/common02/food/CookingSteps/Steamer.asset.meta"),
   steamerIcon: readGuid("Assets/common02/food/CookingSteps/icons/SteamerIcon.asset.meta"),
   mixerIcon: readGuid("Assets/common02/food/CookingSteps/icons/MixerIcon.asset.meta"),
-  fish: readGuid("Assets/common01/food/Ingredients/SushiFishSO.asset.meta"),
+  // 蒸菜用原版蒸鱼/烧麦食材（FishSO / PrawnSO）。寿司鱼虾只属于寿司（米饭进煮锅），不进蒸笼。
+  fish: readGuid("Assets/common01/food/Ingredients/FishSO.asset.meta"),
   flour: readGuid("Assets/common01/food/Ingredients/FlourSO.asset.meta"),
-  prawn: readGuid("Assets/common01/food/Ingredients/SushiPrawnSO.asset.meta"),
+  prawn: readGuid("Assets/common01/food/Ingredients/PrawnSO.asset.meta"),
   modelFish: readGuid("Assets/commonW1/pseudo_prefab_so/core/decor/recipes/Steamed_Fish_SO.asset.meta"),
   modelPrawns: readGuid("Assets/commonW1/pseudo_prefab_so/core/decor/recipes/Steamed_Prawns_SO.asset.meta"),
 };

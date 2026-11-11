@@ -364,7 +364,7 @@ export function updateMarqueeSelection() {
   S.selectedKey = keys.length ? keys[keys.length - 1] : null;
 }
 
-type PreviewPosMap = Map<string, { x: number; z: number; y?: number; rotY?: number }> | null;
+type PreviewPosMap = Map<string, { x: number; z: number; y?: number; rotY?: number; tiltX?: number; tiltZ?: number; scale?: number; alpha?: number }> | null;
 
 /** Draw an item at its preview pose when the anim preview is playing:
  *  a dim ghost stays at the original spot while the item itself moves/rotates
@@ -380,7 +380,16 @@ function drawItemPreview(item: EditorItem, selected: boolean, pos: PreviewPosMap
   drawItem(item, false);
   dom.ctx.restore();
   dom.ctx.save();
-  dom.ctx.globalAlpha = 1;
+  // fade（淡入淡出）：ghost 全局透明度乘 alpha（0=隐身不可见）。
+  dom.ctx.globalAlpha = Math.max(0, Math.min(1, pp.alpha ?? 1));
+  // scale 事件：绕预览位姿缩放图标（缩没消失；tilt 俯视无 2D 表现，3D 预览可见）。
+  const psc = pp.scale ?? 1;
+  if (psc !== 1) {
+    const c = worldToCanvas(pp.x, pp.z);
+    dom.ctx.translate(c.x, c.y);
+    dom.ctx.scale(Math.max(0.001, psc), Math.max(0.001, psc));
+    dom.ctx.translate(-c.x, -c.y);
+  }
   drawItem(
     {
       ...item,
@@ -420,8 +429,9 @@ function drawPreviewFloorGhosts(pos: PreviewPosMap): void {  if (!pos) return;
     if (!pp) continue;
     const c = worldToCanvas(pp.x, pp.z);
     const rad = (-normalizeRot(f.localRotationY + (pp.rotY ?? 0)) * Math.PI) / 180;
-    const w = f._wCells * cellPx;
-    const h = f._dCells * cellPx;
+    const psc = Math.max(0.001, pp.scale ?? 1);
+    const w = f._wCells * cellPx * psc;
+    const h = f._dCells * cellPx * psc;
     dom.ctx.save();
     dom.ctx.translate(c.x, c.y);
     dom.ctx.rotate(rad);
@@ -644,6 +654,7 @@ export function draw() {
 
   drawSceneLights();
   if (S.showCameraFov || S.cameraInfo?.splitScreen) drawCameraFrustum();
+  drawCameraIntroMarkers();
 
   if (S.showCoords) drawCoordAxes();
 
@@ -723,8 +734,10 @@ export function drawCameraFrustum(): void {
         z: p._wz - fwd.z * dist + off.z,
       };
       const refFov = c?.fieldOfView && c.fieldOfView > 0 ? c.fieldOfView : fov;
-      drawFrustumReference(origin, fwd, right, up, refFov, splitViewAspect(players.length, i), palette[i % palette.length],
-        `🎥 镜头 ${i + 1} · ${size.toFixed(2)}×`, `镜头 ${i + 1}`);
+      const viewAspect = splitViewAspect(players.length, i);
+      const hPct = Math.round((viewAspect / (16 / 9)) * 100);
+      drawFrustumReference(origin, fwd, right, up, refFov, viewAspect, palette[i % palette.length],
+        `🎥 镜头 ${i + 1} · 水平 ${hPct}% · ${size.toFixed(2)}×`, `镜头 ${i + 1}`);
     }
     return;
   }
@@ -740,6 +753,125 @@ function splitViewAspect(count: number, index: number): number {
   if (count === 2) return screen * 0.5;
   if (count === 3) return index === 0 ? screen * (0.6 / 0.5) : screen;
   return screen; // 1P 全屏 / 4P 2×2（半宽半高）
+}
+
+/** 进场动画目标标记：focus = 聚焦点标记（X/Z 均生效，画布实际坐标）；tour =
+ *  A/B X 标记 + A→B→最终相机位的水平巡回虚线路径（tour 仅 X 平移，Z 恒为主相机
+ *  Z，绘制同款取 Z 保证所见即所得）；orbit = 绕最终位的圆弧虚线；dive/dollyIn =
+ *  沿视轴的远端直线。分屏模式下不画。 */
+export function drawCameraIntroMarkers(): void {
+  const cam = S.cameraInfo;
+  const intro = cam?.intro;
+  if (!cam || cam.splitScreen || !intro) return;
+  const ctx = dom.ctx;
+  const stroke = "rgba(236,72,153,0.9)";
+  ctx.save();
+  ctx.strokeStyle = stroke;
+  ctx.fillStyle = stroke;
+  ctx.lineWidth = 1.5;
+
+  const drawPoint = (x: number, z: number, label: string): void => {
+    const c = worldToCanvas(x, z);
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, 9, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(c.x - 14, c.y);
+    ctx.lineTo(c.x + 14, c.y);
+    ctx.moveTo(c.x, c.y - 14);
+    ctx.lineTo(c.x, c.y + 14);
+    ctx.stroke();
+    ctx.font = "bold 11px sans-serif";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(label, c.x + 16, c.y - 6);
+  };
+
+  /** 视轴水平投影单位向量（世界 XZ；pitch/yaw 快照推导）。 */
+  const axisDir = (): { x: number; z: number } => {
+    const yaw = ((cam.yaw ?? 0) * Math.PI) / 180;
+    const pitch = ((cam.pitch ?? 60) * Math.PI) / 180;
+    const cp = Math.cos(pitch);
+    return { x: Math.sin(yaw) * cp, z: Math.cos(yaw) * cp };
+  };
+
+  if (intro.mode === "focus" && intro.focusTarget) {
+    drawPoint(intro.focusTarget.x, intro.focusTarget.z, "🎬 进场聚焦");
+  } else if (intro.mode === "tour" && intro.tourA && intro.tourB) {
+    const camZ = Number.isFinite(cam.position?.z) ? (cam.position as { z: number }).z : intro.tourA.z;
+    const a = worldToCanvas(intro.tourA.x, camZ);
+    const b = worldToCanvas(intro.tourB.x, camZ);
+    const f = cam.position ? worldToCanvas(cam.position.x, cam.position.z) : null;
+    // 巡回路径：A → B → 最终相机位（归位）。Z 恒为主相机 Z → 水平线。
+    ctx.setLineDash([7, 5]);
+    ctx.globalAlpha = 0.75;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    if (f) ctx.lineTo(f.x, f.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+    drawPoint(intro.tourA.x, camZ, "🎬 巡回 A · X");
+    drawPoint(intro.tourB.x, camZ, "🎬 巡回 B · X");
+    if (f) {
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.font = "11px sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "bottom";
+      ctx.fillText("归位", f.x + 8, f.y - 4);
+    }
+  } else if (intro.mode === "orbit") {
+    // 环绕路径：offset(θ) = R·(sinθ, cosθ−1)，θ 从 ±orbitAngle 归零（与烘焙一致）。
+    const cxw = cam.position?.x ?? 0;
+    const czw = cam.position?.z ?? 0;
+    const r = intro.startDistance && intro.startDistance >= 2 ? intro.startDistance : 8;
+    const th0 = ((intro.orbitDirection === "left" ? -1 : 1) * (intro.orbitAngle ?? 180) * Math.PI) / 180;
+    ctx.setLineDash([7, 5]);
+    ctx.globalAlpha = 0.75;
+    ctx.beginPath();
+    for (let i = 0; i <= 40; i++) {
+      const th = th0 * (1 - i / 40);
+      const c = worldToCanvas(cxw + Math.sin(th) * r, czw + (Math.cos(th) - 1) * r);
+      if (i === 0) ctx.moveTo(c.x, c.y);
+      else ctx.lineTo(c.x, c.y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+    const s = worldToCanvas(cxw + Math.sin(th0) * r, czw + (Math.cos(th0) - 1) * r);
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.font = "bold 11px sans-serif";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(`🎬 ${intro.orbitDirection === "left" ? "左" : "右"}环绕 ${Math.round(intro.orbitAngle ?? 180)}°`, s.x + 8, s.y - 6);
+  } else if (intro.mode === "dive" || intro.mode === "dollyIn") {
+    // 远端直线：起始 = 最终位 ∓ 视轴·d（dive 另有高度，画布只示水平投影）。
+    const d = intro.startDistance && intro.startDistance > 0 ? intro.startDistance : 5;
+    const ax = axisDir();
+    const sign = intro.mode === "dive" ? -1 : -1;
+    const sx = (cam.position?.x ?? 0) + ax.x * d * sign;
+    const sz = (cam.position?.z ?? 0) + ax.z * d * sign;
+    const a = worldToCanvas(sx, sz);
+    const f = cam.position ? worldToCanvas(cam.position.x, cam.position.z) : null;
+    ctx.setLineDash([7, 5]);
+    ctx.globalAlpha = 0.75;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    if (f) ctx.lineTo(f.x, f.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+    drawPoint(sx, sz, intro.mode === "dive" ? "🎬 俯冲起点" : "🎬 推近起点");
+  }
+
+  ctx.restore();
 }
 
 function drawFrustumReference(

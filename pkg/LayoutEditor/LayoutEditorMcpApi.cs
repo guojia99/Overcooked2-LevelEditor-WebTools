@@ -33,12 +33,13 @@ public static class LayoutEditorMcpApi
         AppendTool(sb, "oc2_get_level_detail", "读取关卡详情。", "read", StringSchema("assetPath"), true, 5000, 30000, false);
         AppendTool(sb, "oc2_get_scene_layout", "读取场景布局。", "read", StringSchema("assetPath"), true, 10000, 60000, false);
         AppendTool(sb, "oc2_get_grid", "读取当前场景网格。", "read", "{}", true, 2000, 30000, false);
-        AppendTool(sb, "oc2_get_level_recipe_context", "读取关卡菜谱和菜谱目录。", "read", "{\"type\":\"object\",\"properties\":{\"assetPath\":{\"type\":\"string\"},\"levelSet\":{\"type\":\"string\"}},\"required\":[\"assetPath\"]}", true, 10000, 60000, false);
+        AppendTool(sb, "oc2_get_level_recipe_context", "读取关卡菜谱和菜谱目录；saladSubgroups 的 non_dlc11_official 独占剧情食材沙拉及其酱扩展，其余按互斥酱料组加可交叉的 official 来源组，按菜谱 id 去重计数。", "read", "{\"type\":\"object\",\"properties\":{\"assetPath\":{\"type\":\"string\"},\"levelSet\":{\"type\":\"string\"}},\"required\":[\"assetPath\"]}", true, 10000, 60000, false);
         AppendTool(sb, "oc2_analyze_level_dependencies", "分析关卡 AssetBundle 依赖。", "compute", StringSchema("assetPath"), true, 10000, 60000, false);
         AppendTool(sb, "oc2_validate_scene", "读取并验证场景，不写入。", "compute", StringSchema("assetPath"), true, 10000, 60000, false);
-        AppendTool(sb, "oc2_commit_scene", "将完整 LayoutDocument 写回 Unity 场景，必须 confirm=true。", "write_scene", "{\"type\":\"object\",\"properties\":{\"confirm\":{\"const\":true},\"snap\":{\"type\":\"number\"},\"syncWalkable\":{\"type\":\"boolean\"},\"only\":{\"type\":\"string\"},\"document\":{\"type\":\"object\"}},\"required\":[\"confirm\",\"document\"]}", false, 30000, 120000, true);
+        AppendTool(sb, "oc2_commit_scene", "将完整 LayoutDocument 写回 Unity 场景，必须 confirm=true。Play 模式下整次拒绝，不改场景。", "write_scene", "{\"type\":\"object\",\"properties\":{\"confirm\":{\"const\":true},\"snap\":{\"type\":\"number\"},\"syncWalkable\":{\"type\":\"boolean\"},\"only\":{\"type\":\"string\"},\"document\":{\"type\":\"object\"}},\"required\":[\"confirm\",\"document\"]}", false, 30000, 120000, true);
         AppendTool(sb, "oc2_start_export", "启动关卡集导出，立即返回后必须轮询状态。", "build", "{\"type\":\"object\",\"properties\":{\"setNames\":{\"type\":\"array\"},\"setName\":{\"type\":\"string\"},\"mode\":{\"type\":\"string\"},\"depsVersion\":{\"type\":\"string\"},\"confirm\":{\"const\":true}},\"required\":[\"confirm\"]}", false, 300000, 1800000, true);
         AppendTool(sb, "oc2_get_export_status", "查询导出状态，建议每 2 秒轮询。", "read", "{}", true, 1000, 30000, false);
+        AppendTool(sb, "oc2_salad_sauce_bundles", "仅构建 commonw3/runtime Windows bundle，不保存场景或发布；build 需 confirm=true，status 读回。HTTP 超时先读 Library/SaladSauceBundleBuild/result.json，勿重复 build。", "build", "{\"type\":\"object\",\"properties\":{\"operation\":{\"enum\":[\"build\",\"status\"]},\"confirm\":{\"type\":\"boolean\"}},\"required\":[\"operation\"]}", false, 300000, 1800000, true);
         sb.Append(']');
         return sb.ToString();
     }

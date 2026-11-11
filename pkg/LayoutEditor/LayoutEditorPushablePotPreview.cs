@@ -40,7 +40,7 @@ public static class LayoutEditorPushablePotPreview
     /// 不触发编译的纯 HTTP 写回，2026-09-04 用户实测漏挂）。</summary>
     public static void Arm()
     {
-        if (Application.isPlaying)
+        if (Application.isPlaying || LayoutEditorPseudoReload.ExportBuildInProgress)
             return;
         _armed = true;
         // 宿主 PseudoPrefabManager 初始化 / bundle 加载都可能滞后（写回主路径会整体
@@ -73,6 +73,8 @@ public static class LayoutEditorPushablePotPreview
 
     private static void Tick()
     {
+        if (LayoutEditorPseudoReload.ExportBuildInProgress)
+            return;
         if (!_armed || Application.isPlaying)
         {
             Stop();

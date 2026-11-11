@@ -350,6 +350,56 @@ function normalizeSplitCameraConfigs(): void {
   }
 }
 
+/** 写回前归一化进场动画配置：自定义模式补齐/夹取参数默认值（后端兜底同样
+ *  clamp，这里保证往返文档稳定）；非自定义模式参数原样保留（后端忽略）。 */
+function normalizeIntroConfig(): void {
+  const cam = S.cameraInfo;
+  if (!cam || !cam.intro) return;
+  const it = cam.intro;
+  if (!it.mode) it.mode = "vanilla";
+  const custom =
+    it.mode === "pullBack" ||
+    it.mode === "rotateLeft" ||
+    it.mode === "rotateRight" ||
+    it.mode === "focus" ||
+    it.mode === "tour" ||
+    it.mode === "dollyIn" ||
+    it.mode === "dive" ||
+    it.mode === "orbit";
+  if (!custom) return;
+  const clampDef = (v: number | undefined, def: number, min: number, max: number): number => {
+    const base = Number.isFinite(v) && (v as number) > 0 ? (v as number) : def;
+    return Math.round(Math.min(max, Math.max(min, base)) * 100) / 100;
+  };
+  const nonNeg = (v: number | undefined, def: number, min: number, max: number): number => {
+    const base = Number.isFinite(v) && (v as number) >= 0 ? (v as number) : def;
+    return Math.round(Math.min(max, Math.max(min, base)) * 100) / 100;
+  };
+  const normPoint = (p: { x: number; z: number } | undefined): { x: number; z: number } => ({
+    x: Number.isFinite(p?.x) ? (p as { x: number }).x : 0,
+    z: Number.isFinite(p?.z) ? (p as { z: number }).z : 0,
+  });
+  it.duration = clampDef(it.duration, 2, 0.5, 6);
+  // startDistance：pullBack/rotate/dive/dollyIn 默认 5；orbit = 环绕半径默认 8；
+  // focus/tour 水平平移不使用。
+  if (it.mode === "pullBack" || it.mode === "rotateLeft" || it.mode === "rotateRight"
+    || it.mode === "dollyIn" || it.mode === "dive")
+    it.startDistance = nonNeg(it.startDistance, 5, 0, 20);
+  if (it.mode === "orbit") it.startDistance = nonNeg(it.startDistance, 8, 1.5, 20);
+  if (it.mode === "rotateLeft" || it.mode === "rotateRight")
+    it.rotateAngle = clampDef(it.rotateAngle, 30, 5, 90);
+  if (it.mode === "dive") it.diveHeight = clampDef(it.diveHeight, 10, 2, 40);
+  if (it.mode === "orbit") {
+    it.orbitAngle = clampDef(it.orbitAngle, 180, 90, 360);
+    if (it.orbitDirection !== "left" && it.orbitDirection !== "right") it.orbitDirection = "right";
+  }
+  if (it.mode === "focus") it.focusTarget = normPoint(it.focusTarget);
+  if (it.mode === "tour") {
+    it.tourA = normPoint(it.tourA);
+    it.tourB = normPoint(it.tourB);
+  }
+}
+
 export function buildDocument(only: SaveScope = ""): LayoutDocument {
   const animDoc = (): AnimControlData | undefined => {
     // Move controls are baked straight into the scene (no external config) and are
@@ -442,6 +492,7 @@ export function buildDocument(only: SaveScope = ""): LayoutDocument {
   }
 
   normalizeSplitCameraConfigs();
+  normalizeIntroConfig();
   return {
     sceneAssetPath: S.scenePath,
     hasCeilingHeight: S.hasCeilingHeight,

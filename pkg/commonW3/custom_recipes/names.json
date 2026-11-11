@@ -400,6 +400,396 @@
             "id": "Web_Soup_TomatoFish",
             "zh": "Web 番茄鱼汤",
             "en": "Web Tomato Fish Soup"
+        },
+        {
+            "id": "Web_SauceSalad_Salad_Tomato_SO_Ketchup",
+            "zh": "番茄沙拉·红酱",
+            "en": "Tomato Salad (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Salad_Tomato_SO_Mustard",
+            "zh": "番茄沙拉·黄酱",
+            "en": "Tomato Salad (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Salad_Tomato_SO_KetchupMustard",
+            "zh": "番茄沙拉·双酱",
+            "en": "Tomato Salad (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Salad_Cucumber_SO_Ketchup",
+            "zh": "黄瓜沙拉·红酱",
+            "en": "Cucumber Salad (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Salad_Cucumber_SO_Mustard",
+            "zh": "黄瓜沙拉·黄酱",
+            "en": "Cucumber Salad (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Salad_Cucumber_SO_KetchupMustard",
+            "zh": "黄瓜沙拉·双酱",
+            "en": "Cucumber Salad (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Salad_Plain_SO_Ketchup",
+            "zh": "生菜沙拉·红酱",
+            "en": "Lettuce Salad (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Salad_Plain_SO_Mustard",
+            "zh": "生菜沙拉·黄酱",
+            "en": "Lettuce Salad (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Salad_Plain_SO_KetchupMustard",
+            "zh": "生菜沙拉·双酱",
+            "en": "Lettuce Salad (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_DLC11_Salad_tomato_cucumber_onion_Ketchup",
+            "zh": "沙拉·番茄黄瓜洋葱·红酱",
+            "en": "Salad Tomato Cucumber & Onion (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_DLC11_Salad_tomato_cucumber_onion_Mustard",
+            "zh": "沙拉·番茄黄瓜洋葱·黄酱",
+            "en": "Salad Tomato Cucumber & Onion (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_DLC11_Salad_tomato_cucumber_onion_KetchupMustard",
+            "zh": "沙拉·番茄黄瓜洋葱·双酱",
+            "en": "Salad Tomato Cucumber & Onion (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_DLC11_Salad_tomato_onion_Ketchup",
+            "zh": "沙拉·番茄洋葱·红酱",
+            "en": "Salad Tomato & Onion (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_DLC11_Salad_tomato_onion_Mustard",
+            "zh": "沙拉·番茄洋葱·黄酱",
+            "en": "Salad Tomato & Onion (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_DLC11_Salad_tomato_onion_KetchupMustard",
+            "zh": "沙拉·番茄洋葱·双酱",
+            "en": "Salad Tomato & Onion (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_DLC11_Salad_tomato_corn_onion_Ketchup",
+            "zh": "沙拉·番茄玉米洋葱·红酱",
+            "en": "Salad Tomato Corn & Onion (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_DLC11_Salad_tomato_corn_onion_Mustard",
+            "zh": "沙拉·番茄玉米洋葱·黄酱",
+            "en": "Salad Tomato Corn & Onion (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_DLC11_Salad_tomato_corn_onion_KetchupMustard",
+            "zh": "沙拉·番茄玉米洋葱·双酱",
+            "en": "Salad Tomato Corn & Onion (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_DLC11_Salad_cucumber_tomato_onion_Ketchup",
+            "zh": "沙拉·黄瓜番茄洋葱·红酱",
+            "en": "Salad Cucumber Tomato & Onion (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_DLC11_Salad_cucumber_tomato_onion_Mustard",
+            "zh": "沙拉·黄瓜番茄洋葱·黄酱",
+            "en": "Salad Cucumber Tomato & Onion (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_DLC11_Salad_cucumber_tomato_onion_KetchupMustard",
+            "zh": "沙拉·黄瓜番茄洋葱·双酱",
+            "en": "Salad Cucumber Tomato & Onion (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_DLC11_Salad_cucumber_onion_Ketchup",
+            "zh": "沙拉·黄瓜洋葱·红酱",
+            "en": "Salad Cucumber & Onion (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_DLC11_Salad_cucumber_onion_Mustard",
+            "zh": "沙拉·黄瓜洋葱·黄酱",
+            "en": "Salad Cucumber & Onion (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_DLC11_Salad_cucumber_onion_KetchupMustard",
+            "zh": "沙拉·黄瓜洋葱·双酱",
+            "en": "Salad Cucumber & Onion (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_DLC11_Salad_corn_onion_Ketchup",
+            "zh": "沙拉·玉米洋葱·红酱",
+            "en": "Salad Corn & Onion (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_DLC11_Salad_corn_onion_Mustard",
+            "zh": "沙拉·玉米洋葱·黄酱",
+            "en": "Salad Corn & Onion (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_DLC11_Salad_corn_onion_KetchupMustard",
+            "zh": "沙拉·玉米洋葱·双酱",
+            "en": "Salad Corn & Onion (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_Lettuce_Ketchup",
+            "zh": "Web 纯生菜沙拉·红酱",
+            "en": "Web Plain Lettuce Salad (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_Lettuce_Mustard",
+            "zh": "Web 纯生菜沙拉·黄酱",
+            "en": "Web Plain Lettuce Salad (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_Lettuce_KetchupMustard",
+            "zh": "Web 纯生菜沙拉·双酱",
+            "en": "Web Plain Lettuce Salad (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_TomatoCucumberCorn_Ketchup",
+            "zh": "Web 番茄黄瓜玉米沙拉·红酱",
+            "en": "Web Tomato Cucumber Corn Salad (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_TomatoCucumberCorn_Mustard",
+            "zh": "Web 番茄黄瓜玉米沙拉·黄酱",
+            "en": "Web Tomato Cucumber Corn Salad (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_TomatoCucumberCorn_KetchupMustard",
+            "zh": "Web 番茄黄瓜玉米沙拉·双酱",
+            "en": "Web Tomato Cucumber Corn Salad (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_Tomato_Ketchup",
+            "zh": "Web 番茄沙拉·红酱",
+            "en": "Web Tomato Salad (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_Tomato_Mustard",
+            "zh": "Web 番茄沙拉·黄酱",
+            "en": "Web Tomato Salad (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_Tomato_KetchupMustard",
+            "zh": "Web 番茄沙拉·双酱",
+            "en": "Web Tomato Salad (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_Cucumber_Ketchup",
+            "zh": "Web 黄瓜沙拉·红酱",
+            "en": "Web Cucumber Salad (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_Cucumber_Mustard",
+            "zh": "Web 黄瓜沙拉·黄酱",
+            "en": "Web Cucumber Salad (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_Cucumber_KetchupMustard",
+            "zh": "Web 黄瓜沙拉·双酱",
+            "en": "Web Cucumber Salad (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_CucumberCorn_Ketchup",
+            "zh": "Web 黄瓜玉米沙拉·红酱",
+            "en": "Web Cucumber Corn Salad (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_CucumberCorn_Mustard",
+            "zh": "Web 黄瓜玉米沙拉·黄酱",
+            "en": "Web Cucumber Corn Salad (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_CucumberCorn_KetchupMustard",
+            "zh": "Web 黄瓜玉米沙拉·双酱",
+            "en": "Web Cucumber Corn Salad (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_TomatoCucumber_Ketchup",
+            "zh": "Web 生菜底番茄黄瓜沙拉·红酱",
+            "en": "Web Tomato Cucumber Salad (Lettuce Base) (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_TomatoCucumber_Mustard",
+            "zh": "Web 生菜底番茄黄瓜沙拉·黄酱",
+            "en": "Web Tomato Cucumber Salad (Lettuce Base) (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_TomatoCucumber_KetchupMustard",
+            "zh": "Web 生菜底番茄黄瓜沙拉·双酱",
+            "en": "Web Tomato Cucumber Salad (Lettuce Base) (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_TomatoCucumberCorn_Ketchup",
+            "zh": "Web 生菜底番茄黄瓜玉米沙拉·红酱",
+            "en": "Web Tomato Cucumber Corn Salad (Lettuce Base) (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_TomatoCucumberCorn_Mustard",
+            "zh": "Web 生菜底番茄黄瓜玉米沙拉·黄酱",
+            "en": "Web Tomato Cucumber Corn Salad (Lettuce Base) (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_TomatoCucumberCorn_KetchupMustard",
+            "zh": "Web 生菜底番茄黄瓜玉米沙拉·双酱",
+            "en": "Web Tomato Cucumber Corn Salad (Lettuce Base) (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_Tomato_Ketchup",
+            "zh": "Web 生菜底番茄沙拉·红酱",
+            "en": "Web Tomato Salad (Lettuce Base) (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_Tomato_Mustard",
+            "zh": "Web 生菜底番茄沙拉·黄酱",
+            "en": "Web Tomato Salad (Lettuce Base) (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_Tomato_KetchupMustard",
+            "zh": "Web 生菜底番茄沙拉·双酱",
+            "en": "Web Tomato Salad (Lettuce Base) (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_TomatoCorn_Ketchup",
+            "zh": "Web 生菜底番茄玉米沙拉·红酱",
+            "en": "Web Tomato Corn Salad (Lettuce Base) (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_TomatoCorn_Mustard",
+            "zh": "Web 生菜底番茄玉米沙拉·黄酱",
+            "en": "Web Tomato Corn Salad (Lettuce Base) (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_TomatoCorn_KetchupMustard",
+            "zh": "Web 生菜底番茄玉米沙拉·双酱",
+            "en": "Web Tomato Corn Salad (Lettuce Base) (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_Cucumber_Ketchup",
+            "zh": "Web 生菜底黄瓜沙拉·红酱",
+            "en": "Web Cucumber Salad (Lettuce Base) (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_Cucumber_Mustard",
+            "zh": "Web 生菜底黄瓜沙拉·黄酱",
+            "en": "Web Cucumber Salad (Lettuce Base) (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_Cucumber_KetchupMustard",
+            "zh": "Web 生菜底黄瓜沙拉·双酱",
+            "en": "Web Cucumber Salad (Lettuce Base) (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_CucumberCorn_Ketchup",
+            "zh": "Web 生菜底黄瓜玉米沙拉·红酱",
+            "en": "Web Cucumber Corn Salad (Lettuce Base) (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_CucumberCorn_Mustard",
+            "zh": "Web 生菜底黄瓜玉米沙拉·黄酱",
+            "en": "Web Cucumber Corn Salad (Lettuce Base) (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_CucumberCorn_KetchupMustard",
+            "zh": "Web 生菜底黄瓜玉米沙拉·双酱",
+            "en": "Web Cucumber Corn Salad (Lettuce Base) (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_Corn_Ketchup",
+            "zh": "Web 生菜底玉米沙拉·红酱",
+            "en": "Web Corn Salad (Lettuce Base) (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_Corn_Mustard",
+            "zh": "Web 生菜底玉米沙拉·黄酱",
+            "en": "Web Corn Salad (Lettuce Base) (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_LSalad_Corn_KetchupMustard",
+            "zh": "Web 生菜底玉米沙拉·双酱",
+            "en": "Web Corn Salad (Lettuce Base) (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_LettuceTomatoCorn_Ketchup",
+            "zh": "Web 生菜番茄玉米沙拉·红酱",
+            "en": "Web Lettuce Tomato Corn Salad (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_LettuceTomatoCorn_Mustard",
+            "zh": "Web 生菜番茄玉米沙拉·黄酱",
+            "en": "Web Lettuce Tomato Corn Salad (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_LettuceTomatoCorn_KetchupMustard",
+            "zh": "Web 生菜番茄玉米沙拉·双酱",
+            "en": "Web Lettuce Tomato Corn Salad (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_LettuceCucumberCorn_Ketchup",
+            "zh": "Web 生菜黄瓜玉米沙拉·红酱",
+            "en": "Web Lettuce Cucumber Corn Salad (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_LettuceCucumberCorn_Mustard",
+            "zh": "Web 生菜黄瓜玉米沙拉·黄酱",
+            "en": "Web Lettuce Cucumber Corn Salad (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_LettuceCucumberCorn_KetchupMustard",
+            "zh": "Web 生菜黄瓜玉米沙拉·双酱",
+            "en": "Web Lettuce Cucumber Corn Salad (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_Lettuce_Ketchup",
+            "zh": "Web 生菜沙拉·红酱",
+            "en": "Web Lettuce Salad (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_Lettuce_Mustard",
+            "zh": "Web 生菜沙拉·黄酱",
+            "en": "Web Lettuce Salad (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_Lettuce_KetchupMustard",
+            "zh": "Web 生菜沙拉·双酱",
+            "en": "Web Lettuce Salad (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_LettuceTomatoCucumberCorn_Ketchup",
+            "zh": "Web 田园全家福沙拉·红酱",
+            "en": "Web Garden Salad (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_LettuceTomatoCucumberCorn_Mustard",
+            "zh": "Web 田园全家福沙拉·黄酱",
+            "en": "Web Garden Salad (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_LettuceTomatoCucumberCorn_KetchupMustard",
+            "zh": "Web 田园全家福沙拉·双酱",
+            "en": "Web Garden Salad (Ketchup & Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_Corn_Ketchup",
+            "zh": "Web 玉米沙拉·红酱",
+            "en": "Web Corn Salad (Ketchup)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_Corn_Mustard",
+            "zh": "Web 玉米沙拉·黄酱",
+            "en": "Web Corn Salad (Mustard)"
+        },
+        {
+            "id": "Web_SauceSalad_Web_Salad_Corn_KetchupMustard",
+            "zh": "Web 玉米沙拉·双酱",
+            "en": "Web Corn Salad (Ketchup & Mustard)"
         }
     ]
 }

@@ -81,7 +81,7 @@ export function waypointColor(id: string): string {
 }
 
 /** Color per event type — event cards use these so 移动 / 抬起 / 落下 / 等待 / 旋转
- *  / 全屏抖动 / 闪电 read at a glance in the events list. */
+ *  / 全屏抖动 / 闪电 / 缩放 / 翻转 / 公转 / 淡入淡出 read at a glance in the events list. */
 export const EVENT_TYPE_COLORS: Record<AnimGroupEvent["type"], string> = {
   move: "#3d6bf3",
   lift: "#8a5fd6",
@@ -90,6 +90,10 @@ export const EVENT_TYPE_COLORS: Record<AnimGroupEvent["type"], string> = {
   rotate: "#e8930c",
   shake: "#c9793c",
   flash: "#e8d94c",
+  scale: "#2fa88a",
+  tilt: "#d9578c",
+  orbit: "#4fb6e8",
+  fade: "#9aa7b8",
 };
 
 /** 时间轴粒度：所有时间（startTime / duration / 间隔）吸附到 0.1 秒。 */
@@ -139,7 +143,93 @@ export function eventTypeLabel(type: AnimGroupEvent["type"]): string {
     : type === "rotate" ? "旋转"
     : type === "shake" ? "全屏抖动"
     : type === "flash" ? "闪电"
+    : type === "scale" ? "缩放"
+    : type === "tilt" ? "翻转"
+    : type === "orbit" ? "公转"
+    : type === "fade" ? "淡入淡出"
     : "等待";
+}
+
+/** 缓动映射（与后端 AnimGroupBakery.EaseValue 同名同公式——flashEnvelope 同款
+ *  铁律，两端常量必须严格一致，改动须同步烘焙端）。 */
+export function easeValue(k: number, easing?: string): number {
+  k = Math.min(1, Math.max(0, k));
+  if (!easing || easing === "linear") return k;
+  if (easing === "easeIn") return k * k;
+  if (easing === "easeOut") return 1 - (1 - k) * (1 - k);
+  if (easing === "easeInOut") return k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+  if (easing === "easeOutBounce") {
+    const n1 = 7.5625, d1 = 2.75;
+    if (k < 1 / d1) return n1 * k * k;
+    if (k < 2 / d1) { const x = k - 1.5 / d1; return n1 * x * x + 0.75; }
+    if (k < 2.5 / d1) { const x = k - 2.25 / d1; return n1 * x * x + 0.9375; }
+    const x4 = k - 2.625 / d1; return n1 * x4 * x4 + 0.984375;
+  }
+  if (easing === "easeInOutBack") {
+    const c2 = 1.70158 * 1.525;
+    return k < 0.5
+      ? (Math.pow(2 * k, 2) * ((c2 + 1) * 2 * k - c2)) / 2
+      : (Math.pow(2 * k - 2, 2) * ((c2 + 1) * (k * 2 - 2) + c2)) / 2 + 1;
+  }
+  return k;
+}
+
+/** pingpong 三角波进度（与后端 PingPongEase 同公式）。 */
+export function pingPongEase(k: number, easing?: string): number {
+  k = Math.min(1, Math.max(0, k));
+  return easeValue(k <= 0.5 ? k * 2 : 2 - k * 2, easing);
+}
+
+/** 缓动选项（下拉共用；与后端 EaseValue 支持集一致）。 */
+export const EASING_OPTIONS: { value: string; label: string }[] = [
+  { value: "linear", label: "线性" },
+  { value: "easeIn", label: "缓入" },
+  { value: "easeOut", label: "缓出" },
+  { value: "easeInOut", label: "缓入缓出" },
+  { value: "easeOutBounce", label: "弹跳（落地衰减）" },
+  { value: "easeInOutBack", label: "回弹（过冲回拉）" },
+];
+
+/** orbit 圆周位置（与后端 AnimGroupBakery.OrbitPos 同公式：+deg 绕 up 把 +X
+ *  转向 -Z，cw/ccw 与 rotate 同向约定）。 */
+export function orbitPos(startX: number, startZ: number, cx: number, cz: number,
+  deg: number, direction?: string): { x: number; z: number } {
+  const dir = direction === "ccw" ? -1 : 1;
+  const theta = (dir * deg * Math.PI) / 180;
+  const ox = startX - cx;
+  const oz = startZ - cz;
+  const c = Math.cos(theta);
+  const s = Math.sin(theta);
+  return { x: cx + ox * c + oz * s, z: cz - ox * s + oz * c };
+}
+
+/** orbit 默认圆心 = 组成员当前世界位包围盒中心（items._wx/_wz + floors）。 */
+export function orbitDefaultCenter(group: AnimGroup): { x: number; z: number } {
+  let sx = 0, sz = 0, n = 0;
+  for (const id of [...group.itemInstanceIds, ...group.floorInstanceIds, ...group.objectInstanceIds]) {
+    const p = memberWorldXZOf(id);
+    if (!p) continue;
+    sx += p.x;
+    sz += p.z;
+    n++;
+  }
+  if (n === 0) return { x: 0, z: 0 };
+  return { x: sx / n, z: sz / n };
+}
+
+function memberWorldXZOf(id: string): { x: number; z: number } | null {
+  const it = S.items.find((i) => i.instanceId === id);
+  if (it) return { x: it._wx, z: it._wz };
+  const f = S.floors.find((fl) => fl.instanceId === id);
+  if (f) return { x: f.localPosition.x, z: f.localPosition.z };
+  return null;
+}
+
+/** 支持事件级 loop/pingpong 自转移重放的类型（与后端 BuildController.canLoop 一致）。 */
+function eventCanCycle(evt: AnimGroupEvent): boolean {
+  return evt.type === "move" || evt.type === "rotate" || evt.type === "shake" ||
+    evt.type === "flash" || evt.type === "scale" || evt.type === "tilt" ||
+    evt.type === "orbit" || evt.type === "fade";
 }
 
 /** 全屏特效组判定（groupKind="fx"：无成员，事件仅 shake/flash/wait）。 */
@@ -314,6 +404,83 @@ export function waypointInfo(wpId: string): { group: AnimGroup; wp: AnimGroupWay
   return null;
 }
 
+/** 激活组内 orbit 圆心命中测试（拖拽改 orbitCenterX/Z 的入口）。 */
+export function hitTestOrbitCenter(wx: number, wz: number): number | null {
+  const group = activeGroup();
+  if (!group) return null;
+  const r2 = 0.16; // ≈0.4 格半径
+  for (let i = 0; i < group.events.length; i++) {
+    const evt = group.events[i];
+    if (evt.type !== "orbit") continue;
+    const dx = (evt.orbitCenterX ?? 0) - wx;
+    const dz = (evt.orbitCenterZ ?? 0) - wz;
+    if (dx * dx + dz * dz <= r2) return i;
+  }
+  return null;
+}
+
+/** 激活组内 move 路线段的贝塞尔控制点命中测试（拖拽改 ctrlX/ctrlZ 的入口）。 */
+export function hitTestCtrlPoint(wx: number, wz: number): string | null {
+  const group = activeGroup();
+  if (!group) return null;
+  const r2 = 0.16;
+  const seen = new Set<string>();
+  for (const evt of group.events) {
+    if (evt.type !== "move" || !evt.waypointIds) continue;
+    for (const wpId of evt.waypointIds) {
+      if (seen.has(wpId)) continue;
+      seen.add(wpId);
+      const wp = group.waypoints.find((w) => w.id === wpId);
+      if (!wp || !wp.ctrlHas) continue;
+      const dx = (wp.ctrlX ?? wp.x) - wx;
+      const dz = (wp.ctrlZ ?? wp.z) - wz;
+      if (dx * dx + dz * dz <= r2) return wpId;
+    }
+  }
+  return null;
+}
+
+/** 给路点拉出「到下一段」的弧线控制点：默认位置 = 段中点沿左法线偏 0.6 格。 */
+export function ensureCtrlPoint(group: AnimGroup, wpId: string): void {
+  const wi = group.waypoints.findIndex((w) => w.id === wpId);
+  if (wi < 0) return;
+  const wp = group.waypoints[wi];
+  if (wp.ctrlHas) return;
+  // 找引用该路点的第一个 move 事件的下一路点。
+  let next: AnimGroupWaypoint | null = null;
+  for (const evt of group.events) {
+    if (evt.type !== "move" || !evt.waypointIds) continue;
+    const ri = evt.waypointIds.indexOf(wpId);
+    if (ri >= 0 && ri < evt.waypointIds.length - 1) {
+      next = group.waypoints.find((w) => w.id === evt.waypointIds![ri + 1]) ?? null;
+      if (next) break;
+    }
+  }
+  if (!next) {
+    setStatus("该路点是路线终点，没有可弯曲的下一段");
+    return;
+  }
+  const mx = (wp.x + next.x) / 2;
+  const mz = (wp.z + next.z) / 2;
+  const dx = next.x - wp.x;
+  const dz = next.z - wp.z;
+  const len = Math.max(0.001, Math.hypot(dx, dz));
+  wp.ctrlHas = true;
+  wp.ctrlX = Math.round((mx - (dz / len) * 0.6) * 10) / 10;
+  wp.ctrlZ = Math.round((mz + (dx / len) * 0.6) * 10) / 10;
+  S.dirty = true;
+  setStatus("已拉出弧线控制点（画布蓝色菱形，可直接拖拽调整弧度）");
+}
+
+/** 删除路点的弧线控制点（段回到直线）。 */
+export function clearCtrlPoint(group: AnimGroup, wpId: string): void {
+  const wp = group.waypoints.find((w) => w.id === wpId);
+  if (!wp || !wp.ctrlHas) return;
+  wp.ctrlHas = false;
+  S.dirty = true;
+  setStatus("已改回直线段");
+}
+
 /** Delete a waypoint (from the pool and every event route). */
 export function deleteWaypoint(group: AnimGroup, wpId: string): void {
   group.waypoints = group.waypoints.filter((w) => w.id !== wpId);
@@ -397,20 +564,29 @@ export function eventEnd(evt: AnimGroupEvent, group: AnimGroup): number {
   return eventStart(evt) + eventDuration(evt, group);
 }
 
-/** 抬起 / 落下事件互相独占时间段（lift 与 drop 之间强制不重叠）；它们与其他
- *  类型事件（移动 / 旋转 / 等待）之间仍可自由重叠并行。 */
-function isExclusiveEvt(evt: AnimGroupEvent): boolean {
-  return evt.type === "lift" || evt.type === "drop";
+/** 互斥通道类别：lift/drop 同写 Y 彼此独占；move/orbit 同写 XZ 彼此独占
+ *  （orbit 与 lift 可并行——Y/XZ 通道独立，与烘焙端簇合并规则一致）。 */
+function exclusiveClass(evt: AnimGroupEvent): "y" | "xz" | null {
+  if (evt.type === "lift" || evt.type === "drop") return "y";
+  if (evt.type === "move" || evt.type === "orbit") return "xz";
+  return null;
 }
 
-/** 事件 idx 的禁区区间表 = 其他 lift/drop 事件的区间——仅当本事件也是
- *  lift/drop 时才生效（即只有 lift/drop 彼此之间不允许重叠）。 */
+/** 抬起 / 落下（Y 类）与 移动 / 公转（XZ 类）各自独占时间段；跨类别与其
+ *  他类型事件（旋转 / 缩放 / 翻转 / 等待）之间仍可自由重叠并行。 */
+function isExclusiveEvt(evt: AnimGroupEvent): boolean {
+  return exclusiveClass(evt) !== null;
+}
+
+/** 事件 idx 的禁区区间表 = 同互斥类别其他事件的区间——不同类别之间允许
+ *  重叠（lift 可与 orbit 并行等）。 */
 function exclusiveBlockers(group: AnimGroup, idx: number): { s: number; e: number }[] {
   const evt = group.events[idx];
+  const cls = exclusiveClass(evt);
   const out: { s: number; e: number }[] = [];
-  if (!isExclusiveEvt(evt)) return out;
+  if (!cls) return out;
   group.events.forEach((o, i) => {
-    if (i === idx || !isExclusiveEvt(o)) return;
+    if (i === idx || exclusiveClass(o) !== cls) return;
     out.push({ s: eventStart(o), e: eventEnd(o, group) });
   });
   out.sort((a, b) => a.s - b.s);
@@ -640,13 +816,17 @@ export function drawAnimControlOverlay(): void {
 
     const wpMap = new Map(group.waypoints.map((w) => [w.id, w]));
 
-    // Draw route lines for move events
+    // Draw route lines for move events（段有贝塞尔控制点时画二次曲线 + 控制点把手）
     for (const evt of group.events) {
       if (evt.type !== "move" || !evt.waypointIds || evt.waypointIds.length < 2) continue;
       const pts: { x: number; z: number }[] = [];
+      const ctrls: ({ x: number; z: number } | null)[] = [];
       for (const wpId of evt.waypointIds) {
         const wp = wpMap.get(wpId);
-        if (wp) pts.push({ x: wp.x, z: wp.z });
+        if (wp) {
+          pts.push({ x: wp.x, z: wp.z });
+          ctrls.push(wp.ctrlHas ? { x: wp.ctrlX ?? wp.x, z: wp.ctrlZ ?? wp.z } : null);
+        }
       }
       if (pts.length < 2) continue;
 
@@ -657,7 +837,13 @@ export function drawAnimControlOverlay(): void {
       dom.ctx.moveTo(p0.x, p0.y);
       for (let i = 1; i < pts.length; i++) {
         const pi = worldToCanvas(pts[i].x, pts[i].z);
-        dom.ctx.lineTo(pi.x, pi.y);
+        const c = ctrls[i - 1];
+        if (c) {
+          const pc = worldToCanvas(c.x, c.z);
+          dom.ctx.quadraticCurveTo(pc.x, pc.y, pi.x, pi.y);
+        } else {
+          dom.ctx.lineTo(pi.x, pi.y);
+        }
       }
       dom.ctx.strokeStyle = isActive ? colorA(col, 0.85) : colorA(col, 0.45);
       dom.ctx.lineWidth = isActive ? 2 : 1.5;
@@ -665,12 +851,50 @@ export function drawAnimControlOverlay(): void {
       dom.ctx.stroke();
       dom.ctx.setLineDash([]);
 
-      // Direction arrows
+      // 贝塞尔控制点把手：小菱形 + 到段两端的细虚线（可拖拽改弧度）。
+      if (isActive) {
+        for (let i = 0; i < pts.length - 1; i++) {
+          const c = ctrls[i];
+          if (!c) continue;
+          const a = worldToCanvas(pts[i].x, pts[i].z);
+          const b = worldToCanvas(pts[i + 1].x, pts[i + 1].z);
+          const pc = worldToCanvas(c.x, c.z);
+          dom.ctx.strokeStyle = "rgba(79,182,232,0.5)";
+          dom.ctx.lineWidth = 1;
+          dom.ctx.setLineDash([3, 3]);
+          dom.ctx.beginPath();
+          dom.ctx.moveTo(a.x, a.y);
+          dom.ctx.lineTo(pc.x, pc.y);
+          dom.ctx.lineTo(b.x, b.y);
+          dom.ctx.stroke();
+          dom.ctx.setLineDash([]);
+          const sel = wpMap.get(evt.waypointIds[i])?.id === S.selectedWaypointId;
+          dom.ctx.beginPath();
+          dom.ctx.moveTo(pc.x, pc.y - 5);
+          dom.ctx.lineTo(pc.x + 5, pc.y);
+          dom.ctx.lineTo(pc.x, pc.y + 5);
+          dom.ctx.lineTo(pc.x - 5, pc.y);
+          dom.ctx.closePath();
+          dom.ctx.fillStyle = sel ? "#ffcc00" : "#4fb6e8";
+          dom.ctx.fill();
+          dom.ctx.strokeStyle = "rgba(0,0,0,0.5)";
+          dom.ctx.lineWidth = 1;
+          dom.ctx.stroke();
+        }
+      }
+
+      // Direction arrows（贝塞尔段：中点 B(0.5)=0.25a+0.5c+0.25b，切向 = b−a）
       for (let i = 0; i < pts.length - 1; i++) {
         const a = worldToCanvas(pts[i].x, pts[i].z);
         const b = worldToCanvas(pts[i + 1].x, pts[i + 1].z);
-        const mx = (a.x + b.x) / 2;
-        const my = (a.y + b.y) / 2;
+        const c = ctrls[i];
+        let mx = (a.x + b.x) / 2;
+        let my = (a.y + b.y) / 2;
+        if (c) {
+          const pc = worldToCanvas(c.x, c.z);
+          mx = 0.25 * a.x + 0.5 * pc.x + 0.25 * b.x;
+          my = 0.25 * a.y + 0.5 * pc.y + 0.25 * b.y;
+        }
         const angle = Math.atan2(b.y - a.y, b.x - a.x);
         const size = 5;
         dom.ctx.beginPath();
@@ -801,6 +1025,12 @@ export function drawAnimControlOverlay(): void {
     if (isPilotGroup(group)) {
       drawPilotGroupOverlay(group, isActive);
     }
+
+    // 公转事件：圆心十字（可拖拽）+ 每成员虚线圆轨道 + 方向箭头。
+    for (const evt of group.events) {
+      if (evt.type !== "orbit") continue;
+      drawOrbitOverlay(group, evt, isActive, alpha);
+    }
   }
 
   if (S.currentLayer === "anim") drawAnimLegend();
@@ -854,6 +1084,68 @@ function drawPilotGroupOverlay(group: AnimGroup, isActive: boolean): void {
   dom.ctx.strokeText(label, cx, cy);
   dom.ctx.fillStyle = term ? col : "#e8b35a";
   dom.ctx.fillText(label, cx, cy);
+  dom.ctx.restore();
+}
+
+/** 公转事件的画布表现：圆心十字标记（激活组可拖拽改 orbitCenterX/Z）+
+ *  每成员虚线圆轨道（半径 = 成员当前位到圆心距离）+ 圆周切向方向箭头。 */
+function drawOrbitOverlay(group: AnimGroup, evt: AnimGroupEvent, isActive: boolean, alpha: number): void {
+  const col = EVENT_TYPE_COLORS.orbit;
+  const cxw = evt.orbitCenterX ?? 0;
+  const czw = evt.orbitCenterZ ?? 0;
+  const cc = worldToCanvas(cxw, czw);
+  const staticIds = new Set((group.memberStatic ?? []).map((m) => m.instanceId));
+  const memberIds = [...group.itemInstanceIds, ...group.floorInstanceIds, ...group.objectInstanceIds];
+  dom.ctx.save();
+  dom.ctx.globalAlpha = alpha;
+  // 每成员轨道圆。
+  for (const id of memberIds) {
+    if (staticIds.has(id)) continue;
+    const sp = memberWorldXZOf(id);
+    if (!sp) continue;
+    const pc = worldToCanvas(sp.x, sp.z);
+    const r = Math.hypot(pc.x - cc.x, pc.y - cc.y);
+    if (r < 2) continue;
+    dom.ctx.beginPath();
+    dom.ctx.arc(cc.x, cc.y, r, 0, Math.PI * 2);
+    dom.ctx.strokeStyle = isActive ? colorA(col, 0.6) : colorA(col, 0.3);
+    dom.ctx.lineWidth = 1.2;
+    dom.ctx.setLineDash([4, 5]);
+    dom.ctx.stroke();
+    dom.ctx.setLineDash([]);
+    if (isActive) {
+      // 方向箭头：成员起始角处的切向（cw/ccw 与 orbitPos 同向约定——canvas y 向下，
+      // orbitPos 的 +deg 在 (x,z) 平面为 cw→画布顺时针）。
+      const ccw = evt.orbitDirection === "ccw";
+      const tang = Math.atan2(pc.y - cc.y, pc.x - cc.x) + (ccw ? -Math.PI / 2 : Math.PI / 2);
+      const size = 6;
+      dom.ctx.beginPath();
+      dom.ctx.moveTo(pc.x + size * Math.cos(tang), pc.y + size * Math.sin(tang));
+      dom.ctx.lineTo(pc.x + size * Math.cos(tang + 2.5), pc.y + size * Math.sin(tang + 2.5));
+      dom.ctx.lineTo(pc.x + size * Math.cos(tang - 2.5), pc.y + size * Math.sin(tang - 2.5));
+      dom.ctx.closePath();
+      dom.ctx.fillStyle = colorA(col, 0.75);
+      dom.ctx.fill();
+    }
+  }
+  // 圆心十字 + 徽标。
+  dom.ctx.strokeStyle = isActive ? col : colorA(col, 0.5);
+  dom.ctx.lineWidth = 1.5;
+  dom.ctx.beginPath();
+  dom.ctx.moveTo(cc.x - 9, cc.y);
+  dom.ctx.lineTo(cc.x + 9, cc.y);
+  dom.ctx.moveTo(cc.x, cc.y - 9);
+  dom.ctx.lineTo(cc.x, cc.y + 9);
+  dom.ctx.stroke();
+  if (isActive) {
+    dom.ctx.font = "10px sans-serif";
+    const label = `🪐 ${evt.orbitDegrees ?? 360}°${evt.loop ? " ⟲" : evt.pingpong ? " ⇄" : ""}`;
+    dom.ctx.fillStyle = "rgba(20,20,24,0.8)";
+    const tw = dom.ctx.measureText(label).width;
+    dom.ctx.fillRect(cc.x + 11, cc.y - 18, tw + 8, 15);
+    dom.ctx.fillStyle = col;
+    dom.ctx.fillText(label, cc.x + 15, cc.y - 7);
+  }
   dom.ctx.restore();
 }
 
@@ -1048,56 +1340,66 @@ function applyEventInterval(group: AnimGroup, evtIdx: number, seconds: number): 
 
 /** Keyframe timeline of an event route (arrival keys + dwell keys from waits).
  *  Imported routes keep their original key times unless any timing is edited
- *  (wait / segmentSeconds), in which case the computed timeline takes over. */
+ *  (wait / segmentSeconds), in which case the computed timeline takes over.
+ *  ctrls[i] = 键 i 所属路点的「到下一段」二次贝塞尔控制点（无 = null），
+ *  与烘焙端 BuildTimeline 的 keyWp + ctrlHas 对应。 */
 /** routeTimeline 结果缓存：预览播放 / scrub 每帧每成员都会取一次，按事件对象 +
  *  解析出的路点引用数组做 identity 校验，命中则复用 times/pts（避免每帧重建数组）。 */
 const routeTimelineCache = new WeakMap<
   AnimGroupEvent,
-  { sig: string; times: number[]; pts: { x: number; z: number }[] }
+  { sig: string; times: number[]; pts: { x: number; z: number }[]; ctrls: ({ x: number; z: number } | null)[] }
 >();
 
-function routeTimeline(evt: AnimGroupEvent, group: AnimGroup): { times: number[]; pts: { x: number; z: number }[] } {
+function routeTimeline(evt: AnimGroupEvent, group: AnimGroup): { times: number[]; pts: { x: number; z: number }[]; ctrls: ({ x: number; z: number } | null)[] } {
   const wps = (evt.waypointIds ?? [])
     .map((id) => group.waypoints.find((w) => w.id === id))
     .filter(Boolean) as AnimGroupWaypoint[];
-  if (!wps.length) return { times: [], pts: [] };
+  if (!wps.length) return { times: [], pts: [], ctrls: [] };
   const interval = evt.intervalSeconds ?? 2;
-  // 签名覆盖所有影响时间线的字段（路点会原地改坐标 / 停留 / 段时长）。
+  // 签名覆盖所有影响时间线的字段（路点会原地改坐标 / 停留 / 段时长 / 控制点）。
   let sig = `${interval}`;
   for (const w of wps) {
-    sig += `|${w.id}:${w.x},${w.z},${w.wait ?? 0},${w.segmentSeconds ?? 0},${w.hasTime ? 1 : 0},${w.t ?? 0}`;
+    sig += `|${w.id}:${w.x},${w.z},${w.wait ?? 0},${w.segmentSeconds ?? 0},${w.hasTime ? 1 : 0},${w.t ?? 0}` +
+      `,${w.ctrlHas ? 1 : 0},${w.ctrlHas ? `${w.ctrlX ?? 0},${w.ctrlZ ?? 0}` : ""}`;
   }
   const hit = routeTimelineCache.get(evt);
-  if (hit && hit.sig === sig) return { times: hit.times, pts: hit.pts };
-  let out: { times: number[]; pts: { x: number; z: number }[] };
+  if (hit && hit.sig === sig) return { times: hit.times, pts: hit.pts, ctrls: hit.ctrls };
+  const ctrlOf = (w: AnimGroupWaypoint) =>
+    w.ctrlHas ? { x: w.ctrlX ?? w.x, z: w.ctrlZ ?? w.z } : null;
+  let out: { times: number[]; pts: { x: number; z: number }[]; ctrls: ({ x: number; z: number } | null)[] };
   if (wps.length === 1) {
-    out = { times: [0], pts: [{ x: wps[0].x, z: wps[0].z }] };
+    out = { times: [0], pts: [{ x: wps[0].x, z: wps[0].z }], ctrls: [ctrlOf(wps[0])] };
   } else {
     const anyEdit = wps.some((w) => (w.wait ?? 0) > 0 || (w.segmentSeconds ?? 0) > 0);
     if (!anyEdit && wps.some((w) => w.hasTime)) {
       out = {
         times: wps.map((w) => w.t ?? 0),
         pts: wps.map((w) => ({ x: w.x, z: w.z })),
+        ctrls: wps.map((w) => ctrlOf(w)),
       };
     } else {
       const times: number[] = [];
       const pts: { x: number; z: number }[] = [];
+      const ctrls: ({ x: number; z: number } | null)[] = [];
       let t = 0;
       for (let i = 0; i < wps.length; i++) {
         const p = { x: wps[i].x, z: wps[i].z };
+        const c = ctrlOf(wps[i]);
         times.push(t);
         pts.push(p);
+        ctrls.push(c);
         const wait = wps[i].wait ?? 0;
         if (wait > 0) {
           times.push(t + wait);
           pts.push(p);
+          ctrls.push(c);
         }
         if (i < wps.length - 1) t += (wps[i].segmentSeconds ?? interval) + wait;
       }
-      out = { times, pts };
+      out = { times, pts, ctrls };
     }
   }
-  routeTimelineCache.set(evt, { sig, times: out.times, pts: out.pts });
+  routeTimelineCache.set(evt, { sig, times: out.times, pts: out.pts, ctrls: out.ctrls });
   return out;
 }
 
@@ -1108,7 +1410,7 @@ function clipDuration(evt: AnimGroupEvent, group: AnimGroup): number {
 }
 
 function clipPos(evt: AnimGroupEvent, group: AnimGroup, tc: number): { x: number; z: number } | null {
-  const { times, pts } = routeTimeline(evt, group);
+  const { times, pts, ctrls } = routeTimeline(evt, group);
   if (!pts.length) return null;
   if (pts.length === 1) return { x: pts[0].x, z: pts[0].z };
   const L = times[times.length - 1];
@@ -1129,9 +1431,20 @@ function clipPos(evt: AnimGroupEvent, group: AnimGroup, tc: number): { x: number
     const t1 = times[i + 1];
     if (t <= t1) {
       const k = t1 > t0 ? (t - t0) / (t1 - t0) : 0;
+      // 段内插值：缓动映射 + 二次贝塞尔控制点（与烘焙端 SampleRouteKeys 同公式）。
+      const c = ctrls[i];
+      if (c) {
+        const e = easeValue(k, evt.easing);
+        const im = 1 - e;
+        return {
+          x: im * im * pts[i].x + 2 * im * e * c.x + e * e * pts[i + 1].x,
+          z: im * im * pts[i].z + 2 * im * e * c.z + e * e * pts[i + 1].z,
+        };
+      }
+      const e = easeValue(k, evt.easing);
       return {
-        x: pts[i].x + (pts[i + 1].x - pts[i].x) * k,
-        z: pts[i].z + (pts[i + 1].z - pts[i].z) * k,
+        x: pts[i].x + (pts[i + 1].x - pts[i].x) * e,
+        z: pts[i].z + (pts[i + 1].z - pts[i].z) * e,
       };
     }
   }
@@ -1155,11 +1468,16 @@ function clipY(evt: AnimGroupEvent, group: AnimGroup, tc: number): number {
 
 /** Duration of one event's clip (wait = duration 秒常量 clip，与烘焙一致；
  *  lift/drop use their liftSeconds; rotate = rotateSeconds; move = route length;
+ *  scale = scaleSeconds; tilt = tiltSeconds; orbit = orbitSeconds;
  *  shake/flash = duration（一次抖动 / 闪光的时长）。 */
 function eventDuration(evt: AnimGroupEvent, group: AnimGroup): number {
   if (evt.type === "move") return clipDuration(evt, group);
   if (evt.type === "lift" || evt.type === "drop") return Math.max(0.1, evt.liftSeconds ?? 1);
   if (evt.type === "rotate") return Math.max(0.1, evt.rotateSeconds ?? 2);
+  if (evt.type === "scale") return Math.max(0.1, evt.scaleSeconds ?? 1);
+  if (evt.type === "tilt") return Math.max(0.1, evt.tiltSeconds ?? 1);
+  if (evt.type === "orbit") return Math.max(0.1, evt.orbitSeconds ?? 8);
+  if (evt.type === "fade") return Math.max(0.1, evt.fadeSeconds ?? 1);
   if (evt.type === "shake") return Math.max(0.1, evt.duration ?? 2);
   if (evt.type === "flash") return Math.max(0.1, evt.duration ?? 0.8);
   return Math.max(0.1, evt.duration ?? 1);
@@ -1190,6 +1508,22 @@ function resizeEventDuration(group: AnimGroup, evt: AnimGroupEvent, newDur: numb
   }
   if (evt.type === "rotate") {
     evt.rotateSeconds = newDur;
+    return;
+  }
+  if (evt.type === "scale") {
+    evt.scaleSeconds = newDur;
+    return;
+  }
+  if (evt.type === "tilt") {
+    evt.tiltSeconds = newDur;
+    return;
+  }
+  if (evt.type === "orbit") {
+    evt.orbitSeconds = newDur;
+    return;
+  }
+  if (evt.type === "fade") {
+    evt.fadeSeconds = newDur;
     return;
   }
   if (evt.type === "lift" || evt.type === "drop") {
@@ -1291,14 +1625,58 @@ function previewDuration(group: AnimGroup): number {
 }
 
 /** 旋转事件在 clip 时间 tc 的角度增量（度）：非循环播完停在满角度，
- *  循环按周期包裹（same rule as the bake 的自转移重放）。 */
+ *  循环按周期包裹（same rule as the bake 的自转移重放）；pingpong 为三角波
+ *  （镜像 clip 2×dur 自转移）；缓动与烘焙端 BuildAxisRotationKeys 同公式。 */
 function rotateProgress(evt: AnimGroupEvent, group: AnimGroup, tc: number): number {
   const deg = evt.rotateDegrees ?? 180;
   const dir = evt.rotateDirection === "ccw" ? -1 : 1;
   const dur = eventDuration(evt, group);
   if (tc < 0 || dur <= 0) return 0;
+  if (evt.pingpong) return dir * deg * pingPongEase(tc / (2 * dur), evt.easing);
   const k = evt.loop ? (tc % dur) / dur : Math.min(1, tc / dur);
-  return dir * deg * k;
+  return dir * deg * easeValue(k, evt.easing);
+}
+
+/** tilt 事件在 clip 时间 tc 的轴角增量（度，带符号）：三角波 / 缓动同 rotate。 */
+function tiltProgress(evt: AnimGroupEvent, group: AnimGroup, tc: number): number {
+  const deg = Math.min(180, Math.max(-180, evt.tiltDegrees ?? 90));
+  const dur = eventDuration(evt, group);
+  if (tc < 0 || dur <= 0) return 0;
+  if (evt.pingpong) return deg * pingPongEase(tc / (2 * dur), evt.easing);
+  const k = evt.loop ? (tc % dur) / dur : Math.min(1, tc / dur);
+  return deg * easeValue(k, evt.easing);
+}
+
+/** scale 事件在 clip 时间 tc 的倍率（绝对值，从 from 起过渡到 scaleTo）：
+ *  与烘焙端 BuildScaleClip / ClusterScaleAt 同公式。 */
+function scaleProgress(evt: AnimGroupEvent, group: AnimGroup, tc: number, from: number): number {
+  const to = Math.max(0, evt.scaleTo ?? 0);
+  const dur = eventDuration(evt, group);
+  if (tc < 0 || dur <= 0) return from;
+  if (evt.pingpong) return from + (to - from) * pingPongEase(tc / (2 * dur), evt.easing);
+  const k = evt.loop ? (tc % dur) / dur : Math.min(1, tc / dur);
+  return from + (to - from) * easeValue(k, evt.easing);
+}
+
+/** orbit 事件在 clip 时间 tc 的角度进度（度）：loop 整圈包裹、pingpong 三角。 */
+function orbitProgress(evt: AnimGroupEvent, group: AnimGroup, tc: number): number {
+  const deg = evt.orbitDegrees ?? 360;
+  const dur = eventDuration(evt, group);
+  if (tc < 0 || dur <= 0) return 0;
+  if (evt.pingpong) return deg * pingPongEase(tc / (2 * dur), evt.easing);
+  const k = evt.loop ? (tc % dur) / dur : Math.min(1, tc / dur);
+  return deg * easeValue(k, evt.easing);
+}
+
+/** fade 事件在 clip 时间 tc 的透明度（绝对值，从 from 起过渡到 fadeTo）：
+ *  与烘焙端 BuildFadeClip / ClusterFadeAt 同公式。 */
+function fadeProgress(evt: AnimGroupEvent, group: AnimGroup, tc: number, from: number): number {
+  const to = Math.min(1, Math.max(0, evt.fadeTo ?? 0));
+  const dur = eventDuration(evt, group);
+  if (tc < 0 || dur <= 0) return from;
+  if (evt.pingpong) return from + (to - from) * pingPongEase(tc / (2 * dur), evt.easing);
+  const k = evt.loop ? (tc % dur) / dur : Math.min(1, tc / dur);
+  return from + (to - from) * easeValue(k, evt.easing);
 }
 
 /** Member's authored local Y (decor offsets below ground, etc.). */
@@ -1321,9 +1699,10 @@ function memberPreviewY(id: string, y: number, mode: "base" | "relative"): numbe
  *  Move events after a lift fly at the inherited height (same rule as the bake). */
 /** Simulated pose (position + optional height + rotation delta) of every member
  *  and the route head. rotY = 旋转动画产生的 Y 轴角度增量（度，叠加到
- *  成员自身 localRotationY 上预览）。
+ *  成员自身 localRotationY 上预览）；tiltX/tiltZ = 翻转（X/Z 轴）角度增量；
+ *  scale = 缩放倍率（相对成员初始尺寸）；alpha = 透明度（0=隐身，fade 事件）。
  *  Move events after a lift fly at the inherited height (same rule as the bake). */
-export type PreviewPose = { x: number; z: number; y?: number; rotY?: number };
+export type PreviewPose = { x: number; z: number; y?: number; rotY?: number; tiltX?: number; tiltZ?: number; scale?: number; alpha?: number };
 
 function previewPositions(group: AnimGroup, t: number): Map<string, PreviewPose> {
   const out = new Map<string, PreviewPose>();
@@ -1342,6 +1721,10 @@ function previewPositions(group: AnimGroup, t: number): Map<string, PreviewPose>
     if (firstItem) basePos = { x: firstItem._wx, z: firstItem._wz };
   }
 
+  // orbit 折叠后的 per-member 末位置（半径各异无法用共享 lastPos 表达；
+  // wait/lift/drop 的定持优先用它，与烘焙端 memberHoldPos 同语义）。
+  let orbitEnd: Map<string, { x: number; z: number }> | null = null;
+
   const place = (id: string, p: { x: number; z: number } | null | undefined, yMode: "base" | "relative" = "base", y = 0) => {
     if (!p) return;
     const off = offById.get(id);
@@ -1357,6 +1740,11 @@ function previewPositions(group: AnimGroup, t: number): Map<string, PreviewPose>
     out.set("__head__", { ...p, y: yMode === "base" ? 0 : y });
     for (const id of memberIds) {
       if (staticIds.has(id)) continue;
+      const oe = orbitEnd?.get(id);
+      if (oe) {
+        out.set(id, { x: oe.x, z: oe.z, y: memberPreviewY(id, y, yMode) });
+        continue;
+      }
       const f = followPosOf(id);
       if (f) out.set(id, { x: f.x, z: f.z, y: memberPreviewY(id, y, yMode) });
       else place(id, p, yMode, y);
@@ -1374,6 +1762,13 @@ function previewPositions(group: AnimGroup, t: number): Map<string, PreviewPose>
     return { x: wp.x + (off?.x ?? 0), z: wp.z + (off?.z ?? 0) };
   };
 
+  /** 成员进入 orbit 时的轨道起点：前一 move 的末位 + 偏移，否则场景现位。 */
+  const orbitStartOf = (id: string): { x: number; z: number } | null => {
+    const off = offById.get(id);
+    if (lastPos) return { x: lastPos.x + (off?.x ?? 0), z: lastPos.z + (off?.z ?? 0) };
+    return memberWorldXZOf(id);
+  };
+
   // Group-level loop: wrap the playback time over the whole sequence so it
   // repeats instead of freezing at the end.
   const total = previewDuration(group);
@@ -1385,12 +1780,20 @@ function previewPositions(group: AnimGroup, t: number): Map<string, PreviewPose>
    *  so event hand-offs are seamless (no flash-back between events). */
   let lastPos: { x: number; z: number } | null = null;
   // 时间轴模型：事件按 startTime 绝对调度（same rule as the bake 的 ΔstartTime
-  // 队列）。XZ/Y 由最晚开始的已生效非旋转事件决定（并行重叠时后者优先，
-  // 时间轴 UI 会对移动类重叠给出警告）；旋转事件独立叠加到 rotY。
+  // 队列）。XZ/Y 由最晚开始的已生效「位姿事件」（move/lift/drop/wait/orbit）决定
+  // （并行重叠时后者优先，时间轴 UI 会对移动类重叠给出警告）；rotate/tilt/scale
+  // 为独立叠加通道（rotY/tiltX/tiltZ/scaleMul 跨事件累积）。
   let cur: AnimGroupEvent | null = null;
   let tc = 0;
   let rotY = 0;
+  let tiltX = 0;
+  let tiltZ = 0;
+  let scaleMul = 1;
+  let alphaMul = 1;
   let hasRotate = false;
+  let hasTilt = false;
+  let hasScale = false;
+  let hasFade = false;
   const sorted = [...group.events].sort((a, b) => eventStart(a) - eventStart(b));
   for (const evt of sorted) {
     const start = startOff + eventStart(evt);
@@ -1398,6 +1801,33 @@ function previewPositions(group: AnimGroup, t: number): Map<string, PreviewPose>
     if (evt.type === "rotate") {
       hasRotate = true;
       rotY += rotateProgress(evt, group, t - start);
+      continue;
+    }
+    if (evt.type === "tilt") {
+      hasTilt = true;
+      if (evt.tiltAxis === "z") tiltZ += tiltProgress(evt, group, t - start);
+      else tiltX += tiltProgress(evt, group, t - start);
+      continue;
+    }
+    if (evt.type === "scale") {
+      hasScale = true;
+      const dur = eventDuration(evt, group);
+      if (!evt.loop && !evt.pingpong && t - start >= dur) {
+        // 完全路过：折叠终态（绝对目标），后续 scale 从它继续（same as bake）。
+        scaleMul = Math.max(0, evt.scaleTo ?? 0);
+      } else {
+        scaleMul = scaleProgress(evt, group, t - start, scaleMul);
+      }
+      continue;
+    }
+    if (evt.type === "fade") {
+      hasFade = true;
+      const dur = eventDuration(evt, group);
+      if (!evt.loop && !evt.pingpong && t - start >= dur) {
+        alphaMul = Math.min(1, Math.max(0, evt.fadeTo ?? 0));
+      } else {
+        alphaMul = fadeProgress(evt, group, t - start, alphaMul);
+      }
       continue;
     }
     // 全屏特效事件不动成员位姿（包络由 previewFxState 单独计算）。
@@ -1414,6 +1844,18 @@ function previewPositions(group: AnimGroup, t: number): Map<string, PreviewPose>
           const end = clipPos(cur, group, L);
           if (end) lastPos = end;
         }
+        orbitEnd = null;
+      } else if (cur.type === "orbit" && !cur.loop) {
+        // orbit 折叠：每成员各自的公转末位置（pingpong 回到起点）。
+        const deg = cur.pingpong ? 0 : (cur.orbitDegrees ?? 360);
+        orbitEnd = new Map();
+        for (const id of memberIds) {
+          const sp = orbitStartOf(id);
+          if (!sp) continue;
+          const p = orbitPos(sp.x, sp.z, cur.orbitCenterX ?? 0, cur.orbitCenterZ ?? 0, deg, cur.orbitDirection);
+          orbitEnd.set(id, p);
+        }
+        lastPos = null;
       }
     }
     cur = evt;
@@ -1429,13 +1871,31 @@ function previewPositions(group: AnimGroup, t: number): Map<string, PreviewPose>
     // Pure-Y event（相对 Δy，可叠加）：成员保持当前 XZ，从已抬升高度继续
     // 上升 / 下降 —— 连续两次抬起 = 高度累加（与烘焙的 accum 串接一致）。
     const secs = Math.max(0.05, cur.liftSeconds ?? 1);
-    const k = Math.min(1, Math.max(0, tc / secs));
+    const k = easeValue(Math.min(1, Math.max(0, tc / secs)), cur.easing);
     const before = seqLiftY;
     const delta = cur.type === "lift" ? (cur.yTo || 1) : (cur.yTo || before);
     const yTarget = cur.type === "drop" ? Math.max(0, before - delta) : before + delta;
     const y = before + (yTarget - before) * k;
     holdAll(lastPos ?? basePos, "relative", y);
     seqLiftY = yTarget;
+  } else if (cur.type === "orbit") {
+    // 公转进行中：每成员绕圆心转 orbitProgress 度（起点 = 进入 orbit 时刻的
+    // 位置；Y 通道独立——继承 lift 的悬空 Δy，可与 lift/drop 并行）。
+    const deg = orbitProgress(cur, group, tc);
+    const yMode: "base" | "relative" = seqLiftY > 0 ? "relative" : "base";
+    const flyY = seqLiftY;
+    for (const id of memberIds) {
+      if (staticIds.has(id)) continue;
+      const f = followPosOf(id);
+      if (f) {
+        out.set(id, { x: f.x, z: f.z, y: memberPreviewY(id, flyY, yMode) });
+        continue;
+      }
+      const sp = orbitStartOf(id);
+      if (!sp) continue;
+      const p = orbitPos(sp.x, sp.z, cur.orbitCenterX ?? 0, cur.orbitCenterZ ?? 0, deg, cur.orbitDirection);
+      out.set(id, { x: p.x, z: p.z, y: memberPreviewY(id, flyY, yMode) });
+    }
   } else {
     const L = clipDuration(cur, group);
     if (L <= 0) {
@@ -1483,12 +1943,19 @@ function previewPositions(group: AnimGroup, t: number): Map<string, PreviewPose>
       place(id, basePos);
     }
   }
-  // 旋转动画：所有非静态成员叠加当前 Y 轴角度增量（移动 + 旋转可并行）。
-  if (hasRotate) {
+  // 旋转/翻转/缩放/淡入淡出动画：所有非静态成员叠加当前增量（与位姿事件可并行）。
+  if (hasRotate || hasTilt || hasScale || hasFade) {
     for (const id of memberIds) {
       if (staticIds.has(id)) continue;
       const p = out.get(id);
-      if (p) p.rotY = rotY;
+      if (!p) continue;
+      if (hasRotate) p.rotY = rotY;
+      if (hasTilt) {
+        p.tiltX = tiltX;
+        p.tiltZ = tiltZ;
+      }
+      if (hasScale) p.scale = scaleMul;
+      if (hasFade) p.alpha = alphaMul;
     }
   }
   return out;
@@ -2740,16 +3207,28 @@ function routeEditorHtml(
 }
 
 /** 事件类型参数区（属性面板用，与原事件卡一致）。 */
+/** 缓动下拉（move/lift/drop/rotate/tilt/scale/orbit 通用；与后端 EaseValue 同集）。 */
+function easingSelectHtml(evt: AnimGroupEvent, i: number): string {
+  const cur = evt.easing ?? "linear";
+  return `<label title="段内进度曲线（烘焙与预览同公式）">缓动
+    <select class="event-easing" data-idx="${i}">
+      ${EASING_OPTIONS.map((o) => `<option value="${o.value}"${cur === o.value ? " selected" : ""}>${o.label}</option>`).join("")}
+    </select>
+  </label>`;
+}
+
 function eventSettingsHtml(evt: AnimGroupEvent, i: number): string {
   if (evt.type === "move") {
     return `<label>每步间隔 (秒)<input type="number" class="event-interval" data-idx="${i}" value="${evt.intervalSeconds ?? 2}" step="0.1" min="0.1" /></label>
+     ${easingSelectHtml(evt, i)}
      <label class="check" title="与「往返循环」互斥"><input type="checkbox" class="event-loop" data-idx="${i}"${evt.loop && !evt.pingpong ? " checked" : ""} /> 循环播放本段（到终点跳回起点，仅最后事件生效）</label>
      <label class="check" title="与「循环播放本段」互斥"><input type="checkbox" class="event-pingpong" data-idx="${i}"${evt.pingpong ? " checked" : ""} /> 往返循环（到终点后原路返回，仅最后事件生效）</label>
-     <div class="sub anim-wp-hint">位于「抬起」事件之后时，本事件自动按抬起高度半空移动，无需配置高度。</div>`;
+     <div class="sub anim-wp-hint">位于「抬起」事件之后时，本事件自动按抬起高度半空移动，无需配置高度。选中路线段落后可拖出弧线控制点（右键路点 → 段弧线）。</div>`;
   }
   if (evt.type === "lift" || evt.type === "drop") {
     return `<label>${evt.type === "lift" ? "抬升高度 ΔY" : "下降高度 ΔY（0 = 落回原高度）"}<input type="number" class="event-yto" data-idx="${i}" value="${evt.yTo ?? (evt.type === "lift" ? 1 : 0)}" step="0.1" /></label>
      <label>升降用时 (秒)<input type="number" class="event-ysec" data-idx="${i}" value="${evt.liftSeconds ?? 1}" step="0.1" min="0.05" /></label>
+     ${easingSelectHtml(evt, i)}
      <div class="muted anim-member-empty">${evt.type === "lift" ? "纯抬起事件：每个成员从自身当前高度原地升起 ΔY（台上物品也会升），不移动。" : "纯落下事件：每个成员从自身当前高度落下 ΔY；0 = 落回抬起前的高度。"}抬起 / 落下之间不允许互相重叠（拖动 / 改时间会自动避让）；与移动等其他事件可正常重叠。</div>`;
   }
   if (evt.type === "rotate") {
@@ -2761,8 +3240,57 @@ function eventSettingsHtml(evt: AnimGroupEvent, i: number): string {
         </select>
       </label>
      <label>用时 (秒)<input type="number" class="event-rot-sec" data-idx="${i}" value="${evt.rotateSeconds ?? 2}" step="0.1" min="0.1" /></label>
-     <label class="check" title="播完后立即重播（仅最后时间簇生效）"><input type="checkbox" class="event-loop" data-idx="${i}"${evt.loop ? " checked" : ""} /> 循环旋转</label>
+     ${easingSelectHtml(evt, i)}
+     <label class="check" title="播完后立即重播（仅最后时间簇生效）"><input type="checkbox" class="event-loop" data-idx="${i}"${evt.loop && !evt.pingpong ? " checked" : ""} /> 循环旋转</label>
+     <label class="check" title="转过去再转回来（缓慢晃动 = 小角度 + 往返 + 长用时）"><input type="checkbox" class="event-pingpong" data-idx="${i}"${evt.pingpong ? " checked" : ""} /> 往返摆动</label>
      <div class="muted anim-member-empty">每个成员绕自身中心 Y 轴自转；与移动事件时间重叠即可「边移动边旋转」。</div>`;
+  }
+  if (evt.type === "scale") {
+    return `<label title="相对初始尺寸的倍率；0=缩没消失、1=原尺寸、>1=放大">目标比例<input type="number" class="event-scale-to" data-idx="${i}" value="${evt.scaleTo ?? 0}" step="0.1" min="0" /></label>
+     <label>过渡用时 (秒)<input type="number" class="event-scale-sec" data-idx="${i}" value="${evt.scaleSeconds ?? 1}" step="0.1" min="0.05" /></label>
+     ${easingSelectHtml(evt, i)}
+     <label class="check" title="播完后立即重播（脉冲缩放）"><input type="checkbox" class="event-loop" data-idx="${i}"${evt.loop && !evt.pingpong ? " checked" : ""} /> 循环脉冲</label>
+     <label class="check" title="缩过去再缩回来"><input type="checkbox" class="event-pingpong" data-idx="${i}"${evt.pingpong ? " checked" : ""} /> 往返呼吸</label>
+     <div class="muted anim-member-empty">纯缩放（渐大渐小 / 弹跳感选「缓动 → 弹跳」）。要「透明渐隐」请用「淡入淡出」事件；⚠ 缩到 0 时碰撞体随之退化、网格占位仍在。</div>`;
+  }
+  if (evt.type === "fade") {
+    return `<label title="目标透明度：0=全透明隐身、1=不透明显型">目标透明度 (0~1)<input type="number" class="event-fade-to" data-idx="${i}" value="${evt.fadeTo ?? 0}" step="0.05" min="0" max="1" /></label>
+     <label>过渡用时 (秒)<input type="number" class="event-fade-sec" data-idx="${i}" value="${evt.fadeSeconds ?? 1}" step="0.1" min="0.05" /></label>
+     ${easingSelectHtml(evt, i)}
+     <label class="check" title="播完后立即重播——闪烁 / 呼吸明暗"><input type="checkbox" class="event-loop" data-idx="${i}"${evt.loop && !evt.pingpong ? " checked" : ""} /> 循环闪烁</label>
+     <label class="check" title="淡出再淡入"><input type="checkbox" class="event-pingpong" data-idx="${i}"${evt.pingpong ? " checked" : ""} /> 往返呼吸</label>
+     <div class="muted anim-member-empty">透明渐隐/渐显（0=慢慢变淡隐身、1=显型复原；与「缩放→0 消失」是两种不同演出）。运行时由 CustomStub.FadeDriver 驱动材质透明度——透明材质全程渐变、不透明材质两端准确（≈0 彻底消失）；网格占位与碰撞不受影响（桌台类隐身后仍占格）。</div>`;
+  }
+  if (evt.type === "tilt") {
+    return `<label title="带符号角度：正 = 绕轴正向翻转">角度 (-180~180°)<input type="number" class="event-tilt-deg" data-idx="${i}" value="${evt.tiltDegrees ?? 90}" step="1" min="-180" max="180" /></label>
+     <label>旋转轴
+        <select class="event-tilt-axis" data-idx="${i}">
+          <option value="x"${evt.tiltAxis !== "z" ? " selected" : ""}>X 轴（俯仰 · 前后翻）</option>
+          <option value="z"${evt.tiltAxis === "z" ? " selected" : ""}>Z 轴（侧倾 · 左右翻）</option>
+        </select>
+      </label>
+     <label>用时 (秒)<input type="number" class="event-tilt-sec" data-idx="${i}" value="${evt.tiltSeconds ?? 1}" step="0.1" min="0.1" /></label>
+     ${easingSelectHtml(evt, i)}
+     <label class="check" title="转过去再转回来"><input type="checkbox" class="event-pingpong" data-idx="${i}"${evt.pingpong ? " checked" : ""} /> 往返摆动</label>
+     <div class="muted anim-member-empty">绕自身 X/Z 轴翻转 / 倾斜（跷跷板、翻板、吊桥）；缓慢晃动 = 小角度 + 往返摆动 + 长用时。与移动 / 抬起可并行。</div>`;
+  }
+  if (evt.type === "orbit") {
+    return `<div class="event-orbit-center" data-idx="${i}">
+       <label>圆心 X<input type="number" class="event-orbit-cx" data-idx="${i}" value="${(evt.orbitCenterX ?? 0).toFixed(2)}" step="0.1" /></label>
+       <label>圆心 Z<input type="number" class="event-orbit-cz" data-idx="${i}" value="${(evt.orbitCenterZ ?? 0).toFixed(2)}" step="0.1" /></label>
+     </div>
+     <label title="每成员半径 = 各自初始位到圆心的距离（画布虚线圆可见）">角度 (度，360 = 整圈)<input type="number" class="event-orbit-deg" data-idx="${i}" value="${evt.orbitDegrees ?? 360}" step="10" /></label>
+     <label>用时 (秒)<input type="number" class="event-orbit-sec" data-idx="${i}" value="${evt.orbitSeconds ?? 8}" step="0.1" min="0.1" /></label>
+     <label>方向
+        <select class="event-orbit-dir" data-idx="${i}">
+          <option value="cw"${evt.orbitDirection !== "ccw" ? " selected" : ""}>顺时针</option>
+          <option value="ccw"${evt.orbitDirection === "ccw" ? " selected" : ""}>逆时针</option>
+        </select>
+      </label>
+     ${easingSelectHtml(evt, i)}
+     <label class="check" title="播完一圈立即重播——持续公转（摩天轮 / 旋转餐台）"><input type="checkbox" class="event-loop" data-idx="${i}"${evt.loop && !evt.pingpong ? " checked" : ""} /> 持续公转（循环）</label>
+     <label class="check" title="弧线转到头再转回来（钟摆）"><input type="checkbox" class="event-pingpong" data-idx="${i}"${evt.pingpong ? " checked" : ""} /> 往返弧摆</label>
+     <div class="muted anim-member-empty">成员绕共享圆心公转（画布可拖十字标记移动圆心）；与抬起 / 落下可并行，与移动 / 其他公转互斥（时间轴自动避让）。</div>`;
   }
   if (evt.type === "shake") {
     return `<label>抖动幅度 (米)<input type="number" class="event-shake-amp" data-idx="${i}" value="${evt.shakeAmplitude ?? 0.15}" step="0.05" min="0.01" /></label>
@@ -2824,6 +3352,10 @@ function renderEventInspector(
             <option value="wait"${evt.type === "wait" ? " selected" : ""}>等待</option>`
     : `<option value="move"${evt.type === "move" ? " selected" : ""}>移动</option>
             <option value="rotate"${evt.type === "rotate" ? " selected" : ""}>旋转</option>
+            <option value="scale"${evt.type === "scale" ? " selected" : ""}>缩放（渐大渐小）</option>
+            <option value="fade"${evt.type === "fade" ? " selected" : ""}>淡入淡出（隐身/显型）</option>
+            <option value="tilt"${evt.type === "tilt" ? " selected" : ""}>翻转（倾斜）</option>
+            <option value="orbit"${evt.type === "orbit" ? " selected" : ""}>公转（绕圆心）</option>
             <option value="lift"${evt.type === "lift" ? " selected" : ""}>抬起</option>
             <option value="drop"${evt.type === "drop" ? " selected" : ""}>落下</option>
             <option value="wait"${evt.type === "wait" ? " selected" : ""}>等待</option>`;
@@ -2871,10 +3403,12 @@ function renderTimelineTab(
   const t = timelinePlayheadTime(group);
   const playing = !!S.animPreview && S.animPreview.groupId === group.id && S.animPreview.playing;
 
-  // 并行语义警告：单占用类事件（移动/升降/全屏特效——同一宿主同一时刻只有
+  // 并行语义警告：单占用类事件（移动/公转/升降/全屏特效——同一宿主同一时刻只有
   // 一个位姿/状态生效）时间重叠时后者/前者覆盖；waitForFinished 下并行会被顺延。
+  // rotate/tilt/scale 为独立叠加通道，重叠合法（并行合成），不参与本警告。
   const fxGrp = isFxGroup(group);
-  const moveItems = items.filter((it) => it.evt.type !== "rotate" && it.evt.type !== "wait");
+  const moveItems = items.filter((it) => it.evt.type !== "rotate" && it.evt.type !== "wait" &&
+    it.evt.type !== "tilt" && it.evt.type !== "scale" && it.evt.type !== "fade");
   let moveOverlap = false;
   for (let a = 0; a < moveItems.length && !moveOverlap; a++) {
     for (let b = a + 1; b < moveItems.length; b++) {
@@ -2889,6 +3423,10 @@ function renderTimelineTab(
   }
   if (group.triggerMode === "button" && group.advanceMode === "hold") {
     warnHtml += `<div class="anim-tl-warn">🦶 按住式：只支持两个 rotate 事件——第 1 个 = 站上压力开关（开门），第 2 个 = 离开（关门）。时间轴只用于预览，游戏内按事件顺序切换 Closed/Open 状态；不能绑定普通按钮。</div>`;
+    const badHold = group.events.filter((e) => e.type !== "rotate");
+    if (badHold.length > 0) {
+      warnHtml += `<div class="anim-tl-warn">⚠ 按住式组存在非 rotate 事件（${badHold.map((e) => eventTypeLabel(e.type)).join("、")}）：写回会被拒绝，请改为两个旋转事件。</div>`;
+    }
   }
   if (moveOverlap) {
     warnHtml += fxGrp
@@ -2919,8 +3457,7 @@ function renderTimelineTab(
     const lastCluster = clusterEnds.length - 1;
     const bad = items.filter((it) => {
       if (!it.evt.loop && !it.evt.pingpong) return false;
-      if (it.evt.type !== "move" && it.evt.type !== "rotate" &&
-          it.evt.type !== "shake" && it.evt.type !== "flash") return true;
+      if (!eventCanCycle(it.evt)) return true;
       return clusterOf[it.idx] !== lastCluster || (clusterSizes.get(clusterOf[it.idx]) ?? 0) > 1;
     });
     if (bad.length > 0) {
@@ -2956,11 +3493,19 @@ function renderTimelineTab(
             ? `↓${evt.yTo || "回原"}`
             : evt.type === "rotate"
               ? `${evt.rotateDirection === "ccw" ? "↺" : "↻"}${evt.rotateDegrees ?? 180}°`
-              : evt.type === "shake"
-                ? `±${(evt.shakeAmplitude ?? 0.15).toFixed(2)}m`
-                : evt.type === "flash"
-                  ? `⚡${evt.flashIntensity ?? 4}`
-                  : `停${(evt.duration ?? 1).toFixed(1)}s`;
+              : evt.type === "scale"
+                ? `×${evt.scaleTo ?? 0}`
+                : evt.type === "fade"
+                  ? `◐${(evt.fadeTo ?? 0).toFixed(2)}`
+                  : evt.type === "tilt"
+                  ? `${evt.tiltAxis === "z" ? "Z" : "X"}${evt.tiltDegrees ?? 90}°`
+                  : evt.type === "orbit"
+                    ? `${evt.orbitDirection === "ccw" ? "↺" : "↻"}${evt.orbitDegrees ?? 360}°`
+                    : evt.type === "shake"
+                      ? `±${(evt.shakeAmplitude ?? 0.15).toFixed(2)}m`
+                      : evt.type === "flash"
+                        ? `⚡${evt.flashIntensity ?? 4}`
+                        : `停${(evt.duration ?? 1).toFixed(1)}s`;
     const badge = evt.loop ? " ⟲" : evt.pingpong ? " ⇄" : "";
     blocks += `<div class="anim-tl-block${selEvtIdx === idx ? " sel" : ""}" data-tl-evt="${idx}"
       style="left:${it.start * pps}px;top:${it.lane * 30}px;width:${Math.max(18, dur * pps - 3)}px;background:${colorA(col, 0.28)};border-color:${col}"
@@ -2984,6 +3529,20 @@ function renderTimelineTab(
       <span class="anim-tl-zoom" id="anim-tl-zoom" title="当前缩放">${Math.round(tlZoom * 100)}%</span>
       ${smallBtnHtml("🔍＋", "default", { id: "btn-tl-zoom-in", title: "放大时间轴（Ctrl/⌘+滚轮）" })}
       ${smallBtnHtml("⤢ 聚焦", "default", { id: "btn-tl-fit", title: "缩放适配：把全部事件聚焦到可视区" })}
+      ${fxGrp ? "" : `<select id="sel-add-event" class="anim-tl-quick-add" title="快捷添加（选中即创建带默认参数的事件）">
+        <option value="">＋ 快捷…</option>
+        <option value="hide">👻 隐身（慢慢变淡）</option>
+        <option value="show">✨ 显型（淡入复原）</option>
+        <option value="bounce">🫧 弹跳（放大回弹）</option>
+        <option value="sway">🌊 晃动（小角度摆动）</option>
+        <option value="rotate">↻ 自转</option>
+        <option value="orbit">🪐 公转（持续绕圈）</option>
+        <option value="tilt">📐 翻转</option>
+        <option value="scale">🔍 缩放（缩到 0 消失）</option>
+        <option value="lift">↑ 抬起</option>
+        <option value="drop">↓ 落下</option>
+        <option value="wait">⏸ 等待</option>
+      </select>`}
       ${smallBtnHtml("＋ 添加事件", "primary", { id: "btn-add-event" })}
     </div>
     ${warnHtml}
@@ -3721,7 +4280,7 @@ function wireGroupEditor(body: HTMLElement, group: AnimGroup): void {
       group.events[idx].type = sel.value as AnimGroupEvent["type"];
       group.events[idx].triggerName = undefined;
       const t = group.events[idx].type;
-      if (t !== "move" && t !== "rotate" && t !== "shake" && t !== "flash") {
+      if (!eventCanCycle(group.events[idx])) {
         group.events[idx].loop = false;
         group.events[idx].pingpong = false;
       }
@@ -3731,6 +4290,29 @@ function wireGroupEditor(body: HTMLElement, group: AnimGroup): void {
       if (t === "rotate") {
         if (!group.events[idx].rotateDegrees) group.events[idx].rotateDegrees = 180;
         if (!group.events[idx].rotateSeconds) group.events[idx].rotateSeconds = 2;
+      }
+      if (t === "scale") {
+        if (group.events[idx].scaleTo == null) group.events[idx].scaleTo = 0;
+        if (!group.events[idx].scaleSeconds) group.events[idx].scaleSeconds = 1;
+      }
+      if (t === "fade") {
+        if (group.events[idx].fadeTo == null) group.events[idx].fadeTo = 0;
+        if (!group.events[idx].fadeSeconds) group.events[idx].fadeSeconds = 1;
+      }
+      if (t === "tilt") {
+        if (!group.events[idx].tiltDegrees) group.events[idx].tiltDegrees = 90;
+        if (!group.events[idx].tiltAxis) group.events[idx].tiltAxis = "x";
+        if (!group.events[idx].tiltSeconds) group.events[idx].tiltSeconds = 1;
+      }
+      if (t === "orbit") {
+        if (!group.events[idx].orbitDegrees) group.events[idx].orbitDegrees = 360;
+        if (!group.events[idx].orbitSeconds) group.events[idx].orbitSeconds = 8;
+        if (group.events[idx].orbitCenterX == null || group.events[idx].orbitCenterZ == null) {
+          // 默认圆心 = 成员包围盒中心（可画布拖拽 / 手改）。
+          const c = orbitDefaultCenter(group);
+          group.events[idx].orbitCenterX = Math.round(c.x * 10) / 10;
+          group.events[idx].orbitCenterZ = Math.round(c.z * 10) / 10;
+        }
       }
       if (t === "shake") {
         if (!group.events[idx].shakeAmplitude) group.events[idx].shakeAmplitude = 0.15;
@@ -3774,8 +4356,53 @@ function wireGroupEditor(body: HTMLElement, group: AnimGroup): void {
   wireNumInput(".event-duration", (e) => e.duration ?? 1, (e, v) => (e.duration = snapTime(Math.max(0.1, v))));
   wireNumInput(".event-rot-deg", (e) => e.rotateDegrees ?? 180, (e, v) => (e.rotateDegrees = Math.min(360, Math.max(0, v))));
   wireNumInput(".event-rot-sec", (e) => e.rotateSeconds ?? 2, (e, v) => (e.rotateSeconds = snapTime(Math.max(0.1, v))));
+  wireNumInput(".event-scale-to", (e) => e.scaleTo ?? 0, (e, v) => (e.scaleTo = Math.max(0, v)));
+  wireNumInput(".event-scale-sec", (e) => e.scaleSeconds ?? 1, (e, v) => (e.scaleSeconds = Math.max(0.05, v)));
+  wireNumInput(".event-fade-to", (e) => e.fadeTo ?? 0, (e, v) => (e.fadeTo = Math.min(1, Math.max(0, v))));
+  wireNumInput(".event-fade-sec", (e) => e.fadeSeconds ?? 1, (e, v) => (e.fadeSeconds = Math.max(0.05, v)));
+  wireNumInput(".event-tilt-deg", (e) => e.tiltDegrees ?? 90, (e, v) => (e.tiltDegrees = Math.min(180, Math.max(-180, v))));
+  wireNumInput(".event-tilt-sec", (e) => e.tiltSeconds ?? 1, (e, v) => (e.tiltSeconds = snapTime(Math.max(0.1, v))));
+  wireNumInput(".event-orbit-cx", (e) => e.orbitCenterX ?? 0, (e, v) => (e.orbitCenterX = v));
+  wireNumInput(".event-orbit-cz", (e) => e.orbitCenterZ ?? 0, (e, v) => (e.orbitCenterZ = v));
+  wireNumInput(".event-orbit-deg", (e) => e.orbitDegrees ?? 360, (e, v) => (e.orbitDegrees = v));
+  wireNumInput(".event-orbit-sec", (e) => e.orbitSeconds ?? 8, (e, v) => (e.orbitSeconds = snapTime(Math.max(0.1, v))));
   wireNumInput(".event-shake-amp", (e) => e.shakeAmplitude ?? 0.15, (e, v) => (e.shakeAmplitude = Math.max(0.01, v)));
   wireNumInput(".event-flash-intensity", (e) => e.flashIntensity ?? 4, (e, v) => (e.flashIntensity = Math.max(0.1, v)));
+  body.querySelectorAll<HTMLSelectElement>(".event-easing").forEach((sel) => {
+    sel.addEventListener("change", () => {
+      const idx = parseInt(sel.dataset.idx!);
+      const v = sel.value as AnimGroupEvent["easing"];
+      if (v === (group.events[idx].easing ?? "linear")) return;
+      pushHistory();
+      if (v && v !== "linear") group.events[idx].easing = v;
+      else delete group.events[idx].easing;
+      S.dirty = true;
+      refresh();
+    });
+  });
+  body.querySelectorAll<HTMLSelectElement>(".event-tilt-axis").forEach((sel) => {
+    sel.addEventListener("change", () => {
+      const idx = parseInt(sel.dataset.idx!);
+      const v = sel.value === "z" ? "z" : "x";
+      if (v === (group.events[idx].tiltAxis ?? "x")) return;
+      pushHistory();
+      group.events[idx].tiltAxis = v;
+      S.dirty = true;
+      refresh();
+    });
+  });
+  body.querySelectorAll<HTMLSelectElement>(".event-orbit-dir").forEach((sel) => {
+    sel.addEventListener("change", () => {
+      const idx = parseInt(sel.dataset.idx!);
+      const v = sel.value === "ccw" ? "ccw" : "cw";
+      if (v === (group.events[idx].orbitDirection ?? "cw")) return;
+      pushHistory();
+      group.events[idx].orbitDirection = v;
+      S.dirty = true;
+      refresh();
+      draw();
+    });
+  });
   body.querySelectorAll<HTMLInputElement>(".event-flash-color").forEach((inp) => {
     inp.addEventListener("change", () => {
       const idx = parseInt(inp.dataset.idx!);
@@ -3938,6 +4565,66 @@ function wireGroupEditor(body: HTMLElement, group: AnimGroup): void {
         waypointIds: [],
       });
     }
+    S.activeAnimEventIdx = group.events.length - 1;
+    S.dirty = true;
+    refresh();
+  });
+
+  // 快捷预设下拉：选中即创建带默认参数的事件（隐身/显型 = scale 预设、弹跳 =
+  // scale + easeOutBounce、晃动 = tilt 小角度 pingpong、公转 = loop 整圈）。
+  body.querySelector<HTMLSelectElement>("#sel-add-event")?.addEventListener("change", (e) => {
+    const sel = e.target as HTMLSelectElement;
+    const kind = sel.value;
+    sel.value = "";
+    if (!kind || isFxGroup(group)) return;
+    pushHistory();
+    const base = { id: uuid(), delay: 0, startTime: snapTime(groupTimelineDuration(group)) };
+    let evt: AnimGroupEvent;
+    switch (kind) {
+      case "rotate":
+        evt = { ...base, type: "rotate", rotateDegrees: 180, rotateDirection: "cw", rotateSeconds: 2 };
+        break;
+      case "hide":
+        evt = { ...base, type: "fade", fadeTo: 0, fadeSeconds: 0.8 };
+        break;
+      case "show":
+        evt = { ...base, type: "fade", fadeTo: 1, fadeSeconds: 0.8 };
+        break;
+      case "bounce":
+        evt = { ...base, type: "scale", scaleTo: 1.3, scaleSeconds: 0.5, easing: "easeOutBounce" };
+        break;
+      case "sway":
+        evt = { ...base, type: "tilt", tiltDegrees: 8, tiltAxis: "x", tiltSeconds: 1.5, pingpong: true };
+        break;
+      case "scale":
+        evt = { ...base, type: "scale", scaleTo: 0, scaleSeconds: 1 };
+        break;
+      case "tilt":
+        evt = { ...base, type: "tilt", tiltDegrees: 90, tiltAxis: "x", tiltSeconds: 1 };
+        break;
+      case "orbit": {
+        const c = orbitDefaultCenter(group);
+        evt = {
+          ...base, type: "orbit",
+          orbitCenterX: Math.round(c.x * 10) / 10, orbitCenterZ: Math.round(c.z * 10) / 10,
+          orbitDegrees: 360, orbitSeconds: 8, orbitDirection: "cw", loop: true,
+        };
+        break;
+      }
+      case "lift":
+        evt = { ...base, type: "lift", yTo: 1, liftSeconds: 1 };
+        break;
+      case "drop":
+        evt = { ...base, type: "drop", yTo: 0, liftSeconds: 1 };
+        break;
+      case "wait":
+        evt = { ...base, type: "wait", duration: 1 };
+        break;
+      default:
+        evt = { ...base, type: "move", intervalSeconds: 2, waypointIds: [] };
+        break;
+    }
+    group.events.push(evt);
     S.activeAnimEventIdx = group.events.length - 1;
     S.dirty = true;
     refresh();

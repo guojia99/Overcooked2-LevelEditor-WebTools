@@ -86,6 +86,11 @@ export function floorSignature(f: EditorFloor, order: number, selected: boolean,
     String(f.imageOpacity ?? ""),
     String(f.imageRotation ?? ""),
     f.materialName ?? "",
+    f.pbrOverride ? "1" : "0",
+    String(f.metallic ?? ""),
+    String(f.smoothness ?? ""),
+    f.renderModeOverride ? "1" : "0",
+    String(f.renderMode ?? ""),
     String(order),
     selected ? "1" : "0",
     dimmed ? "1" : "0",
@@ -113,16 +118,47 @@ export function buildFloorNode(f: EditorFloor, opts: BuildFloorOpts): THREE.Grou
   } else {
     const geo = new THREE.BoxGeometry(slab.w, slab.thickness, slab.d);
     const opacity = opts.dimmed ? 0.22 : Math.max(0.55, base.alpha);
-    const mat = new THREE.MeshLambertMaterial({
-      color: base.color,
-      transparent: opacity < 1,
-      opacity,
-      side: THREE.FrontSide, // R4
-      depthWrite: opacity > 0.9,
-      polygonOffset: true, // R3
-      polygonOffsetFactor: -1,
-      polygonOffsetUnits: -opts.order * POLYGON_OFFSET_STEP,
-    });
+    // 表面参数（PBR 覆盖）：实心材质地板启用覆盖时换 MeshStandardMaterial 预览
+    // 金属度/光滑度（smoothness = 1 - roughness）；未启用保持 Lambert。
+    const mat = f.pbrOverride
+      ? new THREE.MeshStandardMaterial({
+          color: base.color,
+          metalness: Math.max(0, Math.min(1, f.metallic ?? 0)),
+          roughness: 1 - Math.max(0, Math.min(1, f.smoothness ?? 0)),
+          transparent: opacity < 1,
+          opacity,
+          side: THREE.FrontSide, // R4
+          depthWrite: opacity > 0.9,
+          polygonOffset: true, // R3
+          polygonOffsetFactor: -1,
+          polygonOffsetUnits: -opts.order * POLYGON_OFFSET_STEP,
+        })
+      : new THREE.MeshLambertMaterial({
+          color: base.color,
+          transparent: opacity < 1,
+          opacity,
+          side: THREE.FrontSide, // R4
+          depthWrite: opacity > 0.9,
+          polygonOffset: true, // R3
+          polygonOffsetFactor: -1,
+          polygonOffsetUnits: -opts.order * POLYGON_OFFSET_STEP,
+        });
+    // 渲染模式覆盖预览（Unity Standard 四态 → three.js 近似）：
+    // 1 镂空=alphaTest；2 渐隐=透明混合；3 透明=预乘 alpha（premultipliedAlpha）。
+    if (f.renderModeOverride) {
+      const rm = f.renderMode ?? 0;
+      if (rm === 1) {
+        mat.alphaTest = 0.5;
+        mat.transparent = false;
+      } else if (rm === 2) {
+        mat.transparent = true;
+        mat.depthWrite = false;
+      } else if (rm === 3) {
+        mat.transparent = true;
+        mat.depthWrite = false;
+        mat.premultipliedAlpha = true;
+      }
+    }
     const img = f.imageTexturePath ? getFloorImage(f.imageTexturePath) : null;
     const tex = img ? iconTexture(img) : null;
     if (tex) {

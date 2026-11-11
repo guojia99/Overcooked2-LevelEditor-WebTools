@@ -50,6 +50,8 @@ static class LayoutEditorGridSnapGuard
 
     private static void OnSceneOpened(Scene scene, OpenSceneMode mode)
     {
+        if (LayoutEditorPseudoReload.ExportBuildInProgress)
+            return;
         RelaxGridSnapOnScene();
         EditorApplication.delayCall += () => RelaxGridSnapOnScene();
         Arm();
@@ -86,6 +88,8 @@ static class LayoutEditorGridSnapGuard
 
     private static void Tick()
     {
+        if (LayoutEditorPseudoReload.ExportBuildInProgress)
+            return;
         if (!_armed || EditorApplication.timeSinceStartup > _deadline)
         {
             _armed = false;
