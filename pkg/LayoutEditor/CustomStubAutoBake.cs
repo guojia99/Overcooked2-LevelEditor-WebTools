@@ -39,6 +39,8 @@ public static class CustomStubAutoBake
         };
         EditorApplication.delayCall += delegate
         {
+            if (EditorWorkBlocked())
+                return;
             // RandomDispenser 包装 prefab 幂等兜底（正常已随仓库提供）
             CustomStubCopyTool.EnsureRandomDispenserPrefab();
             // RatHeist 包装 prefab + PseudoPrefabSO 幂等兜底
@@ -71,7 +73,7 @@ public static class CustomStubAutoBake
         if (!focused || EditorApplication.timeSinceStartup < _focusCheckAt)
             return;
         _focusCheckAt = double.MaxValue; // 本轮聚焦只检查一次，失焦后再聚焦重置
-        if (EditorApplication.isCompiling || EditorApplication.isUpdating || EditorApplication.isPlaying)
+        if (EditorWorkBlocked())
             return;
         LayoutStubDllBuilder.RequestCompileIfStale();
     }
@@ -82,6 +84,8 @@ public static class CustomStubAutoBake
 
     private static void ArmIconSync()
     {
+        if (EditorWorkBlocked())
+            return;
         _iconArmed = true;
         _iconDeadline = EditorApplication.timeSinceStartup + 15.0;
         EditorApplication.update -= SyncIconTick;
@@ -90,7 +94,7 @@ public static class CustomStubAutoBake
 
     private static void SyncIconTick()
     {
-        if (LayoutEditorPseudoReload.ExportBuildInProgress)
+        if (EditorWorkBlocked())
             return;
         if (!_iconArmed)
         {
@@ -131,17 +135,22 @@ public static class CustomStubAutoBake
 
     private static void RebakeActiveScene()
     {
+        if (EditorWorkBlocked())
+            return;
         try
         {
+            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            if (!scene.IsValid() || !scene.isLoaded || string.IsNullOrEmpty(scene.path))
+                return;
+            LayoutEditorPseudoReload.PrepareSceneForWrite(scene, false);
             var baked = LayoutEditorStubIO.RebakeRandomCratesInActiveScene();
             var portals = LayoutEditorStubIO.RebakeTeleportalExitOnlyInActiveScene();
             if (baked <= 0 && portals <= 0)
+            {
+                LayoutEditorPseudoReload.ReloadPseudoAssetsFull();
                 return;
-            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-            if (!scene.IsValid() || string.IsNullOrEmpty(scene.path))
-                return;
-            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
-            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+            }
+            LayoutEditorPseudoReload.SaveScenePrepared(scene, true);
             if (baked > 0)
                 Debug.Log("[CustomStub] 已自动补烘焙 " + baked + " 个随机食材箱并保存场景: " + scene.path);
             if (portals > 0)
@@ -179,6 +188,8 @@ public static class CustomStubAutoBake
     {
         painted = 0;
         waiting = 0;
+        if (EditorWorkBlocked())
+            return;
         try
         {
             var skipped = 0;
@@ -236,5 +247,12 @@ public static class CustomStubAutoBake
             return null;
         var f = comp.GetType().GetField(fieldName);
         return f != null ? f.GetValue(comp) : null;
+    }
+
+    private static bool EditorWorkBlocked()
+    {
+        return EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling
+            || EditorApplication.isUpdating || BuildPipeline.isBuildingPlayer
+            || LayoutEditorPseudoReload.ExportBuildInProgress;
     }
 }

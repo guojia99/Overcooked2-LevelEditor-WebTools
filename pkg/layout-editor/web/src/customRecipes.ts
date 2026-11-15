@@ -221,7 +221,8 @@ async function renderSetChooser(app: HTMLElement): Promise<void> {
 
   const devOn = isDeveloperModeEnabled();
   const devSection = `
-    <div class="m-section-title" style="margin-top:2rem">开发者模式 · 共享菜谱库</div>
+    <details class="cc-advanced" ${devOn ? "open" : ""}>
+    <summary>高级：开发者模式与共享菜谱库</summary>
     <p class="modal-hint">
       <label class="cr-dev-toggle">
         <input type="checkbox" id="cr-dev-mode" ${devOn ? "checked" : ""}>
@@ -242,8 +243,9 @@ async function renderSetChooser(app: HTMLElement): Promise<void> {
       </div>`
             )
             .join("")}</div>`
-        : '<p class="muted">开启后可编辑 commonW2（Burger大全等）、commonW3（沙拉/果汁）与 commonW5（卷饼）共享库中的已有菜谱。</p>'
+        : ""
     }
+    </details>
   `;
   content.insertAdjacentHTML("beforeend", devSection);
   document.getElementById("cr-dev-mode")?.addEventListener("change", (e) => {
@@ -490,7 +492,8 @@ async function renderRecipeList(app: HTMLElement, scope: RecipeAdminScope): Prom
         <div class="cr-card-foot">
           <span class="cr-cat-tag">${esc(catDisplay(cat ?? { id: r.category, zh: customCategoryLabel(r.category), en: r.category }))}</span>
           ${plating ? `<span class="cr-cat-tag cr-plate-tag" title="装盘容器">🍽 ${esc(plating)}</span>` : ""}
-          <span class="muted small">${r.optionalKind === "sandwich" ? "三明治组装" : isAssembly ? "组装定义" : isFinishedBurger ? "成品汉堡" : `UID ${r.uID}`} · 组成 ${compCount} 项</span>
+          <span class="muted small">${r.optionalKind === "sandwich" ? "三明治组装" : isAssembly ? "组装定义" : isFinishedBurger ? "成品汉堡" : "菜谱"} · 组成 ${compCount} 项</span>
+          <details class="cc-advanced"><summary>高级：编号</summary><span class="muted small">UID ${r.uID}</span></details>
           <span style="flex:1"></span>
           ${r.previewable ?? r.hasModel ? mBtnHtml("👁", "small", { "data-preview": esc(r.assetPath), title: "3D 模型在线预览" }) : ""}
           ${
@@ -1943,9 +1946,7 @@ export async function renderRecipeForm(
       ${mBtnHtml("💾 保存", "primary", { id: "cr-form-save" })}
     </div>
     <div class="cr-form">
-      ${isFilling ? `<p class="modal-hint cr-filling-hint">🥩 <b>夹心</b>就是一道 <b>0 分的自定义菜谱</b>——不可单独点单，只作为汉堡的一层。
-        做好并给它一个模型后，就能在「🍔 汉堡组装工作台」的候选里选用（没有模型的夹心会被过滤，因为游戏里那层看不见）。
-        下面用的是和普通菜谱完全相同的编辑器，额外多了一条「模板网格 + 自制贴图」的零建模通道。</p>` : ""}
+      ${isFilling ? `<p class="modal-hint cr-filling-hint">夹心是 0 分中间产物，不单独点单。保存模型后可在汉堡工作台选用；无模型的夹心不会进入候选。</p>` : ""}
       <div class="cr-section">
         <div class="m-section-title">组装效果（实时预览）</div>
         <div id="cr-preview" class="cr-preview"></div>
@@ -1961,7 +1962,6 @@ export async function renderRecipeForm(
           <label class="m-field">分类 ${catSelectHtml()}
             ${isLibrary ? "" : mBtnHtml("+ 新建分类", "default", { id: "cr-new-cat-inline", style: "margin-top:6px" })}
           </label>
-          <label class="m-field">UID（自动生成）<input type="text" value="${recipe?.uID ?? (isNew ? config.uidPrefix * 1000 + config.nextSequence : "—")}" disabled></label>
           <label class="m-field">菜谱图标（PNG，卡片图）<input type="file" id="cr-icon-upload" accept="image/png">
             <span class="muted small">上传后立即在组装预览中显示</span></label>
         </div>
@@ -1979,11 +1979,11 @@ export async function renderRecipeForm(
         <div class="cr-form-grid">
           <label class="m-field">类型
             <select id="cr-type" class="m-select">
-              <option value="Composite" ${type === "Composite" ? "selected" : ""}>Composite（组合）</option>
-              <option value="Cooked" ${type === "Cooked" ? "selected" : ""}>Cooked（烹饪）</option>
-              <option value="Mixed" ${type === "Mixed" ? "selected" : ""}>Mixed（搅拌）</option>
-              <option value="Ingredient" ${type === "Ingredient" ? "selected" : ""}>Ingredient（食材）</option>
-              <option value="Item" ${type === "Item" ? "selected" : ""}>Item（道具）</option>
+              <option value="Composite" ${type === "Composite" ? "selected" : ""}>组合（Composite）</option>
+              <option value="Cooked" ${type === "Cooked" ? "selected" : ""}>烹饪（Cooked）</option>
+              <option value="Mixed" ${type === "Mixed" ? "selected" : ""}>搅拌（Mixed）</option>
+              <option value="Ingredient" ${type === "Ingredient" ? "selected" : ""}>食材（Ingredient）</option>
+              <option value="Item" ${type === "Item" ? "selected" : ""}>道具（Item）</option>
             </select>
           </label>
           <label class="m-field">分数<input type="number" id="cr-score" value="${score}" min="0">
@@ -1992,12 +1992,11 @@ export async function renderRecipeForm(
               : "菜谱分值（卡片展示）"}</span>
           </label>
           <label class="m-field" id="cr-cook-step-field">烹饪步骤 ${selectHtml(refs.cookingSteps, cookingStepId, "cr-cook-step")}</label>
-          <label class="m-field" id="cr-cook-icon-field">烹饪图标 ${selectHtml(refs.icons, cookingStepIconId, "cr-cook-icon")}</label>
           <label class="m-field" id="cr-cook-prog-field">烹饪程度
             <select id="cr-cook-prog" class="m-select">
-              <option value="0">Raw（生）</option>
-              <option value="1" selected>Cooked（熟）</option>
-              <option value="2">Burnt（焦）</option>
+              <option value="0">生（Raw）</option>
+              <option value="1" selected>熟（Cooked）</option>
+              <option value="2">焦（Burnt）</option>
             </select>
           </label>
           <label class="m-field" id="cr-plate-field">装盘容器 ${selectHtml(
@@ -2009,12 +2008,11 @@ export async function renderRecipeForm(
           )}
             <span class="muted small">决定上桌容器（盘子/杯子）</span>
           </label>
-          <label class="m-field" id="cr-mix-icon-field">搅拌图标 ${selectHtml(refs.icons, mixingIconId, "cr-mix-icon")}</label>
           <label class="m-field" id="cr-mix-prog-field">搅拌程度
             <select id="cr-mix-prog" class="m-select">
-              <option value="0">Unmixed（未搅拌）</option>
-              <option value="1" selected>Mixed（已搅拌）</option>
-              <option value="2">OverMixed（过度搅拌）</option>
+              <option value="0">未搅拌（Unmixed）</option>
+              <option value="1" selected>已搅拌（Mixed）</option>
+              <option value="2">过度搅拌（OverMixed）</option>
             </select>
           </label>
         </div>
@@ -2047,11 +2045,9 @@ export async function renderRecipeForm(
             </div>
             <input type="file" id="cr-model-texture" accept=".png,.jpg,.jpeg,image/png,image/jpeg" hidden>
           </div>
-          <div class="cr-model-template">
-            <div class="m-section-title small">零建模：模板网格 + 自制贴图</div>
-            <p class="muted small">不会建模也能给夹心做出模型：选一个内置模板网格，再用取色/上传/画笔做一张 1024×1024 贴图即可。
-              模板 FBX 会被<b>拷贝一份</b>到本菜谱目录（模板本身只读，拷贝后与共享库无引用关系）。
-              若上方已选了自己的 FBX/OBJ，则以你的模型为准，本区忽略。</p>
+          <details class="cr-model-template cc-advanced" ${isFilling ? "open" : ""}>
+            <summary>使用模板网格与自制贴图</summary>
+            <p class="muted small">选择网格并制作 1024×1024 贴图；保存时复制到本菜谱目录。已上传 FBX/OBJ 时优先使用上传模型。</p>
             <div class="cr-form-grid">
               <label class="m-field">模板网格
                 <select id="cr-tpl-mesh" class="m-select"><option value="">（不使用模板）</option></select>
@@ -2065,13 +2061,21 @@ export async function renderRecipeForm(
                 <span class="muted small">用当前贴图实时渲染，不写盘</span>
               </label>
             </div>
-          </div>
+          </details>
           <div class="cr-model-tools">
             <label class="m-field">在线预览${mBtnHtml("👁 预览并调整方向/大小", "default", { id: "cr-preview-model" })}</label>
-            <label class="m-field">模型诊断${mBtnHtml("🔍 检查装盘链路", "default", { id: "cr-diagnose" })}</label>
           </div>
         </div>
       </div>
+      <details class="cr-section cc-advanced">
+        <summary>高级：唯一编号、引擎图标与模型诊断</summary>
+        <div class="cr-form-grid">
+          <label class="m-field">UID（自动生成）<input type="text" value="${recipe?.uID ?? (isNew ? config.uidPrefix * 1000 + config.nextSequence : "—")}" disabled></label>
+          <label class="m-field" id="cr-cook-icon-field">烹饪图标 ${selectHtml(refs.icons, cookingStepIconId, "cr-cook-icon")}</label>
+          <label class="m-field" id="cr-mix-icon-field">搅拌图标 ${selectHtml(refs.icons, mixingIconId, "cr-mix-icon")}</label>
+          <label class="m-field">模型诊断${mBtnHtml("🔍 检查装盘链路", "default", { id: "cr-diagnose" })}</label>
+        </div>
+      </details>
     </div>
     <div class="cr-form-footer">
       ${mBtnHtml("← 返回菜谱列表", "default", { id: "cr-form-back2" })}
@@ -2159,6 +2163,7 @@ export async function renderRecipeForm(
           buffer,
           fileName: `${id}.fbx`,
           textures,
+          fitTarget: (document.getElementById("cr-plate-step") as HTMLSelectElement | null)?.value === "Glass" ? "cup" : "plate",
         });
       } catch (e) {
         setStatus((e as Error).message || "模板预览失败。", false);

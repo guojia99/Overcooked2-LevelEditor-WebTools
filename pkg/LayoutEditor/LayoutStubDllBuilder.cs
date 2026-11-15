@@ -358,7 +358,8 @@ public static class LayoutStubDllBuilder
     private static bool IsIgnoredRuntimeSource(string path)
     {
         var p = path.Replace('\\', '/');
-        return p.Contains("/Loader~/") || p.Contains("/Modules~/") || p.Contains("/debugLog~/");
+        return p.Contains("/Loader~/") || p.Contains("/Modules~/") || p.Contains("/debugLog~/")
+            || p.Contains("/Checks~/");
     }
 
     public static void StageRuntime(bool throwOnStale)
@@ -413,6 +414,27 @@ public static class LayoutStubDllBuilder
             ProjectRoot() + "/Library/ScriptAssemblies/IngredientSplitterStub.dll", false);
         StageModuleDll("IngredientSplitterRuntime",
             ProjectRoot() + "/Assets/WebCustomStubRuntime/Modules~/IngredientSplitter/bin/Release/IngredientSplitterRuntime.dll", false);
+        // This compiled module ships with the source distribution; Unity ignores Modules~/.
+        // Never silently export a runtime whose multiplayer backpack protocol is missing/stale.
+        var protocolAsset = RuntimeDllDir + "/BackpackProtocol.dll.bytes";
+        var protocolAbs = ProjectRoot() + "/" + protocolAsset;
+        if (!File.Exists(protocolAbs))
+            throw new Exception("[LayoutEditor/CustomStub] 缺少 BackpackProtocol.dll.bytes，请先构建 WebBackpack/Modules~/BackpackProtocol/BackpackProtocol.csproj（Release）。");
+        var protocolRoot = ProjectRoot() + "/" + RuntimeRoot + "/WebBackpack/Modules~/BackpackProtocol";
+        if (Directory.Exists(protocolRoot))
+            foreach (var source in Directory.GetFiles(protocolRoot, "*.cs.txt", SearchOption.TopDirectoryOnly))
+                if (File.GetLastWriteTime(source) > File.GetLastWriteTime(protocolAbs).AddSeconds(2))
+                    throw new Exception("[LayoutEditor/CustomStub] BackpackProtocol 源码比打包 DLL 新，请重新构建协议模块（Release）后再导出。");
+        AssetDatabase.ImportAsset(protocolAsset, ImportAssetOptions.ForceUpdate);
+        var protocolImporter = AssetImporter.GetAtPath(protocolAsset);
+        if (protocolImporter == null)
+            throw new Exception("[LayoutEditor/CustomStub] BackpackProtocol TextAsset 导入失败。");
+        if (protocolImporter.assetBundleName != RuntimeBundleName)
+        {
+            protocolImporter.assetBundleName = RuntimeBundleName;
+            protocolImporter.SaveAndReimport();
+        }
+        Debug.Log("[LayoutEditor/CustomStub] BackpackProtocol 已纳入 " + RuntimeBundleName);
     }
 
     private static void StageModuleDll(string asmName, string sourceAbs, bool throwOnMissing)

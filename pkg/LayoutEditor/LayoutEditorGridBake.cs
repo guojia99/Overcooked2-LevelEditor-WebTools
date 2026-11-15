@@ -76,9 +76,9 @@ public static class LayoutEditorGridBake
             return "[GridBake] m_gridHalfSize 形态无法识别（既无 .X/.Y/.Z 相对属性也非 Vector3），跳过";
         }
 
+        LayoutEditorPseudoReload.PrepareSceneForWrite(scene, false);
         so.ApplyModifiedPropertiesWithoutUndo();
-        EditorSceneManager.MarkSceneDirty(scene);
-        EditorSceneManager.SaveScene(scene);
+        LayoutEditorPseudoReload.SaveScenePrepared(scene, true);
         return null;
     }
 

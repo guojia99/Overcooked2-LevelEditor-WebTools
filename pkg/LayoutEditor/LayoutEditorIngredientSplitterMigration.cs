@@ -31,7 +31,8 @@ public static class LayoutEditorIngredientSplitterMigration
 
     public static void MigrateOpenScene()
     {
-        if (s_scanning)
+        if (s_scanning || EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling
+            || LayoutEditorPseudoReload.ExportBuildInProgress || BuildPipeline.isBuildingPlayer)
             return;
         s_scanning = true;
         try
@@ -60,10 +61,33 @@ public static class LayoutEditorIngredientSplitterMigration
     [MenuItem(Menu)]
     private static void MigrateMenu()
     {
+        if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling
+            || EditorApplication.isUpdating || LayoutEditorPseudoReload.ExportBuildInProgress
+            || BuildPipeline.isBuildingPlayer)
+            return;
         s_cache.Clear();
-        MigrateOpenScene();
-        EditorSceneManager.MarkAllScenesDirty();
-        EditorSceneManager.SaveOpenScenes();
+        var scenes = new List<UnityEngine.SceneManagement.Scene>();
+        for (int i = 0; i < EditorSceneManager.sceneCount; i++)
+        {
+            var scene = EditorSceneManager.GetSceneAt(i);
+            if (scene.IsValid() && scene.isLoaded)
+                scenes.Add(scene);
+        }
+        foreach (var scene in scenes)
+        {
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                foreach (var mb in root.GetComponentsInChildren<MonoBehaviour>(true))
+                {
+                    if (mb != null && mb.GetType().Name == "IngredientSplitter")
+                        TryMigrate(mb, true);
+                }
+            }
+        }
+        // Resolve legacy references before DeInit unloads bundle assets. Restore only after all saves.
+        foreach (var scene in scenes)
+            LayoutEditorPseudoReload.SaveScenePrepared(scene, false);
+        LayoutEditorPseudoReload.ReloadPseudoAssetsFull();
         EditorUtility.DisplayDialog("分料机字段迁移", "已完成当前打开场景的 IngredientSplitter 输出字段迁移。\n旧 GameObject 引用已尽量解析为 PseudoPrefabSO。", "确定");
     }
 

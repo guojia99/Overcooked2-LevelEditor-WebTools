@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net35</TargetFramework>
+    <LangVersion>4</LangVersion>
+    <AssemblyName>BackpackProtocol</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <RepoRoot>$(MSBuildThisFileDirectory)../../../../..</RepoRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" />
+    <Compile Include="BackpackProtocol.cs.txt" />
+    <Compile Include="DirectoryAgreement.cs.txt" />
+    <Reference Include="/Applications/Unity/Hub/Editor/2017.4.8f1/Unity.app/Contents/Managed/UnityEngine/*.dll" />
+    <Reference Include="$(RepoRoot)/Library/ScriptAssemblies/Assembly-CSharp.dll" />
+    <Reference Include="$(RepoRoot)/Assets/Plugins/0Harmony.dll" />
+  </ItemGroup>
+  <Target Name="StageProtocol" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(RepoRoot)/Assets/WebCustomStubRuntime/RuntimeDll/BackpackProtocol.dll.bytes" />
+  </Target>
+</Project>

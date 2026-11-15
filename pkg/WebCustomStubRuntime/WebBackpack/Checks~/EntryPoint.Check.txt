@@ -1,0 +1,8 @@
+namespace CustomStub
+{
+    // The shared installer is the sole external call outside the compiled feature slice.
+    internal static class EntryPoint
+    {
+        internal static void EnsureWebBackpackPatches() { }
+    }
+}

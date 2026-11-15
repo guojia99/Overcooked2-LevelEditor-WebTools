@@ -21,6 +21,7 @@ GameObject:
   - component: {fileID: 4341917854781290}
   - component: {fileID: 114266618352629990}
   - component: {fileID: 6598243100175246001}
+  - component: {fileID: 6598243100175246002}
   - component: {fileID: 114214987726898516}
   m_Layer: 0
   m_Name: web_utensil_large_pot_01
@@ -71,7 +72,19 @@ MonoBehaviour:
   allowedCookingStationTypes: 
   modelSOs: []
   models: []
---- !u!65 &6598243100175246001
+--- !u!135 &6598243100175246001
+SphereCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1554132891853676}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 1.3
+  m_Center: {x: -0.6, y: 0.65, z: 0.6}
+--- !u!65 &6598243100175246002
 BoxCollider:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}

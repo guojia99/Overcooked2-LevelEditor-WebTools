@@ -13,9 +13,9 @@ namespace CustomStub
     ///
     /// 行为：开局藏在绑定工作台底下（wrapper 摆放格），按可调间隔出洞，
     /// 寻路到最近的「台面自由物品」（分类开关过滤），服务端权威偷取
-    /// （AttachStation.TakeItem → ServerPlayerAttachmentCarrier.CarryItem），
+    /// （AttachStation.TakeItem → ServerPhysicalAttachment.Attach），
     /// 拖回家门口销毁（NetworkUtils.DestroyObject），循环。玩家面对老鼠按
-    /// 交互键 = 打一下：掉落携带物（carrier.TakeItem 物理落地）+ 逃回家。
+    /// 交互键 = 打一下：掉落携带物（PhysicalAttachment.Detach）+ 逃回家。
     ///
     /// 资产：复古鼠 rat.prefab（bundle47，本体包，模型 bundle34/动画 bundle0），
     /// 皮肤 dlc08 = 官方 h18 关同款做法（复古鼠模型 + t_dlc08_rat_01_d 贴图，
@@ -25,19 +25,17 @@ namespace CustomStub
     /// RatBehaviour/RatSpawnPoint/RatCosmeticDecisions 在本体里只有序列化字段、
     /// 无任何方法——偷食逻辑从未在 OC2 实装，本组件为全自定义行为，复用原版
     /// 无主组件：GridNavigator（网格寻路）、Interactable（交互，MultiplayerController
-    /// :483 注册了同步器）、PlayerAttachmentCarrier（携带，:373 注册同步器，
-    /// ChefCarryMessage 全网同步携带物）。老鼠 prefab 由 wrapper 通道
+    /// 注册了同步器）、PlayerAttachmentCarrier（原生 IParentable 嘴部挂点，
+    /// PhysicalAttachMessage/WorldObject 同步携带物）。老鼠 prefab 由 wrapper 通道
     /// （编辑器 PseudoPrefabManager / 真机 OC2DIYLevel）在实体扫描前生成，
     /// 其同步类型组件被自动同步化；bundle 缺失时兜底自建（也在扫描前完成，
     /// 避开 2.2.1 实体 ID 错位事故的窗口）。
     ///
     /// 双端分工（服务端判定 = ConnectionStatus.IsHost() || !IsInSession()）：
     /// - 服务端：权威状态机（计时/选目标/偷/拖/销毁），全部走官方网络消息
-    ///   （AttachStationMessage/ChefCarryMessage/DestroyEntity），零自建同步；
-    /// - 客户端：影子演出——同 interval 计时 + 同确定性规则（最近目标，平局取
-    ///   格坐标字典序）预测目标跑位，以「嘴上挂点出现/消失物品」的真实同步
-    ///   事件矫正（挂上=回家；物品 active 但离嘴=被打掉落→回家；物品
-    ///   inactive=销毁→回洞）。预测错误的代价只是老鼠在错误台面短等 2s。
+    ///   （AttachStationMessage/PhysicalAttachMessage/WorldObject/DestroyEntity）；
+    /// - 客户端：原生 RigidbodyMotion -> WorldObject/BasicLerp 同步位置与朝向，
+    ///   不选目标、不寻路；根据主机藏身位置切换显示/交互。受击逃跑由主机导航驱动。
     ///
     /// 目标枚举统一走 AttachStation.m_attachPoint.childCount（物品挂台面 =
     /// parent 在挂点下，双端一致且零同步器反射）；偷取动作只走
@@ -116,8 +114,16 @@ namespace CustomStub
         private bool _skinApplied;
         private bool _hitHooked;
         private Coroutine _fleeRoutine;
+        private bool _started;
+        private bool _runActive;
         private GameObject _targetStation; // 服务端本轮占用的目标台面（s_targets 配套）
-        private float _channelWaited;      // 已等待 wrapper 通道的秒数（超过阈值走兜底）
+        private bool _prepared;
+        private bool _networkReady;
+        private bool _visible;
+        private bool _syncWarned;
+        private bool _dropWarned;
+        private int _hitRevision;
+        private static bool s_scanStarted;
 
         /// <summary>本机（服务端）目标占用表：多鼠不同时盯同一台面。
         /// 清场：OnSceneChanged（挂 EntryPoint.ResetSceneTickers 链）。</summary>
@@ -147,13 +153,89 @@ namespace CustomStub
             s_groundMaskReady = false;
             s_navVoidPatched = false;
             s_navVoidPatchWarned = false;
+            s_scanStarted = false;
+            RatDiagnostics.OnSceneChanged();
         }
 
-        /// <summary>外层协程：C#4 禁止在有 catch 的 try 里 yield，嵌套枚举器给整个
-        /// 协程套异常捕获（镜像 RandomCrate.Start）。</summary>
-        private IEnumerator Start()
+        private void Awake()
         {
-            var inner = RunInner();
+            EntryPoint.EnsurePotAssemblyPatches();
+        }
+
+        // Called synchronously by ScanEntities, before its enumerator can allocate IDs.
+        internal static void FlushPendingAssemblies()
+        {
+            if (GameApi.IsEntityScanActive() || GameApi.IsSynchronisationActive())
+                return;
+            var roots = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
+            int total = 0, ready = 0;
+            for (int r = 0; r < roots.Length; r++)
+            {
+                var rats = roots[r].GetComponentsInChildren<RatHeist>(true);
+                for (int i = 0; i < rats.Length; i++)
+                {
+                    total++;
+                    try
+                    {
+                        if (rats[i].PrepareForScan()) ready++;
+                    }
+                    catch (Exception ex)
+                    {
+                        LogWarn("[RatNet] prepare failed: " + rats[i].name + ": " + ex);
+                    }
+                }
+            }
+            s_scanStarted = true;
+            if (total > 0)
+                StubLog.Log("[RatNet] scan preparation revision=4.0.0.22 ready=" + ready + "/" + total);
+        }
+
+        private bool PrepareForScan()
+        {
+            if (!EnsureRatVisual(true)) return false;
+            _homePos = transform.position;
+            ApplySkin();
+            HideRat();
+            _prepared = true;
+            RatDiagnostics.Register(_rat);
+            RatDiagnostics.Install();
+            return true;
+        }
+
+        private void Start()
+        {
+            _started = true;
+            EnsureRunning();
+        }
+
+        private void OnEnable()
+        {
+            // Unity calls OnEnable before the first Start; only later enables restart here.
+            if (_started) EnsureRunning();
+        }
+
+        private void EnsureRunning()
+        {
+            if (_runActive || !isActiveAndEnabled) return;
+            _runActive = true;
+            try { StartCoroutine(RunLifecycle()); }
+            catch
+            {
+                _runActive = false;
+                throw;
+            }
+        }
+
+        private IEnumerator RunLifecycle()
+        {
+            var inner = Guarded(RunInner());
+            while (inner.MoveNext()) yield return inner.Current;
+            _runActive = false;
+        }
+
+        /// <summary>C#4 禁止在有 catch 的 try 里 yield，嵌套枚举器捕获异常。</summary>
+        private IEnumerator Guarded(IEnumerator inner)
+        {
             while (true)
             {
                 object current;
@@ -165,6 +247,10 @@ namespace CustomStub
                 }
                 catch (Exception ex)
                 {
+                    try { CleanupHeist(); }
+                    catch (Exception cleanup) { LogWarn("[RatHeist] cleanup failed: " + cleanup); }
+                    _fleeing = false;
+                    _fleeRoutine = null;
                     LogWarn("[RatHeist] 协程异常退出: " + name + "\n" + ex);
                     yield break;
                 }
@@ -184,20 +270,17 @@ namespace CustomStub
                 + " utensil=" + m_stealUtensil + "）");
             while (true)
             {
-                // 1. 老鼠视觉体：wrapper 通道（PseudoPrefabManager/OC2DIYLevel）会在
-                //    场景加载早期生成真实 rat.prefab 实例（子孙里带 GridNavigator）。
-                //    先纯等 5s 让通道生成；仍无再从 bundle47 兜底自建（也在实体扫描
-                //    前，避免 2.2.1 实体 ID 错位窗口）。
-                if (!EnsureRatVisual(5f))
+                // Only the synchronous ScanEntities prefix may assemble network entities.
+                if (!_prepared || _rat == null)
                 {
-                    _channelWaited += 1f; // 外层 1s 重试节拍
+                    if (s_scanStarted && !_syncWarned)
+                    {
+                        _syncWarned = true;
+                        LogWarn("[RatNet] not prepared before scan; rat disabled until next scene: " + name);
+                    }
                     yield return new WaitForSecondsRealtime(1f);
                     continue;
                 }
-                _channelWaited = 0f;
-                _homePos = transform.position;
-                ApplySkin();
-                HideRat();
                 Log("[RatHeist] 老鼠就绪: " + name + " → " + _rat.name
                     + "（家 " + _homePos.ToString("0.##") + "，挂点 "
                     + (_attachPoint != null ? "有" : "无") + "）");
@@ -230,18 +313,50 @@ namespace CustomStub
                     continue;
                 }
 
-                // 3. 分端就绪（晚生成老鼠补挂同步器 + 打鼠回调）
+                // 3. Validate the full scanned component set; never register locally here.
                 _isServer = GameApi.IsServerMachine();
                 EnsureRatNetworkSync();
+                if (!_networkReady)
+                {
+                    SetRatVisible(false);
+                    yield break;
+                }
                 TryHookInteraction();
+                if (_isServer && !_hitHooked)
+                {
+                    LogWarn("[RatNet] hit callback unavailable; disabling rat: " + name);
+                    yield break;
+                }
+                RatDiagnostics.Install();
+                RatDiagnostics.Trace("ready", _rat, null, true);
                 Log("[RatHeist] 网络同步就绪: " + name + "（isServer=" + _isServer
                     + "，实体=" + GameApi.HasEntityEntry(_rat) + "，打鼠="
                     + _hitHooked + "）");
                 EnsureNavVoidMask();
+                var navBehaviour = _nav as Behaviour;
+                if (navBehaviour != null) navBehaviour.enabled = _isServer;
+                if (!_isServer)
+                {
+                    // RigidbodyMotion uses native WorldObject + BasicLerp. Never run local AI.
+                    while (_rat != null)
+                    {
+                        bool visible = _rat.transform.position.y > _homePos.y - HideDropY * 0.5f;
+                        if (visible != _visible) SetRatVisible(visible);
+                        yield return null;
+                    }
+                    yield break;
+                }
+                // A resumed server starts a fresh interval from its authoritative hidden state.
+                HideRat();
 
                 // 4. 状态机主循环（重开关卡后 _rat 失效 → 回外层重装配）
                 while (_rat != null)
                 {
+                    if (!DropCarriedNow())
+                    {
+                        yield return new WaitForSecondsRealtime(1f);
+                        continue;
+                    }
                     var t = 0f;
                     while (t < m_interval && !_fleeing && _rat != null)
                     {
@@ -267,16 +382,6 @@ namespace CustomStub
                             yield return heist.Current;
                         }
                     }
-                    else
-                    {
-                        var shadow = ClientShadow();
-                        while (shadow.MoveNext())
-                        {
-                            if (_rat == null)
-                                break;
-                            yield return shadow.Current;
-                        }
-                    }
                 }
                 yield return null;
             }
@@ -291,6 +396,7 @@ namespace CustomStub
         /// 释放由每条退出路径显式 ReleaseTarget 完成。</summary>
         private IEnumerator ServerHeist()
         {
+            int revision = _hitRevision;
             GameObject stationGo;
             GameObject itemGo;
             if (!FindTarget(out stationGo, out itemGo))
@@ -318,10 +424,13 @@ namespace CustomStub
                     yield return goHomeEarly.Current;
                 yield break;
             }
-            while (!RatApi.NavCompleted(_nav) && !_fleeing && _rat != null)
+            float travel = 0f;
+            while (!RatApi.NavCompleted(_nav) && !_fleeing && _rat != null
+                && revision == _hitRevision && travel < 25f)
             {
+                travel += RatApi.DeltaTime(_rat);
                 yield return null;
-                if (_fleeing || _rat == null)
+                if (_fleeing || _rat == null || revision != _hitRevision)
                 {
                     ReleaseTarget();
                     yield break;
@@ -335,14 +444,16 @@ namespace CustomStub
                     yield break;
                 }
             }
+            if (_fleeing || _rat == null || revision != _hitRevision)
+            {
+                ReleaseTarget();
+                yield break;
+            }
             // —— 寻路失败守卫：NavPoint snap 到不可达岛时 HasCompletedRoute 立即为
             //    true（FindPath 空路径），老鼠没跑过去——放弃本轮（防远程偷取穿帮）。
-            var offX = _rat != null ? _rat.transform.position.x - targetPos.x : 0f;
-            var offZ = _rat != null ? _rat.transform.position.z - targetPos.z : 0f;
-            var arrived = _rat != null && (offX * offX + offZ * offZ) < 6.25f; // ≤ 2.5m ≈ 2 格
             // —— 偷取（目标可能已被玩家拿走/别的老鼠偷走：重验）——
             GameObject taken = null;
-            if (arrived && StillValidTarget(stationGo, itemGo))
+            if (travel < 25f && CanStealNow(stationGo, itemGo) && RatApi.CanCarry(_rat, itemGo))
             {
                 if (stationGo != null)
                 {
@@ -362,21 +473,33 @@ namespace CustomStub
                     yield return goHome.Current;
                 yield break; // 扑空：回家继续等
             }
+            if (taken != itemGo || !RatApi.RatCarry(_rat, taken))
+            {
+                // TakeItem may have detached it already. Leave it in the kitchen on failure.
+                if (taken != null) RatApi.RatDrop(_rat, taken);
+                ReleaseTarget();
+                var goHomeFailedCarry = ReturnHome();
+                while (goHomeFailedCarry.MoveNext()) yield return goHomeFailedCarry.Current;
+                yield break;
+            }
             _carried = taken;
-            RatApi.RatCarry(_rat, taken);
             Log("[RatHeist] 偷到: " + name + " → " + taken.name
                 + (stationGo == null ? "（地面）" : ""));
             // —— 回程 ——
             if (!TryNavMoveTo(_homePos))
             {
                 ReleaseTarget();
+                DropCarriedNow();
                 HideRat();
                 yield break;
             }
-            while (!RatApi.NavCompleted(_nav) && !_fleeing && _rat != null)
+            travel = 0f;
+            while (!RatApi.NavCompleted(_nav) && !_fleeing && _rat != null
+                && revision == _hitRevision && travel < 25f && RatApi.OwnsItem(_rat, _carried))
             {
+                travel += RatApi.DeltaTime(_rat);
                 yield return null;
-                if (_fleeing || _rat == null)
+                if (_fleeing || _rat == null || revision != _hitRevision)
                 {
                     // 掉落已在被打回调里处理；逃亡协程负责回家
                     ReleaseTarget();
@@ -385,20 +508,29 @@ namespace CustomStub
                 if (AbortNavIfOverVoid())
                 {
                     ReleaseTarget();
+                    DropCarriedNow();
                     HideRat();
                     yield break;
                 }
             }
+            if (_fleeing || _rat == null || revision != _hitRevision)
+            {
+                ReleaseTarget();
+                yield break;
+            }
             // —— 到家销毁 ——
             var carried = _carried;
-            _carried = null;
             ReleaseTarget();
-            if (carried != null)
+            if (carried != null && RatApi.OwnsItem(_rat, carried))
             {
-                RatApi.RatDrop(_rat, carried);
-                RatApi.DestroyObject(carried);
-                Log("[RatHeist] 销毁食材: " + name + " → " + carried.name);
+                bool atHome = IsWithinReach(_rat.transform.position, _homePos, 0.8f, 0.75f);
+                if (RatApi.RatDrop(_rat, carried) && atHome)
+                {
+                    RatApi.DestroyObject(carried);
+                    Log("[RatHeist] 销毁食材: " + name + " → " + carried.name);
+                }
             }
+            if (carried == null || !RatApi.OwnsItem(_rat, carried)) _carried = null;
             HideRat();
         }
 
@@ -410,6 +542,40 @@ namespace CustomStub
             if (stationGo == null)
                 return itemGo.activeInHierarchy && !RatApi.IsAttached(itemGo);
             return GetStationItem(stationGo) == itemGo;
+        }
+
+        private static bool IsWithinReach(Vector3 from, Vector3 to, float horizontal, float height)
+        {
+            var delta = to - from;
+            return delta.x * delta.x + delta.z * delta.z <= horizontal * horizontal
+                && Mathf.Abs(delta.y) <= height;
+        }
+
+        private bool CanStealNow(GameObject station, GameObject item)
+        {
+            if (_rat == null || item == null || !item.activeInHierarchy
+                || !StillValidTarget(station, item) || !PassStealFilter(item, station)
+                || RatApi.GetComponent(item, RatApi.CarryableItemType) == null
+                || !_visible || !RatApi.CanPickUp(_rat, station, item)
+                || GameApi.GetEntityId(item) == 0) return false;
+            Vector3 pos = item.transform.position;
+            if (!IsWithinReach(_rat.transform.position, pos, 1.5f, station != null ? 1.8f : 0.75f)
+                || !HasGroundSupport(pos.x, pos.z))
+            {
+                Log("[RatNet] steal rejected: moved/out of reach/unsupported rat=" + _rat.transform.position.ToString("0.00")
+                    + " item=" + item.name + " pos=" + pos.ToString("0.00")
+                    + " station=" + (station != null ? station.name : "ground"));
+                return false;
+            }
+            if (station != null && Mathf.Abs(station.transform.position.y - _rat.transform.position.y) > 0.75f)
+                return false;
+            if (m_radius > 0f)
+            {
+                float dx = pos.x - _homePos.x, dz = pos.z - _homePos.z;
+                float radius = m_radius * CellSize;
+                if (dx * dx + dz * dz > radius * radius) return false;
+            }
+            return true;
         }
 
         /// <summary>释放本轮目标占用（ServerHeist 各退出路径显式调用）。</summary>
@@ -425,6 +591,7 @@ namespace CustomStub
         /// abortOnFlee：被打逃亡时 FleeHome 独占回家，其它协程里的 ReturnHome 应立即让出。</summary>
         private IEnumerator ReturnHome(bool hideWhenDone = true, bool abortOnFlee = true)
         {
+            int revision = _hitRevision;
             if (abortOnFlee && _fleeing)
                 yield break;
             if (TryNavMoveTo(_homePos))
@@ -432,7 +599,7 @@ namespace CustomStub
                 var guard = 0f;
                 while (!RatApi.NavCompleted(_nav) && _rat != null && guard < 15f)
                 {
-                    if (abortOnFlee && _fleeing)
+                    if (abortOnFlee && (_fleeing || revision != _hitRevision))
                         yield break;
                     guard += RatApi.DeltaTime(_rat);
                     yield return null;
@@ -440,7 +607,7 @@ namespace CustomStub
                         break;
                 }
             }
-            if (abortOnFlee && _fleeing)
+            if (abortOnFlee && (_fleeing || revision != _hitRevision))
                 yield break;
             if (hideWhenDone)
                 HideRat();
@@ -450,10 +617,12 @@ namespace CustomStub
         /// 立刻停导航、释放偷取目标、掉落携带物，并从当前位置逃回洞穴。</summary>
         internal void OnRatHit(GameObject interacter, Vector2 directionXZ)
         {
-            if (!_isServer || _fleeing)
+            RatDiagnostics.Trace("hit-callback", _rat, interacter, false);
+            if (!isActiveAndEnabled || !_isServer || _fleeing || !_visible || !_networkReady)
                 return;
             Log("[RatHeist] 被打: " + name + (interacter != null ? "（by " + interacter.name + "）" : ""));
             _fleeing = true;
+            _hitRevision++;
             ReleaseTarget();
             RatApi.NavClear(_nav);
             DropCarriedNow();
@@ -463,7 +632,7 @@ namespace CustomStub
                 StopCoroutine(_fleeRoutine);
                 _fleeRoutine = null;
             }
-            _fleeRoutine = StartCoroutine(FleeHome());
+            _fleeRoutine = StartCoroutine(Guarded(FleeHome()));
         }
 
         /// <summary>被打后从当前位置寻路回洞（不传送回 home，避免「瞬移回家」穿帮）。</summary>
@@ -482,30 +651,67 @@ namespace CustomStub
         }
 
         /// <summary>掉落嘴上/缓存的携带物（被打时同步落地，不销毁）。</summary>
-        private void DropCarriedNow()
+        private bool DropCarriedNow()
         {
             if (_rat == null)
-                return;
-            if (_carried != null)
             {
-                RatApi.RatDrop(_rat, _carried);
                 _carried = null;
-                return;
+                return true;
             }
-            if (_attachPoint == null || _attachPoint.childCount == 0)
-                return;
-            var onMouth = _attachPoint.GetChild(0).gameObject;
-            if (onMouth != null)
-                RatApi.RatDrop(_rat, onMouth);
+            var carried = _carried;
+            if (carried != null && RatApi.OwnsItem(_rat, carried))
+            {
+                if (!RatApi.RatDrop(_rat, carried)) return false;
+            }
+            _carried = null;
+            // Also clean a partial Attach that threw before a successful carry was cached.
+            var points = new Transform[] { _attachPoint, FindChildRecursive(_rat.transform, "Attachment_Backpack") };
+            for (int p = 0; p < points.Length; p++)
+            {
+                var point = points[p];
+                if (point == null) continue;
+                for (int i = point.childCount - 1; i >= 0; i--)
+                {
+                    var item = point.GetChild(i).gameObject;
+                    if (RatApi.GetComponent(item, RatApi.ServerPhysicalAttachmentType) != null
+                        && RatApi.OwnsItem(_rat, item) && !RatApi.RatDrop(_rat, item)) return false;
+                }
+            }
+            return true;
         }
 
-        // ==================== 客户端影子演出 ====================
+        private void CleanupHeist()
+        {
+            ReleaseTarget();
+            if (_isServer)
+            {
+                DropCarriedNow();
+                if (_rat != null) HideRat();
+            }
+        }
+
+        private void OnDisable()
+        {
+            StopAllCoroutines();
+            _runActive = false;
+            _fleeRoutine = null;
+            _fleeing = false;
+            _hitRevision++;
+            _networkReady = false;
+            try { CleanupHeist(); }
+            catch (Exception ex) { LogWarn("[RatHeist] disable cleanup failed: " + ex); }
+            // Native WorldObject reception continues on the client; only local presentation stops.
+            if (!_isServer && _rat != null) SetRatVisible(false);
+        }
+
+        // ==================== 服务端巡逻 ====================
 
         /// <summary>无目标巡逻：走到距家 ≥MinPatrolCells 格的随机可走点再回洞
         /// （用户规则：多鼠关卡里老鼠也要固定出来溜达，不能全程蹲洞）。
-        /// 双端本地随机（不追求同步——纯视觉行为，偷/毁仍由服务端事件驱动）。</summary>
+        /// 仅服务端随机，客机通过原生 WorldObject 跟随。</summary>
         private IEnumerator Patrol()
         {
+            int revision = _hitRevision;
             ShowRat();
             var target = _homePos;
             var found = false;
@@ -533,16 +739,17 @@ namespace CustomStub
                 yield break;
             }
             var guard = 0f;
-            while (!RatApi.NavCompleted(_nav) && !_fleeing && _rat != null && guard < 25f)
+            while (!RatApi.NavCompleted(_nav) && !_fleeing && _rat != null && guard < 25f
+                && revision == _hitRevision)
             {
                 guard += RatApi.DeltaTime(_rat);
                 yield return null;
-                if (_fleeing || _rat == null)
+                if (_fleeing || _rat == null || revision != _hitRevision)
                     yield break;
                 if (AbortNavIfOverVoid())
                     break;
             }
-            if (_fleeing)
+            if (_fleeing || revision != _hitRevision)
                 yield break;
             var goHome = ReturnHome();
             while (goHome.MoveNext())
@@ -551,66 +758,6 @@ namespace CustomStub
                     break;
                 yield return goHome.Current;
             }
-        }
-
-        /// <summary>预测跑位 + 真实事件矫正：
-        /// - 预测目标（同服务端确定性规则）跑过去；无预测目标 → 本地巡逻；
-        /// - 嘴上挂点出现物品（Attach 同步）或预测目标消失（服务端已偷走）→ 立刻回家；
-        /// - 台面扑空（目标还在但迟迟没被抓）→ 原地等 2s 再回家。</summary>
-        private IEnumerator ClientShadow()
-        {
-            GameObject stationGo;
-            GameObject itemGo;
-            if (!FindTarget(out stationGo, out itemGo))
-            {
-                var patrol = Patrol();
-                while (patrol.MoveNext())
-                {
-                    if (_rat == null)
-                        break;
-                    yield return patrol.Current;
-                }
-                yield break;
-            }
-            var targetPos = stationGo != null ? stationGo.transform.position : itemGo.transform.position;
-            ShowRat();
-            if (!TryNavMoveTo(targetPos))
-            {
-                var goHomeFail = ReturnHome();
-                while (goHomeFail.MoveNext())
-                    yield return goHomeFail.Current;
-                yield break;
-            }
-            while (!RatApi.NavCompleted(_nav) && _rat != null
-                && (_attachPoint == null || _attachPoint.childCount == 0)
-                && StillValidTarget(stationGo, itemGo)
-                && !_fleeing)
-            {
-                if (AbortNavIfOverVoid())
-                {
-                    var goHomeVoid = ReturnHome();
-                    while (goHomeVoid.MoveNext())
-                        yield return goHomeVoid.Current;
-                    yield break;
-                }
-                yield return null;
-            }
-            if (_fleeing || _rat == null)
-                yield break;
-            // 到位（或嘴上提前出现物品/目标已被服务端偷走）：稍等看有没有挂上嘴
-            var wait = 0f;
-            while (wait < 2f && _attachPoint != null && _attachPoint.childCount == 0
-                && StillValidTarget(stationGo, itemGo))
-            {
-                wait += RatApi.DeltaTime(_rat);
-                yield return null;
-            }
-            if (_rat == null)
-                yield break;
-            // 回家（无论偷没偷到，跟着嘴上物品走）
-            var goHome = ReturnHome();
-            while (goHome.MoveNext())
-                yield return goHome.Current;
         }
 
         // ==================== 目标选择（双端同规则，确定性） ====================
@@ -677,6 +824,10 @@ namespace CustomStub
 
         private void CollectCandidate(GameObject stationGo, Vector3 pos, GameObject item)
         {
+            if (item == null || !item.activeInHierarchy
+                || RatApi.GetComponent(item, RatApi.CarryableItemType) == null
+                || GameApi.GetEntityId(item) == 0
+                || Mathf.Abs(pos.y - _homePos.y) > 0.75f) return;
             if (!HasGroundSupport(pos.x, pos.z))
                 return;
             // 藏身格（wrapper 同格台面/家里地面）不偷：距家格中心 < 0.6 格视为同格
@@ -685,6 +836,8 @@ namespace CustomStub
             if (hdx * hdx + hdz * hdz < 0.36f)
                 return;
             if (!PassStealFilter(item, stationGo))
+                return;
+            if (!RatApi.CanPickUp(_rat, stationGo, item) || !RatApi.CanCarry(_rat, item))
                 return;
             if (_isServer && stationGo != null && s_targets.Contains(stationGo))
                 return;
@@ -762,11 +915,12 @@ namespace CustomStub
 
         /// <summary>定位/生成老鼠视觉体。优先 wrapper 通道生成的真实老鼠（子孙里
         /// 带 GridNavigator 的物体，编辑器 PseudoPrefabManager / 真机 OC2DIYLevel
-        /// 在场景加载早期生成）；累计等待超过 channelWaitSeconds 仍无，再从
-        /// bundle47 兜底 Instantiate（一次性同步加载，仍在实体扫描前，避开
-        /// 2.2.1 实体 ID 错位窗口）。</summary>
-        private bool EnsureRatVisual(float channelWaitSeconds)
+        /// 在场景加载早期生成）；仅扫描前锚点允许 bundle47 同步兜底。</summary>
+        private bool EnsureRatVisual(bool allowCreate)
         {
+            if (_rat != null) return true;
+            if (s_scanStarted || GameApi.IsEntityScanActive() || GameApi.IsSynchronisationActive())
+                return false;
             var navs = GameApi.GetComponentsInChildren(gameObject, RatApi.GridNavigatorType, true);
             if (navs != null)
             {
@@ -779,12 +933,8 @@ namespace CustomStub
                     }
                 }
             }
-            if (_channelWaited < channelWaitSeconds)
-            {
-                if (_channelWaited == 0f)
-                    Log("[RatHeist] 等待 wrapper 通道生成老鼠: " + name);
-                return false; // 外层 1s 后重试
-            }
+            if (!allowCreate || s_scanStarted || GameApi.IsEntityScanActive()
+                || GameApi.IsSynchronisationActive()) return false;
             // 兜底：bundle47 直接实例化
             var bundle = GameApi.GetAssetBundle(RatBundle);
             if (bundle == null)
@@ -800,6 +950,7 @@ namespace CustomStub
                     LogWarn("[RatHeist] 兜底失败：rat.prefab 加载失败 " + RatPrefabPath + ": " + name);
                     return false;
                 }
+                if (GameApi.IsEntityScanActive() || GameApi.IsSynchronisationActive()) return false;
                 var rat = (GameObject)Instantiate(prefab, transform.position, Quaternion.identity);
                 rat.transform.parent = transform;
                 rat.name = "RatHeist_Rat";
@@ -829,6 +980,15 @@ namespace CustomStub
             _hitHooked = false;
             EnsureRatGridLocation(rat);
             EnsureRatInteractable(rat);
+            // The native registry already maps this marker to WorldObject + BasicLerp.
+            // No custom message type or entity ID allocation is needed.
+            if (RatApi.RigidbodyMotionType != null && rat.GetComponent(RatApi.RigidbodyMotionType) == null)
+                rat.AddComponent(RatApi.RigidbodyMotionType);
+            rb = rat.GetComponent<Rigidbody>();
+            if (rb != null) rb.isKinematic = true;
+            var interact = RatApi.GetComponent(rat, RatApi.InteractableType);
+            if (interact != null && RatApi.AllowMultipleField != null)
+                RatApi.AllowMultipleField.SetValue(interact, true);
         }
 
         /// <summary>确保老鼠有可用的携带挂点（真机实证 2026-09-19：rat.prefab 是 OC1
@@ -1287,6 +1447,7 @@ namespace CustomStub
 
         private bool TryNavMoveTo(Vector3 pos)
         {
+            if (_nav == null || RatApi.NavMoveToMethod == null) return false;
             EnsureNavVoidMask();
             if (!HasGroundSupport(pos.x, pos.z))
             {
@@ -1324,6 +1485,17 @@ namespace CustomStub
         {
             if (_rat == null)
                 return;
+            if (_isServer && !DropCarriedNow())
+            {
+                RatApi.NavClear(_nav);
+                if (!_dropWarned)
+                {
+                    _dropWarned = true;
+                    LogWarn("[RatHeist] detach failed; keeping rat/item visible for recovery: " + name);
+                }
+                return;
+            }
+            _dropWarned = false;
             _rat.transform.position = _homePos + Vector3.down * HideDropY;
             SetRatVisible(false);
             RatApi.NavClear(_nav);
@@ -1331,6 +1503,9 @@ namespace CustomStub
 
         private void SetRatVisible(bool visible)
         {
+            _visible = visible;
+            var interact = RatApi.GetComponent(_rat, RatApi.InteractableType) as Behaviour;
+            if (interact != null) interact.enabled = visible;
             if (_ratRenderers != null)
             {
                 for (int i = 0; i < _ratRenderers.Length; i++)
@@ -1352,20 +1527,23 @@ namespace CustomStub
                 animator.enabled = visible;
         }
 
-        /// <summary>晚于实体扫描生成的老鼠补挂 Interactable 同步器（Server/Client
-        /// Interactable）。根因：wrapper 缺 PseudoPrefab 时老鼠 5s 后才兜底实例化，
-        /// 会错过 AsyncScanEntities 窗口。</summary>
+        /// <summary>验证实体及交互/位置同步器完整；禁止扫描后本地补注册。</summary>
         private void EnsureRatNetworkSync()
         {
             if (_rat == null)
                 return;
-            EnsureRatInteractable(_rat);
-            if (!GameApi.IsSynchronisationActive() || GameApi.HasEntityEntry(_rat))
-                return;
-            if (GameApi.ServerRegisterObject(_rat))
-                Log("[RatHeist] 老鼠已补注册网络实体（Interactable 同步器）: " + name);
-            else
-                LogWarn("[RatHeist] 老鼠网络实体补注册失败（打鼠可能无效）: " + name);
+            _networkReady = _prepared && GameApi.GetEntityId(_rat) != 0
+                && RatApi.GetComponent(_rat, RatApi.ClientInteractableType) != null
+                && RatApi.GetComponent(_rat, RatApi.ClientWorldType) != null
+                && RatApi.GetComponent(_rat, RatApi.PlayerAttachmentCarrierType) != null
+                && (!_isServer || (RatApi.GetComponent(_rat, RatApi.ServerInteractableType) != null
+                    && RatApi.GetComponent(_rat, RatApi.ServerWorldType) != null));
+            if (!_networkReady && !_syncWarned)
+            {
+                _syncWarned = true;
+                LogWarn("[RatNet] incomplete scanned entity; refusing local re-registration: " + name);
+                RatDiagnostics.Trace("incomplete", _rat, null, true);
+            }
         }
 
         /// <summary>确保老鼠根节点有 Interactable（rat.prefab 自带；兜底实例化路径保险）。</summary>
@@ -1464,6 +1642,11 @@ namespace CustomStub
             public static readonly Type InteractableType = Find("Interactable");
             public static readonly Type DynamicGridLocationType = Find("DynamicGridLocation");
             public static readonly Type ServerInteractableType = Find("ServerInteractable");
+            public static readonly Type ClientInteractableType = Find("ClientInteractable");
+            public static readonly Type RigidbodyMotionType = Find("RigidbodyMotion");
+            public static readonly Type ClientWorldType = GameApi.Find("Team17.Online.Multiplayer.Messaging.ClientWorldObjectSynchroniser");
+            public static readonly Type ServerWorldType = GameApi.Find("Team17.Online.Multiplayer.Messaging.ServerWorldObjectSynchroniser");
+            public static readonly FieldInfo AllowMultipleField = Field(InteractableType, "m_allowMultipleInteracters");
             public static readonly Type PlateType = Find("Plate");
             public static readonly Type CookableContainerType = Find("CookableContainer");
             public static readonly Type CookablePreparationContainerType = Find("CookablePreparationContainer");
@@ -1482,6 +1665,7 @@ namespace CustomStub
             /// IDisposalBehaviour=IngredientDisposalBehaviour，生/切好全有）。</summary>
             public static readonly Type IngredientDisposalType = Find("IngredientDisposalBehaviour");
             public static readonly Type CarryableItemType = Find("CarryableItem");
+            public static readonly Type ServerCarryableItemType = Find("ServerCarryableItem");
             public static readonly Type TimeManagerType = Find("TimeManager");
             public static readonly Type NetworkUtilsType = Find("NetworkUtils");
 
@@ -1539,7 +1723,13 @@ namespace CustomStub
                     : null;
             });
             public static readonly Type ServerPhysicalAttachmentType = Find("ServerPhysicalAttachment");
+            public static readonly Type ClientPhysicalAttachmentType = Find("ClientPhysicalAttachment");
             public static readonly Type IParentableType = Find("IParentable");
+            public static readonly MethodInfo GetCarryPointMethod = Safe(delegate
+            {
+                return IParentableType != null
+                    ? IParentableType.GetMethod("GetAttachPoint", new[] { typeof(GameObject) }) : null;
+            });
             public static readonly MethodInfo AttachMethod = Safe(delegate
             {
                 return ServerPhysicalAttachmentType != null && IParentableType != null
@@ -1557,6 +1747,11 @@ namespace CustomStub
                 return ServerPhysicalAttachmentType != null
                     ? ServerPhysicalAttachmentType.GetMethod("IsAttached", Type.EmptyTypes)
                     : null;
+            });
+            public static readonly MethodInfo ClientIsAttachedMethod = Safe(delegate
+            {
+                return ClientPhysicalAttachmentType != null
+                    ? ClientPhysicalAttachmentType.GetMethod("IsAttached", Type.EmptyTypes) : null;
             });
 
             // —— 打鼠交互（ServerInteractable.RegisterTriggerCallbacks）——
@@ -1681,46 +1876,100 @@ namespace CustomStub
                 }
             }
 
-            public static void RatCarry(GameObject rat, GameObject item)
+            public static bool CanCarry(GameObject rat, GameObject item)
             {
+                if (rat == null || item == null || AttachMethod == null || DetachMethod == null
+                    || GetComponent(item, ServerPhysicalAttachmentType) == null
+                    || GameApi.GetEntityId(rat) == 0 || GameApi.GetEntityId(item) == 0) return false;
+                var point = GetCarryPoint(rat, item);
+                return point != null && point.childCount == 0;
+            }
+
+            public static bool CanPickUp(GameObject rat, GameObject station, GameObject item)
+            {
+                try
+                {
+                    var carrier = GetComponent(rat, ServerCarrierType);
+                    var pickup = GetComponent(item, ServerCarryableItemType) as Behaviour;
+                    if (carrier == null || pickup == null || !pickup.isActiveAndEnabled) return false;
+                    if (station == null)
+                    {
+                        var canPickup = pickup.GetType().GetMethod("CanHandlePickup");
+                        return !IsAttached(item) && canPickup != null
+                            && (bool)canPickup.Invoke(pickup, new object[] { carrier });
+                    }
+                    var serverStation = GetComponent(station, ServerAttachStationType);
+                    if (serverStation == null) return false;
+                    var inspect = ServerAttachStationType.GetMethod("InspectItem", Type.EmptyTypes);
+                    var canPick = ServerAttachStationType.GetMethod("CanHandlePickup");
+                    return inspect != null && inspect.Invoke(serverStation, null) as GameObject == item
+                        && canPick != null && (bool)canPick.Invoke(serverStation, new object[] { carrier });
+                }
+                catch (Exception ex)
+                {
+                    LogWarn("[RatHeist] pickup validation failed: " + ex.Message);
+                    return false;
+                }
+            }
+
+            private static Transform GetCarryPoint(GameObject rat, GameObject item)
+            {
+                var carrier = GetComponent(rat, PlayerAttachmentCarrierType);
+                if (carrier == null || GetCarryPointMethod == null) return null;
+                try { return GetCarryPointMethod.Invoke(carrier, new object[] { item }) as Transform; }
+                catch { return null; }
+            }
+
+            public static bool OwnsItem(GameObject rat, GameObject item)
+            {
+                if (rat == null || item == null) return false;
+                var point = GetCarryPoint(rat, item);
+                return point != null && item.transform.parent == point;
+            }
+
+            public static bool RatCarry(GameObject rat, GameObject item)
+            {
+                if (!CanCarry(rat, item) || IsAttached(item)) return false;
                 var carrier = GetComponent(rat, PlayerAttachmentCarrierType);
                 var attachment = GetComponent(item, ServerPhysicalAttachmentType);
                 if (carrier == null || attachment == null || AttachMethod == null)
                 {
                     LogWarn("[RatHeist] 挂接不可用（carrier=" + (carrier != null)
                         + "，attachment=" + (attachment != null) + "）: " + item.name);
-                    return;
+                    return false;
                 }
                 try
                 {
                     AttachMethod.Invoke(attachment, new object[] { carrier });
+                    if (OwnsItem(rat, item) && IsAttached(item)) return true;
                 }
                 catch (Exception ex)
                 {
                     LogWarn("[RatHeist] Attach 异常（物品将落地）: " + ex.Message);
                 }
+                RatDrop(rat, item);
+                return false;
             }
 
             /// <summary>物理 Detach 落地（PhysicalAttachMessage）；并静默清服务端 carrier
             /// 槽位（不发 ChefCarryMessage，避免客户端 TakeItem 崩溃）。</summary>
-            public static void RatDrop(GameObject rat, GameObject item)
+            public static bool RatDrop(GameObject rat, GameObject item)
             {
-                if (item == null)
-                    return;
-                ClearServerCarrierSlotSilent(rat, item);
-                if (!IsAttached(item))
-                    return;
+                if (!OwnsItem(rat, item)) return false;
                 var attachment = GetComponent(item, ServerPhysicalAttachmentType);
                 if (attachment == null || DetachMethod == null)
-                    return;
+                    return false;
                 try
                 {
+                    ClearServerCarrierSlotSilent(rat, item);
                     DetachMethod.Invoke(attachment, null);
+                    return !OwnsItem(rat, item) && !IsAttached(item);
                 }
                 catch (Exception ex)
                 {
                     LogWarn("[RatHeist] Detach 异常: " + ex.Message);
                 }
+                return false;
             }
 
             /// <summary>清 ServerPlayerAttachmentCarrier.m_carriedObjects 里对该物的引用，
@@ -1757,20 +2006,24 @@ namespace CustomStub
                 }
             }
 
-            /// <summary>物品是否处于挂接态（被台面/玩家/老鼠持有）。同步器缺失按
-            /// 自由态处理（地面物品）。</summary>
+            /// <summary>双端查询挂接态；缺组件/反射失败按不可偷处理。</summary>
             public static bool IsAttached(GameObject go)
             {
                 var a = GetComponent(go, ServerPhysicalAttachmentType);
-                if (a == null || IsAttachedMethod == null)
-                    return false;
+                var method = IsAttachedMethod;
+                if (a == null)
+                {
+                    a = GetComponent(go, ClientPhysicalAttachmentType);
+                    method = ClientIsAttachedMethod;
+                }
+                if (a == null) return true; // Unknown attachment state is never free loot.
                 try
                 {
-                    return (bool)IsAttachedMethod.Invoke(a, null);
+                    return method == null || (bool)method.Invoke(a, null);
                 }
                 catch (Exception)
                 {
-                    return false;
+                    return true;
                 }
             }
 
@@ -1780,8 +2033,7 @@ namespace CustomStub
                     return;
                 if (DestroyObjectMethod == null)
                 {
-                    go.SetActive(false); // 降级：仅本地隐藏
-                    LogWarn("[RatHeist] NetworkUtils.DestroyObject 反射缺失，本地隐藏物品");
+                    LogWarn("[RatHeist] NetworkUtils.DestroyObject missing; leaving item in kitchen");
                     return;
                 }
                 try

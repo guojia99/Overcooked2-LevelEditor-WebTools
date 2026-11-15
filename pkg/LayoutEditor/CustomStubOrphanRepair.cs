@@ -77,12 +77,14 @@ public static class CustomStubOrphanRepair
     [MenuItem("Layout Editor/CustomStub（关卡代码分发）/修复场景孤儿脚本引用 (Fix Orphan Script Refs)", false, 24)]
     public static void Run()
     {
+        var prepared = false;
         try
         {
             // 打开中的目标场景：先保存（防脏数据丢失）、非激活的关闭、激活的记录待修复后
             // 从磁盘重开——文本改写与 Unity 内存副本不再打架（2026-09-09：原拒绝执行，
             // 用户要求直接修复）。
             var reopenPath = PrepareOpenTargetScenes();
+            prepared = true;
 
             var guidIndex = BuildGuidIndex();
             var plans = new List<ScenePlan>();
@@ -145,6 +147,11 @@ public static class CustomStubOrphanRepair
         {
             LayoutEditorLog.LogWarning("[LayoutEditor/CustomStub] 孤儿修复 执行异常: " + ex);
             EditorUtility.DisplayDialog("孤儿脚本引用修复", "执行异常（详见日志）:\n" + ex.Message, "知道了");
+        }
+        finally
+        {
+            if (prepared)
+                LayoutEditorPseudoReload.ReloadPseudoAssetsFull();
         }
     }
 
@@ -236,16 +243,16 @@ public static class CustomStubOrphanRepair
     /// <summary>清单内已打开且脏的目标场景先保存（文本改写与内存副本不打架）。</summary>
     private static void SaveDirtyOpenTargets(List<string> targets)
     {
-        var active = EditorSceneManager.GetActiveScene();
-        if (active.IsValid() && active.isDirty && targets.Contains(active.path))
-            LayoutEditorPseudoReload.ForcePrepareForExportStrict(true);
+        var dirtyTargets = new List<UnityEngine.SceneManagement.Scene>();
         for (int i = 0; i < EditorSceneManager.sceneCount; i++)
         {
             var s = EditorSceneManager.GetSceneAt(i);
             if (!s.IsValid() || !s.isDirty || !targets.Contains(s.path))
                 continue;
-            EditorSceneManager.SaveScene(s);
+            dirtyTargets.Add(s);
         }
+        foreach (var s in dirtyTargets)
+            LayoutEditorPseudoReload.SaveScenePrepared(s, false);
     }
 
     // ============================== 数据 ==============================
@@ -307,18 +314,20 @@ public static class CustomStubOrphanRepair
         var active = EditorSceneManager.GetActiveScene();
         string reopenPath = null;
         var toClose = new List<UnityEngine.SceneManagement.Scene>();
+        var targets = new List<string>();
         for (int i = 0; i < EditorSceneManager.sceneCount; i++)
         {
             var s = EditorSceneManager.GetSceneAt(i);
             if (!s.IsValid() || !s.path.StartsWith("Assets/LevelSets/", StringComparison.Ordinal))
                 continue;
-            if (s.isDirty)
-                EditorSceneManager.SaveScene(s);
+            targets.Add(s.path);
             if (s == active)
                 reopenPath = s.path;
             else
                 toClose.Add(s);
         }
+        // Finish every pre-save before closing anything or starting text repair.
+        SaveDirtyOpenTargets(targets);
         foreach (var s in toClose)
             EditorSceneManager.CloseScene(s, true);
         return reopenPath;

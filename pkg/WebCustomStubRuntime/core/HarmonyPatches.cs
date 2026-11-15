@@ -23,6 +23,52 @@ namespace CustomStub
             StubLog.LogWarn(msg);
         }
 
+        /// <summary>CookedCompositeAssembledNode.IsMatch 空烹饪步骤守卫（2026-11-12）。
+        ///
+        /// 关卡 RecipeMatchList 只登记了本传烹饪步骤时，客户端反序列化锅/勺内容物
+        /// 得到的 CookedCompositeAssembledNode.m_cookingStep = null
+        /// （GameUtils.GetCookingStepData 查不到 DLC 步骤，如火锅 HotPot uID=20069），
+        /// 宿主 IsMatch 直接读 m_cookingStep.m_uID → NullReferenceException，
+        /// 经网络回调冒泡到 ClientIngredientContentGUI.OnOrderChanged（大勺连续
+        /// 取放火锅内容物稳定复现）。此处任一侧步骤为空即判「不匹配」并跳过原方法，
+        /// 让 UI 走正常刷新分支；步骤数据正确时完全放行（零行为变化）。</summary>
+        private static bool CookedCompositeIsMatchPrefix(object __instance, object _subject, ref bool __result)
+        {
+            try
+            {
+                if (__instance == null || _subject == null)
+                    return true;
+                var type = GameApi.CookedCompositeAssembledNodeType;
+                if (type == null || !type.IsInstanceOfType(__instance) || !type.IsInstanceOfType(_subject))
+                    return true; // 非同类节点（如 CompositeAssembledNode）：原方法自行处理
+                var field = GameApi.CookedCompositeStepField;
+                if (field == null)
+                    return true;
+                var selfStep = field.GetValue(__instance);
+                var subjStep = field.GetValue(_subject);
+                if (selfStep != null && subjStep != null)
+                    return true; // 数据正常：交给原方法
+                __result = false;
+                WarnOnce("cookedStepNull",
+                    "[CustomStub.Harmony] 内容物烹饪步骤为空（关卡未登记该 DLC 烹饪步骤），IsMatch 已按不匹配处理");
+                return false;
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("cookedStepGuard", "[CustomStub.Harmony] IsMatch 守卫异常（放行原方法）: " + ex.Message);
+                return true;
+            }
+        }
+
+        internal static System.Reflection.MethodInfo CookedCompositeIsMatchPrefixMethod
+        {
+            get
+            {
+                return typeof(HarmonyPatches).GetMethod("CookedCompositeIsMatchPrefix",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            }
+        }
+
         // ---- 快速放行（v5 性能）：这些方法被宿主「每帧×每锅具」调用。全场景没有
         // 任何生效中的 UtensilTiming（burn/overMix>0）时，首行静态字段检查直接
         // 放行原方法，不做 GetComponent/装箱——纳秒级开销。----
@@ -81,6 +127,7 @@ namespace CustomStub
 
         private static bool ServerBackpackDispenserHandlePickupPrefix(object __instance, object _carrier, object _directionXZ)
         {
+            bool owned = false;
             try
             {
                 var wb0 = WebBackpackStorage.FindForDispenser(__instance as Component);
@@ -90,18 +137,19 @@ namespace CustomStub
                     StubLog.Log("[WebBackpack] 取出前缀: 未命中背包表（原版行为）→ " + missName);
                     return true;
                 }
+                owned = wb0.IsWorn();
                 if (wb0.TryDispense(_carrier, _directionXZ))
                     return false;
-                if (wb0.IsWorn())
+                if (owned)
                     return false;
                 var compName = __instance is Component ? ((Component)__instance).name : "?";
                 StubLog.Log("[WebBackpack] 取出前缀: 未背起，放行原版 → " + compName);
             }
             catch (System.Exception ex)
             {
-                WarnOnce("wbPickup", "[CustomStub.Harmony] WebBackpack 取出前缀异常（放行原方法）: " + ex.Message);
+                WarnOnce("wbPickup", "[BackpackNet] pickup hook failed; worn=" + owned + ": " + ex.Message);
             }
-            return true;
+            return !owned;
         }
 
         /// <summary>容器组件 → WebBackpackStorage（层级无关）：先查 child 标记
@@ -128,6 +176,7 @@ namespace CustomStub
         private static bool ServerPlacementCanHandlePlacementPrefix(object __instance, object _carrier,
             ref bool __result)
         {
+            bool owned = false;
             try
             {
                 var comp = __instance as Component;
@@ -156,14 +205,16 @@ namespace CustomStub
                     WebBackpackStorage.WireServerPlacementReferences(comp.gameObject);
                     return true;
                 }
+                owned = true;
                 WebBackpackStorage.WireServerPlacementReferences(comp.gameObject);
                 __result = wb.CanHandlePlacementCarrier(_carrier);
                 return false;
             }
             catch (System.Exception ex)
             {
-                WarnOnce("wbPlaceCan", "[CustomStub.Harmony] WebBackpack 放置判定前缀异常（放行原方法）: " + ex.Message);
-                return true;
+                WarnOnce("wbPlaceCan", "[BackpackNet] placement check failed; owned=" + owned + ": " + ex.Message);
+                if (owned) __result = false;
+                return !owned;
             }
         }
 
@@ -171,26 +222,27 @@ namespace CustomStub
         /// 走统一放置入口（空盘接 / 盘装内容搬入 / 食材放入）。</summary>
         private static bool ServerPlacementHandlePlacementPrefix(object __instance, object _carrier)
         {
+            bool owned = false;
             try
             {
                 var comp = __instance as Component;
                 if (comp == null || _carrier == null)
                     return true;
-                WebBackpackStorage.WireServerPlacementReferences(comp.gameObject);
                 var wb = FindWebBackpack(comp);
                 if (wb == null)
                     return true;
                 if (!wb.IsWorn())
                     return true;
-                if (wb.TryHandlePlacementCarrier(_carrier))
-                    return false;
-                return true;
+                owned = true;
+                WebBackpackStorage.WireServerPlacementReferences(comp.gameObject);
+                wb.TryHandlePlacementCarrier(_carrier);
+                return false;
             }
             catch (System.Exception ex)
             {
-                WarnOnce("wbPlacePre", "[CustomStub.Harmony] WebBackpack 放入前缀异常: " + ex.Message);
+                WarnOnce("wbPlacePre", "[BackpackNet] placement hook failed; worn=" + owned + ": " + ex.Message);
             }
-            return true;
+            return !owned;
         }
 
         private static bool ServerPickupHandlePickupPrefix(object __instance)
@@ -1328,6 +1380,14 @@ namespace CustomStub
         /// 可移动火锅装配完，并记录发令时刻快照。</summary>
         private static void MultiplayerScanEntitiesPrefix()
         {
+            try
+            {
+                RatHeist.FlushPendingAssemblies();
+            }
+            catch (System.Exception ex)
+            {
+                WarnOnce("ratScanPrefix", "[RatNet] scan preparation failed: " + ex);
+            }
             try
             {
                 int total, assembled;

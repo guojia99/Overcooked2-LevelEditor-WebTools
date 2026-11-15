@@ -245,6 +245,7 @@ public static class LayoutEditorCustomContentApi
         ReadSetupGoPath(prefab, "SetupCustomSinkStub", "washingPart", ref dto.washingPartPath);
         ReadSetupGoPath(prefab, "SetupCustomSinkStub", "dryingPart", ref dto.dryingPartPath);
         ReadSetupOrderList(prefab, "SetupCustomTrayStub", ref dto.traySlotGuid);
+        ReadLookupSettings(prefab, entry, dto);
 
         var splitter = prefab.GetComponent("IngredientSplitter");
         if (splitter != null)
@@ -332,6 +333,574 @@ public static class LayoutEditorCustomContentApi
             var g = GuidOf(arr.GetValue(0) as UnityEngine.Object);
             if (!string.IsNullOrEmpty(g)) guid = g;
         }
+    }
+
+    private static void ReadLookupSettings(GameObject prefab, CustomContentConfigSO.Entry entry, CustomContentItemDto dto)
+    {
+        var trayType = FindType("SetupCustomTrayStub");
+        if (trayType != null)
+        {
+            var trayStub = prefab.GetComponent(trayType);
+            var slotsField = trayType.GetField("slots", BindingFlags.Public | BindingFlags.Instance);
+            var slots = trayStub != null && slotsField != null ? slotsField.GetValue(trayStub) as Array : null;
+            if (slots != null)
+            {
+                dto.traySlots = new CustomContentLookupSlotDto[slots.Length];
+                for (int i = 0; i < slots.Length; i++)
+                    dto.traySlots[i] = new CustomContentLookupSlotDto { rows = ReadLookupRows(slots.GetValue(i) as OrderToPrefabListSO) };
+                if (slots.Length > 0)
+                    dto.traySlotGuid = GuidOf(slots.GetValue(0) as UnityEngine.Object);
+            }
+        }
+
+        var prep = prefab.GetComponent<PreparationContainer>();
+        if (prep == null)
+            return;
+        var lookup = prep.m_containerRestrictions;
+        dto.lookupGuid = GuidOf(lookup);
+        dto.lookupRows = ReadLookupRows(lookup);
+        var cosmetics = prep.m_cosmeticsPrefab;
+        dto.cosmeticsPrefabGuid = GuidOf(cosmetics);
+        var cosmeticsLookup = cosmetics != null ? cosmetics.GetComponent<BurgerBunCosmeticDecisions>() : null;
+        if (cosmeticsLookup != null)
+        {
+            var field = typeof(BurgerBunCosmeticDecisions).GetField("m_prefabLookup", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field != null)
+                dto.cosmeticsLookupGuid = GuidOf(field.GetValue(cosmeticsLookup) as OrderToPrefabLookup);
+        }
+    }
+
+    private static CustomContentLookupRowDto[] ReadLookupRows(UnityEngine.Object asset)
+    {
+        var list = asset as OrderToPrefabListSO;
+        if (list != null)
+        {
+            var rows = new List<CustomContentLookupRowDto>();
+            if (list.recipes != null)
+            {
+                for (int i = 0; i < list.recipes.Length; i++)
+                {
+                    var row = new CustomContentLookupRowDto { recipeGuid = GuidOf(list.recipes[i]) };
+                    row.readOnly = !(list.recipes[i] is CustomRecipeSO) && !(list.recipes[i] is PseudoPrefabSO);
+                    if (row.readOnly) row.recipeGuid = "";
+                    if (list.models != null && i < list.models.Length) row.modelGuid = GuidOf(list.models[i]);
+                    if (list.modelSOs != null && i < list.modelSOs.Length) row.modelSoGuid = GuidOf(list.modelSOs[i]);
+                    row.amountAllowed = 1;
+                    rows.Add(row);
+                }
+            }
+            return rows.ToArray();
+        }
+
+        var lookup = asset as OrderToPrefabLookup;
+        if (lookup == null)
+            return new CustomContentLookupRowDto[0];
+        var field = typeof(OrderToPrefabLookup).GetField("m_lookupArray", BindingFlags.NonPublic | BindingFlags.Instance);
+        var entries = field != null ? field.GetValue(lookup) as OrderToPrefabLookup.ContentPrefabLookup[] : null;
+        if (entries == null)
+            return new CustomContentLookupRowDto[0];
+        var result = new List<CustomContentLookupRowDto>();
+        for (int i = 0; i < entries.Length; i++)
+        {
+            if (entries[i] == null) continue;
+            var restricted = new List<string>();
+            if (entries[i].m_restrictedContent != null)
+                for (int j = 0; j < entries[i].m_restrictedContent.Length; j++)
+                    AddGuid(restricted, entries[i].m_restrictedContent[j]);
+            result.Add(new CustomContentLookupRowDto
+            {
+                readOnly = string.IsNullOrEmpty(LookupRecipeGuid(entries[i].m_content)) || restricted.Count != (entries[i].m_restrictedContent != null ? entries[i].m_restrictedContent.Length : 0),
+                recipeGuid = LookupRecipeGuid(entries[i].m_content),
+                modelGuid = GuidOf(entries[i].m_prefab),
+                amountAllowed = entries[i].m_amountAllowed,
+                restrictedRecipeGuids = restricted.ToArray()
+            });
+        }
+        return result.ToArray();
+    }
+
+    private static void AddGuid(List<string> guids, UnityEngine.Object obj)
+    {
+        var node = obj as OrderDefinitionNode;
+        var guid = node != null ? LookupRecipeGuid(node) : GuidOf(obj);
+        if (!string.IsNullOrEmpty(guid)) guids.Add(guid);
+    }
+
+    private static string LookupRecipeGuid(OrderDefinitionNode node)
+    {
+        const string prefix = "lookup_recipe_";
+        if (node != null && node.name.StartsWith(prefix, StringComparison.Ordinal)
+            && node.name.Length >= prefix.Length + 32)
+        {
+            var guid = node.name.Substring(prefix.Length, 32);
+            var source = LoadAsset<ScriptableObject>(guid);
+            if (source is CustomRecipeSO || source is PseudoPrefabSO) return guid;
+        }
+        return "";
+    }
+
+    private static string LookupAssetPath(CustomContentConfigSO.Entry entry)
+    {
+        return Path.GetDirectoryName(entry.prefabPath).Replace("\\", "/") + "/" + entry.id + "_Lookup.asset";
+    }
+
+    private static string CosmeticsAssetPath(CustomContentConfigSO.Entry entry)
+    {
+        return Path.GetDirectoryName(entry.prefabPath).Replace("\\", "/") + "/" + entry.id + "_Cosmetics.prefab";
+    }
+
+    private sealed class CustomContentLookupPlan
+    {
+        public OrderToPrefabListSO[] trayLists;
+        public string[] traySourcePaths;
+        public string[] trayAssetPaths;
+        public List<CustomContentLookupRowDto[]> trayRows;
+        public OrderToPrefabLookup prepLookup;
+        public OrderToPrefabLookup.ContentPrefabLookup[] prepRows;
+        public GameObject cosmeticsPrefab;
+        public bool writeTray;
+        public bool writePrep;
+        public Dictionary<string, OrderDefinitionNode> nodes;
+    }
+
+    private static string ValidateLookupSettings(CustomContentEditDto dto, GameObject prefab,
+        CustomContentConfigSO.Entry entry, out CustomContentLookupPlan plan)
+    {
+        plan = null;
+        var wantsTray = dto.traySlots != null;
+        var wantsPrep = dto.lookupRows != null;
+        if (!wantsTray && !wantsPrep)
+            return null;
+        plan = new CustomContentLookupPlan();
+        plan.nodes = new Dictionary<string, OrderDefinitionNode>();
+        try
+        {
+            if (wantsPrep)
+            {
+                var err = ValidateLookupRows(dto.lookupRows, plan.nodes);
+                if (err != null) return err;
+            }
+        }
+        catch (Exception ex) { return "菜谱节点解析失败：" + ex.Message; }
+
+        if (wantsTray)
+        {
+            if (dto.traySlots.Length == 0) return "traySlots 不能为空。";
+            if (entry.kind != "tray" && !(entry.kind == "utensil" && entry.templateId == "utensil_tray"))
+                return "traySlots 仅支持 tray 或 utensil_tray。";
+            var trayType = FindType("SetupCustomTrayStub");
+            var trayStub = trayType != null ? prefab.GetComponent(trayType) : null;
+            var slotsField = trayType != null ? trayType.GetField("slots", BindingFlags.Public | BindingFlags.Instance) : null;
+            var oldSlots = trayStub != null && slotsField != null ? slotsField.GetValue(trayStub) as Array : null;
+            if (oldSlots == null || oldSlots.Length != dto.traySlots.Length)
+                return "traySlots 数量必须等于模板现有槽位数。";
+            plan.trayLists = new OrderToPrefabListSO[oldSlots.Length];
+            plan.traySourcePaths = new string[oldSlots.Length];
+            plan.trayAssetPaths = new string[oldSlots.Length];
+            plan.trayRows = new List<CustomContentLookupRowDto[]>();
+            for (int i = 0; i < oldSlots.Length; i++)
+            {
+                var oldList = oldSlots.GetValue(i) as OrderToPrefabListSO;
+                if (oldList == null)
+                    return "模板第 " + i + " 个槽位没有 OrderToPrefabListSO，拒绝更改槽位结构。";
+                var sourcePath = AssetDatabase.GetAssetPath(oldList);
+                if (string.IsNullOrEmpty(sourcePath)) return "模板槽位资产路径缺失。";
+                var ownPath = Path.GetDirectoryName(entry.prefabPath).Replace("\\", "/") + "/" + entry.id + "_Slot_" + i + ".asset";
+                var rows = dto.traySlots[i] != null ? dto.traySlots[i].rows : null;
+                if (rows == null || rows.Length == 0)
+                    return "traySlots[" + i + "].rows 不能为空。";
+                for (int j = 0; j < rows.Length; j++)
+                {
+                    var err = ValidateLookupRow(rows[j], false);
+                    if (err != null) return "traySlots[" + i + "].rows[" + j + "]: " + err;
+                    if (rows[j].amountAllowed != 1 || rows[j].restrictedRecipeGuids != null && rows[j].restrictedRecipeGuids.Length > 0)
+                        return "tray 行仅支持 amountAllowed=1 且不支持 restrictedRecipeGuids。";
+                }
+                plan.traySourcePaths[i] = sourcePath;
+                plan.trayAssetPaths[i] = ownPath;
+                plan.trayRows.Add(rows);
+            }
+            plan.writeTray = true;
+        }
+
+        if (wantsPrep)
+        {
+            if (entry.kind != "prep" && !(entry.kind == "ingredient" && entry.templateId == "ingredient_preparation"))
+                return "lookupRows 仅支持 prep 或 ingredient_preparation。";
+            var prep = prefab.GetComponent<PreparationContainer>();
+            if (prep == null)
+                return "目标 prefab 不含 PreparationContainer。";
+            if (dto.lookupRows.Length == 0)
+                return "lookupRows 不能为空。";
+            var nativeCosmetics = prep.m_cosmeticsPrefab;
+            if (nativeCosmetics == null)
+                return "PreparationContainer 缺少模板 cosmetics prefab。";
+            var cosmeticComponent = nativeCosmetics.GetComponent<BurgerBunCosmeticDecisions>();
+            if (cosmeticComponent == null)
+                return "模板 cosmetics 不含 BurgerBunCosmeticDecisions，无法安全绑定 lookup。";
+            var cosmeticLookupField = typeof(BurgerBunCosmeticDecisions).GetField("m_prefabLookup", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (cosmeticLookupField == null)
+                return "BurgerBunCosmeticDecisions.m_prefabLookup 不存在。";
+            plan.prepRows = new OrderToPrefabLookup.ContentPrefabLookup[dto.lookupRows.Length];
+            for (int i = 0; i < dto.lookupRows.Length; i++)
+            {
+                var err = ValidateLookupRow(dto.lookupRows[i], true);
+                if (err != null) return "lookupRows[" + i + "]: " + err;
+                var recipe = LoadAsset<ScriptableObject>(dto.lookupRows[i].recipeGuid);
+                var model = LoadAsset<GameObject>(dto.lookupRows[i].modelGuid);
+                if (model == null && !string.IsNullOrEmpty(dto.lookupRows[i].modelSoGuid))
+                {
+                    var modelSo = LoadAsset<PseudoPrefabSO>(dto.lookupRows[i].modelSoGuid);
+                    model = ResolveLookupModel(modelSo);
+                }
+                var node = recipe != null ? plan.nodes[dto.lookupRows[i].recipeGuid] : null;
+                if (!IsLookupPersistent(model)) return "无法加载持久化 prep 行模型：" + i;
+                if (node == null) return "无法为菜谱生成 OrderDefinitionNode：" + dto.lookupRows[i].recipeGuid;
+                plan.prepRows[i] = new OrderToPrefabLookup.ContentPrefabLookup
+                {
+                    m_content = node,
+                    m_prefab = model,
+                    m_amountAllowed = dto.lookupRows[i].amountAllowed,
+                    m_restrictedContent = ResolveRestrictedNodes(dto.lookupRows[i].restrictedRecipeGuids, plan.nodes)
+                };
+            }
+            var lookupPath = LookupAssetPath(entry);
+            plan.prepLookup = AssetDatabase.LoadAssetAtPath<OrderToPrefabLookup>(lookupPath);
+            if (plan.prepLookup == null)
+                plan.prepLookup = ScriptableObject.CreateInstance<OrderToPrefabLookup>();
+            plan.cosmeticsPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CosmeticsAssetPath(entry));
+            if (plan.cosmeticsPrefab != null && plan.cosmeticsPrefab.GetComponent<BurgerBunCosmeticDecisions>() == null)
+                return "自有 cosmetics prefab 加载或类型检查失败。";
+            plan.writePrep = true;
+        }
+        return null;
+    }
+
+    private static string ValidateLookupRow(CustomContentLookupRowDto row, bool prep)
+    {
+        if (row != null && row.readOnly) return "原生 lookup 行只读，必须显式选择可编辑菜谱来源。";
+        if (row == null || string.IsNullOrEmpty(row.recipeGuid)) return "recipeGuid 必填。";
+        var recipe = LoadAsset<ScriptableObject>(row.recipeGuid);
+        if (recipe == null || !(recipe is CustomRecipeSO) && !(recipe is PseudoPrefabSO)) return "recipeGuid 必须解析到 CustomRecipeSO 或 PseudoPrefabSO。";
+        if (row.amountAllowed < 1) return "amountAllowed 必须大于 0。";
+        if (prep && string.IsNullOrEmpty(row.modelGuid) && string.IsNullOrEmpty(row.modelSoGuid)) return "prep 行必须提供 modelGuid 或 modelSoGuid。";
+        if (!string.IsNullOrEmpty(row.modelGuid) && !IsLookupPersistent(LoadAsset<GameObject>(row.modelGuid))) return "modelGuid 无法解析到持久化 prefab。";
+        if (!string.IsNullOrEmpty(row.modelSoGuid) && LoadAsset<PseudoPrefabSO>(row.modelSoGuid) == null) return "modelSoGuid 无法解析到 PseudoPrefabSO。";
+        if (!string.IsNullOrEmpty(row.modelSoGuid))
+        {
+            var modelSo = LoadAsset<PseudoPrefabSO>(row.modelSoGuid);
+            var model = ResolveLookupModel(modelSo);
+            if (!IsLookupPersistent(model)) return "modelSo 无法解析到持久化 prefab。";
+        }
+        if (row.restrictedRecipeGuids != null)
+            for (int i = 0; i < row.restrictedRecipeGuids.Length; i++)
+                if (LoadAsset<ScriptableObject>(row.restrictedRecipeGuids[i]) == null) return "restrictedRecipeGuids 中含无效 GUID。";
+        return null;
+    }
+
+    private static bool IsLookupPersistent(UnityEngine.Object asset)
+    {
+        return asset != null && EditorUtility.IsPersistent(asset) && AssetDatabase.GetAssetPath(asset).StartsWith("Assets/", StringComparison.Ordinal)
+            && File.Exists(AssetDatabase.GetAssetPath(asset));
+    }
+
+    private static GameObject ResolveLookupModel(PseudoPrefabSO modelSo)
+    {
+        if (modelSo == null) return null;
+        var model = modelSo.asset as GameObject;
+        if (IsLookupPersistent(model)) return model;
+        var path = (modelSo.assetPath ?? "").Replace("\\", "/");
+        model = path.StartsWith("Assets/", StringComparison.Ordinal) ? AssetDatabase.LoadAssetAtPath<GameObject>(path) : null;
+        return IsLookupPersistent(model) ? model : null;
+    }
+
+    private static void AuditLookupNode(ScriptableObject node, HashSet<ScriptableObject> visited)
+    {
+        if (node == null || !visited.Add(node)) return;
+        var serialized = new SerializedObject(node);
+        var property = serialized.GetIterator();
+        while (property.Next(true))
+        {
+            if (property.propertyType != SerializedPropertyType.ObjectReference || property.propertyPath == "m_Script") continue;
+            var reference = property.objectReferenceValue;
+            if (reference == null) continue;
+            var child = reference as OrderDefinitionNode;
+            if (child != null) { AuditLookupNode(child, visited); continue; }
+            if (reference is CookingStepData || reference is PlatingStepData)
+            {
+                AuditLookupNode(reference as ScriptableObject, visited);
+                continue;
+            }
+            if (!IsLookupPersistent(reference))
+                throw new InvalidOperationException("节点引用无法持久化：" + node.name + "." + property.propertyPath + " (" + reference.name + ")");
+        }
+    }
+
+    private static string ValidateLookupRows(CustomContentLookupRowDto[] rows, Dictionary<string, OrderDefinitionNode> nodes)
+    {
+        if (rows == null) return "rows 必填。";
+        for (int i = 0; i < rows.Length; i++)
+        {
+            var err = ValidateLookupRow(rows[i], false);
+            if (err != null) return "rows[" + i + "]: " + err;
+            var guids = new List<string> { rows[i].recipeGuid };
+            if (rows[i].restrictedRecipeGuids != null) guids.AddRange(rows[i].restrictedRecipeGuids);
+            foreach (var guid in guids)
+            {
+                if (nodes.ContainsKey(guid)) continue;
+                var recipe = LoadAsset<ScriptableObject>(guid);
+                if (!(recipe is CustomRecipeSO) && !(recipe is PseudoPrefabSO))
+                    return "不支持的菜谱引用：" + guid;
+                OrderDefinitionNode node;
+                var hydrated = new Dictionary<PseudoPrefabSO, UnityEngine.Object>();
+                try
+                {
+                    HydrateLookupRecipe(recipe, hydrated, new HashSet<ScriptableObject>());
+                    node = LevelEditor.RecipeHelper.GetOrderDefinitionNode(recipe);
+                }
+                finally
+                {
+                    foreach (var pair in hydrated) pair.Key.asset = pair.Value;
+                }
+                if (node == null) return "无法解析菜谱节点：" + guid;
+                AuditLookupNode(node, new HashSet<ScriptableObject>());
+                if (AssetDatabase.Contains(node)) node = UnityEngine.Object.Instantiate(node) as OrderDefinitionNode;
+                nodes.Add(guid, node);
+            }
+        }
+        return null;
+    }
+
+    private static void HydrateLookupRecipe(ScriptableObject recipe, Dictionary<PseudoPrefabSO, UnityEngine.Object> hydrated,
+        HashSet<ScriptableObject> visited)
+    {
+        if (recipe == null || !visited.Add(recipe)) return;
+        var wrapper = recipe as PseudoPrefabSO;
+        if (wrapper != null)
+        {
+            if (wrapper.asset != null) return;
+            var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>((wrapper.assetPath ?? "").Replace("\\", "/"));
+            if (asset == null)
+            {
+                AssetBundle bundle = null;
+                foreach (var loaded in AssetBundle.GetAllLoadedAssetBundles())
+                    if (loaded.name == wrapper.bundleName) { bundle = loaded; break; }
+                if (bundle == null)
+                    bundle = AssetBundle.LoadFromFile(Path.Combine(Path.Combine(Application.streamingAssetsPath, "Windows"), wrapper.bundleName));
+                if (bundle != null) asset = bundle.LoadAsset<UnityEngine.Object>(wrapper.assetPath.Replace("\\", "/"));
+            }
+            if (asset == null) throw new InvalidOperationException("无法加载菜谱依赖：" + wrapper.assetPath);
+            hydrated.Add(wrapper, wrapper.asset);
+            wrapper.asset = asset;
+            return;
+        }
+        // Walk serialized SO references, including optional recipe implementations.
+        var serialized = new SerializedObject(recipe);
+        var property = serialized.GetIterator();
+        while (property.Next(true))
+            if (property.propertyType == SerializedPropertyType.ObjectReference)
+                HydrateLookupRecipe(property.objectReferenceValue as ScriptableObject, hydrated, visited);
+    }
+
+    private static OrderDefinitionNode[] ResolveRestrictedNodes(string[] recipeGuids, Dictionary<string, OrderDefinitionNode> resolved)
+    {
+        if (recipeGuids == null || recipeGuids.Length == 0)
+            return new OrderDefinitionNode[0];
+        var nodes = new List<OrderDefinitionNode>();
+        for (int i = 0; i < recipeGuids.Length; i++)
+        {
+            nodes.Add(resolved[recipeGuids[i]]);
+        }
+        return nodes.ToArray();
+    }
+
+    private static void ApplyLookupBindings(GameObject instance, CustomContentConfigSO.Entry entry, CustomContentLookupPlan plan)
+    {
+        if (plan == null) return;
+        if (plan.writeTray)
+        {
+            var trayType = FindType("SetupCustomTrayStub");
+            var stub = trayType != null ? instance.GetComponent(trayType) : null;
+            var field = trayType != null ? trayType.GetField("slots", BindingFlags.Public | BindingFlags.Instance) : null;
+            if (stub != null && field != null) field.SetValue(stub, plan.trayLists);
+        }
+        if (plan.writePrep)
+        {
+            var prep = instance.GetComponent<PreparationContainer>();
+            if (prep != null) prep.m_containerRestrictions = plan.prepLookup;
+            if (prep != null) prep.m_cosmeticsPrefab = plan.cosmeticsPrefab;
+        }
+    }
+
+    private static void PersistLookupAssets(CustomContentConfigSO.Entry entry, CustomContentLookupPlan plan, string setName)
+    {
+        if (plan == null) return;
+        var bundle = setName + "/" + ContentDir;
+        if (plan.writeTray)
+        {
+            for (int i = 0; i < plan.trayLists.Length; i++)
+            {
+                var list = AssetDatabase.LoadAssetAtPath<OrderToPrefabListSO>(plan.trayAssetPaths[i]);
+                if (list == null)
+                {
+                    if (!AssetDatabase.CopyAsset(plan.traySourcePaths[i], plan.trayAssetPaths[i]))
+                        throw new InvalidOperationException("创建自有槽位列表失败。");
+                    list = AssetDatabase.LoadAssetAtPath<OrderToPrefabListSO>(plan.trayAssetPaths[i]);
+                }
+                if (list == null) throw new InvalidOperationException("自有槽位列表加载失败。");
+                plan.trayLists[i] = list;
+                var rows = plan.trayRows[i];
+                var recipes = new ScriptableObject[rows.Length];
+                var models = new GameObject[rows.Length];
+                var modelSOs = new PseudoPrefabSO[rows.Length];
+                for (int j = 0; j < rows.Length; j++)
+                {
+                    recipes[j] = LoadAsset<ScriptableObject>(rows[j].recipeGuid);
+                    models[j] = LoadAsset<GameObject>(rows[j].modelGuid);
+                    modelSOs[j] = LoadAsset<PseudoPrefabSO>(rows[j].modelSoGuid);
+                }
+                list.recipes = recipes;
+                list.models = models;
+                list.modelSOs = modelSOs;
+                EditorUtility.SetDirty(list);
+                SetBundle(AssetDatabase.GetAssetPath(list), bundle);
+            }
+        }
+        if (!plan.writePrep) return;
+        if (plan.cosmeticsPrefab == null)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(entry.prefabPath);
+            var prep = prefab != null ? prefab.GetComponent<PreparationContainer>() : null;
+            var source = prep != null ? prep.m_cosmeticsPrefab : null;
+            var cosmeticsPath = CosmeticsAssetPath(entry);
+            if (source == null || !AssetDatabase.CopyAsset(AssetDatabase.GetAssetPath(source), cosmeticsPath))
+                throw new InvalidOperationException("创建自有 cosmetics prefab 失败。");
+            plan.cosmeticsPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(cosmeticsPath);
+            if (plan.cosmeticsPrefab == null) throw new InvalidOperationException("自有 cosmetics prefab 加载失败。");
+        }
+        var lookupPath = LookupAssetPath(entry);
+        if (!AssetDatabase.Contains(plan.prepLookup))
+            AssetDatabase.CreateAsset(plan.prepLookup, lookupPath);
+        // Reuse named subassets so repeated edits retain local file IDs and the lookup GUID.
+        var existingNodes = new Dictionary<string, OrderDefinitionNode>();
+        foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(lookupPath))
+        {
+            var node = asset as OrderDefinitionNode;
+            if (node != null) existingNodes[node.name] = node;
+        }
+        var persisted = new Dictionary<OrderDefinitionNode, OrderDefinitionNode>();
+        var keys = new List<string>(plan.nodes.Keys);
+        foreach (var key in keys)
+            plan.nodes[key] = PersistNode(plan.nodes[key], plan.prepLookup, "lookup_recipe_" + key, existingNodes, persisted);
+        for (int i = 0; i < plan.prepRows.Length; i++)
+        {
+            plan.prepRows[i].m_content = persisted[plan.prepRows[i].m_content];
+            var restricted = plan.prepRows[i].m_restrictedContent;
+            for (int j = 0; j < restricted.Length; j++) restricted[j] = persisted[restricted[j]];
+        }
+        plan.prepLookup.GetType().GetField("m_lookupArray", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(plan.prepLookup, plan.prepRows);
+        EditorUtility.SetDirty(plan.prepLookup);
+        AssetDatabase.SaveAssets();
+        SetBundle(lookupPath, bundle);
+
+        var cosmeticPath = CosmeticsAssetPath(entry);
+        var cosmeticInstance = PrefabUtility.InstantiatePrefab(plan.cosmeticsPrefab) as GameObject;
+        if (cosmeticInstance == null) throw new InvalidOperationException("实例化自有 cosmetics 失败。");
+        if (cosmeticInstance != null)
+        {
+            try
+            {
+                var cosmetic = cosmeticInstance.GetComponent<BurgerBunCosmeticDecisions>();
+                var field = typeof(BurgerBunCosmeticDecisions).GetField("m_prefabLookup", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (field != null) field.SetValue(cosmetic, plan.prepLookup);
+                PrefabUtility.ReplacePrefab(cosmeticInstance, plan.cosmeticsPrefab, ReplacePrefabOptions.ReplaceNameBased);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(cosmeticInstance); }
+        }
+        SetBundle(cosmeticPath, bundle);
+    }
+
+    private static OrderDefinitionNode PersistNode(OrderDefinitionNode node, OrderToPrefabLookup owner, string name,
+        Dictionary<string, OrderDefinitionNode> existing, Dictionary<OrderDefinitionNode, OrderDefinitionNode> persisted)
+    {
+        if (node == null) return null;
+        OrderDefinitionNode result;
+        if (persisted.TryGetValue(node, out result)) return result;
+        // Ingredient nodes already backed by assets remain shared and are never modified.
+        if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(node))) { persisted[node] = node; return node; }
+        if (!existing.TryGetValue(name, out result) || result.GetType() != node.GetType())
+        {
+            result = ScriptableObject.CreateInstance(node.GetType()) as OrderDefinitionNode;
+            result.name = name;
+            AssetDatabase.AddObjectToAsset(result, owner);
+        }
+        persisted[node] = result;
+        var composite = node as CompositeOrderNode;
+        if (composite != null)
+        {
+            if (composite.m_composition != null)
+                for (int i = 0; i < composite.m_composition.Length; i++) composite.m_composition[i] = PersistNode(composite.m_composition[i], owner, name + "_composition_" + i, existing, persisted);
+            if (composite.m_optional != null)
+                for (int i = 0; i < composite.m_optional.Length; i++) composite.m_optional[i] = PersistNode(composite.m_optional[i], owner, name + "_optional_" + i, existing, persisted);
+        }
+        EditorUtility.CopySerialized(node, result);
+        result.name = name;
+        var cooked = result as CookedCompositeOrderNode;
+        if (cooked != null && cooked.m_cookingStep != null && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(cooked.m_cookingStep)))
+        {
+            var stepName = "lookup_step_" + cooked.m_cookingStep.m_uID;
+            CookingStepData step = null;
+            foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(owner)))
+                if (asset is CookingStepData && asset.name == stepName
+                    && !string.IsNullOrEmpty(AssetDatabase.GetAssetPath(MonoScript.FromScriptableObject(asset as CookingStepData)))) { step = asset as CookingStepData; break; }
+            if (step == null)
+            {
+                step = ScriptableObject.CreateInstance<CookingStepData>();
+                step.name = stepName;
+                AssetDatabase.AddObjectToAsset(step, owner);
+            }
+            CopyLookupStep(cooked.m_cookingStep, step);
+            cooked.m_cookingStep = step;
+        }
+        if (result.m_platingStep != null && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(result.m_platingStep)))
+        {
+            var stepName = "lookup_plating_" + result.m_platingStep.m_uID;
+            PlatingStepData step = null;
+            foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(owner)))
+                if (asset is PlatingStepData && asset.name == stepName
+                    && !string.IsNullOrEmpty(AssetDatabase.GetAssetPath(MonoScript.FromScriptableObject(asset as PlatingStepData)))) { step = asset as PlatingStepData; break; }
+            if (step == null)
+            {
+                step = ScriptableObject.CreateInstance<PlatingStepData>();
+                step.name = stepName;
+                AssetDatabase.AddObjectToAsset(step, owner);
+            }
+            CopyLookupStep(result.m_platingStep, step);
+            result.m_platingStep = step;
+        }
+        EditorUtility.SetDirty(result);
+        return result;
+    }
+
+    private static void CopyLookupStep(ScriptableObject source, ScriptableObject target)
+    {
+        var name = target.name;
+        for (var type = source.GetType(); type != null && type != typeof(ScriptableObject); type = type.BaseType)
+            foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+                if (!field.IsInitOnly && !field.IsNotSerialized && (field.IsPublic || Attribute.IsDefined(field, typeof(SerializeField))))
+                    field.SetValue(target, field.GetValue(source));
+        target.name = name;
+        var serialized = new SerializedObject(target);
+        var property = serialized.GetIterator();
+        while (property.Next(true))
+        {
+            if (property.propertyType != SerializedPropertyType.ObjectReference) continue;
+            if (property.propertyPath == "m_Script") continue;
+            if (property.objectReferenceValue != null && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(property.objectReferenceValue)))
+                property.objectReferenceValue = null;
+        }
+        serialized.ApplyModifiedProperties();
+        EditorUtility.SetDirty(target);
     }
 
     private static string RelativePath(Transform root, Transform child)
@@ -600,6 +1169,61 @@ public static class LayoutEditorCustomContentApi
 
     public static string Update(CustomContentEditDto dto)
     {
+        if (dto == null || string.IsNullOrEmpty(dto.assetPath) || dto.assetPath.IndexOf("/" + ContentDir + "/", StringComparison.Ordinal) < 0)
+            return "缺少或无效 assetPath。";
+        if (!string.IsNullOrEmpty(dto.platingStepId) && FindPlatingStep(dto.platingStepId) == null)
+            return "未找到装盘容器：" + dto.platingStepId;
+        try
+        {
+            if (!string.IsNullOrEmpty(dto.iconBase64))
+            {
+                var icon = Convert.FromBase64String(dto.iconBase64);
+                if (icon.Length < 8 || icon[0] != 137 || icon[1] != 80 || icon[2] != 78 || icon[3] != 71
+                    || icon[4] != 13 || icon[5] != 10 || icon[6] != 26 || icon[7] != 10)
+                    return "图标必须是 PNG 格式。";
+            }
+            if (dto.modelFiles != null && dto.modelFiles.Length > 0)
+            {
+                var hasModel = false;
+                foreach (var file in dto.modelFiles)
+                {
+                    if (file == null || string.IsNullOrEmpty(file.fileName) || string.IsNullOrEmpty(file.base64)) continue;
+                    Convert.FromBase64String(file.base64);
+                    var extension = Path.GetExtension(file.fileName).ToLowerInvariant();
+                    if (extension == ".fbx" || extension == ".obj") hasModel = true;
+                }
+                if (!hasModel) return "模型文件中未找到 .fbx / .obj 主模型。";
+            }
+        }
+        catch (Exception ex) { return "上传数据预检失败：" + ex.Message; }
+        if (dto.lookupRows == null && dto.traySlots == null) return UpdateInner(dto);
+        var directory = Path.GetDirectoryName(dto.assetPath);
+        if (!Directory.Exists(directory)) return "未找到资产目录。";
+        var snapshot = new Dictionary<string, byte[]>();
+        foreach (var path in Directory.GetFiles(directory, "*", SearchOption.AllDirectories)) snapshot[path] = File.ReadAllBytes(path);
+        var configPath = Root(SetNameFromPath(dto.assetPath)) + "/Config.asset";
+        if (File.Exists(configPath)) snapshot[configPath] = File.ReadAllBytes(configPath);
+        string error;
+        try { error = UpdateInner(dto); }
+        catch (Exception ex) { error = "更新自定义内容失败：" + ex.Message; }
+        if (error == null) return null;
+        // A lookup update is local to this entry and Config; restore bytes and subasset IDs on any failure.
+        try
+        {
+            AssetDatabase.SaveAssets();
+            foreach (var path in Directory.GetFiles(directory, "*", SearchOption.AllDirectories))
+                if (!snapshot.ContainsKey(path)) File.Delete(path);
+            foreach (var pair in snapshot) File.WriteAllBytes(pair.Key, pair.Value);
+            AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+            foreach (var pair in snapshot)
+                if (!pair.Key.EndsWith(".meta", StringComparison.Ordinal)) AssetDatabase.ImportAsset(pair.Key.Replace("\\", "/"), ImportAssetOptions.ForceUpdate);
+        }
+        catch (Exception ex) { return error + "；回滚失败：" + ex.Message; }
+        return error;
+    }
+
+    private static string UpdateInner(CustomContentEditDto dto)
+    {
         if (dto == null || string.IsNullOrEmpty(dto.assetPath))
             return "缺少 assetPath。";
         if (dto.assetPath.IndexOf("/" + ContentDir + "/", StringComparison.Ordinal) < 0)
@@ -620,6 +1244,15 @@ public static class LayoutEditorCustomContentApi
         var uidErr = ValidateOrderUidNotTaken(dto.orderUid, entry.nodePath ?? "");
         if (uidErr != null)
             return uidErr;
+        CustomContentLookupPlan lookupPlan;
+        var lookupErr = ValidateLookupSettings(dto, prefab, entry, out lookupPlan);
+        if (lookupErr != null)
+            return lookupErr;
+        // Loading recipe bundles can invalidate previously loaded editor asset handles.
+        config = EnsureConfig(setName);
+        entry = config != null ? FindEntry(config, dto.assetPath) : null;
+        prefab = AssetDatabase.LoadAssetAtPath<GameObject>(dto.assetPath);
+        if (entry == null || prefab == null) return "匹配表保存后无法重新加载自定义内容。";
         // 自愈：旧版「显式切片关联」创建的可加工食材漏建 OrderNode（nodePath 为空）——编辑保存时
         // 补建一个独立 OrderNode 并把 prefab 接线，避免只能删除重建。
         var healedNode = false;
@@ -693,6 +1326,19 @@ public static class LayoutEditorCustomContentApi
                 var tErr = ApplyModelTransform(entry, dto);
                 if (tErr != null)
                     return tErr;
+            }
+            PersistLookupAssets(entry, lookupPlan, setName);
+            if (lookupPlan != null)
+            {
+                prefab = AssetDatabase.LoadAssetAtPath<GameObject>(dto.assetPath);
+                var boundInstance = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+                if (boundInstance == null) throw new InvalidOperationException("实例化匹配表目标失败。");
+                try
+                {
+                    ApplyLookupBindings(boundInstance, entry, lookupPlan);
+                    PrefabUtility.ReplacePrefab(boundInstance, prefab, ReplacePrefabOptions.ReplaceNameBased);
+                }
+                finally { UnityEngine.Object.DestroyImmediate(boundInstance); }
             }
             EditorUtility.SetDirty(config);
         // SaveIcon/SaveModel 会回填 entry.iconPath 等字段（entry 是嵌套序列化对象，须显式标脏 config）。
@@ -1479,10 +2125,12 @@ public static class LayoutEditorCustomContentApi
         var so = new SerializedObject(comp);
         var p = so.FindProperty(fieldName);
         if (p == null) return;
-        p.arraySize = 1;
         var path = AssetDatabase.GUIDToAssetPath(guid);
-        p.GetArrayElementAtIndex(0).objectReferenceValue =
-            string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<OrderToPrefabListSO>(path);
+        var list = string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<OrderToPrefabListSO>(path);
+        if (!IsLookupPersistent(list)) throw new InvalidOperationException("槽位 GUID 无法解析到持久化 OrderToPrefabListSO。");
+        if (p.arraySize > 0 && p.GetArrayElementAtIndex(0).objectReferenceValue == list) return;
+        if (p.arraySize == 0) p.arraySize = 1;
+        for (int i = 0; i < p.arraySize; i++) p.GetArrayElementAtIndex(i).objectReferenceValue = list;
         so.ApplyModifiedProperties();
     }
 
@@ -1557,6 +2205,11 @@ public static class LayoutEditorCustomContentApi
         for (int i = 0; i < asms.Length; i++)
         {
             t = asms[i].GetType(name);
+            if (t != null) return t;
+        }
+        for (int i = 0; i < asms.Length; i++)
+        {
+            t = asms[i].GetType("LevelEditorStub." + name);
             if (t != null) return t;
         }
         return null;

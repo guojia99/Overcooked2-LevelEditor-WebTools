@@ -2161,30 +2161,24 @@ public class LayoutEditorHttpServer
         if (levelSet != null && levelInfo != null)
             LayoutEditorCustomIngredients.SyncLevelInfo(levelSet, levelInfo);
 
-        error = SceneLayoutApplier.Apply(doc, snap, syncWalkable, only);
+        try
+        {
+            error = SceneLayoutApplier.Apply(doc, snap, syncWalkable, only, delegate
+            {
+                CompleteSceneWriteBack(doc, levelSet, levelInfo);
+            });
+        }
+        catch
+        {
+            LayoutEditorLayoutMigrations.DiscardPending();
+            LayoutEditorWriteBackHistory.Abort();
+            LayoutEditorPseudoReload.TryRestoreWritePreview();
+            throw;
+        }
         if (!string.IsNullOrEmpty(error))
         {
             LayoutEditorWriteBackHistory.Abort();
             return null;
-        }
-
-        if (levelSet != null && levelInfo != null)
-        {
-            LayoutEditorAllIngredientsFill.AutoFillIngredients(levelInfo);
-            LayoutEditorAllIngredientsFill.FillAllAudioDirectorySOs(levelInfo);
-            LayoutEditorCatalogApi.SyncCookingStepsFromSelectedRecipes(levelInfo);
-            LayoutEditorCatalogApi.SyncWebBackpackOptionalItems(levelInfo, doc);
-            LayoutEditorCustomIngredients.EnsureWebDependencies(levelSet, levelInfo, true);
-            // commonW6 去本地化：EnsureWebDependencies 只加 commonW6 本体；这里再补
-            // wrapper/ SO 指向的游戏 bundle（bundle163/167/428…）。
-            var activeScene = EditorSceneManager.GetActiveScene();
-            if (activeScene.IsValid()
-                && string.Equals(activeScene.path, doc.sceneAssetPath,
-                    StringComparison.OrdinalIgnoreCase))
-                LayoutEditorCommonW6Dependencies.SyncForScene(activeScene, levelInfo);
-            LayoutEditorLevelAdminApi.MergeAudioDependencies(levelInfo);
-            EditorUtility.SetDirty(levelInfo);
-            AssetDatabase.SaveAssets();
         }
 
         if (levelSet != null && CustomStubWriteBackCheck != null)
@@ -2199,6 +2193,32 @@ public class LayoutEditorHttpServer
             ok = true,
             warnings = LayoutEditorLog.DrainApplyWarnings(),
         };
+    }
+
+    private static void CompleteSceneWriteBack(LayoutDocumentDto doc, string levelSet, LevelInfoSO levelInfo)
+    {
+        if (levelSet != null && levelInfo != null)
+        {
+            LayoutEditorAllIngredientsFill.AutoFillIngredients(levelInfo);
+            LayoutEditorAllIngredientsFill.FillAllAudioDirectorySOs(levelInfo);
+            LayoutEditorCatalogApi.SyncCookingStepsFromSelectedRecipes(levelInfo);
+            LayoutEditorCatalogApi.SyncWebBackpackOptionalItems(levelInfo, doc);
+            // 火锅大锅：按当前菜谱重建 allowedIngredientSOs（叶食材 + 生/熟 permutations）。
+            // 必须在 Apply 之后：ApplyStub 会用前端 DTO 覆盖该数组；改的是场景对象，
+            // 由 Applier 在全部补全完成后统一 Prepare / Save / Reload。
+            LayoutEditorHotPotFill.EnsureHotPotIngredients(levelInfo);
+            LayoutEditorCustomIngredients.EnsureWebDependencies(levelSet, levelInfo, true);
+            // commonW6 去本地化：EnsureWebDependencies 只加 commonW6 本体；这里再补
+            // wrapper/ SO 指向的游戏 bundle（bundle163/167/428…）。
+            var activeScene = EditorSceneManager.GetActiveScene();
+            if (activeScene.IsValid()
+                && string.Equals(activeScene.path, doc.sceneAssetPath,
+                    StringComparison.OrdinalIgnoreCase))
+                LayoutEditorCommonW6Dependencies.SyncForScene(activeScene, levelInfo);
+            LayoutEditorLevelAdminApi.MergeAudioDependencies(levelInfo);
+            EditorUtility.SetDirty(levelInfo);
+        }
+
     }
 
     private static string HandleMcpRpc(string body)

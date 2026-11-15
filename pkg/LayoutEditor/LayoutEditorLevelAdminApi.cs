@@ -1136,8 +1136,7 @@ public static class LayoutEditorLevelAdminApi
                 EditorUtility.SetDirty(stub);
             }
             var newScene = EditorSceneManager.GetActiveScene();
-            EditorSceneManager.MarkSceneDirty(newScene);
-            EditorSceneManager.SaveScene(newScene);
+            LayoutEditorPseudoReload.SaveScenePrepared(newScene, false);
             if (!string.IsNullOrEmpty(prevActive) && File.Exists(AbsPath(prevActive)))
                 EditorSceneManager.OpenScene(prevActive);
             SetAssetBundleName(scenePath, setName + "/" + sceneName);
@@ -2184,6 +2183,9 @@ public static class LayoutEditorLevelAdminApi
         var offX = c0.x - pivot.x;
         var offZ = c0.z - pivot.z;
 
+        ForcePrepareForBuilding();
+        if (t == null)
+            return "KillPlane 位于临时预览中，无法持久化边界。";
         Undo.RecordObject(t, "KillPlane bounds");
         t.localScale = new Vector3(t.localScale.x * kx, t.localScale.y, t.localScale.z * kz);
 
@@ -2196,9 +2198,7 @@ public static class LayoutEditorLevelAdminApi
 
         EditorUtility.SetDirty(t);
         // Persist with the canonical workflow: Prepare (strip temp objects) -> Save -> Reload (restore UI).
-        ForcePrepareForBuilding();
-        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-        EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+        LayoutEditorPseudoReload.SaveScenePrepared(EditorSceneManager.GetActiveScene(), false);
         // 写回历史：SaveScene 后、Reload 前取语义快照（覆盖 layout 的 after，
         // 携带 layout+killplane 累计变化；无进行中记录时为 no-op）。
         LayoutEditorWriteBackHistory.SupplySemanticAfter(sceneAssetPath);
@@ -2242,14 +2242,7 @@ public static class LayoutEditorLevelAdminApi
 
     private static void ForcePrepareForBuilding()
     {
-        var mgr = UnityEngine.Object.FindObjectOfType<LevelEditor.PseudoPrefabManager>();
-        if (mgr == null)
-            return;
-        if (!mgr.prepareForBuilding)
-        {
-            mgr.prepareForBuilding = true;
-            mgr.DeInit();
-        }
+        LayoutEditorPseudoReload.PrepareSceneForWrite(EditorSceneManager.GetActiveScene(), true);
     }
 
     private static string FindFallbackScene(string setName, string excludePath)
@@ -3470,12 +3463,12 @@ public static class LayoutEditorLevelAdminApi
         if (!AssetFolderExists(recipesDir))
         {
             AssetDatabase.CreateFolder(setDir, CustomRecipesDir);
-            var importer = AssetImporter.GetAtPath(recipesDir);
-            if (importer != null)
-            {
-                importer.SetAssetBundleNameAndVariant(setName + "/custom_recipes", "");
-                importer.SaveAndReimport();
-            }
+        }
+        var importer = AssetImporter.GetAtPath(recipesDir);
+        if (importer != null && string.IsNullOrEmpty(importer.assetBundleName))
+        {
+            importer.SetAssetBundleNameAndVariant(setName + "/custom_recipes", "");
+            importer.SaveAndReimport();
         }
 
         var config = AssetDatabase.LoadAssetAtPath<CustomRecipeConfigSO>(configPath);

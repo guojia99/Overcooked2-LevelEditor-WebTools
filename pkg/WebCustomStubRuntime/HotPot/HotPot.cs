@@ -126,6 +126,7 @@ namespace CustomStub
             s_wokCosmetics.Clear();
             s_drivenProgress.Clear();
             s_visualAppliedProgress.Clear();
+            s_embersOn.Clear();
             s_nextSliceAt = -1f;
             s_cacheSlice = 0;
             s_hasPots = false;
@@ -445,6 +446,7 @@ namespace CustomStub
             AlertWhenCooked();
             ApplyClientVisualFallback();
             ClearStalePotVisuals();
+            TickAudioFallback();
         }
 
         /// <summary>锅底火焰 Enter/Exit + 客户端「锅在灶台上」标志，由 StubTicker 每 ~15 帧调用。</summary>
@@ -982,6 +984,80 @@ namespace CustomStub
             for (int i = 0; i < dead.Count; i++)
                 s_cookedState.Remove(dead[i]);
         }
+
+        // ---- Web 火锅灶台循环音兜底（2026-11-12）----
+        // 真机上 DLC04 灶台的 Embers 循环音由宿主 ClientCookingRegion 驱动（它的
+        // OnEnableChanged 在 region.enabled 翻转时 StartAudio/StopAudio）。该组件是
+        // 网络同步器，只有实体扫描把材质化后的 child 纳入才会挂载；custom 伪 prefab
+        // 的 child 是运行时 Instantiate 的，存在漏挂可能 → 全程静音。这里按与烹饪
+        // 完全相同的门控直接驱动；【只要任一宿主 ClientCookingRegion 存在就整段跳过】，
+        // 保证永不双播。锅的 DLC_04_Flames 由 ClientWokEffectsCosmeticDecisions 自身
+        // 在 EnterCookingRegion 内播放（HotPot.KeepWokFlameOn 已驱动该入口），无需兜底。
+        private static readonly HashSet<UnityEngine.Object> s_embersOn = new HashSet<UnityEngine.Object>();
+        private static bool s_audioLoopFailLogged;
+        private static bool s_loggedAudioFallback;
+
+        private static void TickAudioFallback()
+        {
+            if (GameApi.StartAudioMethod == null || GameApi.StopAudioMethod == null)
+                return;
+            if (!HasClientRegion())
+                DriveBurnerAudio();
+        }
+
+        private static bool HasClientRegion()
+        {
+            if (GameApi.ClientCookingRegionType == null)
+                return false;
+            for (int i = 0; i < s_cachedRegions.Length; i++)
+            {
+                var r = s_cachedRegions[i];
+                if (r != null && r.GetComponent(GameApi.ClientCookingRegionType) != null)
+                    return true;
+            }
+            return false;
+        }
+
+        private static void DriveBurnerAudio()
+        {
+            if (GameApi.Dlc04EmbersTag == null)
+                return;
+            for (int i = 0; i < s_cachedRegions.Length; i++)
+            {
+                var region = s_cachedRegions[i] as Behaviour;
+                if (region == null)
+                    continue;
+                bool on = region.enabled && IsRegionHeating(i);
+                bool started = s_embersOn.Contains(region);
+                if (on == started)
+                    continue;
+                try
+                {
+                    if (on)
+                    {
+                        GameApi.StartAudioMethod.Invoke(null,
+                            new object[] { GameApi.Dlc04EmbersTag, region, region.gameObject.layer });
+                        s_embersOn.Add(region);
+                    }
+                    else
+                    {
+                        GameApi.StopAudioMethod.Invoke(null,
+                            new object[] { GameApi.Dlc04EmbersTag, region });
+                        s_embersOn.Remove(region);
+                    }
+                    if (!s_loggedAudioFallback)
+                    {
+                        s_loggedAudioFallback = true;
+                        StubLog.Log("[HotPot] 灶台循环音兜底已接管（宿主 ClientCookingRegion 缺失）: " + region.name);
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    WarnOnce(ref s_audioLoopFailLogged, "[HotPot] 灶台循环音驱动失败: " + ex.Message);
+                }
+            }
+        }
+
 
         /// <summary>锅根（含可移动火锅 wrapper / 载具）是否落在某个启用 CookingRegion 的
         /// 触发区内（XZ 判定，用碰撞体中心而非 transform 原点——锅体碰撞中心在自身

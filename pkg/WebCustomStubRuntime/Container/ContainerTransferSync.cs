@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using HarmonyLib;
 using UnityEngine;
 
 namespace CustomStub
@@ -12,6 +13,79 @@ namespace CustomStub
     internal static class ContainerTransferSync
     {
         private static readonly HashSet<string> s_warnedOnce = new HashSet<string>();
+        private const string UpstreamOwner = "dev.gua.overcooked.diylevel";
+        private const string UpstreamTransfer = "ServerPreparationContainer_TransferToContainer_Patch";
+        private static int s_transferOwner = -1;
+        private static int s_transferSamples;
+
+        internal static void LogTransferPatchState()
+        {
+            try { HasUpstreamTransferPrefix(); }
+            catch (Exception ex)
+            {
+                try { WarnOnce("prepPatchInfo", "[ContainerTransfer] 补丁归属读取失败，转移时重试: " + ex); }
+                catch { /* Diagnostics must not interrupt patch installation. */ }
+            }
+        }
+
+        private static bool HasUpstreamTransferPrefix()
+        {
+            var target = GameApi.ServerPrepTransferMethod;
+            if (target == null)
+                throw new InvalidOperationException("ServerPreparationContainer.TransferToContainer 反射目标缺失");
+            // HarmonyX 会执行全部 prefix，return false 只跳过原方法体。
+            // 每次读实际补丁表，兼容上游后装/卸载，不缓存接管结论。
+            var info = Harmony.GetPatchInfo(target);
+            bool upstream = false;
+            if (info != null)
+            {
+                foreach (var patch in info.Prefixes)
+                {
+                    var method = patch.PatchMethod;
+                    if (patch.owner == UpstreamOwner && method != null
+                        && method.DeclaringType != null
+                        && method.DeclaringType.FullName == "OC2DIYLevel.Patch"
+                        && method.Name == UpstreamTransfer)
+                        upstream = true;
+                }
+            }
+            int owner = upstream ? 1 : 0;
+            if (s_transferOwner != owner)
+            {
+                s_transferOwner = owner;
+                s_transferSamples = 0;
+                try
+                {
+                    StubLog.Log("[ContainerTransfer] 单写守卫 r25: ServerPreparationContainer.TransferToContainer"
+                        + " 写入归属=" + (upstream ? "OC2DIYLevel（WebRuntime 让行，不合并/不销毁）"
+                            : "WebRuntime 兜底（未发现上游等价 prefix）")
+                        + " prefixes=" + (info != null ? info.Prefixes.Count : 0));
+                    if (StubLog.Verbose && info != null)
+                    {
+                        foreach (var patch in info.Prefixes)
+                        {
+                            var method = patch.PatchMethod;
+                            StubLog.Dbg("[ContainerTransfer] prefix owner=" + patch.owner
+                                + " method=" + (method != null && method.DeclaringType != null
+                                    ? method.DeclaringType.FullName + "." + method.Name : "<unknown>")
+                                + " priority=" + patch.priority);
+                        }
+                    }
+                }
+                catch { /* Logging must not change transfer ownership. */ }
+            }
+            return upstream;
+        }
+
+        private static string TransferContext(object source, object target, bool dontRemove)
+        {
+            var from = source as Component;
+            var to = target as Component;
+            return " f=" + Time.frameCount
+                + " src=" + (from != null ? from.name + "#" + from.GetInstanceID() : "<null>")
+                + " dst=" + (to != null ? to.name + "#" + to.GetInstanceID() : "<null>")
+                + " dontRemove=" + dontRemove;
+        }
 
         private static void WarnOnce(string key, string msg)
         {
@@ -124,8 +198,26 @@ namespace CustomStub
 
         internal static bool ServerPrepTransferPrefix(object __instance, object _carrier, object _container, bool _dontRemove)
         {
+            bool mutationStarted = false;
+            string stage = "ownership";
             try
             {
+                // 在读取源组件前让行：上游可能已执行并销毁了源食材。
+                bool upstream = HasUpstreamTransferPrefix();
+                try
+                {
+                    if (StubLog.Verbose && s_transferSamples < 8)
+                    {
+                        s_transferSamples++;
+                        StubLog.Dbg("[ContainerTransfer] 转移样本 " + s_transferSamples + "/8"
+                            + " action=" + (upstream ? "yield-upstream" : "runtime-check")
+                            + TransferContext(__instance, _container, _dontRemove));
+                    }
+                }
+                catch { /* A destroyed source or logging failure must not affect the decision. */ }
+                if (upstream)
+                    return true;
+                stage = "prepare";
                 if (!IsMixableOrCookableTarget(_container))
                     return true;
                 var comp = __instance as Component;
@@ -145,15 +237,26 @@ namespace CustomStub
                 object assembled = GameApi.IngredientAssembledNodeCtor.Invoke(new object[] { orderNode });
                 if (_dontRemove && GameApi.AssembledSimplifyMethod != null)
                     assembled = GameApi.AssembledSimplifyMethod.Invoke(assembled, null);
+                // Invoke 可能写入后才抛异常；从这里起绝不再放行原方法二次转移。
+                stage = "combine";
+                mutationStarted = true;
                 GameApi.AssembledCombineMethod.Invoke(null, new object[] { assembled, _container, _dontRemove });
+                stage = "destroy-carried";
                 if (!_dontRemove && GameApi.CarrierDestroyCarriedMethod != null)
                     GameApi.CarrierDestroyCarriedMethod.Invoke(_carrier, null);
                 return false;
             }
             catch (Exception ex)
             {
-                WarnOnce("prepXfer", "[CustomStub] ServerPreparationContainer.Transfer 前缀异常（放行原方法）: " + ex.Message);
-                return true;
+                try
+                {
+                    WarnOnce("prepXfer:" + stage, "[ContainerTransfer] 转移异常 stage=" + stage
+                        + " mutationStarted=" + mutationStarted
+                        + " original=" + (mutationStarted ? "blocked（防重复写入）" : "allowed")
+                        + TransferContext(__instance, _container, _dontRemove) + ": " + ex);
+                }
+                catch { /* Preserve the no-replay decision even if diagnostics fail. */ }
+                return !mutationStarted;
             }
         }
 

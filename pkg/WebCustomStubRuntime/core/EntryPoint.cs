@@ -528,6 +528,9 @@ namespace CustomStub
                 EnsureHighlightIntegrityPatches();
                 EnsurePlatePortionPatches();
                 EnsurePseudoPrefabDispenserSetupPatches();
+                // 锅/勺内容物空烹饪步骤守卫（2026-11-12）：宿主 CookedCompositeAssembledNode.IsMatch
+                // 对 m_cookingStep=null 无防护（DLC 烹饪步骤未登记时必触发），无条件安装。
+                EnsureCookedStepGuardPatch();
                 RecipeWidgetTileFollowInstaller.Install();
                 // 屏幕点探针（2026-11-08 真机排障，仅 Verbose）：原生
                 // "Screen position out of view frustum" 类错误无托管堆栈——
@@ -696,6 +699,7 @@ namespace CustomStub
                 ok += PatchPair(harmony, GameApi.ServerPrepHandlePlacementMethod,
                     null, HarmonyPatches.ServerPrepHandlePlacementPostfixMethod, ref skip);
                 s_containerTransferPatched = ok > 0;
+                ContainerTransferSync.LogTransferPatchState();
                 if (ok > 0)
                     StubLog.Log("[CustomStub] 容器转移补丁: 已装 " + ok + " 个（盘子/手持料 → 锅碗，含备餐容器 2+ 食材）");
             }
@@ -973,6 +977,49 @@ namespace CustomStub
 
         private static bool s_webBackpackPatched;
         private static bool s_webBackpackPatchFailed;
+
+        private static bool s_cookedStepGuardPatched;
+        private static bool s_cookedStepGuardFailed;
+
+        /// <summary>锅/勺内容物空烹饪步骤守卫（2026-11-12）：宿主
+        /// CookedCompositeAssembledNode.IsMatch 对 m_cookingStep=null 无防护，
+        /// DLC 烹饪步骤（火锅 HotPot uID=20069 等）未登记时客户端反序列化必得 null
+        /// → IsMatch 空引用（大勺连续取放火锅内容物实证）。守卫只拦截空步骤，
+        /// 数据正常时零影响。无条件安装（任何锅具/夹心内容物都可能触发）。</summary>
+        internal static void EnsureCookedStepGuardPatch()
+        {
+            if (s_cookedStepGuardPatched || s_cookedStepGuardFailed)
+                return;
+            try
+            {
+                var type = GameApi.CookedCompositeAssembledNodeType;
+                var subject = GameApi.AssembledDefinitionNodeType;
+                var target = type != null && subject != null
+                    ? type.GetMethod("IsMatch",
+                        System.Reflection.BindingFlags.Instance
+                        | System.Reflection.BindingFlags.NonPublic
+                        | System.Reflection.BindingFlags.Public,
+                        null, new[] { subject }, null)
+                    : null;
+                var prefix = HarmonyPatches.CookedCompositeIsMatchPrefixMethod;
+                if (target == null || prefix == null)
+                {
+                    s_cookedStepGuardFailed = true;
+                    StubLog.LogWarn("[CustomStub] 内容物烹饪步骤守卫未安装（找不到 CookedCompositeAssembledNode.IsMatch，type="
+                        + (type != null) + " subject=" + (subject != null) + " prefix=" + (prefix != null) + "）");
+                    return;
+                }
+                var harmony = new Harmony(HarmonyId + ".cookedstep");
+                harmony.Patch(target, new HarmonyMethod(prefix));
+                s_cookedStepGuardPatched = true;
+                StubLog.Dbg("[CustomStub] 内容物烹饪步骤守卫已安装");
+            }
+            catch (Exception ex)
+            {
+                s_cookedStepGuardFailed = true;
+                StubLog.LogWarn("[CustomStub] 内容物烹饪步骤守卫安装失败: " + ex.Message);
+            }
+        }
 
         internal static void EnsureWebBackpackPatches()
         {
@@ -2124,6 +2171,7 @@ namespace CustomStub
             }
             else if (prefabTag.StartsWith(RatHeist.TagPrefix, StringComparison.Ordinal))
             {
+                EnsurePotAssemblyPatches();
                 if (HasStubComponentNamed(go, "RatHeist"))
                     return;
                 // 老鼠状态机在 Start 协程里自行等待同步，OnEnable 无副作用，无需

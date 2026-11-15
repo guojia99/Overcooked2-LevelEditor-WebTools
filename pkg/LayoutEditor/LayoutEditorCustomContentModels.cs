@@ -54,6 +54,10 @@ public class CustomContentItemDto
     public string dryingPartPath;
     public string cleanPlateStackGuid;
     public string traySlotGuid;
+    public CustomContentLookupSlotDto[] traySlots;
+    public CustomContentLookupRowDto[] lookupRows;
+    public string lookupGuid;
+    public string cosmeticsLookupGuid;
     public string inputRecipeGuid;
     public string outputPrefabGuid;
     public string splitAudioTag;
@@ -87,6 +91,23 @@ public class CustomContentListRequest
 }
 
 [Serializable]
+public class CustomContentLookupRowDto
+{
+    public bool readOnly;
+    public string recipeGuid;
+    public string modelGuid;
+    public string modelSoGuid;
+    public int amountAllowed;
+    public string[] restrictedRecipeGuids;
+}
+
+[Serializable]
+public class CustomContentLookupSlotDto
+{
+    public CustomContentLookupRowDto[] rows;
+}
+
+[Serializable]
 public class CustomContentEditDto
 {
     public string setName;
@@ -114,6 +135,8 @@ public class CustomContentEditDto
     public string dryingPartPath;
     public string cleanPlateStackGuid;
     public string traySlotGuid;
+    public CustomContentLookupSlotDto[] traySlots;
+    public CustomContentLookupRowDto[] lookupRows;
     public string progressUiGuid;
     public string fireEffectGuid;
     public string chopPfxGuid;

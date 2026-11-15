@@ -54,7 +54,7 @@ public static class LayoutEditorManagerRigRepair
             };
             foreach (var stub in UnityEngine.Object.FindObjectsOfType<PseudoPrefabManagerStub>())
             {
-                if (stub == null) continue;
+                if (stub == null || stub.gameObject.scene != scene) continue;
                 addRoot(stub.transform);
                 var fields = stub.GetType().GetFields(System.Reflection.BindingFlags.Public |
                     System.Reflection.BindingFlags.Instance);
@@ -109,13 +109,13 @@ public static class LayoutEditorManagerRigRepair
                 "这些组件会让 Play 进图即 NRE（初始化中断）。\n\n立即删除并保存场景？", "删除并保存", "取消");
             if (!ok) return;
 
+            LayoutEditorPseudoReload.PrepareSceneForWrite(scene, false);
             foreach (var c in doomed)
             {
                 if (c != null)
                     Undo.DestroyObjectImmediate(c);
             }
-            EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene);
+            LayoutEditorPseudoReload.SaveScenePrepared(scene, true);
             LayoutEditorLog.Log("[LayoutEditor/SceneRepair] 管理器环境修复 已删除 " + doomed.Count +
                 " 个错挂组件并保存场景 " + scene.name + "（可 Ctrl+Z 撤销，撤销后请勿保存）");
             EditorUtility.DisplayDialog("管理器环境修复",

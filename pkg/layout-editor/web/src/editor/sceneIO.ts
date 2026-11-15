@@ -646,7 +646,7 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
           : only === "decor"
             ? "仅装饰，未修改物品/地板/背景"
             : "仅地板/背景，未修改物品/装饰";
-      setStatus(applySaveStatus(`写回成功（${scopeNote}）：请在 Unity Ctrl+S 保存场景`, warnings));
+      setStatus(applySaveStatus(`写回成功（${scopeNote}）：场景已自动落盘并重新加载`, warnings));
       S.history.clear();
       clearDirty();
       await loadScene(S.scenePath);
@@ -750,12 +750,14 @@ export async function saveToUnity(only: SaveScope = ""): Promise<boolean> {
       try {
         await setKillPlaneBounds(S.scenePath, bounds.cx, bounds.cz, bounds.sx, bounds.sz);
       } catch (kpErr) {
-        setStatus(`坠落区配置失败：${(kpErr as Error).message}`, false);
+        markDirty();
+        setStatus(`部分写回失败：布局已写回，但坠落区配置失败（${(kpErr as Error).message}）；修改仍标记为未保存，请修复后重试`, false);
+        return false;
       }
     }
     const walkNote = S.autoWalkable ? "，可行走碰撞体已按地板重新生成（地板间空隙=坠落坑）" : "";
-    const killNote = bounds && S.autoKillPlane ? "：坠落区已覆盖整关，" : "：";
-    setStatus(applySaveStatus(`写回成功${walkNote}${killNote}请在 Unity Ctrl+S 保存场景`, warnings));
+    const killNote = bounds && S.autoKillPlane ? "，坠落区已覆盖整关" : "";
+    setStatus(applySaveStatus(`写回成功${walkNote}${killNote}；场景已自动落盘并重新加载`, warnings));
     S.history.clear();
     clearDirty();
     await loadScene(S.scenePath);

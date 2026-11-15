@@ -1,0 +1,121 @@
+using System;
+using System.Reflection;
+using BackpackProtocol;
+using BitStream;
+using Team17.Online.Multiplayer.Messaging;
+using System.Collections.Generic;
+
+internal static class NativeWire
+{
+    private sealed class OccupiedPayload : Serialisable
+    {
+        public void Serialise(BitStreamWriter writer) { }
+        public bool Deserialise(BitStreamReader reader) { return true; }
+    }
+    private static void Check(bool condition, string text)
+    {
+        if (!condition) throw new Exception(text);
+        Console.WriteLine("PASS native " + text);
+    }
+    private static bool Decode(byte[] buffer, out Message message)
+    {
+        var reader = new BitStreamReader(buffer);
+        message = new Message();
+        bool nativeResult = message.Deserialise(reader);
+        object[] args = { message, reader, nativeResult };
+        typeof(Bootstrap).GetMethod("ReadExtension", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, args);
+        return (bool)args[2];
+    }
+    public static void Main()
+    {
+        // Uses the shipped Assembly-CSharp BitStreamWriter/Reader/Message implementations.
+        // Explicit postfix invocation isolates payload correctness from Harmony/Unity runtime.
+        typeof(Bootstrap).GetField("s_active", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, true);
+        var payload = new DirectoryMessage { Kind = 1, Nonce = 0xfedcba98, Ready = true, Digest = new string('A', 64) };
+        var ctor = typeof(BitStreamWriter).GetConstructors()[0];
+        var bytes = Activator.CreateInstance(ctor.GetParameters()[0].ParameterType, new object[] { 1024 });
+        var writer = (BitStreamWriter)ctor.Invoke(new[] { bytes });
+        var buffer = (byte[])bytes.GetType().GetField("_items").GetValue(bytes);
+        new Message { Type = (MessageType)Bootstrap.MessageId, Payload = payload }.Serialise(writer);
+        Message decoded;
+        Check(Decode(buffer, out decoded), "extension accepted after vanilla eight-bit COUNT rejection");
+        var restored = (DirectoryMessage)decoded.Payload;
+        Check(restored.Kind == payload.Kind && restored.Nonce == payload.Nonce && restored.Ready && restored.Digest == payload.Digest,
+            "dedicated message round-trip preserves nonce, ready and SHA256 digest");
+        buffer[1] ^= 1;
+        Check(!Decode(buffer, out decoded), "incorrect protocol magic rejected");
+        buffer[1] ^= 1;
+        typeof(Bootstrap).GetField("s_active", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, false);
+        Check(!Decode(buffer, out decoded), "inactive scene rejects extension without payload dispatch");
+        Check((int)MessageType.COUNT == 42 && Bootstrap.MessageId > (int)MessageType.COUNT && Bootstrap.MessageId <= 255,
+            "dedicated ID outside native enum, within eight-bit wire field");
+        SerialisationRegistry<MessageType>.Initialise(EqualityComparer<MessageType>.Default);
+        var occupied = new OccupiedPayload();
+        SerialisationRegistry<MessageType>.RegisterMessageType((MessageType)Bootstrap.MessageId, occupied);
+        bool conflict = false;
+        try { typeof(Bootstrap).GetMethod("Install", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null); }
+        catch (TargetInvocationException ex) { conflict = ex.InnerException is InvalidOperationException; }
+        Check(conflict && ReferenceEquals(SerialisationRegistry<MessageType>.s_MessageTypes[(MessageType)Bootstrap.MessageId], occupied),
+            "occupied extension ID fails before patching and preserves existing serializer");
+        var agreement = new DirectoryAgreement();
+        agreement.Configure(123, "hash", true);
+        var peers = new[] { "one", "two" };
+        Check(!agreement.AllReady(peers, 1), "no generation permission before every actual peer replied");
+        Check(!agreement.Reply("one", new DirectoryMessage { Kind = 1, Nonce = 123, Ready = true, Digest = "wrong" }, true, 1),
+            "single-peer mismatching hash rejected");
+        agreement.Reply("one", new DirectoryMessage { Kind = 1, Nonce = 123, Ready = true, Digest = "hash" }, true, 1);
+        Check(!agreement.AllReady(peers, 1), "one missing peer keeps host disabled");
+        Check(!agreement.Reply("two", new DirectoryMessage { Kind = 1, Nonce = 122, Ready = true, Digest = "hash" }, true, 1),
+            "stale nonce cannot acknowledge current scene");
+        agreement.Reply("two", new DirectoryMessage { Kind = 1, Nonce = 123, Ready = true, Digest = "hash" }, true, 1);
+        Check(agreement.AllReady(peers, 1), "matching ready responses from all peers allow generation");
+        Check(!agreement.AllReady(peers, 5), "expired response disables generation");
+        agreement.Configure(124, "hash", true);
+        Check(!agreement.AllReady(peers, 1), "roster or scene nonce change clears previous leases");
+        Check(!agreement.Reply("one", new DirectoryMessage { Kind = 1, Nonce = 124, Ready = true, Digest = "hash" }, false, 1),
+            "unconnected sender cannot acknowledge");
+        agreement.Configure(124, "hash", false);
+        Check(!agreement.AllReady(new string[0], 1), "local directory failure never grants permission");
+        var protocol = typeof(Bootstrap);
+        var hidden = BindingFlags.Static | BindingFlags.NonPublic;
+        protocol.GetField("s_active", hidden).SetValue(null, true);
+        protocol.GetField("s_ready", hidden).SetValue(null, true);
+        protocol.GetField("s_confirmedDigest", hidden).SetValue(null, "confirmed");
+        protocol.GetField("s_accepted", hidden).SetValue(null, false);
+        Check(Bootstrap.CanDecode("confirmed"), "in-flight confirmed directory remains decodable after initiation lease expiry");
+        Check(!Bootstrap.CanDecode("different"), "confirmed decoder refuses a different directory");
+        protocol.GetField("s_ready", hidden).SetValue(null, false);
+        Check(!Bootstrap.CanDecode("confirmed"), "invalid local table blocks decoding independent of past confirmation");
+        protocol.GetField("s_ready", hidden).SetValue(null, true);
+        protocol.GetField("s_confirmedDigest", hidden).SetValue(null, null);
+        Check(!Bootstrap.CanDecode("confirmed"), "unconfirmed scene cannot decode a page spawn");
+        var gameAssembly = typeof(ClientSynchronisationReceiver).Assembly;
+        Check(typeof(ClientSynchronisationReceiver).GetMethod("OnSpawnEntityMessageReceived") != null
+            && typeof(ClientSynchronisationReceiver).GetMethod("OnSpawnPhysicalAttachmentMessageReceived") != null,
+            "whole native normal/physical Spawn receiver guard targets exist");
+        var controlsType = gameAssembly.GetType("ServerPlayerControlsImpl_Default", true);
+        var carrierType = gameAssembly.GetType("ServerPlayerAttachmentCarrier", true);
+        Check(controlsType.GetMethod("OnChefEvent", BindingFlags.NonPublic | BindingFlags.Instance) != null
+            && controlsType.GetMethod("Update_Impl") != null
+            && controlsType.GetMethod("ReceiveThrowEvent") != null
+            && controlsType.GetMethod("ReceivePlaceEvent") != null,
+            "actual server interaction dispatcher and automatic carry/catch boundaries exist");
+        Check(carrierType.GetMethod("TakeItem", Type.EmptyTypes) != null
+            && carrierType.GetMethod("CarryItem", new[] { typeof(UnityEngine.GameObject) }) != null
+            && gameAssembly.GetType("ServerPhysicalAttachment", true).GetMethod("IsAttached") != null,
+            "native carrier and physical-attachment confirmation boundaries exist");
+        var rawAssembly = System.IO.File.ReadAllBytes(typeof(Bootstrap).Assembly.Location);
+        var loadedFromBytes = Assembly.Load(rawAssembly);
+        Check(loadedFromBytes.GetName().Name == "BackpackProtocol"
+            && loadedFromBytes.GetType("BackpackProtocol.Bootstrap", false) != null,
+            "staged protocol DLL bytes load independently of Loader entrypoint");
+        foreach (var type in typeof(LevelEditorStub.PseudoPrefabSO).Assembly.GetTypes())
+            if (type.Name.IndexOf("Reference", StringComparison.OrdinalIgnoreCase) >= 0 || type.Name == "PseudoPrefabStub")
+            {
+                Console.WriteLine("SOURCE CONTRACT " + type.FullName);
+                foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public))
+                    Console.WriteLine("  " + field.FieldType.FullName + " " + field.Name);
+            }
+        Console.WriteLine("Native wire checks passed; Harmony detour and transport need Unity dual-peer validation.");
+    }
+}

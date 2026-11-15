@@ -1,0 +1,658 @@
+// Minimal deterministic host for executing the actual directory and slot code without Unity.
+// This tests transactions/ordering; it does not emulate Unity entity scanning or network transport.
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
+using UnityEngine;
+
+namespace UnityEngine
+{
+    public class Component
+    {
+        public GameObject gameObject;
+        public Transform transform { get { return gameObject.transform; } }
+        public string name { get { return gameObject.name; } }
+        public Component GetComponent(Type type) { return gameObject.GetComponent(type); }
+    }
+    public class MonoBehaviour : Component { }
+    public enum SendMessageOptions { DontRequireReceiver }
+    public static class Time { public static float realtimeSinceStartup = 1; }
+    public class Transform : Component
+    {
+        public Transform parent;
+        public List<Transform> Children = new List<Transform>();
+        public int childCount { get { return Children.Count; } }
+        public Transform GetChild(int index) { return Children[index]; }
+        public void SetParent(Transform value, bool worldPositionStays)
+        {
+            parent = value;
+            value.Children.Add(this);
+        }
+        public int GetSiblingIndex() { return parent != null ? parent.Children.IndexOf(this) : SceneManagement.Scene.Roots.IndexOf(gameObject); }
+    }
+    public class GameObject
+    {
+        public string name;
+        public bool activeSelf = true;
+        public Transform transform;
+        public object Node;
+        public void SetActive(bool value) { activeSelf = value; }
+        private readonly List<Component> _components = new List<Component>();
+        public GameObject(string value)
+        {
+            name = value;
+            transform = AddComponent<Transform>();
+        }
+        public T AddComponent<T>() where T : Component, new() { return (T)AddComponent(typeof(T)); }
+        public Component AddComponent(Type type)
+        {
+            var component = (Component)Activator.CreateInstance(type);
+            component.gameObject = this;
+            _components.Add(component);
+            return component;
+        }
+        public Component GetComponent(Type type) { return _components.Find(delegate(Component c) { return type.IsInstanceOfType(c); }); }
+        public T GetComponent<T>() where T : Component { return GetComponent(typeof(T)) as T; }
+        public T[] GetComponents<T>() where T : Component
+        {
+            var result = new List<T>();
+            foreach (var c in _components) if (c is T) result.Add((T)c);
+            return result.ToArray();
+        }
+        public T[] GetComponentsInChildren<T>(bool inactive) where T : Component
+        {
+            var result = new List<T>(GetComponents<T>());
+            foreach (var child in transform.Children) result.AddRange(child.gameObject.GetComponentsInChildren<T>(inactive));
+            return result.ToArray();
+        }
+        public void SendMessage(string value, SendMessageOptions options) { }
+    }
+}
+namespace UnityEngine.SceneManagement
+{
+    public class Scene
+    {
+        public string name = "test";
+        public static List<GameObject> Roots = new List<GameObject>();
+        public GameObject[] GetRootGameObjects() { return Roots.ToArray(); }
+    }
+    public static class SceneManager { public static Scene GetActiveScene() { return new Scene(); } }
+}
+namespace HarmonyLib
+{
+    public enum HarmonyPatchType { All }
+    public class HarmonyMethod { public HarmonyMethod(MethodInfo method) { } }
+    public class Harmony
+    {
+        public Harmony(string id) { }
+        public void Patch(MethodBase target, HarmonyMethod prefix, HarmonyMethod postfix) { }
+        public void Patch(MethodBase target, HarmonyMethod prefix) { }
+        public void Unpatch(MethodBase target, HarmonyPatchType type, string id) { }
+    }
+}
+namespace LevelEditorStub
+{
+    public class PseudoPrefabSO
+    {
+        public string bundleName;
+        public string assetPath;
+        public object asset;
+    }
+    public class PseudoPrefabStub : UnityEngine.Component { public PseudoPrefabSO pseudoPrefabSO; }
+}
+namespace CustomStub
+{
+    internal class ObjectContainer : Component { }
+    internal class CookableIngredient : Component { public IngredientOrderNode m_ingredientOrderNode; }
+    internal class IngredientOrderNode
+    {
+        public int Uid;
+        public object Convert() { return new IngredientNode { Uid = Uid }; }
+    }
+    internal class CookingHandler : Component
+    {
+        public object m_cookingType;
+        public float m_cookingtime = 10f;
+    }
+    internal class ServerCookingHandler : Component
+    {
+        public float Progress;
+        public float GetCookingProgress() { return Progress; }
+    }
+    internal enum CookingProgress { Raw, Cooked, Burnt }
+    internal class CookedCompositeAssembledNode
+    {
+        public object[] m_composition = new object[0];
+        public object[] m_optional = new object[0];
+        public object m_cookingStep = null;
+        public CookingProgress m_progress = CookingProgress.Raw;
+        public float? m_recordedProgress;
+    }
+    internal class ServerCookableIngredient : Component
+    {
+        public object Node;
+        public object GetOrderComposition() { return Node; }
+    }
+    internal class ServerPhysicalAttachment : Component
+    {
+        public bool Attached;
+        public bool IsAttached() { return Attached; }
+        public void Attach() { Attached = true; }
+    }
+    internal static class WebBackpackProtocolLoader { internal static Type FindOrLoad() { return typeof(PollProbe); } }
+    internal static class PollProbe
+    {
+        public static int Calls;
+        public static void Reset() { Calls = 0; }
+        public static bool Poll(string digest, bool ready) { Calls++; return ready; }
+        public static bool CanDecode(string digest) { return true; }
+    }
+    internal class IngredientNode
+    {
+        public int Uid;
+        public override bool Equals(object other) { return other is IngredientNode && ((IngredientNode)other).Uid == Uid; }
+        public override int GetHashCode() { return Uid; }
+    }
+    internal class ChoppedNode { }
+    internal class WorkableItem : Component { public GameObject m_nextPrefab; }
+    internal class PickupItemSpawner : Component { public GameObject m_itemPrefab; }
+    internal class ServerWorkableItem : Component
+    {
+        private int m_progress;
+        private int m_subProgress;
+        public int Broadcasts;
+        private void SynchroniseClientState() { Broadcasts++; }
+        public void Set(int progress, int sub) { m_progress = progress; m_subProgress = sub; }
+        public bool Matches(int progress, int sub) { return progress == m_progress && sub == m_subProgress; }
+    }
+    internal class SpawnableEntityCollection : Component
+    {
+        private List<GameObject> m_spawnables = new List<GameObject>();
+        public void Register(GameObject prefab) { if (!m_spawnables.Contains(prefab)) m_spawnables.Add(prefab); }
+        public int GetSpawnableID(GameObject prefab) { return m_spawnables.IndexOf(prefab); }
+        public int Count { get { return m_spawnables.Count; } }
+    }
+    internal class FakeContainer
+    {
+        private List<object> m_contents = new List<object>();
+        public int GetContentsCount() { return m_contents.Count; }
+        public object GetContentsElement(int index) { return m_contents[index]; }
+        public void AddIngredient(object node) { m_contents.Add(node); }
+    }
+    internal class Carrier : Component
+    {
+        private GameObject _item;
+        public bool Refuse;
+        public bool ThrowAfterCarry;
+        public bool FailTake;
+        public bool FailInspect;
+        public bool FailDestroyBeforeClear;
+        public bool FailBeforeAttach;
+        public GameObject InspectCarriedItem()
+        {
+            if (FailInspect) throw new Exception("inspection failed");
+            return _item;
+        }
+        public void CarryItem(GameObject item)
+        {
+            if (Refuse) return;
+            _item = item;
+            if (FailBeforeAttach) throw new InvalidOperationException("before attach");
+            item.GetComponent<ServerPhysicalAttachment>().Attached = true;
+            if (ThrowAfterCarry) throw new InvalidOperationException("after attach");
+        }
+        public GameObject TakeItem()
+        {
+            if (FailTake) throw new Exception("detach failed before hand slot clear");
+            var item = _item;
+            if (item != null) item.GetComponent<ServerPhysicalAttachment>().Attached = false;
+            _item = null; return item;
+        }
+        public void DestroyCarriedItem()
+        {
+            // Actual ServerPlayerAttachmentCarrier ordering: hide/broadcast BEFORE hand clear.
+            _item.SetActive(false);
+            if (FailDestroyBeforeClear) throw new Exception("broadcast failed before hand clear");
+            _item = null;
+        }
+    }
+    internal class FakeBundle { public object LoadAsset(string path) { return null; } }
+    internal class ServerPlayerAttachmentCarrier : Carrier { }
+    internal class ServerPlayerControlsImpl_Default : Component
+    {
+        private object m_iCarrier;
+        public void Bind(object carrier) { m_iCarrier = carrier; }
+        public void ReceiveThrowEvent() { }
+        public object Bound { get { return m_iCarrier; } }
+    }
+    internal static class FakeNetwork
+    {
+        public static GameObject LastSpawn;
+        public static bool FailAfterSpawn;
+        public static bool FailDestroyBroadcast;
+        public static GameObject Spawn(GameObject owner, GameObject prefab)
+        {
+            var table = owner.GetComponent<SpawnableEntityCollection>();
+            if (table == null || table.GetSpawnableID(prefab) < 0 || table.GetSpawnableID(prefab) > 15)
+                throw new InvalidOperationException("unregistered/truncated ID");
+            LastSpawn = Clone(prefab);
+            typeof(WebBackpackPrefabDirectory).GetMethod("AfterSpawn", BindingFlags.Static | BindingFlags.NonPublic)
+                .Invoke(null, new object[] { table, LastSpawn, prefab });
+            return FailAfterSpawn ? null : LastSpawn;
+        }
+        public static GameObject Clone(GameObject prefab)
+        {
+            var item = new GameObject(prefab.name + "(Clone)");
+            item.AddComponent<ServerPhysicalAttachment>();
+            item.Node = prefab.Node;
+            var cookable = prefab.GetComponent<CookableIngredient>();
+            if (cookable != null)
+            {
+                item.AddComponent<CookableIngredient>().m_ingredientOrderNode = cookable.m_ingredientOrderNode;
+                var config = item.AddComponent<CookingHandler>();
+                config.m_cookingType = prefab.GetComponent<CookingHandler>().m_cookingType;
+                config.m_cookingtime = prefab.GetComponent<CookingHandler>().m_cookingtime;
+                item.AddComponent<ServerCookingHandler>();
+            }
+            var workable = prefab.GetComponent<WorkableItem>();
+            if (workable != null)
+            {
+                item.AddComponent<WorkableItem>().m_nextPrefab = workable.m_nextPrefab;
+                item.AddComponent<ServerWorkableItem>();
+            }
+            typeof(WebBackpackPrefabDirectory).GetMethod("AfterSpawn", BindingFlags.Static | BindingFlags.NonPublic)
+                .Invoke(null, new object[] { new SpawnableEntityCollection { gameObject = item }, item, prefab });
+            return item;
+        }
+        public static void DestroyObjectsRecursive(GameObject item)
+        {
+            item.activeSelf = false;
+            if (FailDestroyBroadcast) throw new Exception("destroy broadcast failed after hide");
+        }
+    }
+    internal static class StubLog { public static void Log(string text) { } }
+    internal static class GameApi
+    {
+        public static Type PickupItemSpawnerType = typeof(PickupItemSpawner);
+        public static Type WorkableItemType = typeof(WorkableItem);
+        public static Type ServerIngredientContainerType = typeof(FakeContainer);
+        public static Type NetworkUtilsType = typeof(FakeNetwork);
+        public static Type AssembledDefinitionNodeType = typeof(object);
+        public static MethodInfo NodeConvertMethod = typeof(IngredientOrderNode).GetMethod("Convert");
+        public static FieldInfo PickupItemPrefabField = typeof(PickupItemSpawner).GetField("m_itemPrefab");
+        public static FieldInfo WorkableNextPrefabField = typeof(WorkableItem).GetField("m_nextPrefab");
+        public static MethodInfo IngredientGetContentsCountMethod = typeof(FakeContainer).GetMethod("GetContentsCount");
+        public static MethodInfo IngredientGetContentsElementMethod = typeof(FakeContainer).GetMethod("GetContentsElement");
+        public static MethodInfo IngredientAddIngredientMethod = typeof(FakeContainer).GetMethod("AddIngredient");
+        public static MethodInfo CarrierDestroyCarriedMethod = typeof(Carrier).GetMethod("DestroyCarriedItem");
+        public static Type Find(string name) { return typeof(GameApi).Assembly.GetType("CustomStub." + name); }
+        public static object GetPseudoPrefabDirectAsset(LevelEditorStub.PseudoPrefabSO so) { return so.asset; }
+        public static FakeBundle GetAssetBundle(string name) { return null; }
+        public static bool IsServerMachine() { return true; }
+        public static bool Session;
+        public static int SessionReads;
+        public static bool IsInSession() { SessionReads++; return Session; }
+        public static MethodInfo IsInSessionMethod = typeof(GameApi).GetMethod("IsInSession");
+        public static System.Collections.IDictionary Entities = new System.Collections.Hashtable();
+        public static System.Collections.IDictionary GetEntitiesByGameObject() { return Entities; }
+        public static int GetEntityId(GameObject item) { return 1; }
+        public static bool RegisterSpawnable(GameObject owner, GameObject prefab)
+        {
+            var collection = owner.GetComponent<SpawnableEntityCollection>() ?? owner.AddComponent<SpawnableEntityCollection>();
+            collection.Register(prefab);
+            return true;
+        }
+        public static GameObject ServerSpawnPrefab(GameObject owner, GameObject prefab) { return FakeNetwork.Spawn(owner, prefab); }
+    }
+    public partial class WebBackpackStorage : MonoBehaviour
+    {
+        private GameObject _backpackGo;
+        public LevelEditorStub.PseudoPrefabSO[] m_initialFillSOs = new LevelEditorStub.PseudoPrefabSO[0];
+        private FakeContainer _container = new FakeContainer();
+        internal static WebBackpackStorage FindForDispenser(Component value) { return null; }
+        private object GetServerIngredient() { return _container; }
+        private static object NodeFromPrefab(GameObject prefab) { return prefab.Node; }
+        internal static object NodeFromWorkableSource(GameObject prefab) { return null; }
+        internal static bool IsBareHandNodeType(object node) { return node is IngredientNode; }
+        private static object InvokeObj(object obj, MethodInfo method, params object[] args) { return method.Invoke(obj, args); }
+        private static int InvokeInt(object obj, MethodInfo method) { return (int)method.Invoke(obj, null); }
+        private static GameObject InspectCarried(object carrier) { return ((Carrier)carrier).InspectCarriedItem(); }
+        private static void InformOfInternalChange(object container) { }
+
+        private static void Assert(bool value, string message)
+        {
+            if (!value) throw new Exception(message);
+            Console.WriteLine("PASS " + message);
+        }
+        private static WebBackpackStorage Setup(int count, bool missingSource)
+        {
+            WebBackpackPrefabDirectory.Reset();
+            // Activate capture without installing detours in this managed-only test host.
+            typeof(WebBackpackPrefabDirectory).GetField("s_active", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, true);
+            UnityEngine.SceneManagement.Scene.Roots.Clear();
+            var root = new GameObject("scene");
+            UnityEngine.SceneManagement.Scene.Roots.Add(root);
+            var backpack = new GameObject("backpack");
+            backpack.transform.SetParent(root.transform, false);
+            var storage = backpack.AddComponent<WebBackpackStorage>();
+            storage._backpackGo = backpack;
+            backpack.AddComponent<WebBackpackChild>().storage = storage;
+            var nativeDefault = new GameObject("nativeDefault");
+            backpack.AddComponent<SpawnableEntityCollection>().Register(nativeDefault);
+            if (missingSource)
+                storage.m_initialFillSOs = new[] { new LevelEditorStub.PseudoPrefabSO { bundleName = "missing", assetPath = "source" } };
+            for (int i = 0; i < count; i++)
+            {
+                var source = new GameObject("source" + i.ToString("D3"));
+                source.transform.SetParent(root.transform, false);
+                var raw = new GameObject("raw" + i);
+                var chopped = new GameObject("chopped" + i);
+                raw.Node = new IngredientNode { Uid = i };
+                chopped.Node = new ChoppedNode();
+                raw.AddComponent<WorkableItem>().m_nextPrefab = chopped;
+                source.AddComponent<PickupItemSpawner>().m_itemPrefab = raw;
+            }
+            storage.PreparePrefabDirectoryBeforeScan();
+            return storage;
+        }
+        public static void Main()
+        {
+            var storage = Setup(10, false); // 20 distinct prefabs across two populated pages.
+            Assert(storage._directoryReady && storage._directory.Verify(storage._backpackGo), "20 prefabs registered without four-bit overflow");
+            Assert(storage._backpackGo.GetComponent<SpawnableEntityCollection>().Count == 1,
+                "preexisting native default table is preserved without reorder or appended candidates");
+            var source = UnityEngine.SceneManagement.Scene.Roots[0].transform.Children[1].gameObject.GetComponent<PickupItemSpawner>().m_itemPrefab;
+            var rawEntry = storage._directory.Find(source);
+            var chopped = source.GetComponent<WorkableItem>().m_nextPrefab;
+            var choppedEntry = storage._directory.Find(chopped);
+            Assert(rawEntry != null && choppedEntry != null && rawEntry.Key != choppedEntry.Key && choppedEntry.Storable,
+                "raw and chopped with shared semantics retain separate exact identities");
+            var rawItem = FakeNetwork.Clone(source);
+            rawItem.GetComponent<ServerWorkableItem>().Set(3, 2);
+            StoredSlot rawSlot;
+            Assert(storage.TryCaptureSlot(rawItem, rawItem.Node, out rawSlot) && rawSlot.Progress == 3 && rawSlot.SubProgress == 2,
+                "partial chopping progress captured");
+            rawItem.GetComponent<ServerWorkableItem>().Set(16, 2);
+            StoredSlot outOfRange;
+            Assert(!storage.TryCaptureSlot(rawItem, rawItem.Node, out outOfRange), "progress outside native four-bit range rejected");
+            rawItem.GetComponent<ServerWorkableItem>().Set(3, 2);
+            StoredSlot choppedSlot;
+            var choppedItem = FakeNetwork.Clone(chopped);
+            Assert(storage.TryCaptureSlot(choppedItem, choppedItem.Node, out choppedSlot), "chopped composite physical item accepted");
+            Assert(storage.AppendSlot(storage._container, rawSlot) && storage.AppendSlot(storage._container, choppedSlot), "mixed-form FIFO appended");
+            var carrier = new Carrier();
+            FakeNetwork.FailAfterSpawn = true;
+            Assert(!storage.TryDispenseStoredSlot(storage._container, rawSlot.Node, 2, carrier)
+                && storage._container.GetContentsCount() == 2 && !FakeNetwork.LastSpawn.activeSelf,
+                "native spawn callback failure rolls back already-created instance");
+            FakeNetwork.FailAfterSpawn = false;
+            carrier.Refuse = true;
+            Assert(!storage.TryDispenseStoredSlot(storage._container, rawSlot.Node, 2, carrier)
+                && storage._container.GetContentsCount() == 2 && !FakeNetwork.LastSpawn.activeSelf,
+                "carry refusal preserves inventory and destroys rollback spawn");
+            carrier.Refuse = false;
+            carrier.ThrowAfterCarry = true;
+            carrier.FailTake = true;
+            carrier.FailBeforeAttach = true;
+            Assert(!storage.TryDispenseStoredSlot(storage._container, rawSlot.Node, 2, carrier)
+                && storage.InventoryLocked && FakeNetwork.LastSpawn.activeSelf && carrier.InspectCarriedItem() == FakeNetwork.LastSpawn
+                && storage._container.GetContentsCount() == 2,
+                "rollback detach failure retains visible held item and locked inventory");
+            carrier.FailTake = false;
+            Time.realtimeSinceStartup += 1f;
+            storage.RetryPendingTransfer();
+            Assert(!storage.InventoryLocked && carrier.InspectCarriedItem() == null && !FakeNetwork.LastSpawn.activeSelf,
+                "pending rollback retries exact hand clear then destroys detached spawn");
+            carrier.FailBeforeAttach = false;
+            Assert(storage.TryDispenseStoredSlot(storage._container, rawSlot.Node, 2, carrier)
+                && carrier.InspectCarriedItem() == FakeNetwork.LastSpawn && storage._container.GetContentsCount() == 1
+                && !storage.InventoryLocked && FakeNetwork.LastSpawn.activeSelf,
+                "exception after physical attachment commits FIFO without rollback or duplicate");
+            Assert(carrier.InspectCarriedItem().GetComponent<ServerWorkableItem>().Matches(3, 2),
+                "half-completed carry commit retains restored progress");
+            carrier.TakeItem();
+            storage._container = new FakeContainer();
+            storage._slots.Clear();
+            storage.AppendSlot(storage._container, rawSlot);
+            storage.AppendSlot(storage._container, choppedSlot);
+            carrier.ThrowAfterCarry = false;
+            Assert(storage.TryDispenseStoredSlot(storage._container, rawSlot.Node, 2, carrier)
+                && carrier.InspectCarriedItem().GetComponent<ServerWorkableItem>().Matches(3, 2)
+                && carrier.InspectCarriedItem().GetComponent<ServerWorkableItem>().Broadcasts == 1,
+                "restored progress broadcast before confirmed FIFO debit");
+            carrier.TakeItem();
+            Assert(storage.TryDispenseStoredSlot(storage._container, choppedSlot.Node, 1, carrier)
+                && carrier.InspectCarriedItem().name == chopped.name + "(Clone)", "chopped form survives following raw slot");
+            StoredSlot unknown;
+            Assert(!storage.TryCaptureSlot(new GameObject(source.name), source.Node, out unknown), "unknown same-name source rejected without guessing");
+            Assert(storage.AllowPrefabRegistration(rawEntry.Spawner, source)
+                && !storage.AllowPrefabRegistration(choppedEntry.Spawner, new GameObject("late")), "late source cannot shift frozen IDs");
+            var dedup = new WebBackpackPrefabDirectory();
+            var add = typeof(WebBackpackPrefabDirectory).GetMethod("AddChain", BindingFlags.Instance | BindingFlags.NonPublic);
+            add.Invoke(dedup, new object[] { source, "z" });
+            add.Invoke(dedup, new object[] { source, "a" });
+            Assert(dedup.Find(source).Key == "a/stage/000", "duplicate prefab identity independent of visitation order");
+            var simple = new WebBackpackPrefabDirectory();
+            var rawOnly = new GameObject("only");
+            rawOnly.Node = new IngredientNode { Uid = 987 };
+            add.Invoke(simple, new object[] { rawOnly, "one" });
+            typeof(WebBackpackPrefabDirectory).GetField("_entries", BindingFlags.Instance | BindingFlags.NonPublic)
+                .GetValue(simple).GetType().GetMethod("Add").Invoke(
+                    typeof(WebBackpackPrefabDirectory).GetField("_entries", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(simple),
+                    new object[] { simple.Find(rawOnly) });
+            Assert(simple.FindUniqueSimpleNode(new IngredientNode { Uid = 987 }) == simple.Find(rawOnly),
+                "node-only simple ingredient initial fill binds unique physical source");
+            var authoredWrapper = new GameObject("authored");
+            var authoredChild = new GameObject("physical");
+            authoredChild.transform.SetParent(authoredWrapper.transform, false);
+            authoredChild.AddComponent<WorkableItem>();
+            var authoredStub = authoredWrapper.AddComponent<LevelEditorStub.PseudoPrefabStub>();
+            authoredStub.pseudoPrefabSO = new LevelEditorStub.PseudoPrefabSO { asset = source };
+            Assert(WebBackpackAuthoredSource.Source(authoredStub) == authoredStub.pseudoPrefabSO
+                && WebBackpackAuthoredSource.ExactChild(authoredWrapper) == authoredChild,
+                "shared LevelEditorStub source identifies unique preplaced child without host type");
+            authoredWrapper.transform.SetParent(UnityEngine.SceneManagement.Scene.Roots[0].transform, false);
+            var preplacedDirectory = new WebBackpackPrefabDirectory();
+            Assert(preplacedDirectory.BuildAndRegister(storage._backpackGo)
+                && preplacedDirectory.FindItem(authoredChild).Prefab == source,
+                "full pre-scan directory maps authored physical child to exact prefab");
+            var extraPhysical = new GameObject("second");
+            extraPhysical.transform.SetParent(authoredWrapper.transform, false);
+            extraPhysical.AddComponent<WorkableItem>();
+            Assert(WebBackpackAuthoredSource.ExactChild(authoredWrapper) == null, "ambiguous preplaced children are not guessed");
+            var simpleField = typeof(WebBackpackPrefabDirectory).GetField("_entries", BindingFlags.Instance | BindingFlags.NonPublic);
+            var simpleEntries = (List<WebBackpackPrefabDirectory.Entry>)simpleField.GetValue(simple);
+            var otherPrefab = new GameObject("other same ingredient");
+            otherPrefab.Node = new IngredientNode { Uid = 987 };
+            simpleEntries.Add(new WebBackpackPrefabDirectory.Entry { Prefab = otherPrefab, Storable = true });
+            Assert(simple.FindUniqueSimpleNode(new IngredientNode { Uid = 987 }) == null,
+                "ambiguous node-only physical ingredient initial fill refuses guessing");
+            var storeCarrier = new Carrier { FailDestroyBeforeClear = true, FailTake = true };
+            var storeItem = FakeNetwork.Clone(source);
+            storeCarrier.CarryItem(storeItem);
+            storage.BeginStoreTransfer(storeCarrier, storeItem, rawSlot);
+            Assert(storage.InventoryLocked && !storeItem.activeSelf && storeCarrier.InspectCarriedItem() == storeItem,
+                "hidden-before-clear destroy failure does not commit or unlock inventory");
+            storeCarrier.FailInspect = true;
+            Time.realtimeSinceStartup += 1;
+            storage.RetryPendingTransfer();
+            Assert(storage.InventoryLocked, "inspection exception never counts as empty-hand confirmation");
+            storeCarrier.FailInspect = false;
+            storeCarrier.FailTake = false;
+            FakeNetwork.FailDestroyBroadcast = true;
+            Time.realtimeSinceStartup += 1;
+            storage.RetryPendingTransfer();
+            Assert(storage.InventoryLocked && storeCarrier.InspectCarriedItem() == null,
+                "hand clear alone cannot commit when destruction broadcast still fails");
+            FakeNetwork.FailDestroyBroadcast = false;
+            Time.realtimeSinceStartup += 1;
+            storage.RetryPendingTransfer();
+            Assert(!storage.InventoryLocked && storeCarrier.InspectCarriedItem() == null,
+                "hidden store recovery confirms empty hand before unlocking");
+            var isolate = typeof(WebBackpackRecoveryIsolation).GetMethod("Allow", BindingFlags.Static | BindingFlags.NonPublic);
+            var reservedItem = FakeNetwork.Clone(source);
+            var reservedCarrier = new Carrier { FailTake = true };
+            reservedCarrier.CarryItem(reservedItem);
+            storage.BeginRollbackTransfer(reservedCarrier, reservedItem);
+            Assert(storage.InventoryLocked && reservedItem.activeSelf, "uncommittable recovery item remains visible and isolated");
+            Assert(!(bool)isolate.Invoke(null, new object[] { reservedCarrier, new object[0], typeof(Carrier).GetMethod("TakeItem") }),
+                "native take of reserved held item is blocked outside recovery");
+            var controlsObject = new GameObject("chef");
+            var controls = controlsObject.AddComponent<ServerPlayerControlsImpl_Default>();
+            controls.Bind(reservedCarrier);
+            Assert(!(bool)isolate.Invoke(null, new object[] { controls, new object[0], typeof(ServerPlayerControlsImpl_Default).GetMethod("ReceiveThrowEvent") }),
+                "reserved carrier native interaction dispatcher cannot place throw or transfer");
+            var bystander = new Carrier();
+            var other = FakeNetwork.Clone(source);
+            bystander.CarryItem(other);
+            Assert((bool)isolate.Invoke(null, new object[] { bystander, new object[0], typeof(Carrier).GetMethod("TakeItem") }),
+                "other carriers and items remain unaffected by recovery isolation");
+            WebBackpackRecoveryIsolation.RecoveryCall = true;
+            WebBackpackRecoveryIsolation.RecoveryCarrier = reservedCarrier;
+            Assert(!(bool)isolate.Invoke(null, new object[] { bystander, new object[] { reservedItem }, typeof(Carrier).GetMethod("CarryItem") }),
+                "reentrant pickup by different carrier is blocked during cleanup");
+            WebBackpackRecoveryIsolation.RecoveryCall = false;
+            WebBackpackRecoveryIsolation.RecoveryCarrier = null;
+            reservedCarrier.FailTake = false;
+            Time.realtimeSinceStartup += 1;
+            storage.RetryPendingTransfer();
+            Assert(!storage.InventoryLocked && !reservedItem.activeSelf, "isolated recovery unlocks only after confirmed detach and destruction");
+            var contested = FakeNetwork.Clone(source);
+            var firstOwner = new Carrier();
+            var secondChef = new GameObject("second owner");
+            var secondOwner = secondChef.AddComponent<ServerPlayerAttachmentCarrier>();
+            secondOwner.CarryItem(contested);
+            GameApi.Entities.Add(secondChef, new object());
+            storage.BeginRollbackTransfer(firstOwner, contested);
+            Assert(storage.InventoryLocked && contested.activeSelf && secondOwner.InspectCarriedItem() == contested,
+                "recovery refuses destroying an object acquired by a different actual carrier");
+            secondOwner.TakeItem();
+            Time.realtimeSinceStartup += 1;
+            storage.RetryPendingTransfer();
+            Assert(!storage.InventoryLocked && !contested.activeSelf, "cleanup resumes only after other owner releases object");
+            GameApi.Entities.Clear();
+            // Known Workable chain ends in a directly cookable cut ingredient. Its Raw
+            // CookedComposite wrapper is not a cooked dish and must remain physically storable.
+            var meatRoot = new GameObject("meat source");
+            meatRoot.transform.SetParent(UnityEngine.SceneManagement.Scene.Roots[0].transform, false);
+            var meat = new GameObject("whole meat");
+            meat.Node = new IngredientNode { Uid = 445 };
+            var cutMeat = new GameObject("cut cookable meat");
+            cutMeat.AddComponent<CookableIngredient>().m_ingredientOrderNode = new IngredientOrderNode { Uid = 445 };
+            cutMeat.AddComponent<CookingHandler>().m_cookingType = new object();
+            meat.AddComponent<WorkableItem>().m_nextPrefab = cutMeat;
+            meatRoot.AddComponent<PickupItemSpawner>().m_itemPrefab = meat;
+            var meatDirectory = new WebBackpackPrefabDirectory();
+            Assert(meatDirectory.BuildAndRegister(storage._backpackGo) && meatDirectory.Find(cutMeat).Storable,
+                "known cut meat with CookableIngredient is storable in prefab directory");
+            storage._directory = meatDirectory;
+            storage._directoryReady = true;
+            storage._container = new FakeContainer();
+            storage._slots.Clear();
+            var rawMeatItem = FakeNetwork.Clone(cutMeat);
+            var rawMeatNode = StorageNodeFromPrefab(rawMeatItem);
+            rawMeatItem.AddComponent<ServerCookableIngredient>().Node = rawMeatNode;
+            StoredSlot meatSlot;
+            Assert(storage.TryCaptureSlot(rawMeatItem, rawMeatNode, out meatSlot) && meatSlot.HasCookable
+                && ReferenceEquals(meatSlot.Node, rawMeatNode),
+                "zero-cooking cut meat accepted without flattening its Raw composite node");
+            Assert(CanPlateStoredSlot(meatSlot), "cut meat without remaining Workable keeps raw node plate-transfer semantics");
+            storage.AppendSlot(storage._container, meatSlot);
+            var meatCarrier = new Carrier();
+            Assert(storage.TryDispenseStoredSlot(storage._container, rawMeatNode, 1, meatCarrier)
+                && meatCarrier.InspectCarriedItem().name == cutMeat.name + "(Clone)"
+                && meatCarrier.InspectCarriedItem().GetComponent<ServerCookingHandler>().Progress == 0f,
+                "Raw CookedComposite slot dispenses exact cut meat prefab with zero cooking progress");
+            rawMeatItem.GetComponent<ServerCookingHandler>().Progress = 0.01f;
+            Assert(!storage.TryCaptureSlot(rawMeatItem, rawMeatNode, out meatSlot),
+                "partially cooked meat rejected even while native cooked enum remains Raw");
+            rawMeatItem.GetComponent<ServerCookingHandler>().Progress = 11f;
+            Assert(!storage.TryCaptureSlot(rawMeatItem, rawMeatNode, out meatSlot), "fully cooked meat remains rejected");
+            rawMeatItem.GetComponent<ServerCookingHandler>().Progress = float.NaN;
+            Assert(!storage.TryCaptureSlot(rawMeatItem, rawMeatNode, out meatSlot), "invalid cooking progress rejected");
+            rawMeatItem.GetComponent<ServerCookingHandler>().Progress = -0.01f;
+            Assert(!storage.TryCaptureSlot(rawMeatItem, rawMeatNode, out meatSlot), "negative cooking state cannot masquerade as untouched meat");
+            rawMeatItem.GetComponent<ServerCookingHandler>().Progress = float.PositiveInfinity;
+            Assert(!storage.TryCaptureSlot(rawMeatItem, rawMeatNode, out meatSlot), "infinite cooking progress rejected");
+            rawMeatItem.GetComponent<ServerCookingHandler>().Progress = 0f;
+            var staleNode = (CookedCompositeAssembledNode)StorageNodeFromPrefab(rawMeatItem);
+            staleNode.m_recordedProgress = 0.5f;
+            rawMeatItem.GetComponent<ServerCookableIngredient>().Node = staleNode;
+            Assert(!storage.TryCaptureSlot(rawMeatItem, staleNode, out meatSlot), "nonzero recorded cooking node cannot enter through zero physical state");
+            rawMeatItem.GetComponent<ServerCookableIngredient>().Node = rawMeatNode;
+            Assert(storage.TryCaptureSlot(rawMeatItem, new IngredientNode { Uid = 445 }, out meatSlot)
+                && ReferenceEquals(meatSlot.Node, rawMeatNode),
+                "server cookable wrapper wins over generic bare IngredientProperties node");
+            Assert(storage.AddInitialSlot(storage._container, cutMeat, StorageNodeFromPrefab(cutMeat))
+                && storage._slots[0].Node is CookedCompositeAssembledNode && storage._slots[0].Entry.Prefab == cutMeat,
+                "cookable prefab initial fill retains exact physical identity and native Raw wrapper");
+            var wrongInitial = (CookedCompositeAssembledNode)StorageNodeFromPrefab(cutMeat);
+            wrongInitial.m_progress = CookingProgress.Cooked;
+            Assert(!storage.AddInitialSlot(storage._container, cutMeat, wrongInitial),
+                "cooked initial node cannot be silently replaced with raw physical form");
+            Assert(!storage.AddInitialSlot(storage._container, cutMeat, new IngredientNode { Uid = 445 }),
+                "flattened initial ingredient node cannot silently lose cookable wrapper identity");
+            StoredSlot cookableWorkable;
+            rawMeatItem.AddComponent<WorkableItem>().m_nextPrefab = chopped;
+            rawMeatItem.AddComponent<ServerWorkableItem>().Set(2, 1);
+            Assert(storage.TryCaptureSlot(rawMeatItem, rawMeatNode, out cookableWorkable)
+                && cookableWorkable.HasCookable && cookableWorkable.HasWorkable
+                && cookableWorkable.Progress == 2 && !CanPlateStoredSlot(cookableWorkable),
+                "zero-cooking partially chopped cookable ingredient retains Workable progress and rejects plate flattening");
+            Assert(IsStorablePhysicalPrefab(cutMeat, false), "direct cookable raw prefab initial source uses same zero-cooking policy");
+            cutMeat.AddComponent<ServerCookingHandler>().Progress = 1f;
+            Assert(!IsStorablePhysicalPrefab(cutMeat, true)
+                && !storage.AddInitialSlot(storage._container, cutMeat, rawMeatNode),
+                "nonzero cooking source rejected consistently by directory and initial fill");
+            Assert(!CanPlateStoredSlot(new StoredSlot { Entry = meatDirectory.Find(meat), HasWorkable = true }),
+                "whole or partly chopped Workable cannot lose form or progress through plate transfer");
+            storage._container = new FakeContainer();
+            storage._slots.Clear();
+            var duplicateNode = new IngredientNode();
+            storage._container.AddIngredient(duplicateNode);
+            storage._container.AddIngredient(duplicateNode);
+            Assert(RemoveExactSlotNode(storage._container, 1) && storage._container.GetContentsCount() == 1,
+                "rollback removes exact final index even with equal/shared nodes");
+            var overflow = Setup(65, false);
+            Assert(!overflow._directoryReady && overflow._backpackGo.GetComponentsInChildren<ObjectContainer>(true).Length == 8,
+                "over-limit directory fails closed with fixed eight-entity topology");
+            var missing = Setup(1, true);
+            Assert(!missing._directoryReady && missing._backpackGo.GetComponentsInChildren<ObjectContainer>(true).Length == 8,
+                "missing dependency fails closed without changing page entity topology");
+            var polling = Setup(2, false);
+            GameApi.Session = true;
+            PollProbe.Reset();
+            GameApi.SessionReads = 0;
+            Time.realtimeSinceStartup = 100f;
+            Assert(WebBackpackDirectoryHandshake.Ready(), "prepared directory can establish cached online permission");
+            int reads = GameApi.SessionReads;
+            for (int i = 0; i < 20; i++) WebBackpackDirectoryHandshake.Ready();
+            Assert(PollProbe.Calls == 1 && GameApi.SessionReads == reads,
+                "multiple backpacks and interactions share one 0.25-second reflection/hash/Poll pass");
+            for (int frame = 1; frame <= 32; frame++)
+            {
+                Time.realtimeSinceStartup = 100f + frame * 0.1f;
+                WebBackpackDirectoryHandshake.Ready();
+            }
+            Assert(PollProbe.Calls >= 10, "10 FPS polling uses elapsed time instead of waiting 32 frames beyond lease");
+            var extra = polling._backpackGo.AddComponent<WebBackpackStorage>();
+            WebBackpackDirectoryHandshake.Register(extra);
+            Assert(!WebBackpackDirectoryHandshake.Ready(), "registering unprepared backpack immediately invalidates shared permission");
+            WebBackpackDirectoryHandshake.Reset();
+            Assert(!WebBackpackDirectoryHandshake.Ready(), "Reset clears cached ready result and directory roster");
+            WebBackpackDirectoryHandshake.Reset();
+            WebBackpackDirectoryHandshake.Register(polling);
+            Assert(WebBackpackDirectoryHandshake.Ready(), "valid directory can reestablish permission after reset");
+            var firstPage = polling._directory.Find(UnityEngine.SceneManagement.Scene.Roots[0].transform.Children[1].gameObject
+                .GetComponent<PickupItemSpawner>().m_itemPrefab).Spawner;
+            firstPage.GetComponent<SpawnableEntityCollection>().Register(new GameObject("unexpected registration"));
+            Assert(!polling.VerifyLocalDirectory() && !WebBackpackDirectoryHandshake.Ready(),
+                "exact local Verify rejects mutated table immediately even within positive cache window");
+            Assert(!polling.AddInitialSlot(polling._container, null, new IngredientNode()),
+                "initial fill cannot run before a valid pre-scan directory exists");
+            GameApi.Session = false;
+            Console.WriteLine("All behavior checks passed (managed host; no Unity/network transport).");
+        }
+    }
+}

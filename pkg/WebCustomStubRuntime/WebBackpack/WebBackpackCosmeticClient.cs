@@ -354,9 +354,6 @@ namespace CustomStub
             try
             {
                 GameApi.UiContainerSetOrderMethod.Invoke(_uiContainer, new object[] { aggregate });
-                // 内容变化：驱动客户端 spawnable 注册（运行期放入的食材）
-                if (changed)
-                    _storage.OnClientContentsChangedForRegistration(contents);
             }
             catch (Exception ex)
             {

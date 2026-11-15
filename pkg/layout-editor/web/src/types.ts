@@ -2349,6 +2349,19 @@ export interface CustomContentTemplate {
   nodePath?: string;
 }
 
+export interface CustomContentLookupRow {
+  readOnly?: boolean;
+  recipeGuid: string;
+  modelGuid?: string;
+  modelSoGuid?: string;
+  amountAllowed: number;
+  restrictedRecipeGuids?: string[];
+}
+
+export interface CustomContentLookupSlot {
+  rows: CustomContentLookupRow[];
+}
+
 export interface CustomContentItem {
   id: string;
   kind: string;
@@ -2384,6 +2397,10 @@ export interface CustomContentItem {
   dryingPartPath?: string;
   cleanPlateStackGuid?: string;
   traySlotGuid?: string;
+  traySlots?: CustomContentLookupSlot[];
+  lookupRows?: CustomContentLookupRow[];
+  lookupGuid?: string;
+  cosmeticsLookupGuid?: string;
   inputRecipeGuid?: string;
   outputPrefabGuid?: string;
   splitAudioTag?: string;
@@ -2426,6 +2443,8 @@ export interface CustomContentEdit {
   dryingPartPath?: string;
   cleanPlateStackGuid?: string;
   traySlotGuid?: string;
+  traySlots?: CustomContentLookupSlot[];
+  lookupRows?: CustomContentLookupRow[];
   progressUiGuid?: string;
   fireEffectGuid?: string;
   chopPfxGuid?: string;

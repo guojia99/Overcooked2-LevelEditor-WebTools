@@ -58,7 +58,9 @@ const MUSIC = [
   { id: "OC1_AllTheTrimmings", group: "oc1", src: "OC1/Music/AllTheTrimmings.ogg", zh: "节日盛宴（BGM）", en: "All the Trimmings" },
   { id: "OC1_CookingWithMama", group: "oc1", src: "OC1/Music/CookingWithMama.ogg", zh: "和妈妈一起做饭（BGM）", en: "Cooking with Mama" },
   { id: "OC1_DLCJungleIsland", group: "oc1", src: "OC1/Music/DLC_JungleIsland.ogg", zh: "丛林岛（BGM）", en: "Jungle Island" },
-  { id: "OC1_EndBoss", group: "oc1", src: "OC1/Music/EndBoss.ogg", zh: "终局首领（BGM）", en: "End Boss" },
+  // q:5 — Unity 2017(FMOD) 对这两首的 q6 码流报 "Unspecified error during import of AudioClip"，
+  // 同源同参数其他曲目正常；降一档重编码可正常导入（音质仍高于源文件码率）。
+  { id: "OC1_EndBoss", group: "oc1", src: "OC1/Music/EndBoss.ogg", q: 5, zh: "终局首领（BGM）", en: "End Boss" },
   { id: "OC1_FeelinGood", group: "oc1", src: "OC1/Music/FeelinGood.ogg", zh: "心情正好（BGM）", en: "Feelin' Good" },
   { id: "OC1_MusicLevelHell", group: "oc1", src: "OC1/Music/Music_Level_Hell.ogg", zh: "地狱关卡（BGM）", en: "Hell Level" },
   { id: "OC1_MusicLevelHorror", group: "oc1", src: "OC1/Music/Music_Level_Horror.ogg", zh: "恐怖关卡（BGM）", en: "Horror Level" },
@@ -74,7 +76,7 @@ const MUSIC = [
   { id: "OC1_FoodTruck", group: "oc1", src: "OC1/Music/New Music/OKD1_Music_FoodTruck.ogg", zh: "餐车（BGM）", en: "Food Truck" },
   { id: "OC1_HauntedHouse", group: "oc1", src: "OC1/Music/New Music/OKD1_Music_HauntedHouse.ogg", zh: "鬼屋（BGM）", en: "Haunted House" },
   { id: "OC1_Kitchen", group: "oc1", src: "OC1/Music/New Music/OKD1_Music_Kitchen.ogg", zh: "厨房（BGM）", en: "Kitchen" },
-  { id: "OC1_OnionHut", group: "oc1", src: "OC1/Music/New Music/OKD1_Music_OnionHut.ogg", zh: "洋葱小屋（BGM）", en: "Onion Hut" },
+  { id: "OC1_OnionHut", group: "oc1", src: "OC1/Music/New Music/OKD1_Music_OnionHut.ogg", q: 5, zh: "洋葱小屋（BGM）", en: "Onion Hut" },
   { id: "OC1_Peckoning", group: "oc1", src: "OC1/Music/New Music/OKD1_Music_Peckoning.ogg", zh: "啄食时刻（BGM）", en: "Peckoning" },
   { id: "OC1_Space", group: "oc1", src: "OC1/Music/New Music/OKD1_Music_Space.ogg", zh: "太空（BGM）", en: "Space" },
   { id: "OC1_Tutorial", group: "oc1", src: "OC1/Music/New Music/OKD1_Music_Tutorial.ogg", zh: "教程（BGM）", en: "Tutorial" },
@@ -763,7 +765,7 @@ function buildMusic() {
             ["-y", "-v", "error", "-i", srcAbs, "-map_metadata", "-1", "-ar", "44100", "-ac", "2", tmpWav],
             { stdio: "inherit" },
           );
-          execFileSync("oggenc", ["-Q", "-q", "6", "-o", outAbs, tmpWav], { stdio: "inherit" });
+          execFileSync("oggenc", ["-Q", "-q", String(m.q || 6), "-o", outAbs, tmpWav], { stdio: "inherit" });
         } finally {
           try {
             fs.unlinkSync(tmpWav);

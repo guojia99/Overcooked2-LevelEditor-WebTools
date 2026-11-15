@@ -738,6 +738,39 @@ namespace CustomStub
         {
             return GameOneShotAudioTagType != null ? Enum.Parse(GameOneShotAudioTagType, "ImCooked") : null;
         });
+
+        // ---- 锅具/火锅内容物：CookedCompositeAssembledNode 空烹饪步骤守卫 ----
+        // 关卡 RecipeMatchList 未登记 DLC 烹饪步骤（如火锅 HotPot uID=20069）时，
+        // 客户端反序列化得到的节点 m_cookingStep = null，宿主 IsMatch 直接读
+        // .m_uID → NRE（2026-11-12 大勺连续取放火锅内容物实证）。
+        public static readonly Type CookedCompositeAssembledNodeType = Find("CookedCompositeAssembledNode");
+        public static readonly FieldInfo CookedCompositeStepField =
+            Field(CookedCompositeAssembledNodeType, "m_cookingStep");
+
+        // ---- 火锅：DLC04 循环音兜底（Client 同步器缺失时由 HotPot 接管）----
+        // 真机上宿主 ClientCookingRegion / ClientWokEffectsCosmeticDecisions 负责
+        // StartAudio/StopAudio（Embers/Flames）。若材质化的锅灶 child 未被网络实体
+        // 扫描纳入，这两个同步器不会挂载 → 全程静音。此时由 HotPot 按同一门控直接
+        // 驱动循环音；宿主同步器存在时整段跳过，不会双播。
+        public static readonly Type GameLoopingAudioTagType = Find("GameLoopingAudioTag");
+        public static readonly MethodInfo StartAudioMethod = Safe(delegate
+        {
+            return GameUtilsType != null && GameLoopingAudioTagType != null
+                ? GameUtilsType.GetMethod("StartAudio", BindingFlags.Public | BindingFlags.Static,
+                    null, new[] { GameLoopingAudioTagType, typeof(object), typeof(int) }, null)
+                : null;
+        });
+        public static readonly MethodInfo StopAudioMethod = Safe(delegate
+        {
+            return GameUtilsType != null && GameLoopingAudioTagType != null
+                ? GameUtilsType.GetMethod("StopAudio", BindingFlags.Public | BindingFlags.Static,
+                    null, new[] { GameLoopingAudioTagType, typeof(object) }, null)
+                : null;
+        });
+        public static readonly object Dlc04EmbersTag = Safe(delegate
+        {
+            return GameLoopingAudioTagType != null ? Enum.Parse(GameLoopingAudioTagType, "DLC_04_Embers") : null;
+        });
         /// <summary>GameUtils.InstantiateUIController(GameObject, string)（热水器进度条用）。</summary>
         public static readonly MethodInfo InstantiateUIControllerMethod = Safe(delegate
         {

@@ -94,7 +94,7 @@ export interface ModelPreviewOptions {
   mtlUrl?: string;
   /** 本地 MTL 文本（本地预览 OBJ 时提供）。 */
   localMtl?: string;
-  /** 自动适配目标：plate（盘子，足迹 85 cm，默认）/ cup（杯子，足迹 37 cm 并抬升到杯中 30 cm）。 */
+  /** 自动适配目标：plate（盘子，足迹 85 cm，默认）/ cup（杯子，足迹 37 cm）；位置归零。 */
   fitTarget?: "plate" | "cup";
   /** Unity 导入后的模型原始尺寸（不含配置变换，由后端从 prefab 包围盒反推），
    *  自动适配以 Unity 实际尺寸为准（three.js 尺寸可能与 Unity 不一致）。 */
@@ -191,43 +191,49 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
   const readonlyControlsHtml = `<div class="mp-controls mp-controls-ro">
     <p class="modal-hint mp-ro-note">🔒 <b>只读预览</b>：${esc(
       opts.readonlyReason ?? "该模型来自共享素材库，变换参数不归当前关卡集管理，因此不提供调整。"
-    )}<br>需要不同的外观时，请在本关卡集<b>新建一个自己的菜谱/夹心</b>并上传模型（或用「模板网格 + 自制贴图」生成）。</p>
-    <p class="modal-hint" id="mp-size-ro">当前尺寸：—（模型加载后显示；1 模型单位 = 1 Unity 单位 = 100 cm）</p>
+    )}</p>
+    <details class="cc-advanced"><summary>高级：尺寸与原点数据</summary>
+      <p class="modal-hint" id="mp-size-ro">当前尺寸：加载后显示（1 单位 = 100 cm）</p>
+    </details>
   </div>`;
   const editableControlsHtml = `<div class="mp-controls">
     <label>尺寸（水平足迹, cm）<input type="number" id="mp-size-cm" step="0.0001" min="0.0001" value="" disabled>
-      <span class="muted small">模型最长水平足迹；保存并上传后按 Unity 实际尺寸精确校准</span></label>
-    <label>缩放（相对倍数）<input type="number" id="mp-scale" value="${fmt4(initial.scale)}" step="0.0001" min="0.0001"></label>
-    <label>旋转X（度）<input type="number" id="mp-rot-x" value="${initial.rotationX}" step="5"></label>
-    <label>旋转Y（度）<input type="number" id="mp-rot-y" value="${initial.rotationY}" step="5"></label>
-    <label>旋转Z（度）<input type="number" id="mp-rot-z" value="${initial.rotationZ}" step="5"></label>
-    <label>位置X（cm）<input type="number" id="mp-pos-x" value="${fmtCm(u2cm(initial.positionX))}" step="0.0001"></label>
-    <label>位置Y（底面高度, cm）<input type="number" id="mp-pos-y" value="${fmtCm(u2cm(initial.positionY))}" step="0.0001"></label>
-    <label>位置Z（cm）<input type="number" id="mp-pos-z" value="${fmtCm(u2cm(initial.positionZ))}" step="0.0001"></label>
-    <p class="modal-hint" id="mp-size-ro">当前尺寸：—（模型加载后显示；1 模型单位 = 1 Unity 单位 = 100 cm）</p>
+      <span class="muted small">最长水平尺寸；保存后可按 Unity 尺寸校准</span></label>
     <label>适配目标<select id="mp-fit-target">
       <option value="plate" ${(opts.fitTarget ?? "plate") === "plate" ? "selected" : ""}>盘子（足迹 85 cm）</option>
       <option value="cup" ${opts.fitTarget === "cup" ? "selected" : ""}>杯子（足迹 37 cm）</option>
-    </select>
-      <span class="muted small">半透明标的物 = 参考容器（盘子/玻璃杯，无碰撞）；「自动适配」按该目标缩放，位置 Y 保持 0（不自动下沉，高度手动调）</span></label>
-    <div class="mp-face-row">
-      <label>虚拟箱面<select id="mp-face">
-        <option value="bottom">下（-Y）</option>
-        <option value="top">上（+Y）</option>
-        <option value="front">前（+Z）</option>
-        <option value="back">后（-Z）</option>
-        <option value="right">右（+X）</option>
-        <option value="left">左（-X）</option>
-      </select></label>
-      ${mBtnHtml("🎯 面中心设为原点", "default", { id: "mp-face-origin", title: "旋转/缩放将绕该面中心" })}
-      ${mBtnHtml("⬇ 该面朝下", "default", { id: "mp-face-down", title: "旋转模型使该面贴地" })}
-    </div>
+    </select></label>
+    ${mBtnHtml("✨ 自动适配", "default", { id: "mp-fit" })}
     ${mBtnHtml("↻ 绕 X 转 90°", "default", { id: "mp-rot-x90" })}
     ${mBtnHtml("↻ 绕 Y 转 90°", "default", { id: "mp-rot-y90" })}
     ${mBtnHtml("↻ 绕 Z 转 90°", "default", { id: "mp-rot-z90" })}
-    ${mBtnHtml("🎯 重选原点", "default", { id: "mp-pick-origin" })}
-    ${mBtnHtml("✨ 自动适配", "default", { id: "mp-fit" })}
-    ${opts.onAdjust ? mBtnHtml("✅ 应用方向/大小到菜谱", "primary", { id: "mp-apply" }) : ""}
+    <details class="cc-advanced">
+      <summary>高级：精确变换与模型原点</summary>
+      <div class="mp-advanced-fields">
+        <p class="modal-hint" id="mp-size-ro">当前尺寸：加载后显示（1 单位 = 100 cm）</p>
+        <label>缩放（相对倍数）<input type="number" id="mp-scale" value="${fmt4(initial.scale)}" step="0.0001" min="0.0001"></label>
+        <label>旋转X（度）<input type="number" id="mp-rot-x" value="${initial.rotationX}" step="5"></label>
+        <label>旋转Y（度）<input type="number" id="mp-rot-y" value="${initial.rotationY}" step="5"></label>
+        <label>旋转Z（度）<input type="number" id="mp-rot-z" value="${initial.rotationZ}" step="5"></label>
+        <label>位置X（cm）<input type="number" id="mp-pos-x" value="${fmtCm(u2cm(initial.positionX))}" step="0.0001"></label>
+        <label>位置Y（底面高度, cm）<input type="number" id="mp-pos-y" value="${fmtCm(u2cm(initial.positionY))}" step="0.0001"></label>
+        <label>位置Z（cm）<input type="number" id="mp-pos-z" value="${fmtCm(u2cm(initial.positionZ))}" step="0.0001"></label>
+        <div class="mp-face-row">
+          <label>虚拟箱面<select id="mp-face">
+            <option value="bottom">下（-Y）</option>
+            <option value="top">上（+Y）</option>
+            <option value="front">前（+Z）</option>
+            <option value="back">后（-Z）</option>
+            <option value="right">右（+X）</option>
+            <option value="left">左（-X）</option>
+          </select></label>
+          ${mBtnHtml("🎯 面中心设为原点", "default", { id: "mp-face-origin", title: "旋转/缩放将绕该面中心" })}
+          ${mBtnHtml("⬇ 该面朝下", "default", { id: "mp-face-down", title: "旋转模型使该面贴地" })}
+        </div>
+        ${mBtnHtml("🎯 重选原点", "default", { id: "mp-pick-origin" })}
+      </div>
+    </details>
+    ${opts.onAdjust ? mBtnHtml("✅ 应用调整", "primary", { id: "mp-apply" }) : ""}
   </div>`;
   const controlsHtml = opts.readonly ? readonlyControlsHtml : editableControlsHtml;
   openModal(
@@ -239,9 +245,13 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
        </div>
        <div class="mp-side">
          ${controlsHtml}
-          ${opts.readonly
-            ? `<p class="modal-hint">${esc(opts.readonlyHint ?? "左键旋转视角 · 右键平移 · 滚轮缩放 · <b>半透明标的物 = 参考容器（盘子直径 100 cm / 玻璃杯口径 69 cm，纯视觉无碰撞）</b>，其<b>包围盒中心 = 原点 (0,0,0)</b> · <b>橙色线框 = 模型虚拟包围盒</b>（尺寸见上方读数）· 视角操作不会改动任何数据。")}</p>`
-            : `<p class="modal-hint">左键旋转视角 · 右键平移 · 滚轮缩放 · <b>半透明标的物 = 参考容器（盘子直径 100 cm / 玻璃杯口径 69 cm，纯视觉无碰撞）</b>，其<b>包围盒中心 = 原点 (0,0,0)</b>（红/绿/蓝轴 X/Y/Z，黄色点为原点，网格按 cm 标注格距，1 单位 = 100 cm）· <b>橙色线框 = 模型虚拟包围盒</b>（尺寸见右侧读数，6 个面各有一个中心点；<b>下拉选中的面会微微高亮</b>）· 「🎯 面中心设为原点」旋转/缩放绕该面中心 · 「⬇ 该面朝下」旋转模型让该面贴地 · 「重选原点」后可点击模型上任意点 · 「自动适配」按目标（盘子 85 cm / 杯子 37 cm）缩放，<b>位置 Y 保持 0（不自动下沉，高度手动调）</b> · 尺寸/位置单位为 cm（4 位小数精度）</p>`}
+          <p class="modal-hint">左键旋转 · 右键平移 · 滚轮缩放${opts.readonly ? "" : "；调整后需返回编辑页保存。自动适配会将位置 X/Y/Z 归零。"}</p>
+          <details class="cc-advanced"><summary>预览操作说明</summary>
+            <p class="modal-hint">半透明容器仅供对比，无碰撞：盘子直径 100 cm，杯口径 69 cm。橙色线框是模型包围盒；红、绿、蓝轴分别为 X、Y、Z，黄色点为原点。尺寸与位置单位为厘米（4 位小数）。</p>
+            ${opts.readonly
+              ? `<p class="modal-hint">${esc(opts.readonlyHint ?? "视角操作不会改动数据。需要调整外观时，可在本关卡集新建菜谱或夹心并上传模型，或使用模板网格与自制贴图。")}</p>`
+              : `<p class="modal-hint">自动适配按盘子 85 cm / 杯子 37 cm 的足迹缩放，高度可在高级选项中调整。选中箱面可设为原点或使其朝下；「重选原点」后点击模型选点，旋转与缩放将围绕所选原点。</p>`}
+          </details>
        </div>
      </div>`,
     mCancelBtnHtml("关闭")
@@ -428,7 +438,7 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
   }
 
   function isCupPreview(): boolean {
-    return refKind === "cup" || opts.fitTarget === "cup";
+    return refKind === "cup";
   }
 
   /** 游戏承物面相对容器中心的 Y（Unity、scale=1）：杯内底 / 盘子顶面。 */
@@ -489,7 +499,7 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
     new OBJLoader().load(
       spec.url,
       (ref) => {
-        if (refObj) return; // 已切换，忽略迟到的加载
+        if (refObj || refKind !== kind) return; // 已切换，忽略迟到的加载
         ref.traverse((child) => {
           const mesh = child as THREE.Mesh;
           if (!mesh.isMesh) return;
@@ -806,7 +816,8 @@ export function openModelPreview(opts: ModelPreviewOptions): void {
     const fitSel = document.getElementById("mp-fit-target") as HTMLSelectElement | null;
     const faceSel = document.getElementById("mp-face") as HTMLSelectElement | null;
     fitSel?.addEventListener("change", () => {
-      loadReference(fitSel.value === "cup" ? "cup" : "plate");
+      refKind = fitSel.value === "cup" ? "cup" : "plate";
+      if (opts.showReference !== false) loadReference(refKind);
       applyTransform(readTransform());
       status.textContent = fitSel.value === "cup" ? "参考容器：玻璃杯（口径 69 cm，食物放入杯中）" : "参考容器：盘子（直径 100 cm，食物放到盘面）";
       status.classList.remove("err");

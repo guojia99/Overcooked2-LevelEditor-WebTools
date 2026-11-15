@@ -1196,9 +1196,7 @@ public static class LayoutEditorSetExporter
         if (scene.isDirty || retagged > 0)
         {
             LayoutEditorMissingScriptCleanup.RemoveMissingScripts(scene);
-            if (!EditorSceneManager.SaveScene(scene))
-                throw new Exception("SaveScene 失败（Console 可能有 Could not extract GUID / Broken PPtr）："
-                    + step.scenePath);
+            LayoutEditorPseudoReload.SaveScenePrepared(scene, false);
         }
         else
             Debug.Log("[SetExporter] 场景无磁盘变更，跳过 SaveScene：" + step.scenePath);

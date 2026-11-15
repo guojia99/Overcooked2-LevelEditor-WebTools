@@ -14,4 +14,4 @@ MonoBehaviour:
   prefabName: \u7EC8\u5C40\u9996\u9886\uFF08BGM\uFF09
   bundleName: 
   assetPath: 
-  asset: {fileID: 0}
+  asset: {fileID: 8300000, guid: 28e02c395b48d823acd42d6c8c1abf98, type: 3}

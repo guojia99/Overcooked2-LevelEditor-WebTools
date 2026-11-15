@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net35</TargetFramework>
+    <LangVersion>4</LangVersion>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <AssemblyName>Backpack.Check</AssemblyName>
+    <RepoRoot>$(MSBuildThisFileDirectory)../../../..</RepoRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" />
+    <Compile Include="../*.cs" />
+    <Compile Include="../../core/GameApi.cs" />
+    <Compile Include="../../core/StubLog.cs" />
+    <Compile Include="EntryPoint.Check.txt" />
+    <Reference Include="/Applications/Unity/Hub/Editor/2017.4.8f1/Unity.app/Contents/Managed/UnityEngine/*.dll" />
+    <Reference Include="$(RepoRoot)/Library/ScriptAssemblies/Assembly-CSharp.dll" />
+    <Reference Include="$(RepoRoot)/Library/ScriptAssemblies/LevelEditorStub.dll" />
+    <Reference Include="$(RepoRoot)/Assets/Plugins/0Harmony.dll" />
+  </ItemGroup>
+</Project>

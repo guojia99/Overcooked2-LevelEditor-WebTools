@@ -3104,13 +3104,14 @@ public static class LayoutEditorStubIO
     /// 有改动时把当前场景标脏。返回处理对象数。</summary>
     public static int RepairFullCleanPlateStackRuntimes()
     {
+        var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
         var seen = new HashSet<GameObject>();
         int fixedCount = 0;
         var stubs = UnityEngine.Object.FindObjectsOfType<PseudoPrefabCleanPlateStackStub>();
         for (int i = 0; i < stubs.Length; i++)
         {
             var stub = stubs[i];
-            if (stub == null)
+            if (stub == null || stub.gameObject.scene != scene)
                 continue;
             var go = stub.gameObject;
             if (go == null || !seen.Add(go))
@@ -3134,7 +3135,7 @@ public static class LayoutEditorStubIO
             for (int i = 0; i < seeders.Length; i++)
             {
                 var seeder = seeders[i] as Component;
-                if (seeder == null)
+                if (seeder == null || seeder.gameObject.scene != scene)
                     continue;
                 var go = seeder.gameObject;
                 if (go == null || !seen.Add(go))
@@ -3151,7 +3152,6 @@ public static class LayoutEditorStubIO
             LayoutEditorLog.Log("[LayoutEditor] CleanPlateStack 自愈: " + fixedCount);
             if (!Application.isPlaying)
             {
-                var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
                 if (scene.IsValid())
                     UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
             }
@@ -3300,19 +3300,18 @@ public static class LayoutEditorStubIO
     [MenuItem("Layout Editor/诊断/修复 commonW5 茶杯堆并保存当前场景")]
     public static void RepairFullCleanPlateStackAndSaveMenu()
     {
-        int fixedCount = RepairFullCleanPlateStackRuntimes();
         var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
         if (scene.IsValid())
         {
-            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
-            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+            LayoutEditorPseudoReload.PrepareSceneForWrite(scene, false);
+            int fixedCount = RepairFullCleanPlateStackRuntimes();
+            LayoutEditorPseudoReload.SaveScenePrepared(scene, true);
             LayoutEditorLog.Log("[LayoutEditor] CleanPlateStack 自愈 " + fixedCount
                 + "，已保存场景 " + scene.path);
         }
         else
         {
-            LayoutEditorLog.LogWarning("[LayoutEditor] CleanPlateStack 自愈 " + fixedCount
-                + "，但当前没有可保存的场景");
+            LayoutEditorLog.LogWarning("[LayoutEditor] 当前没有可保存的场景");
         }
     }
 
@@ -5349,7 +5348,30 @@ public static class LayoutEditorStubIO
     {
         if (go == null || string.IsNullOrEmpty(tagValue))
             return;
-        var tag = go.GetComponent<SpecificPseudoPrefabTag>();
+        // 2026-11-12：由「单对象单 tag」升级为「单对象单【前缀】多 tag」——
+        // 火锅灶台同时承载 TriggerOnChild（原版 prefab 自带）与 TimedSwitch|
+        // （web 定时开关），旧版 GetComponent 取首个会把前者整串覆盖掉。
+        int bar = tagValue.IndexOf('|');
+        string prefix = bar >= 0 ? tagValue.Substring(0, bar + 1) : tagValue;
+        var all = go.GetComponents<SpecificPseudoPrefabTag>();
+        SpecificPseudoPrefabTag tag = null;
+        SpecificPseudoPrefabTag empty = null;
+        for (int i = 0; i < all.Length; i++)
+        {
+            var t = all[i];
+            if (t == null)
+                continue;
+            if (!string.IsNullOrEmpty(t.prefabTag)
+                && t.prefabTag.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                tag = t;
+                break;
+            }
+            if (empty == null && string.IsNullOrEmpty(t.prefabTag))
+                empty = t;
+        }
+        if (tag == null)
+            tag = empty;
         if (tag == null)
         {
             tag = Undo.AddComponent<SpecificPseudoPrefabTag>(go);
@@ -5362,22 +5384,27 @@ public static class LayoutEditorStubIO
         EditorUtility.SetDirty(tag);
     }
 
-    /// <summary>清除 customStub tag 载体（值匹配任意前缀开头即清空整串——单用途约定）。
-    /// prefix 为空则清空任何非 RandomCrate 标记。</summary>
+    /// <summary>清除 customStub tag 载体（值匹配任意前缀开头即清空整串）。
+    /// prefix 为空则清空任何非 RandomCrate 标记。2026-11-12 起按前缀逐组件清除，
+    /// 不再触碰同对象上的其它前缀 tag（火锅灶台 TriggerOnChild + TimedSwitch|）。</summary>
     private static void ClearCustomStubTag(GameObject go, string prefix)
     {
         if (go == null)
             return;
-        var tag = go.GetComponent<SpecificPseudoPrefabTag>();
-        if (tag == null || string.IsNullOrEmpty(tag.prefabTag))
-            return;
-        if (tag.prefabTag.StartsWith("RandomCrate|", StringComparison.Ordinal))
-            return; // 随机箱载体不属于本流程，保留
-        if (string.IsNullOrEmpty(prefix) || tag.prefabTag.StartsWith(prefix, StringComparison.Ordinal))
+        var all = go.GetComponents<SpecificPseudoPrefabTag>();
+        for (int i = 0; i < all.Length; i++)
         {
-            Undo.RecordObject(tag, "Layout Editor CustomStub Tag Clear");
-            tag.prefabTag = "";
-            EditorUtility.SetDirty(tag);
+            var tag = all[i];
+            if (tag == null || string.IsNullOrEmpty(tag.prefabTag))
+                continue;
+            if (tag.prefabTag.StartsWith("RandomCrate|", StringComparison.Ordinal))
+                continue; // 随机箱载体不属于本流程，保留
+            if (string.IsNullOrEmpty(prefix) || tag.prefabTag.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                Undo.RecordObject(tag, "Layout Editor CustomStub Tag Clear");
+                tag.prefabTag = "";
+                EditorUtility.SetDirty(tag);
+            }
         }
     }
 
@@ -5644,7 +5671,7 @@ public static class LayoutEditorStubIO
         var baked = 0;
         foreach (var tag in UnityEngine.Object.FindObjectsOfType<SpecificPseudoPrefabTag>())
         {
-            if (tag == null || string.IsNullOrEmpty(tag.prefabTag) ||
+            if (tag == null || tag.gameObject.scene != scene || string.IsNullOrEmpty(tag.prefabTag) ||
                 !tag.prefabTag.StartsWith(RandomCrateTagPrefix, StringComparison.Ordinal))
                 continue;
             var soArray = tag.gameObject.GetComponent<PseudoPrefabSOArray>();
@@ -5690,7 +5717,7 @@ public static class LayoutEditorStubIO
         var baked = 0;
         foreach (var tag in UnityEngine.Object.FindObjectsOfType<SpecificPseudoPrefabTag>())
         {
-            if (tag == null || string.IsNullOrEmpty(tag.prefabTag) ||
+            if (tag == null || tag.gameObject.scene != scene || string.IsNullOrEmpty(tag.prefabTag) ||
                 !tag.prefabTag.StartsWith(TeleportalExitOnlyTagPrefix, StringComparison.Ordinal))
                 continue;
             if (tag.gameObject.GetComponent(type) != null)
@@ -5965,9 +5992,17 @@ public static class LayoutEditorStubIO
 
     private static bool HasCustomStubTag(GameObject go, string prefix)
     {
-        var tag = go != null ? go.GetComponent<SpecificPseudoPrefabTag>() : null;
-        return tag != null && !string.IsNullOrEmpty(tag.prefabTag)
-            && tag.prefabTag.StartsWith(prefix, StringComparison.Ordinal);
+        if (go == null)
+            return false;
+        var all = go.GetComponents<SpecificPseudoPrefabTag>();
+        for (int i = 0; i < all.Length; i++)
+        {
+            var tag = all[i];
+            if (tag != null && !string.IsNullOrEmpty(tag.prefabTag)
+                && tag.prefabTag.StartsWith(prefix, StringComparison.Ordinal))
+                return true;
+        }
+        return false;
     }
 
     private static Component FindComp(GameObject go, string className)

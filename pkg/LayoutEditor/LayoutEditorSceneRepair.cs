@@ -21,6 +21,7 @@ public static class LayoutEditorSceneRepair
         if (!scene.IsValid())
             return 0;
 
+        LayoutEditorPseudoReload.PrepareSceneForWrite(scene, false);
         var all = new List<GameObject>();
         foreach (var root in scene.GetRootGameObjects())
             Collect(root.transform, all);
@@ -29,6 +30,8 @@ public static class LayoutEditorSceneRepair
         var restored = 0;
         foreach (var go in all)
         {
+            if (go == null)
+                continue;
             var type = PrefabUtility.GetPrefabType(go);
             if (type != PrefabType.PrefabInstance && type != PrefabType.MissingPrefabInstance)
                 continue;
@@ -72,9 +75,10 @@ public static class LayoutEditorSceneRepair
 
         if (removed > 0 || restored > 0)
         {
-            EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene);
+            LayoutEditorPseudoReload.SaveScenePrepared(scene, true);
         }
+        else
+            LayoutEditorPseudoReload.ReloadPseudoAssetsFull();
         return removed;
     }
 

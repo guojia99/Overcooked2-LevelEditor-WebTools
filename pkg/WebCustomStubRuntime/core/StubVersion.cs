@@ -27,6 +27,27 @@
         ///  - ⚠ 改本文件后须 Unity 重编译 + 重新 staging webcustomstub_runtime。
         ///
         /// 内部修订索引（倒序；明细见下方「内部修订明细」）：
+        ///  4.0.0.25（2026-11-12 10:25）备餐食材入锅双写修复：每次转移精确
+        ///    检查 OC2DIYLevel 的等价 Harmony prefix，存在即让出合并/销毁；
+        ///    Combine 开始后的异常不再放行原方法。补充单写归属状态、Verbose
+        ///    prefix 清单/限量投料样本、含反射内层异常的防重放诊断。
+        ///  4.0.0.24（2026-11-12）火锅内容物空烹饪步骤守卫：宿主
+        ///    CookedCompositeAssembledNode.IsMatch 对 m_cookingStep=null 无防护
+        ///    （DLC 步骤未登记时大勺连续取放火锅内容物必 NRE，冒泡到
+        ///    ClientIngredientContentGUI）。运行时 Harmony 前缀拦截 IsMatch，
+        ///    任一侧步骤为空即判不匹配；同时编辑器 SyncCookingStepsFromSelectedRecipes
+        ///    改为也收集官方菜谱步骤（recipe-knowledge step → food/CookingSteps 包装，
+        ///    火锅 HotPot uID=20069），写回后 allCookingSteps 自动登记。
+        ///  4.0.0.23（2026-11-12）Web 火锅灶台/大锅真机静音与斜角投料：
+        ///    commonW1 两灶台补回原版 TriggerOnChild + TurnOn→Layout1 /
+        ///    TurnOff→Layout2（原版 child 的 TriggerDisableScript 入口）；两 web 大锅
+        ///    去掉非原版实体 BoxCollider、改回原版 trigger SphereCollider(r1.3,
+        ///    center -0.6,0.65,0.6)（恢复 8 邻格交互几何）；HotPot 增加 DLC04 循环音
+        ///    兜底（ClientCookingRegion / ClientWokEffectsCosmeticDecisions 缺失时
+        ///    直接驱动 DLC_04_Embers / DLC_04_Flames，宿主存在时零影响）。
+        ///  4.0.0.22（2026-11-11 18:05）老鼠主机权威位置同步、扫描前装配、
+        ///    偷取当帧距离/归属复核；背包逐格保留原料/半切/切后形态与进度，
+        ///    分页生成目录双端握手、持取确认后扣库存；RatNet/BackpackNet 诊断。
         ///  4.0.0.21（2026-11-10 19:06）commonW3 酱沙拉：26 基底 / 78 成品；
         ///    部分沙拉接酱、空盘/重复酱前置拒绝、服务端复核、DLC08 沙拉专用 UID
         ///    归一化；原版外观查找表私有克隆追加红黄视觉（无新网络实体/帧扫描）。

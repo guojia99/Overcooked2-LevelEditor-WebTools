@@ -379,15 +379,19 @@ flowchart TD
     C --> D["LevelInfoResolver.ResolveForScene → levelInfo"]
     D --> E["WriteBackHistory.Begin（pending_ 记录 + before 快照）"]
     E --> F["CustomIngredients.EnsureDocCopies<br/>+ SyncLevelInfo（依赖注册必须在 Apply 前）"]
-    F --> G["SceneLayoutApplier.Apply（§3.3 全流程，含 SaveScene 场景落盘）"]
+    F --> G["SceneLayoutApplier.Apply：严格 Prepare + 应用布局"]
     G --> H["AllIngredientsFill.AutoFillIngredients<br/>+ FillAllAudioDirectorySOs"]
     H --> I["CustomIngredients.EnsureWebDependencies(replace=true)（重建依赖）"]
     I --> J["LevelAdminApi.MergeAudioDependencies"]
-    J --> K["SetDirty + SaveAssets（LevelInfoSO 落盘）→ 200 {ok, warnings}"]
+    J --> K["保存前再次严格 Prepare → SaveScene + SaveAssets → 历史 after → Reload → 200 {ok, warnings}；准备或保存失败则请求失败"]
     K -. "death/killplane POST → Touch 归并<br/>10s 宽限定稿" .-> L["writeback_history/&lt;set&gt;/&lt;levelId&gt;/&lt;时间戳&gt;_layout/<br/>{scene,info}_{before,after} + diff.json<br/>+ semantic/doc_{before,after}.json<br/>每关滚动保留 15 条"]
 ```
 
 **Play 模式闸门**：`POST /api/scene/layout`、死亡主题、坠落区，以及 MCP `oc2_commit_scene`，在解析、校验、开场景和任何落盘之前先看 `EditorApplication.isPlaying || isPlayingOrWillChangePlaymode`。仍在 Play，或正在进入/退出 Play 时直接 400，不写历史、不改场景、不 `SaveAssets`。请求可以在编辑模式入队，主线程真正执行时再判一次。
+
+**保存与验证**：Web/MCP 场景写回由后端严格执行 Prepare、保存场景与资源，并在成功后刷新伪预制体；Prepare 或任一保存步骤失败时请求失败，不返回写回成功。Web 写回成功后会自动重新加载预览，无需再手动 Ctrl+S。应重新读取场景布局核对结果；需要验证磁盘落盘时，关闭并重新打开场景后再读取。用户直接在 Unity 手动编辑场景时，仍须先执行 Prepare For Building，再保存场景与资源。
+
+**多场景限制**：宿主 `DeInit()` 会全局清理伪预制体。另有已加载场景包含 manager、PseudoPrefab 或 SetupCustomPrefab 时，严格准备直接拒绝操作；先关闭其他伪预制体场景，再写回或运行批量修复，避免清理其他场景的临时对象。
 
 **文件模型（写回的目标形态）**：
 

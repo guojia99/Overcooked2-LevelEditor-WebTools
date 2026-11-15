@@ -1,0 +1,46 @@
+using System;
+using System.Collections.Generic;
+
+namespace BackpackProtocol
+{
+    // Transport-independent server acceptance state, used by the real receive/poll path.
+    public sealed class DirectoryAgreement
+    {
+        private readonly Dictionary<string, float> _leases = new Dictionary<string, float>();
+        public uint Nonce;
+        public string Digest = "";
+        public bool Ready;
+
+        public void Configure(uint nonce, string digest, bool ready)
+        {
+            if (nonce == Nonce && digest == Digest && ready == Ready) return;
+            Nonce = nonce;
+            Digest = digest;
+            Ready = ready;
+            _leases.Clear();
+        }
+
+        public bool Reply(string peer, DirectoryMessage packet, bool connected, float now)
+        {
+            if (!connected || packet.Kind != 1 || packet.Nonce != Nonce) return false;
+            if (!Ready || !packet.Ready || packet.Digest != Digest)
+            {
+                _leases.Remove(peer);
+                return false;
+            }
+            _leases[peer] = now + 3f;
+            return true;
+        }
+
+        public bool AllReady(IEnumerable<string> peers, float now)
+        {
+            if (!Ready) return false;
+            foreach (var peer in peers)
+            {
+                float until;
+                if (!_leases.TryGetValue(peer, out until) || now > until) return false;
+            }
+            return true;
+        }
+    }
+}

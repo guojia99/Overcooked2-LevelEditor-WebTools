@@ -1,0 +1,26 @@
+<Project>
+  <PropertyGroup>
+    <RatCheckArtifactsPath Condition="'$(RatCheckArtifactsPath)' == ''">$([System.IO.Path]::GetTempPath())opencode/rat-heist-check/</RatCheckArtifactsPath>
+    <BaseIntermediateOutputPath>$(RatCheckArtifactsPath)obj/</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+  </PropertyGroup>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <PropertyGroup>
+    <TargetFramework>net35</TargetFramework>
+    <LangVersion>4</LangVersion>
+    <LanguageTargets>$(MSBuildToolsPath)/Microsoft.CSharp.targets</LanguageTargets>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <DefineConstants>RATHEIST_ISOLATED_CHECK</DefineConstants>
+    <OutputPath>$(RatCheckArtifactsPath)bin/</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" />
+    <Compile Include="../*.cs;../../core/GameApi.cs;../../core/StubLog.cs;../../core/StubVersion.cs;EntryPoint.Check.cs" />
+    <Reference Include="/Applications/Unity/Hub/Editor/2017.4.8f1/Unity.app/Contents/Managed/UnityEngine/*.dll" />
+    <Reference Include="../../../../Library/ScriptAssemblies/Assembly-CSharp.dll" />
+    <Reference Include="../../../../Library/ScriptAssemblies/LevelEditorStub.dll" />
+    <Reference Include="../../../Plugins/0Harmony.dll" />
+  </ItemGroup>
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+</Project>

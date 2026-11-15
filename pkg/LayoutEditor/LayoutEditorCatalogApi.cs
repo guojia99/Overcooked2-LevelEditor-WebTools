@@ -1052,7 +1052,17 @@ public static class LayoutEditorCatalogApi
             return;
         var custom = so as CustomRecipeSO;
         if (custom == null)
-            return; // PseudoPrefabSO（官方食材/步骤）= 叶子
+        {
+            // 官方菜谱（PseudoPrefabSORecipe，如 DLC04 火锅 DLC04_Hotpot_*）：
+            // 关卡 RecipeMatchList 默认只含本传步骤，DLC 步骤（火锅 HotPot uID=20069、
+            // 烤盘等）不在其中 → 客户端反序列化 CookedCompositeAssembledNode 时
+            // GameUtils.GetCookingStepData 返回 null → IsMatch 空引用
+            //（2026-11-12 大勺连续取放火锅内容物实证）。
+            // 首选 recipe-knowledge 的 step 字段（官方菜谱 id → "HotPot"），
+            // 直接映射本地 food/CookingSteps 包装，无需加载 bundle。
+            CollectOfficialRecipeCookingSteps(so, steps);
+            return; // 其余 PseudoPrefabSO（官方食材/步骤）= 叶子
+        }
         if (custom.cookingStepSO != null)
             steps.Add(custom.cookingStepSO);
         if (custom.compositionSOs != null)
@@ -1068,6 +1078,125 @@ public static class LayoutEditorCatalogApi
         var burger = so as CustomRecipeOptionalBurgerSO;
         if (burger != null && burger.bunSO != null)
             CollectCookingSteps(burger.bunSO, steps, visited);
+    }
+
+    /// <summary>官方菜谱 → 烹饪步骤包装。主通道 recipe-knowledge（step 名 ↔
+    /// food/CookingSteps/*.asset 文件名/prefabName）；知识表未收录时退回载入
+    /// OrderDefinitionNode 树按 uID 映射（编辑器非 Play 下 bundle 可能未加载，
+    /// 失败静默跳过，行为同旧版）。</summary>
+    private static void CollectOfficialRecipeCookingSteps(ScriptableObject recipeSO, HashSet<PseudoPrefabSO> steps)
+    {
+        var id = Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(recipeSO));
+        if (!string.IsNullOrEmpty(id))
+        {
+            string step;
+            string[] ings;
+            if (LayoutEditorRecipeKnowledge.TryGetOriginal(id, out step, out ings))
+            {
+                var wrap = FindCookingStepWrapperByName(step);
+                if (wrap != null)
+                {
+                    steps.Add(wrap);
+                    return;
+                }
+            }
+        }
+        var recipe = recipeSO as PseudoPrefabSORecipe;
+        if (recipe == null)
+            return;
+        OrderDefinitionNode order = null;
+        try
+        {
+            order = LevelEditor.RecipeHelper.GetOrderDefinitionNode(recipe);
+        }
+        catch (Exception)
+        {
+            return; // 编辑器非 Play：bundle 未加载，跳过（旧版行为）
+        }
+        CollectCookingStepsFromOrder(order, steps, new HashSet<int>());
+    }
+
+    /// <summary>兜底：遍历官方菜谱 OrderDefinitionNode 树，按 uID 收集烹饪步骤。</summary>
+    private static void CollectCookingStepsFromOrder(OrderDefinitionNode node, HashSet<PseudoPrefabSO> steps, HashSet<int> seen)
+    {
+        if (node == null)
+            return;
+        var cooked = node as CookedCompositeOrderNode;
+        if (cooked != null && cooked.m_cookingStep != null && seen.Add(cooked.m_cookingStep.m_uID))
+        {
+            var wrap = FindCookingStepWrapperByUid(cooked.m_cookingStep.m_uID);
+            if (wrap != null)
+                steps.Add(wrap);
+        }
+        var comp = node as CompositeOrderNode;
+        if (comp != null && comp.m_composition != null)
+        {
+            for (int i = 0; i < comp.m_composition.Length; i++)
+                CollectCookingStepsFromOrder(comp.m_composition[i], steps, seen);
+        }
+    }
+
+    private static Dictionary<string, PseudoPrefabSO> s_cookingStepWrappersByName;
+    private static Dictionary<int, PseudoPrefabSO> s_cookingStepWrappersByUid;
+
+    private static readonly string[] CookingStepFolders =
+    {
+        "Assets/common01/food/CookingSteps",
+        "Assets/common02/food/CookingSteps",
+        "Assets/common03/food/CookingSteps",
+    };
+
+    private static void EnsureCookingStepWrappers()
+    {
+        if (s_cookingStepWrappersByName != null)
+            return;
+        s_cookingStepWrappersByName = new Dictionary<string, PseudoPrefabSO>(StringComparer.OrdinalIgnoreCase);
+        s_cookingStepWrappersByUid = new Dictionary<int, PseudoPrefabSO>();
+        for (int i = 0; i < CookingStepFolders.Length; i++)
+        {
+            if (!AssetDatabase.IsValidFolder(CookingStepFolders[i]))
+                continue;
+            var guids = AssetDatabase.FindAssets("t:PseudoPrefabSO", new[] { CookingStepFolders[i] });
+            for (int j = 0; j < guids.Length; j++)
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guids[j]);
+                var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
+                if (so == null)
+                    continue;
+                var fileName = Path.GetFileNameWithoutExtension(path);
+                if (!string.IsNullOrEmpty(fileName) && !s_cookingStepWrappersByName.ContainsKey(fileName))
+                    s_cookingStepWrappersByName.Add(fileName, so);
+                if (!string.IsNullOrEmpty(so.prefabName) && !s_cookingStepWrappersByName.ContainsKey(so.prefabName))
+                    s_cookingStepWrappersByName.Add(so.prefabName, so);
+                CookingStepData data = null;
+                try
+                {
+                    data = LevelEditor.RecipeHelper.GetCookingStepData(so);
+                }
+                catch (Exception)
+                {
+                    // bundle 未加载：uID 通道不可用（主通道按名匹配不依赖加载）
+                }
+                if (data != null && !s_cookingStepWrappersByUid.ContainsKey(data.m_uID))
+                    s_cookingStepWrappersByUid.Add(data.m_uID, so);
+            }
+        }
+    }
+
+    private static PseudoPrefabSO FindCookingStepWrapperByName(string step)
+    {
+        if (string.IsNullOrEmpty(step))
+            return null;
+        EnsureCookingStepWrappers();
+        PseudoPrefabSO wrap;
+        return s_cookingStepWrappersByName.TryGetValue(step, out wrap) ? wrap : null;
+    }
+
+    private static PseudoPrefabSO FindCookingStepWrapperByUid(int uid)
+    {
+        EnsureCookingStepWrappers();
+        PseudoPrefabSO wrap;
+        return s_cookingStepWrappersByUid.TryGetValue(uid, out wrap) ? wrap : null;
     }
 
     private static string SyncBurgerOptionalsForSavedRecipes(        string levelInfoAssetPath,

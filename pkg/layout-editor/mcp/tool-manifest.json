@@ -167,6 +167,7 @@
     },
     {
       "name": "oc2_commit_scene",
+      "description": "提交场景写回；后端严格 Prepare 并保存场景与资源，任一步骤失败则请求失败。成功后自动刷新预览，无需再手动 Ctrl+S；请重新读取场景验证，或关闭并重开场景核对磁盘内容。",
       "category": "scene",
       "sideEffect": "write_scene",
       "estimatedMs": 30000,

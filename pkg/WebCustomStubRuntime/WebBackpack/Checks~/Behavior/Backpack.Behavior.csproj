@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>4</LangVersion>
+    <OutputType>Exe</OutputType>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../WebBackpackPrefabDirectory.cs" />
+    <Compile Include="../../WebBackpackStoredSlot.cs" />
+    <Compile Include="../../WebBackpackSpawnPage.cs" />
+    <Compile Include="../../WebBackpackChild.cs" />
+    <Compile Include="../../WebBackpackRecovery.cs" />
+    <Compile Include="../../WebBackpackAuthoredSource.cs" />
+    <Compile Include="../../WebBackpackDirectoryHandshake.cs" />
+    <Compile Include="../../WebBackpackRecoveryIsolation.cs" />
+    <Compile Include="../../WebBackpackCookingPolicy.cs" />
+    <Compile Include="../BehaviorHost.txt" />
+  </ItemGroup>
+</Project>

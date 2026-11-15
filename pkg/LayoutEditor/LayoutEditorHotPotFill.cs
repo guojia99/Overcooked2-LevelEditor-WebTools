@@ -253,15 +253,16 @@ public static class LayoutEditorHotPotFill
     }
 
     /// <summary>收集 LevelInfo 所选菜谱中 HotPot 步骤菜谱的叶食材 PseudoPrefabSO，
-    ///  外加同 DLC 的 permutationsraw/cooked 中间产物（PseudoPrefabSORecipe，
-    ///  位于 common03/Recipes/{dlc}/，Setup() 会按 PseudoPrefabSORecipe 分支加载节点）。</summary>
+    ///  外加同 bundle 的生/熟中间产物（本地包装 DLC04_optionalhotpot_raw/cooked，
+    ///  prefabName=HotpotPermutationsraw/cooked；Setup() 按 PseudoPrefabSORecipe
+    ///  分支加载节点）。</summary>
     public static List<ScriptableObject> CollectHotPotNodes(LevelInfoSO info)
     {
         var result = new List<ScriptableObject>();
         if (info == null || info.recipes == null)
             return result;
         var seen = new HashSet<Object>();
-        var dlcPrefixes = new HashSet<string>(System.StringComparer.Ordinal);
+        var recipeBundles = new HashSet<string>(System.StringComparer.Ordinal);
         foreach (var r in info.recipes)
         {
             if (r == null)
@@ -274,17 +275,9 @@ public static class LayoutEditorHotPotFill
                 continue;
             if (step != "HotPot")
                 continue;
-            if (id != null && id.StartsWith("dlc", System.StringComparison.Ordinal))
-            {
-                // dlc10_hotpot_mixed → "dlc10_"；无前缀（dlc04 家族）→ ""。
-                var under = id.IndexOf('_');
-                if (under > 0)
-                    dlcPrefixes.Add(id.Substring(0, under + 1));
-                else
-                    dlcPrefixes.Add("");
-            }
-            else
-                dlcPrefixes.Add("");
+            var recipePseudo = r as PseudoPrefabSO;
+            if (recipePseudo != null && !string.IsNullOrEmpty(recipePseudo.bundleName))
+                recipeBundles.Add(recipePseudo.bundleName);
             foreach (var ing in ings)
             {
                 var so = LayoutEditorRoastTrayFill.LoadIngredientSo(ing);
@@ -292,11 +285,15 @@ public static class LayoutEditorHotPotFill
                     result.Add(so);
             }
         }
-        foreach (var prefix in dlcPrefixes)
+        // 生/熟中间产物：本地包装文件名（DLC04_optionalhotpot_cooked）与 bundle 内
+        // asset 名（hotpot_permutationscooked）不同，旧实现按 asset 名找文件永远落空
+        // → 熟食节点缺失：盘子里的火锅菜回不了锅、成品模型发黑（2026-11-12 实证）。
+        // 改为扫描 common03/Recipes 包装，按 prefabName 含 "permutations" + 菜谱同
+        // bundle 反查。
+        if (recipeBundles.Count > 0)
         {
-            foreach (var permId in new[] { prefix + "hotpot_permutationsraw", prefix + "hotpot_permutationscooked" })
+            foreach (var so in FindHotPotPermutationSOs(recipeBundles))
             {
-                var so = LoadRecipeSo(permId);
                 if (so != null && seen.Add(so))
                     result.Add(so);
             }
@@ -304,19 +301,42 @@ public static class LayoutEditorHotPotFill
         return result;
     }
 
-    /// <summary>在 common03/Recipes 下按 id 找 PseudoPrefabSO（permutations 等）。</summary>
-    private static PseudoPrefabSO LoadRecipeSo(string id)
+    private static Dictionary<string, PseudoPrefabSO> s_hotpotPermutationCache;
+
+    /// <summary>扫描 common03/food/Recipes 下的 PseudoPrefabSO 包装，按 prefabName
+    /// 含 "permutations" 且 bundleName 命中菜谱 bundle 反查火锅生/熟中间产物。</summary>
+    private static List<PseudoPrefabSO> FindHotPotPermutationSOs(HashSet<string> bundles)
     {
-        if (string.IsNullOrEmpty(id))
-            return null;
-        var root = "Assets/common03/food/Recipes";
-        var absRoot = System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "../" + root));
-        if (!System.IO.Directory.Exists(absRoot))
-            return null;
-        var files = System.IO.Directory.GetFiles(absRoot, id + ".asset", System.IO.SearchOption.AllDirectories);
-        if (files.Length == 0)
-            return null;
-        var rel = root + files[0].Substring(absRoot.Length).Replace('\\', '/');
-        return AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(rel);
+        if (s_hotpotPermutationCache == null)
+        {
+            s_hotpotPermutationCache = new Dictionary<string, PseudoPrefabSO>(System.StringComparer.OrdinalIgnoreCase);
+            const string root = "Assets/common03/food/Recipes";
+            if (AssetDatabase.IsValidFolder(root))
+            {
+                var guids = AssetDatabase.FindAssets("t:PseudoPrefabSO", new[] { root });
+                for (int i = 0; i < guids.Length; i++)
+                {
+                    var path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                    var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
+                    if (so == null || string.IsNullOrEmpty(so.prefabName))
+                        continue;
+                    if (so.prefabName.IndexOf("permutations", System.StringComparison.OrdinalIgnoreCase) < 0)
+                        continue;
+                    var key = (so.bundleName ?? "") + "|" + so.prefabName;
+                    if (!s_hotpotPermutationCache.ContainsKey(key))
+                        s_hotpotPermutationCache.Add(key, so);
+                }
+            }
+        }
+        var list = new List<PseudoPrefabSO>();
+        foreach (var pair in s_hotpotPermutationCache)
+        {
+            var so = pair.Value;
+            if (so != null && bundles.Contains(so.bundleName ?? ""))
+                list.Add(so);
+        }
+        return list;
     }
+
+
 }

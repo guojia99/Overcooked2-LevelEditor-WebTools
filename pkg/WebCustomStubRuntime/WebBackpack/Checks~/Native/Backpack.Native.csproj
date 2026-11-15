@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>4</LangVersion>
+    <OutputType>Exe</OutputType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <RepoRoot>$(MSBuildThisFileDirectory)../../../../..</RepoRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="NativeWire.txt" />
+    <Reference Include="BackpackProtocol"><HintPath>../../Modules~/BackpackProtocol/bin/Debug/net35/BackpackProtocol.dll</HintPath></Reference>
+    <Reference Include="$(RepoRoot)/Library/ScriptAssemblies/Assembly-CSharp.dll" />
+    <Reference Include="$(RepoRoot)/Library/ScriptAssemblies/Assembly-CSharp-firstpass.dll" />
+    <Reference Include="$(RepoRoot)/Library/ScriptAssemblies/LevelEditorStub.dll" />
+    <Reference Include="/Applications/Unity/Hub/Editor/2017.4.8f1/Unity.app/Contents/Managed/UnityEngine/*.dll" />
+    <Reference Include="$(RepoRoot)/Assets/Plugins/0Harmony.dll" />
+  </ItemGroup>
+</Project>

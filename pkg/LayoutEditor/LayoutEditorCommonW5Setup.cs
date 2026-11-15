@@ -12,7 +12,7 @@ using UnityEngine;
 /// Sprite 子资产与 SubTexture2D；本类在域重载后（幂等）补全：
 ///   1. PseudoPrefabSO.asset ← 本地 AudioClip / prefab（音乐、食材、桌台皮肤）；
 ///   2. IngredientOrderNode：m_iconSprite / m_crateLid 缺失时按图标补全，并校验 uID 唯一；
-///   3. 缺 OGG / prefab 时仅告警，不阻断。
+///   3. 缺 OGG / prefab 时仅告警，不阻断；OGG 存在但 AudioClip 未导入时强制重导入自愈。
 /// 也可手动执行菜单「Layout Editor/commonW5 校验并补全直引」。
 /// </summary>
 [InitializeOnLoad]
@@ -24,17 +24,49 @@ public static class LayoutEditorCommonW5Setup
     private const string IngredientRoot = Root + "/ingredients";
     private const string CounterRoot = Root + "/counters";
 
+    // 首次导入 commonW5 时若在 AssetDatabase 仍在 Import 期间 Load/SaveAssets，
+    // 可能打断正在导入的音频（Unity 报 Unspecified error 并留下永久损坏的缓存，
+    // PseudoPrefabSO 直引随之一直为空）。统一延迟到空闲执行，并带去重与超时。
+    private static bool sVerifyScheduled;
+    private static bool sVerifying;
+    private static double sVerifyDeadline;
+    // 每个文件每个会话只强制重导入一次：损坏音频单次导入可能阻塞十几秒，且导入
+    // 事件会再次触发本类；无此闸门会形成「校验→重导入→校验」死循环（编辑器假死）。
+    private static readonly HashSet<string> sReimportAttempted =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
     static LayoutEditorCommonW5Setup()
     {
-        EditorApplication.delayCall += AutoVerify;
+        EditorApplication.delayCall += ScheduleVerify;
     }
 
-    private static void AutoVerify()
+    internal static void ScheduleVerify()
     {
-        if (EditorApplication.isPlayingOrWillChangePlaymode ||
-            EditorApplication.isCompiling ||
-            EditorApplication.isUpdating)
+        if (sVerifyScheduled || sVerifying)
             return;
+        sVerifyScheduled = true;
+        sVerifyDeadline = EditorApplication.timeSinceStartup + 300.0;
+        EditorApplication.delayCall += TryVerify;
+    }
+
+    private static void TryVerify()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode)
+        {
+            sVerifyScheduled = false;
+            return;
+        }
+        if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+        {
+            if (EditorApplication.timeSinceStartup < sVerifyDeadline)
+            {
+                EditorApplication.delayCall += TryVerify;
+                return;
+            }
+            sVerifyScheduled = false;
+            return;
+        }
+        sVerifyScheduled = false;
         if (!AssetDatabase.IsValidFolder(Root))
             return;
         VerifyAndRepair(false);
@@ -47,6 +79,23 @@ public static class LayoutEditorCommonW5Setup
     }
 
     internal static void VerifyAndRepair(bool verbose)
+    {
+        // 防重入：VerifyAndRepair 内部会 ImportAsset/SaveAssets，期间触发的
+        // OnPostprocessAllAssets 不得再次排入校验。
+        if (sVerifying)
+            return;
+        sVerifying = true;
+        try
+        {
+            VerifyAndRepairInternal(verbose);
+        }
+        finally
+        {
+            sVerifying = false;
+        }
+    }
+
+    private static void VerifyAndRepairInternal(bool verbose)
     {
         int fixedCount = 0;
         int warnCount = 0;
@@ -75,11 +124,36 @@ public static class LayoutEditorCommonW5Setup
             if (path.Replace("\\", "/").IndexOf("/pseudo_prefab_so/audio/", StringComparison.Ordinal) >= 0)
             {
                 string clipPath;
-                if (audioByClipName.TryGetValue(id, out clipPath))
+                if (!audioByClipName.TryGetValue(id, out clipPath))
+                {
+                    // 失败/尚未导入的 AudioClip 不会出现在 AssetDatabase.FindAssets("t:AudioClip")
+                    // 里；按文件名在磁盘定位后强制重导入，修复历史坏缓存与首次导入竞态。
+                    clipPath = FindAudioFile(id);
+                }
+                if (!string.IsNullOrEmpty(clipPath))
+                {
                     target = AssetDatabase.LoadAssetAtPath<AudioClip>(clipPath);
+                    if (target == null && !sReimportAttempted.Contains(clipPath))
+                    {
+                        sReimportAttempted.Add(clipPath);
+                        try
+                        {
+                            AssetDatabase.ImportAsset(clipPath,
+                                ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+                            target = AssetDatabase.LoadAssetAtPath<AudioClip>(clipPath);
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.LogWarning("[commonW5] 强制重导入 OGG 失败: " + clipPath + "（" + e.Message + "）");
+                        }
+                    }
+                    if (target != null)
+                        audioByClipName[id] = clipPath;
+                }
                 if (target == null)
                 {
-                    Debug.LogWarning("[commonW5] 音乐 SO 找不到对应 OGG: " + path + "（期望同名 " + id + ".ogg）");
+                    Debug.LogWarning("[commonW5] 音乐 SO 找不到对应 OGG: " + path + "（期望同名 " + id + ".ogg）"
+                        + (string.IsNullOrEmpty(clipPath) ? "" : "；本会话已尝试强制重导入仍失败，文件可能不被当前 Unity 支持"));
                     warnCount++;
                     continue;
                 }
@@ -170,6 +244,28 @@ public static class LayoutEditorCommonW5Setup
         }
     }
 
+    /// <summary>
+    /// 按曲目 id 在 commonW5/audio 下定位同名 .ogg（项目根相对路径）。
+    /// 失败导入的 AudioClip 从 AssetDatabase 查不到，只能走文件系统再强制重导入。
+    /// </summary>
+    private static string FindAudioFile(string id)
+    {
+        if (!Directory.Exists(AudioRoot))
+            return null;
+        string[] hits;
+        try
+        {
+            hits = Directory.GetFiles(AudioRoot, id + ".ogg", SearchOption.AllDirectories);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+        if (hits == null || hits.Length == 0)
+            return null;
+        return hits[0].Replace("\\", "/");
+    }
+
     private static Dictionary<string, string> CollectAssetPaths(string filter, string folder)
     {
         var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -211,7 +307,8 @@ public class LayoutEditorCommonW5SetupPostprocessor : AssetPostprocessor
             if (!string.IsNullOrEmpty(p) &&
                 p.Replace("\\", "/").StartsWith("Assets/commonW5/", StringComparison.Ordinal))
             {
-                EditorApplication.delayCall += delegate { LayoutEditorCommonW5Setup.VerifyAndRepair(false); };
+                // 导入批次仍在进行，交给 ScheduleVerify 等 AssetDatabase 空闲后再执行。
+                LayoutEditorCommonW5Setup.ScheduleVerify();
                 return;
             }
         }

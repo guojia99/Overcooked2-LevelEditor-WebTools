@@ -9853,6 +9853,17 @@ body.manage-bg {
   justify-content: space-between;
 }
 
+.mp-advanced-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.mp-advanced-fields .mp-face-row {
+  flex-wrap: wrap;
+}
+
 #mp-canvas {
   display: block;
   width: 100%;

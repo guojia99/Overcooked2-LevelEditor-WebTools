@@ -31,7 +31,8 @@ public static class SceneLayoutApplier
     /// null = full, "items" = gameplay items only, "decor" = decor only,
     /// "floors" = floors/background + surface items only.
     /// </summary>
-    public static string Apply(LayoutDocumentDto document, float snapStep, bool syncWalkable, string only)
+    public static string Apply(LayoutDocumentDto document, float snapStep, bool syncWalkable, string only,
+        Action beforeSave = null)
     {
         // 必须在开场景、删物件、烘焙、SaveScene 之前拒绝。请求可能在编辑模式入队，
         // 主线程泵执行时编辑器已经进了 Play。
@@ -550,15 +551,23 @@ public static class SceneLayoutApplier
         }
         // 分料机 2026-11 字段迁移（outputPrefab -> outputPrefabSO）：必须在 SaveScene 前。
         LayoutEditorIngredientSplitterMigration.MigrateOpenScene();
-        LayoutEditorPseudoReload.ForcePrepareForBuildingForExport();
+        if (beforeSave != null)
+            beforeSave();
         var removedMissingScripts = LayoutEditorMissingScriptCleanup.RemoveMissingScripts(scene);
         if (removedMissingScripts > 0)
             LayoutEditorLog.Log("[Applier] 清理 Missing Script 组件: " + removedMissingScripts);
-        EditorSceneManager.MarkSceneDirty(scene);
-        if (EditorSceneManager.SaveScene(scene))
-            LayoutEditorLayoutMigrations.CommitPending();
-        else
+        try
+        {
+            LayoutEditorPseudoReload.SaveScenePrepared(scene, false);
+            AssetDatabase.SaveAssets();
+        }
+        catch (Exception ex)
+        {
             LayoutEditorLayoutMigrations.DiscardPending();
+            LayoutEditorPseudoReload.TryRestoreWritePreview();
+            return "写回保存失败：" + ex.Message;
+        }
+        LayoutEditorLayoutMigrations.CommitPending();
         // 写回历史：SaveScene 后、Reload 前（stripped 状态）取写回后语义快照；
         // killplane 随后的同款调用会覆盖为累计状态。
         LayoutEditorWriteBackHistory.SupplySemanticAfter(document.sceneAssetPath);
@@ -3611,8 +3620,16 @@ public static class LayoutEditorSafety
     public static bool PrepareSceneForApply()
     {
         LastError = null;
-        LayoutEditorPseudoReload.EnsurePrepareForBuilding();
-        return true;
+        try
+        {
+            LayoutEditorPseudoReload.EnsurePrepareForBuilding();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            LastError = "写回准备失败：" + ex.Message;
+            return false;
+        }
     }
 
     /// <summary>

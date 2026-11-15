@@ -1,0 +1,268 @@
+// Explicit Compile input: .txt also protects broad standalone **/*.cs compilation globs.
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Text;
+using BitStream;
+using HarmonyLib;
+using Team17.Online;
+using Team17.Online.Multiplayer;
+using Team17.Online.Multiplayer.Messaging;
+using UnityEngine;
+
+namespace BackpackProtocol
+{
+    // Dedicated global protocol; never masquerades as an existing native payload or EntityType.
+    public sealed class DirectoryMessage : Serialisable
+    {
+        public const uint Magic = 0x42504e31;
+        public byte Kind;
+        public uint Nonce;
+        public bool Ready;
+        public string Digest = "";
+        public void Serialise(BitStreamWriter writer)
+        {
+            writer.Write(Magic, 32);
+            writer.Write(Kind, 8);
+            writer.Write(Nonce, 32);
+            writer.Write(Ready);
+            writer.Write(Digest, Encoding.ASCII);
+        }
+        public bool Deserialise(BitStreamReader reader)
+        {
+            if (reader.ReadUInt32(32) != Magic) return false;
+            Kind = reader.ReadByte(8);
+            Nonce = reader.ReadUInt32(32);
+            Ready = reader.ReadBit();
+            Digest = reader.ReadString(Encoding.ASCII);
+            return Kind <= 2 && Digest != null && Digest.Length <= 128;
+        }
+    }
+
+    public static class Bootstrap
+    {
+        // Audit: native global MessageType 0..41; no 201 use in runtime modules. Runtime registry
+        // collision check is mandatory because other installed mods may allocate the same value.
+        public const int MessageId = 201;
+        private const string HarmonyId = "oc2.customstub.backpack.protocol";
+        private static readonly List<MethodBase> s_targets = new List<MethodBase>();
+        private static readonly DirectoryAgreement s_agreement = new DirectoryAgreement();
+        private static string s_roster = "";
+        private static bool s_installed;
+        private static bool s_active;
+        private static string s_digest = "";
+        private static bool s_ready;
+        private static bool s_accepted;
+        private static string s_confirmedDigest;
+        private static float s_next;
+        private static uint s_nonce;
+        private static DirectoryMessage s_payload = new DirectoryMessage();
+        private static readonly Type MailboxType = typeof(MultiplayerController).Assembly.GetType("Mailbox");
+        private static object Field(object target, string name)
+        {
+            return target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).GetValue(target);
+        }
+        private static object Mailbox(string name)
+        {
+            return MailboxType.GetField(name, BindingFlags.Static | BindingFlags.Public).GetValue(null);
+        }
+        private static bool Host(MultiplayerController controller)
+        {
+            return (bool)typeof(MultiplayerController).GetMethod("IsServer",
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Invoke(controller, null);
+        }
+
+        public static void Reset()
+        {
+            s_active = false;
+            s_accepted = false;
+            s_ready = false;
+            s_digest = "";
+            s_confirmedDigest = null;
+            s_agreement.Configure(0, "", false);
+            s_roster = "";
+            s_next = 0;
+            s_nonce = 0;
+            if (s_installed)
+            {
+                var harmony = new Harmony(HarmonyId);
+                foreach (var target in s_targets) harmony.Unpatch(target, HarmonyPatchType.All, HarmonyId);
+                s_targets.Clear();
+                s_installed = false;
+            }
+            var registry = SerialisationRegistry<MessageType>.s_MessageTypes;
+            Serialisable registered;
+            if (registry != null && registry.TryGetValue((MessageType)MessageId, out registered) && registered is DirectoryMessage)
+                registry.Remove((MessageType)MessageId);
+        }
+
+        private static void Install()
+        {
+            if (s_installed) return;
+            Serialisable existing;
+            if (Enum.IsDefined(typeof(MessageType), MessageId)
+                || (SerialisationRegistry<MessageType>.s_MessageTypes != null
+                    && SerialisationRegistry<MessageType>.s_MessageTypes.TryGetValue((MessageType)MessageId, out existing)
+                    && !(existing is DirectoryMessage)))
+                throw new InvalidOperationException("Backpack message ID conflict: " + MessageId);
+            var harmony = new Harmony(HarmonyId);
+            try
+            {
+                Patch(harmony, typeof(Message).GetMethod("Deserialise"), "ReadExtension", false);
+                Patch(harmony, MailboxType.GetMethod("OnMessageReceived", BindingFlags.Instance | BindingFlags.NonPublic), "Receive", true);
+                // Debug tracker has arrays sized to native COUNT=42. Exclude only this dedicated
+                // extension from native counters; never index/resize them or remap message IDs.
+                Patch(harmony, typeof(NetworkMessageTracker).GetMethod("TrackSentGlobalEvent"), "Track", true);
+                Patch(harmony, typeof(NetworkMessageTracker).GetMethod("TrackReceivedGlobalEvent"), "Track", true);
+                s_installed = true;
+            }
+            catch
+            {
+                foreach (var target in s_targets) harmony.Unpatch(target, HarmonyPatchType.All, HarmonyId);
+                s_targets.Clear();
+                throw;
+            }
+        }
+        private static void Patch(Harmony harmony, MethodBase target, string method, bool prefix)
+        {
+            if (target == null) throw new MissingMethodException(method);
+            s_targets.Add(target);
+            var patch = new HarmonyMethod(typeof(Bootstrap).GetMethod(method, BindingFlags.NonPublic | BindingFlags.Static));
+            if (prefix) harmony.Patch(target, patch); else harmony.Patch(target, null, patch);
+        }
+        private static bool Track(MessageType __0) { return (int)__0 != MessageId; }
+        private static void ReadExtension(Message __instance, BitStreamReader reader, ref bool __result)
+        {
+            // Vanilla has consumed exactly the 8-bit type before rejecting extension IDs.
+            if (__result || (int)__instance.Type != MessageId || !s_active) return;
+            __result = s_payload.Deserialise(reader);
+            __instance.Payload = __result ? s_payload : null;
+        }
+
+        private static bool Receive(object __instance, IOnlineMultiplayerSessionUserId sessionUserId,
+            MessageType type, Serialisable message, uint sequence, bool bReliable)
+        {
+            if ((int)type != MessageId) return true;
+            if (!s_active || !bReliable) return false;
+            var packet = message as DirectoryMessage;
+            var controller = GameUtils.RequireManager<MultiplayerController>();
+            if (packet == null || controller == null) return false;
+            bool host = Host(controller);
+            if (ReferenceEquals(__instance, Mailbox("Server")))
+            {
+                if (!host || packet.Kind != 1 || packet.Nonce != s_nonce) return false;
+                // Authenticate reply identity using the actual server connection dictionary.
+                var server = Field(controller, "m_LocalServer") as Server;
+                var remotes = server != null ? Field(server, "m_RemoteClientConnections") as IDictionary : null;
+                if (sessionUserId == null || remotes == null || !remotes.Contains(sessionUserId)) return false;
+                if (!s_agreement.Reply(sessionUserId.UniqueId.ToString(), packet, true, Time.realtimeSinceStartup))
+                    s_accepted = false;
+            }
+            else if (ReferenceEquals(__instance, Mailbox("Client")) && !host)
+            {
+                // Client's only connection is the authoritative server; mailbox preserves it.
+                if (packet.Kind == 0)
+                {
+                    if (packet.Nonce != s_nonce) s_accepted = false;
+                    s_nonce = packet.Nonce;
+                    bool match = s_ready && packet.Ready && packet.Digest == s_digest;
+                    if (!match) s_accepted = false;
+                    var client = Field(controller, "m_LocalClient") as Client;
+                    if (client != null) client.SendMessageToServer((MessageType)MessageId,
+                        new DirectoryMessage { Kind = 1, Nonce = s_nonce, Ready = match, Digest = s_digest }, true);
+                }
+                else if (packet.Kind == 2 && packet.Nonce == s_nonce)
+                {
+                    s_accepted = packet.Ready && s_ready && packet.Digest == s_digest;
+                    if (s_accepted) s_confirmedDigest = s_digest;
+                }
+            }
+            return false; // Dedicated extension never reaches vanilla 42-entry mailbox arrays.
+        }
+
+        public static bool Poll(string digest, bool ready)
+        {
+            try
+            {
+                Install();
+                s_active = true;
+                // Registry can be re-initialized by MultiplayerController; do not cache a
+                // registration flag across that boundary. EntitySerialisationRegistry.Clear
+                // is irrelevant: this protocol registers no synchronizers or EntityType.
+                var registry = SerialisationRegistry<MessageType>.s_MessageTypes;
+                Serialisable occupied;
+                if (registry == null || (registry.TryGetValue((MessageType)MessageId, out occupied) && !(occupied is DirectoryMessage)))
+                    return false;
+                registry[(MessageType)MessageId] = s_payload;
+                var controller = GameUtils.RequireManager<MultiplayerController>();
+                if (controller == null || !MultiplayerController.IsSynchronisationActive()) return false;
+                if (digest != s_digest || ready != s_ready)
+                {
+                    s_digest = digest;
+                    if (s_confirmedDigest != digest || !ready) s_confirmedDigest = null;
+                    s_ready = ready;
+                    s_accepted = false;
+                    s_nonce = BitConverter.ToUInt32(Guid.NewGuid().ToByteArray(), 0);
+                    if (s_nonce == 0) s_nonce = 1;
+                    s_next = 0;
+                }
+                float now = Time.realtimeSinceStartup;
+                if (Host(controller))
+                {
+                    var server = Field(controller, "m_LocalServer") as Server;
+                    var remotes = server != null ? Field(server, "m_RemoteClientConnections") as IDictionary : null;
+                    if (remotes == null) return false;
+                    var peers = new List<string>();
+                    foreach (DictionaryEntry peer in remotes)
+                    {
+                        var id = peer.Key as IOnlineMultiplayerSessionUserId;
+                        if (id == null) return false;
+                        peers.Add(id.UniqueId.ToString());
+                    }
+                    peers.Sort(StringComparer.Ordinal);
+                    string roster = string.Join(",", peers.ToArray());
+                    if (roster != s_roster)
+                    {
+                        s_roster = roster;
+                        s_nonce = BitConverter.ToUInt32(Guid.NewGuid().ToByteArray(), 0);
+                        if (s_nonce == 0) s_nonce = 1;
+                        s_next = 0;
+                    }
+                    s_agreement.Configure(s_nonce, s_digest, s_ready);
+                    bool all = s_agreement.AllReady(peers, now);
+                    if (all) s_confirmedDigest = s_digest;
+                    bool changed = s_accepted != all;
+                    s_accepted = all;
+                    if (now >= s_next || changed)
+                    {
+                        s_next = now + 1f;
+                        server.BroadcastMessageToAll((MessageType)MessageId,
+                            new DirectoryMessage { Kind = 0, Nonce = s_nonce, Ready = ready, Digest = digest }, true);
+                        server.BroadcastMessageToAll((MessageType)MessageId,
+                            new DirectoryMessage { Kind = 2, Nonce = s_nonce, Ready = all, Digest = digest }, true);
+                    }
+                    return all;
+                }
+                return CanDecode(s_digest); // Client consumes confirmed in-flight data; no initiation lease.
+            }
+            catch (Exception ex)
+            {
+                s_accepted = false;
+                if (Time.realtimeSinceStartup >= s_next)
+                {
+                    s_next = Time.realtimeSinceStartup + 5f;
+                    Debug.LogWarning("[BackpackNet] handshake unavailable: " + ex.Message);
+                }
+                return false;
+            }
+        }
+
+        // A confirmed immutable directory remains decodable for reliable messages already sent.
+        // Challenge leases control new host transactions only; never revoke an in-flight decoder.
+        public static bool CanDecode(string digest)
+        {
+            return s_active && s_ready && s_confirmedDigest != null && s_confirmedDigest == digest;
+        }
+    }
+}

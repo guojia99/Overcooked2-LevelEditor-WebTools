@@ -701,6 +701,18 @@ public static class LayoutEditorCustomIngredients
                     AddDependency(deps, ml.bundleName);
             }
         }
+        // allCookingSteps（官方 DLC 菜谱步骤登记，尤其火锅 HotPot / 烤盘）：
+        // 包装指向的 bundle 必须进 dependencies，否则真机 LoadAsset 抛 KeyNotFoundException。
+        if (info.allCookingSteps != null)
+        {
+            foreach (var cs in info.allCookingSteps)
+            {
+                if (cs == null)
+                    continue;
+                if (!string.IsNullOrEmpty(cs.bundleName))
+                    AddDependency(deps, cs.bundleName);
+            }
+        }
         // optionalRecipeMatchListItems（菜谱管理 Optional tab 手动写入的 DLC 菜谱/
         // hotdog 酱料/披萨部件等）：按反射读 bundleName 注册（与 LevelAdminApi
         // AnalyzeBundles 的 CollectBundleNames 同款），否则条目指向的 bundle

@@ -1,0 +1,655 @@
+// Executes the linked production source. Unity and Harmony metadata are deterministic fakes.
+// The dispatcher models HarmonyX: every prefix executes even after another returns false.
+// It deliberately does not claim to test native detours, Harmony sorting, or Unity networking.
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Reflection;
+using UnityEngine;
+using HarmonyLib;
+
+namespace UnityEngine
+{
+    public class Object
+    {
+        private static int s_next;
+        private readonly int _id = ++s_next;
+        private string _name;
+        public bool Destroyed;
+        public int DestroyedNameReads;
+        public int DestroyedIdReads;
+        public virtual string name
+        {
+            get { CheckNameAlive(); return _name; }
+            set { _name = value; }
+        }
+        protected void CheckNameAlive()
+        {
+            if (!Destroyed) return;
+            DestroyedNameReads++;
+            throw new InvalidOperationException("destroyed-object-name-access");
+        }
+        public int GetInstanceID()
+        {
+            if (Destroyed) DestroyedIdReads++;
+            return _id;
+        }
+        // Unity keeps the managed reference while its destroyed native object compares null.
+        public static bool operator ==(Object left, Object right)
+        {
+            if (ReferenceEquals(left, null)) return ReferenceEquals(right, null) || right.Destroyed;
+            if (ReferenceEquals(right, null)) return left.Destroyed;
+            return ReferenceEquals(left, right);
+        }
+        public static bool operator !=(Object left, Object right) { return !(left == right); }
+        public override bool Equals(object other)
+        {
+            if (!ReferenceEquals(other, null) && !(other is Object)) return false;
+            return this == (Object)other;
+        }
+        public override int GetHashCode() { return _id; }
+    }
+    public class Component : Object
+    {
+        public GameObject gameObject;
+        public override string name
+        {
+            get { CheckNameAlive(); return gameObject.name; }
+            set { gameObject.name = value; }
+        }
+        public Component GetComponent(Type type) { return gameObject.GetComponent(type); }
+    }
+    public class MonoBehaviour : Component { }
+    public class GameObject : Object
+    {
+        private readonly List<Component> _components = new List<Component>();
+        public GameObject(string value) { name = value; }
+        public T AddComponent<T>() where T : Component, new()
+        {
+            T component = new T();
+            component.gameObject = this;
+            _components.Add(component);
+            return component;
+        }
+        public Component GetComponent(Type type)
+        {
+            return _components.Find(delegate(Component value) { return type.IsInstanceOfType(value); });
+        }
+        public Component GetComponent(string type)
+        {
+            return _components.Find(delegate(Component value) { return value.GetType().Name == type; });
+        }
+        public T[] GetComponents<T>() where T : Component
+        {
+            List<T> result = new List<T>();
+            foreach (Component component in _components)
+                if (component is T) result.Add((T)component);
+            return result.ToArray();
+        }
+    }
+    public static class Time
+    {
+        public static int frameCount = 17;
+        public static float realtimeSinceStartup = 1;
+    }
+}
+namespace UnityEngine.SceneManagement
+{
+    public struct Scene { public string name; public string path; }
+    public static class SceneManager
+    {
+        public static Scene GetActiveScene()
+        {
+            return new Scene { name = "transfer-check", path = "checks/transfer-check" };
+        }
+    }
+}
+namespace HarmonyLib
+{
+    public class Patch
+    {
+        public readonly string owner;
+        public readonly MethodInfo PatchMethod;
+        public readonly int priority = 400;
+        public readonly string[] before = new string[0];
+        public readonly string[] after = new string[0];
+        public Patch(string id, MethodInfo method) { owner = id; PatchMethod = method; }
+    }
+    public class Patches
+    {
+        public readonly ReadOnlyCollection<Patch> Prefixes;
+        public Patches(Patch[] prefixes) { Prefixes = Array.AsReadOnly(prefixes); }
+    }
+    public class Harmony
+    {
+        public static Patches Metadata;
+        public static int Reads;
+        public static Patches GetPatchInfo(MethodBase method)
+        {
+            if (method != CustomStub.GameApi.ServerPrepTransferMethod)
+                throw new InvalidOperationException("Wrong metadata target");
+            Reads++;
+            return Metadata;
+        }
+    }
+}
+namespace CustomStub
+{
+    internal static class StubLog
+    {
+        internal static bool Verbose;
+        internal static readonly List<string> Info = new List<string>();
+        internal static readonly List<string> Warnings = new List<string>();
+        internal static readonly List<string> Debug = new List<string>();
+        internal static bool ThrowInfo;
+        internal static bool ThrowDbg;
+        internal static bool ThrowWarn;
+        internal static int InfoThrows;
+        internal static int DbgThrows;
+        internal static int WarnThrows;
+        internal static void Log(string message)
+        {
+            Info.Add(message);
+            if (ThrowInfo) { InfoThrows++; throw new InvalidOperationException("info-outlet-failure"); }
+        }
+        internal static void LogWarn(string message)
+        {
+            Warnings.Add(message);
+            if (ThrowWarn) { WarnThrows++; throw new InvalidOperationException("warn-outlet-failure"); }
+        }
+        internal static void Dbg(string message)
+        {
+            if (!Verbose) return;
+            Debug.Add(message);
+            if (ThrowDbg) { DbgThrows++; throw new InvalidOperationException("debug-outlet-failure"); }
+        }
+        internal static string All()
+        {
+            return string.Join("\n", Info.ToArray()) + "\n" + string.Join("\n", Warnings.ToArray())
+                + "\n" + string.Join("\n", Debug.ToArray());
+        }
+        internal static int NormalCount { get { return Info.Count + Warnings.Count; } }
+    }
+    internal class Mixable : MonoBehaviour { }
+    internal class Cookable : MonoBehaviour { }
+    internal class Target : MonoBehaviour
+    {
+        public int Writes;
+        public int CombineCalls;
+        public bool ThrowBeforeCombine;
+        public bool ThrowAfterCombine;
+        public bool LastDontRemove;
+        public Assembled LastNode;
+    }
+    internal class Items
+    {
+        public bool Occupied;
+        public bool HasContents() { return Occupied; }
+    }
+    internal class Preparation { public object m_ingredientOrderNode = new object(); }
+    internal class Source : MonoBehaviour
+    {
+        public Items m_itemContainer = new Items();
+        public Preparation m_container = new Preparation();
+        public void TransferToContainer(object carrier, object target, bool dontRemove) { }
+    }
+    internal class Carrier : MonoBehaviour
+    {
+        public int DestroyCalls;
+        public bool ThrowDestroy;
+        public Source SourceToDestroy;
+        public void DestroyCarriedItem()
+        {
+            DestroyCalls++;
+            if (ThrowDestroy) throw new InvalidOperationException("destroy-inner-detail");
+            if (!object.ReferenceEquals(SourceToDestroy, null)) SourceToDestroy.Destroyed = true;
+        }
+    }
+    internal class Assembled
+    {
+        public static bool ThrowConstruct;
+        public static bool ThrowSimplify;
+        public static int Constructors;
+        public static int Simplifies;
+        public object Order;
+        public bool Simplified;
+        public Assembled(object order)
+        {
+            Constructors++;
+            if (ThrowConstruct) throw new InvalidOperationException("constructor-inner-detail");
+            Order = order;
+        }
+        public object Simplify()
+        {
+            Simplifies++;
+            if (ThrowSimplify) throw new InvalidOperationException("simplify-inner-detail");
+            Assembled result = new Assembled(Order);
+            result.Simplified = true;
+            return result;
+        }
+        public static void Combine(object node, object container, bool dontRemove)
+        {
+            Target target = (Target)container;
+            target.CombineCalls++;
+            if (target.ThrowBeforeCombine) throw new InvalidOperationException("combine-before-inner-detail");
+            target.Writes++;
+            target.LastDontRemove = dontRemove;
+            target.LastNode = (Assembled)node;
+            if (target.ThrowAfterCombine) throw new InvalidOperationException("combine-after-inner-detail");
+        }
+    }
+    internal static class GameApi
+    {
+        internal static Type ServerMixableContainerType = typeof(Mixable);
+        internal static Type ServerCookableContainerType = typeof(Cookable);
+        internal static MethodInfo ServerPrepTransferMethod = typeof(Source).GetMethod("TransferToContainer");
+        internal static FieldInfo ServerPrepItemContainerField = typeof(Source).GetField("m_itemContainer");
+        internal static FieldInfo ServerPrepContainerField = typeof(Source).GetField("m_container");
+        internal static FieldInfo PrepIngredientOrderNodeField = typeof(Preparation).GetField("m_ingredientOrderNode");
+        internal static ConstructorInfo IngredientAssembledNodeCtor = typeof(Assembled).GetConstructor(new Type[] { typeof(object) });
+        internal static MethodInfo HasContentsMethod = typeof(Items).GetMethod("HasContents");
+        internal static MethodInfo AssembledCombineMethod = typeof(Assembled).GetMethod("Combine");
+        internal static MethodInfo AssembledSimplifyMethod = typeof(Assembled).GetMethod("Simplify");
+        internal static MethodInfo CarrierDestroyCarriedMethod = typeof(Carrier).GetMethod("DestroyCarriedItem");
+        // These members compile the other, unchanged entrypoints in the actual production file.
+        internal static MethodInfo ServerPlateIsReservedMethod = null;
+        internal static FieldInfo ServerPlateIngredientField = null;
+        internal static MethodInfo IngredientGetContentsCountMethod = null;
+        internal static MethodInfo IngredientGetContentsMethod = null;
+        internal static MethodInfo IngredientCanTakeContentsMethod = null;
+        internal static MethodInfo IngredientGetContentsElementMethod = null;
+        internal static MethodInfo AssembledCanCombineMethod = null;
+        internal static Type CookableContainerType = null;
+        internal static MethodInfo ClientIngredientHasContentsMethod = null;
+        internal static MethodInfo ClientContainerCanTransferMethod = null;
+        internal static MethodInfo ClientCookableGetOrderCompositionMethod = null;
+        internal static Type AssembledDefinitionNodeType = null;
+        internal static Type ContainerTransferBehaviourType = null;
+        internal static MethodInfo ICarrierInspectCarriedMethod = null;
+        internal static Type ServerIngredientContainerType = null;
+        internal static MethodInfo IngredientEmptyMethod = null;
+    }
+    internal class Fixture
+    {
+        internal Source Source = new GameObject("source-preparation").AddComponent<Source>();
+        internal Carrier Carrier = new GameObject("carrier").AddComponent<Carrier>();
+        internal Target Target = new GameObject("target").AddComponent<Target>();
+        internal int OriginalCalls;
+        internal int RuntimeCalls;
+        internal int UpstreamCalls;
+        internal bool LastRuntimeResult;
+        internal Fixture(string kind)
+        {
+            Carrier.SourceToDestroy = Source;
+            if (kind == "mixable") Target.gameObject.AddComponent<Mixable>();
+            if (kind == "cookable") Target.gameObject.AddComponent<Cookable>();
+        }
+        internal bool Runtime(bool dontRemove)
+        {
+            RuntimeCalls++;
+            LastRuntimeResult = ContainerTransferSync.ServerPrepTransferPrefix(Source, Carrier, Target, dontRemove);
+            return LastRuntimeResult;
+        }
+        internal bool Upstream(bool dontRemove)
+        {
+            UpstreamCalls++;
+            return OC2DIYLevel.Patch.ServerPreparationContainer_TransferToContainer_Patch(Source, Carrier, Target, dontRemove);
+        }
+        internal void Dispatch(bool upstream, bool runtimeFirst, bool dontRemove)
+        {
+            bool runOriginal = true;
+            if (runtimeFirst) runOriginal &= Runtime(dontRemove);
+            if (upstream) runOriginal &= Upstream(dontRemove);
+            if (!runtimeFirst) runOriginal &= Runtime(dontRemove);
+            if (runOriginal)
+            {
+                OriginalCalls++;
+                // Observable fallback, independent of the injected constructor/Combine failures.
+                Target.Writes++;
+            }
+        }
+    }
+    internal static class BehaviorChecks
+    {
+        private const string Owner = "dev.gua.overcooked.diylevel";
+        private static readonly string[] Cases = new string[] {
+            "runtime-mixable-remove", "runtime-mixable-keep", "runtime-cookable-remove", "runtime-cookable-keep",
+            "both-runtime-first-remove", "both-runtime-last-remove", "both-runtime-first-keep", "both-runtime-last-keep",
+            "metadata-late-install-and-removal", "exact-prefix-not-first", "wrong-owner", "wrong-method", "wrong-declaring-type",
+            "non-pot-pass-through", "source-occupied-remove", "source-occupied-keep",
+            "combine-after-write-remove", "combine-after-write-keep", "combine-before-write-conservative",
+            "destroy-after-write", "constructor-before-write", "simplify-before-write", "missing-reflection-fallback",
+            "logs-stable-runtime", "logs-stable-upstream", "logs-state-transitions", "logs-verbose-prefixes",
+            "logs-combine-inner", "logs-destroy-inner", "logs-constructor-inner", "logs-exception-once",
+            "outlet-upstream-info", "outlet-upstream-prefix-dbg", "outlet-upstream-sample-dbg", "outlet-upstream-all",
+            "outlet-runtime-info", "outlet-runtime-prefix-dbg", "outlet-runtime-sample-dbg", "outlet-runtime-all",
+            "outlet-warn-after-combine-remove", "outlet-warn-after-combine-keep",
+            "destroyed-source-fake-null-contract", "destroyed-source-upstream-first-verbose"
+        };
+        private static void Require(bool condition, string message)
+        {
+            if (!condition) throw new Exception(message);
+        }
+        private static Patch Exact()
+        {
+            return new Patch(Owner, typeof(OC2DIYLevel.Patch).GetMethod("ServerPreparationContainer_TransferToContainer_Patch"));
+        }
+        private static void Metadata(params Patch[] patches) { Harmony.Metadata = new Patches(patches); }
+        private static void ReportState()
+        {
+            MethodInfo method = typeof(ContainerTransferSync).GetMethod("LogTransferPatchState", BindingFlags.NonPublic | BindingFlags.Static);
+            Require(method != null, "Production LogTransferPatchState entrypoint is missing");
+            Require(method.IsAssembly && method.ReturnType == typeof(void) && method.GetParameters().Length == 0,
+                "Patch state entrypoint must remain internal static void with no arguments");
+            method.Invoke(null, null);
+        }
+        private static void SingleRuntime(string kind, bool keep)
+        {
+            Fixture f = new Fixture(kind);
+            f.Dispatch(false, true, keep);
+            Require(!f.LastRuntimeResult && f.OriginalCalls == 0, "Runtime must consume eligible transfer");
+            Require(f.Target.Writes == 1 && f.Target.CombineCalls == 1, "Runtime must write exactly once");
+            Require(f.Carrier.DestroyCalls == (keep ? 0 : 1), "_dontRemove must control carrier removal");
+            Require(Assembled.Simplifies == (keep ? 1 : 0), "_dontRemove must control Simplify");
+            Require(f.Target.LastDontRemove == keep && f.Target.LastNode.Simplified == keep, "Combine must receive the correct node and keep flag");
+            Require(object.ReferenceEquals(f.Source.m_container.m_ingredientOrderNode, f.Target.LastNode.Order), "Order node must be preserved");
+        }
+        private static void Both(bool runtimeFirst, bool keep)
+        {
+            Metadata(Exact());
+            Fixture f = new Fixture("cookable");
+            f.Dispatch(true, runtimeFirst, keep);
+            Require(f.RuntimeCalls == 1 && f.UpstreamCalls == 1, "HarmonyX simulation must execute both prefixes");
+            Require(f.Target.Writes == 1 && f.Target.CombineCalls == 1 && f.OriginalCalls == 0,
+                "Both prefixes must produce exactly one write and suppress original; writes=" + f.Target.Writes
+                + ", Combine=" + f.Target.CombineCalls + ", original=" + f.OriginalCalls);
+            Require(f.LastRuntimeResult, "Runtime must yield to the exact upstream prefix");
+            Require(f.Carrier.DestroyCalls == (keep ? 0 : 1), "Upstream must own removal exactly once");
+            Require(Assembled.Simplifies == (keep ? 1 : 0), "Runtime must not construct/simplify when upstream owns transfer");
+            Require(Assembled.Constructors == (keep ? 2 : 1), "Runtime must not construct an extra node");
+        }
+        private static void NoFalseYield(Patch patch)
+        {
+            Metadata(patch);
+            SingleRuntime("cookable", false);
+        }
+        private static void ExceptionCase(string point, bool keep, bool checkLog)
+        {
+            Fixture f = new Fixture("cookable");
+            if (point == "combine-after") f.Target.ThrowAfterCombine = true;
+            if (point == "combine-before") f.Target.ThrowBeforeCombine = true;
+            if (point == "destroy") f.Carrier.ThrowDestroy = true;
+            if (point == "constructor") Assembled.ThrowConstruct = true;
+            if (point == "simplify") Assembled.ThrowSimplify = true;
+            f.Dispatch(false, true, keep);
+            bool before = point == "constructor" || point == "simplify";
+            Require(f.LastRuntimeResult == before, "Incorrect original fallback at " + point);
+            Require(f.OriginalCalls == (before ? 1 : 0), "Original must not run after mutation starts at " + point);
+            Require(f.Target.Writes == (point == "combine-before" ? 0 : 1), "Duplicate/lost writes at " + point);
+            Require(f.Target.CombineCalls == (before ? 0 : 1), "Unexpected Combine calls at " + point);
+            Require(f.Carrier.DestroyCalls == (point == "destroy" ? 1 : 0), "Unexpected carrier destruction at " + point);
+            if (checkLog)
+            {
+                Require(StubLog.Warnings.Count > 0, "Exception must emit a warning");
+                Require(StubLog.All().Contains(point + "-inner-detail"), "Exception log must include reflected inner exception detail at " + point);
+            }
+        }
+        private static void Run(string name)
+        {
+            if (name.StartsWith("outlet-upstream-") || name.StartsWith("outlet-runtime-"))
+            {
+                bool owned = name.StartsWith("outlet-upstream-");
+                StubLog.Verbose = true;
+                Metadata(owned ? Exact() : new Patch("diagnostic.other", typeof(OtherPatch).GetMethod("ServerPreparationContainer_TransferToContainer_Patch")));
+                // Prime only the ownership report so injected Dbg failure hits transfer sampling.
+                if (name.EndsWith("sample-dbg")) ReportState();
+                StubLog.ThrowInfo = name.EndsWith("info") || name.EndsWith("all");
+                StubLog.ThrowDbg = name.EndsWith("dbg") || name.EndsWith("all");
+                StubLog.ThrowWarn = name.EndsWith("all");
+                Fixture logged = new Fixture("cookable");
+                if (owned)
+                {
+                    Require(logged.Runtime(false), "Logging failure must preserve upstream ownership");
+                    Require(logged.Target.Writes == 0 && logged.Target.CombineCalls == 0 && logged.Carrier.DestroyCalls == 0
+                        && Assembled.Constructors == 0 && Assembled.Simplifies == 0,
+                        "Runtime must do no transfer work when upstream owns it, even if logging throws");
+                    Require(!logged.Upstream(false) && logged.Target.Writes == 1 && logged.Target.CombineCalls == 1
+                        && logged.Carrier.DestroyCalls == 1, "Upstream must still complete exactly one transfer");
+                }
+                else
+                {
+                    logged.Dispatch(false, true, false);
+                    Require(!logged.LastRuntimeResult && logged.OriginalCalls == 0 && logged.Target.Writes == 1
+                        && logged.Target.CombineCalls == 1 && logged.Carrier.DestroyCalls == 1 && Assembled.Constructors == 1,
+                        "Logging failure must preserve runtime ownership and exactly one write");
+                }
+                Require(StubLog.InfoThrows + StubLog.DbgThrows > 0, "The selected logging failure must actually fire");
+                if (name.EndsWith("dbg")) Require(StubLog.DbgThrows > 0, "Dbg exception injection was not exercised");
+                if (name.EndsWith("info")) Require(StubLog.InfoThrows > 0, "Info exception injection was not exercised");
+                return;
+            }
+            if (name.StartsWith("runtime-"))
+            {
+                SingleRuntime(name.Contains("mixable") ? "mixable" : "cookable", name.EndsWith("keep"));
+                return;
+            }
+            if (name.StartsWith("both-")) { Both(name.Contains("first"), name.EndsWith("keep")); return; }
+            switch (name)
+            {
+                case "outlet-warn-after-combine-remove":
+                case "outlet-warn-after-combine-keep":
+                    StubLog.ThrowWarn = true;
+                    Fixture warnFailure = new Fixture("cookable");
+                    warnFailure.Target.ThrowAfterCombine = true;
+                    warnFailure.Dispatch(false, true, name.EndsWith("keep"));
+                    Require(StubLog.WarnThrows > 0, "Warn exception injection must actually fire after Combine");
+                    Require(!warnFailure.LastRuntimeResult && warnFailure.OriginalCalls == 0 && warnFailure.Target.Writes == 1
+                        && warnFailure.Target.CombineCalls == 1 && warnFailure.Carrier.DestroyCalls == 0,
+                        "Warn outlet failure must not escape or permit an original write after failed Combine");
+                    break;
+                case "destroyed-source-fake-null-contract":
+                    Source destroyed = new GameObject("fake-null-source").AddComponent<Source>();
+                    Source live = new GameObject("live-source").AddComponent<Source>();
+                    Require(destroyed != null && !(destroyed == null), "Live Unity object must compare non-null");
+                    destroyed.Destroyed = true;
+                    Require(destroyed == null && null == destroyed && !(destroyed != null) && !(null != destroyed)
+                        && !object.ReferenceEquals(destroyed, null), "Destroyed Unity object must retain a reference but compare null both ways");
+                    Require(destroyed != live && live != destroyed, "Destroyed object must not compare equal to another live object");
+                    bool nameThrew = false;
+                    try { string ignored = destroyed.name; }
+                    catch (InvalidOperationException) { nameThrew = true; }
+                    Require(nameThrew && destroyed.DestroyedNameReads == 1, "Destroyed Source.name must throw and record access");
+                    break;
+                case "destroyed-source-upstream-first-verbose":
+                    Metadata(Exact());
+                    StubLog.Verbose = true;
+                    Fixture sourceDestroyed = new Fixture("cookable");
+                    sourceDestroyed.Dispatch(true, false, false);
+                    Require(sourceDestroyed.Source.Destroyed && sourceDestroyed.Source == null
+                        && !object.ReferenceEquals(sourceDestroyed.Source, null), "Carrier must destroy the source before runtime prefix executes");
+                    Require(sourceDestroyed.RuntimeCalls == 1 && sourceDestroyed.UpstreamCalls == 1 && sourceDestroyed.LastRuntimeResult
+                        && sourceDestroyed.OriginalCalls == 0 && sourceDestroyed.Target.Writes == 1 && sourceDestroyed.Target.CombineCalls == 1
+                        && sourceDestroyed.Carrier.DestroyCalls == 1 && Assembled.Constructors == 1 && Assembled.Simplifies == 0,
+                        "Verbose upstream-first removal must remain a single upstream-owned write");
+                    Require(sourceDestroyed.Source.DestroyedNameReads == 0 && sourceDestroyed.Source.DestroyedIdReads == 0,
+                        "Runtime diagnostics must not dereference the destroyed source");
+                    Require(StubLog.Debug.Count > 0 && StubLog.Warnings.Count == 0, "Verbose diagnostics must execute without destroyed-source warnings");
+                    break;
+                case "metadata-late-install-and-removal":
+                    SingleRuntime("cookable", false);
+                    int before = Harmony.Reads;
+                    Metadata(Exact());
+                    Fixture installed = new Fixture("cookable");
+                    installed.Dispatch(true, true, false);
+                    Require(installed.LastRuntimeResult && installed.Target.Writes == 1, "Late installation must be observed without cached absence");
+                    Require(Harmony.Reads > before, "Each transfer must reread metadata");
+                    before = Harmony.Reads;
+                    Fixture stillInstalled = new Fixture("cookable");
+                    stillInstalled.Dispatch(true, false, false);
+                    Require(stillInstalled.LastRuntimeResult && stillInstalled.Target.Writes == 1, "Unchanged upstream must still own transfer");
+                    Require(Harmony.Reads > before, "Positive metadata must be reread on every call");
+                    before = Harmony.Reads;
+                    Metadata();
+                    Fixture removed = new Fixture("cookable");
+                    removed.Dispatch(false, true, false);
+                    Require(!removed.LastRuntimeResult && removed.Target.Writes == 1 && removed.OriginalCalls == 0, "Removal must restore runtime ownership without cached presence");
+                    Require(Harmony.Reads > before, "Removal must reread metadata");
+                    before = Harmony.Reads;
+                    new Fixture("cookable").Runtime(false);
+                    Require(Harmony.Reads > before, "Unchanged metadata must still be reread");
+                    break;
+                case "exact-prefix-not-first":
+                    Metadata(new Patch("another.owner", typeof(OtherPatch).GetMethod("ServerPreparationContainer_TransferToContainer_Patch")), Exact());
+                    Fixture laterPrefix = new Fixture("cookable");
+                    laterPrefix.Dispatch(true, true, false);
+                    Require(laterPrefix.LastRuntimeResult && laterPrefix.Target.Writes == 1 && laterPrefix.OriginalCalls == 0,
+                        "Exact upstream must be found after unrelated prefix metadata");
+                    break;
+                case "wrong-owner": NoFalseYield(new Patch("another.owner", Exact().PatchMethod)); break;
+                case "wrong-method": NoFalseYield(new Patch(Owner, typeof(OC2DIYLevel.Patch).GetMethod("WrongMethod"))); break;
+                case "wrong-declaring-type": NoFalseYield(new Patch(Owner, typeof(OtherPatch).GetMethod("ServerPreparationContainer_TransferToContainer_Patch"))); break;
+                case "non-pot-pass-through":
+                    Fixture plain = new Fixture("plain");
+                    plain.Dispatch(false, true, false);
+                    Require(plain.LastRuntimeResult && plain.OriginalCalls == 1 && plain.Target.CombineCalls == 0 && plain.Carrier.DestroyCalls == 0 && Assembled.Constructors == 0, "Non-pot must pass through without custom work");
+                    break;
+                case "source-occupied-remove":
+                case "source-occupied-keep":
+                    Fixture occupied = new Fixture("cookable");
+                    occupied.Source.m_itemContainer.Occupied = true;
+                    occupied.Dispatch(false, true, name.EndsWith("keep"));
+                    Require(!occupied.LastRuntimeResult && occupied.OriginalCalls == 0 && occupied.Target.Writes == 0 && occupied.Carrier.DestroyCalls == 0 && Assembled.Constructors == 0, "Occupied source must not transfer");
+                    break;
+                case "combine-after-write-remove": ExceptionCase("combine-after", false, false); break;
+                case "combine-after-write-keep": ExceptionCase("combine-after", true, false); break;
+                case "combine-before-write-conservative": ExceptionCase("combine-before", false, false); break;
+                case "destroy-after-write": ExceptionCase("destroy", false, false); break;
+                case "constructor-before-write": ExceptionCase("constructor", false, false); break;
+                case "simplify-before-write": ExceptionCase("simplify", true, false); break;
+                case "missing-reflection-fallback":
+                    GameApi.IngredientAssembledNodeCtor = null;
+                    Fixture missing = new Fixture("cookable");
+                    missing.Dispatch(false, true, false);
+                    Require(missing.LastRuntimeResult && missing.OriginalCalls == 1 && missing.Target.CombineCalls == 0, "Missing constructor must allow original fallback");
+                    break;
+                case "logs-stable-runtime":
+                case "logs-stable-upstream":
+                    bool upstream = name.EndsWith("upstream");
+                    if (upstream) Metadata(Exact());
+                    ReportState();
+                    new Fixture("cookable").Runtime(false);
+                    int steady = StubLog.NormalCount;
+                    Require(steady > 0, "Install/first observation must report patch state");
+                    for (int i = 0; i < 12; i++) new Fixture("cookable").Runtime(false);
+                    Require(StubLog.NormalCount == steady, "Steady transfer state must not flood normal logs");
+                    break;
+                case "logs-state-transitions":
+                    ReportState();
+                    new Fixture("cookable").Runtime(false);
+                    int absent = StubLog.NormalCount;
+                    Metadata(Exact());
+                    new Fixture("cookable").Runtime(false);
+                    Require(StubLog.NormalCount > absent, "Late upstream appearance must log ownership transition");
+                    int present = StubLog.NormalCount;
+                    Metadata();
+                    new Fixture("cookable").Runtime(false);
+                    Require(StubLog.NormalCount > present, "Upstream removal must log ownership transition");
+                    int restored = StubLog.NormalCount;
+                    new Fixture("cookable").Runtime(false);
+                    Require(StubLog.NormalCount == restored, "Restored steady state must stop logging");
+                    break;
+                case "logs-verbose-prefixes":
+                    StubLog.Verbose = true;
+                    Metadata(Exact(), new Patch("diagnostic.other", typeof(OtherPatch).GetMethod("ServerPreparationContainer_TransferToContainer_Patch")));
+                    ReportState();
+                    string details = StubLog.All();
+                    Require(details.Contains(Owner) && details.Contains("OC2DIYLevel.Patch") && details.Contains("ServerPreparationContainer_TransferToContainer_Patch") && details.Contains("diagnostic.other"), "Verbose install report must list prefix owners and methods");
+                    break;
+                case "logs-combine-inner": ExceptionCase("combine-after", false, true); break;
+                case "logs-destroy-inner": ExceptionCase("destroy", false, true); break;
+                case "logs-constructor-inner": ExceptionCase("constructor", false, true); break;
+                case "logs-exception-once":
+                    Fixture first = new Fixture("cookable");
+                    first.Target.ThrowAfterCombine = true;
+                    first.Runtime(false);
+                    int warnings = StubLog.Warnings.Count;
+                    Require(warnings > 0, "First failure must warn");
+                    for (int i = 0; i < 8; i++)
+                    {
+                        Fixture repeated = new Fixture("cookable");
+                        repeated.Target.ThrowAfterCombine = true;
+                        Require(!repeated.Runtime(false), "Repeated post-write failure must still suppress original");
+                    }
+                    Require(StubLog.Warnings.Count == warnings, "Repeated exception must be deduplicated");
+                    break;
+                default: throw new Exception("Unknown case: " + name);
+            }
+        }
+        public static int Main(string[] args)
+        {
+            if (args.Length == 1)
+            {
+                try { Run(args[0]); return 0; }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine(args[0] + ": " + ex.GetBaseException().Message);
+                    Console.Error.WriteLine(StubLog.All());
+                    return 1;
+                }
+            }
+            // Fresh processes preserve genuine production static initialization and avoid resetting
+            // private production caches/once flags, especially in the metadata-transition cases.
+            int failed = 0;
+            foreach (string name in Cases)
+            {
+                ProcessStartInfo start = new ProcessStartInfo("dotnet");
+                start.ArgumentList.Add(Assembly.GetExecutingAssembly().Location);
+                start.ArgumentList.Add(name);
+                start.UseShellExecute = false;
+                start.RedirectStandardOutput = true;
+                start.RedirectStandardError = true;
+                using (Process child = Process.Start(start))
+                {
+                    string output = child.StandardOutput.ReadToEnd();
+                    string error = child.StandardError.ReadToEnd();
+                    child.WaitForExit();
+                    if (child.ExitCode != 0)
+                    {
+                        failed++;
+                        Console.WriteLine("FAIL " + name + "\n" + output + error);
+                    }
+                    else Console.WriteLine("PASS " + name);
+                }
+            }
+            Console.WriteLine("Container transfer checks: " + (Cases.Length - failed) + "/" + Cases.Length + " passed");
+            return failed == 0 ? 0 : 1;
+        }
+    }
+    internal static class OtherPatch
+    {
+        public static bool ServerPreparationContainer_TransferToContainer_Patch(object source, object carrier, object target, bool keep) { return true; }
+    }
+}
+namespace OC2DIYLevel
+{
+    public static class Patch
+    {
+        // Behavioral stand-in for the independently installed upstream transfer prefix.
+        // Its precise owner/type/method identity is also used in fake patch metadata.
+        public static bool ServerPreparationContainer_TransferToContainer_Patch(object instance, object carrier, object container, bool dontRemove)
+        {
+            CustomStub.Source source = (CustomStub.Source)instance;
+            CustomStub.Target target = (CustomStub.Target)container;
+            if (target.gameObject.GetComponent(typeof(CustomStub.Mixable)) == null
+                && target.gameObject.GetComponent(typeof(CustomStub.Cookable)) == null) return true;
+            if (source.m_itemContainer.HasContents()) return false;
+            object assembled = new CustomStub.Assembled(source.m_container.m_ingredientOrderNode);
+            if (dontRemove) assembled = ((CustomStub.Assembled)assembled).Simplify();
+            CustomStub.Assembled.Combine(assembled, target, dontRemove);
+            if (!dontRemove) ((CustomStub.Carrier)carrier).DestroyCarriedItem();
+            return false;
+        }
+        public static bool WrongMethod(object source, object carrier, object target, bool keep) { return true; }
+    }
+}

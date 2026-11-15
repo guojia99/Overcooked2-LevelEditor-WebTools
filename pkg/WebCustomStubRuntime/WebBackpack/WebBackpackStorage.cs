@@ -8,15 +8,11 @@ using UnityEngine;
 namespace CustomStub
 {
     /// <summary>
-    /// Web 储物背包：原生 Backpack 可背 + IngredientContainer 多格存储（联机同步）。
-    /// 背上后可见内容宫格。交互模型（3.8.10）：
-    ///  - 空手按拾取 = 取出队首【食材型】节点（FIFO，生成裸食材进手）；
-    ///  - 携带空盘族按放置 = 队首节点注入盘中（组合型节点唯一取出方式）；
-    ///  - 携带食材按放置 = 节点入包、销毁手中食材；
-    ///  - 携带盘装内容按放置 = 内容节点搬入包（盘清空留手，盘永不进包）。
-    /// 盘族容器只作介质；严格 FIFO（随机模式已移除）；容量 1/2/4/9/16。
+    /// Native wearable Backpack plus FIFO storage. Each physical slot retains its exact
+    /// prefab provenance and Workable progress separately from the replicated UI node.
+    /// Processed ingredients remain supported; filled containers/finished dishes are rejected.
     /// </summary>
-    public class WebBackpackStorage : MonoBehaviour
+    public partial class WebBackpackStorage : MonoBehaviour
     {
         public const string TagPrefix = "WebBackpack|";
 
@@ -43,13 +39,6 @@ namespace CustomStub
         private bool _isServer;
         private bool _containersReady;
 
-        /// <summary>食材型节点 uID → 裸物品 prefab（本机取出注册缓存）。</summary>
-        private readonly Dictionary<int, GameObject> _ingredientPrefabByUid =
-            new Dictionary<int, GameObject>();
-
-        /// <summary>uID 解析失败负缓存（避免反复扫场景食材箱）。</summary>
-        private readonly HashSet<int> _uidResolveFailed = new HashSet<int>();
-
         private readonly HashSet<string> _warnedOnce = new HashSet<string>();
 
         private static readonly List<WebBackpackStorage> s_pendingAssembly = new List<WebBackpackStorage>();
@@ -58,6 +47,8 @@ namespace CustomStub
 
         internal static void OnSceneChanged()
         {
+            WebBackpackPrefabDirectory.Reset();
+            s_reservedItems.Clear();
             s_pendingAssembly.Clear();
             s_dispenserMap.Clear();
             s_wornCount = 0;
@@ -91,6 +82,17 @@ namespace CustomStub
 
         internal static void FlushPendingAssemblies()
         {
+            // Called synchronously by the existing ScanEntities prefix, before enumeration.
+            // ResetSceneTickers runs after HealScene: reacquire actual components rather than
+            // relying on the pending list surviving that reset or on MonoBehaviour.Start timing.
+            foreach (var root in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
+                foreach (var storage in root.GetComponentsInChildren<WebBackpackStorage>(true))
+                    if (!s_pendingAssembly.Contains(storage))
+                        s_pendingAssembly.Add(storage);
+            if (s_pendingAssembly.Count == 0)
+                return;
+            if (!WebBackpackPrefabDirectory.Install())
+                return;
             for (int i = 0; i < s_pendingAssembly.Count; i++)
             {
                 var wb = s_pendingAssembly[i];
@@ -99,6 +101,9 @@ namespace CustomStub
                 wb.EnsureBackpackChild();
                 wb.TryAssembleContainers();
             }
+            for (int i = 0; i < s_pendingAssembly.Count; i++)
+                if (s_pendingAssembly[i] != null)
+                    s_pendingAssembly[i].PreparePrefabDirectoryBeforeScan();
         }
 
         internal void EnsureBackpackChild()
@@ -115,6 +120,7 @@ namespace CustomStub
         {
             if (wrapper == null || wb == null)
                 return;
+            WebBackpackPrefabDirectory.Install();
             if (!s_pendingAssembly.Contains(wb))
                 s_pendingAssembly.Add(wb);
             wb.EnsureBackpackChild();
@@ -131,6 +137,7 @@ namespace CustomStub
 
         private void Awake()
         {
+            WebBackpackPrefabDirectory.Install();
             if (!s_pendingAssembly.Contains(this))
                 s_pendingAssembly.Add(this);
         }
@@ -161,6 +168,7 @@ namespace CustomStub
 
         private IEnumerator RunInner()
         {
+            WebBackpackPrefabDirectory.Install();
             if (!s_pendingAssembly.Contains(this))
                 s_pendingAssembly.Add(this);
 
@@ -184,10 +192,11 @@ namespace CustomStub
                 + "s，等同步 " + (Time.realtimeSinceStartup - t2).ToString("F2") + "s）");
 
             _isServer = GameApi.IsServerMachine();
+            CheckPrefabDirectory();
+            // The ScanEntities prefix freezes paged directories before native defaults.
+            // A late component fails closed instead of appending a different table on each peer.
             if (_isServer)
                 ApplyInitialFill();
-            else
-                RegisterClientFillPrefabs();
             RegisterDispenserMap();
             EnsureRuntimeSyncComponents();
             WebBackpackPlacementBridge.EnsureOn(_backpackGo, this);
@@ -236,14 +245,8 @@ namespace CustomStub
                                 + _pendingFillSOs[i].prefabName + " —— " + fail);
                         continue;
                     }
-                    GameApi.IngredientAddIngredientMethod.Invoke(sic, new object[] { node });
-                    if (prefab != null)
-                    {
-                        int uid = NodeUidOf(node);
-                        if (uid >= 0)
-                            _ingredientPrefabByUid[uid] = prefab;
-                        GameApi.RegisterSpawnable(_backpackGo, prefab);
-                    }
+                    if (!AddInitialSlot(sic, prefab, node))
+                        continue;
                     StubLog.Log("[WebBackpack] 初填重试成功(第" + (attempt + 1) + "次): " + _pendingFillSOs[i].prefabName
                         + " → " + node.GetType().Name);
                     _pendingFillSOs.RemoveAt(i);
@@ -441,6 +444,8 @@ namespace CustomStub
         {
             try
             {
+                RetryPendingTransfer();
+                WebBackpackDirectoryHandshake.Ready(); // Shared 0.25s elapsed-time throttle.
                 if (_backpackGo == null)
                 {
                     // 子背包晚实例化兜底（真机/重载路径）：每 ~0.5s 重找一次
@@ -573,7 +578,6 @@ namespace CustomStub
         // -------------------------------------------------------------
 
         private readonly List<PseudoPrefabSO> _pendingFillSOs = new List<PseudoPrefabSO>();
-        private bool _fillDiagLogged;
 
         private void ApplyInitialFill()
         {
@@ -603,17 +607,11 @@ namespace CustomStub
                     object node;
                     if (TryResolveFillEntry(so, out prefab, out node, out fail))
                     {
-                        GameApi.IngredientAddIngredientMethod.Invoke(sic, new object[] { node });
-                        if (prefab != null)
-                        {
-                            int uid = NodeUidOf(node);
-                            if (uid >= 0)
-                                _ingredientPrefabByUid[uid] = prefab;
-                            GameApi.RegisterSpawnable(_backpackGo, prefab);
-                        }
+                        if (!AddInitialSlot(sic, prefab, node))
+                            continue;
                         added++;
                         StubLog.Log("[WebBackpack] 初填+" + so.prefabName + " → 节点 " + node.GetType().Name
-                            + "（uid=" + NodeUidOf(node) + "，prefab=" + prefab.name
+                            + "（uid=" + NodeUidOf(node) + "，prefab=" + (prefab != null ? prefab.name : "node-only")
                             + "，已存 " + added + "/" + cap + "）");
                     }
                     else
@@ -641,7 +639,8 @@ namespace CustomStub
                     var assembled = ConvertOrderNode(orderNode);
                     if (assembled == null)
                         continue;
-                    GameApi.IngredientAddIngredientMethod.Invoke(sic, new object[] { assembled });
+                    if (!AddInitialSlot(sic, null, assembled))
+                        continue;
                     added++;
                     StubLog.Log("[WebBackpack] 自定义初填+uid=" + uid + " → 节点 "
                         + assembled.GetType().Name + "（已存 " + added + "/" + cap + "）");
@@ -666,7 +665,7 @@ namespace CustomStub
                 prefab = direct as GameObject;
                 if (prefab != null)
                 {
-                    node = NodeFromPrefab(prefab);
+                    node = StorageNodeFromPrefab(prefab);
                     if (node != null)
                         return true;
                     failReason = "prefab 无 IOrderDefinition: " + prefab.name;
@@ -700,7 +699,7 @@ namespace CustomStub
                 failReason = "bundle 已加载但 prefab 为空（瞬态未就绪/路径失效）: " + so.assetPath;
                 return false;
             }
-            node = NodeFromPrefab(prefab);
+            node = StorageNodeFromPrefab(prefab);
             if (node == null)
             {
                 failReason = "prefab 无 IOrderDefinition（煤块/冰块等特殊物不可入包）: " + prefab.name;
@@ -709,166 +708,13 @@ namespace CustomStub
             return true;
         }
 
-        /// <summary>客户端：初填里的食材 prefab 预注册到本地 spawnable 表
-        /// （客户端按 spawner 本地注册表解析生成 ID）。</summary>
-        private void RegisterClientFillPrefabs()
-        {
-            if (m_initialFillSOs == null || _backpackGo == null)
-                return;
-            int registered = 0;
-            for (int i = 0; i < m_initialFillSOs.Length; i++)
-            {
-                var so = m_initialFillSOs[i];
-                if (so == null)
-                    continue;
-                var prefab = LoadPrefabFromPseudoSo(so);
-                if (prefab == null)
-                    continue;
-                var node = NodeFromPrefab(prefab);
-                if (node == null)
-                    continue;
-                int uid = NodeUidOf(node);
-                if (uid >= 0)
-                    _ingredientPrefabByUid[uid] = prefab;
-                if (GameApi.RegisterSpawnable(_backpackGo, prefab))
-                    registered++;
-            }
-            StubLog.Log("[WebBackpack] 客户端初填预注册: " + registered + " 个 prefab");
-        }
-
-        /// <summary>客户端内容变化（宫格轮询发现）：为新增食材型节点解析并注册
-        /// prefab，覆盖运行期放入的食材（取出消息到达前完成注册）。</summary>
-        internal void OnClientContentsChangedForRegistration(Array contents)
-        {
-            if (contents == null || _backpackGo == null)
-                return;
-            for (int i = 0; i < contents.Length; i++)
-            {
-                var node = contents.GetValue(i);
-                if (node == null || !IsBareHandNodeType(node))
-                    continue;
-                EnsureRegisteredForNode(node);
-            }
-        }
-
-        /// <summary>确保食材型节点的裸物品已解析 + 已注册（幂等；负缓存防重扫）。</summary>
-        private void EnsureRegisteredForNode(object node)
-        {
-            int uid = NodeUidOf(node);
-            if (uid < 0)
-                return;
-            if (_ingredientPrefabByUid.ContainsKey(uid) || _uidResolveFailed.Contains(uid))
-                return;
-            var prefab = ResolveIngredientItemPrefab(uid);
-            if (prefab == null)
-            {
-                _uidResolveFailed.Add(uid);
-                WarnOnce("uid" + uid, "[WebBackpack] 节点 uID=" + uid + " 无法解析食材 prefab（场景无对应食材箱），空手取出将不可用");
-                return;
-            }
-            _ingredientPrefabByUid[uid] = prefab;
-            GameApi.RegisterSpawnable(_backpackGo, prefab);
-        }
-
-        /// <summary>放入路径的精化注册：原版整料与切碎共享节点 uid，按【携带物
-        /// 是否带 WorkableItem】匹配食材箱链成员（整料=带 Workable 的链级，
-        /// 切碎=不带的下一级）——切好的进、切好的出。</summary>
-        private void EnsureRegisteredForNodeFromItem(object node, GameObject item)
-        {
-            int uid = NodeUidOf(node);
-            if (uid < 0)
-                return;
-            GameObject prefab = null;
-            if (item != null && GameApi.WorkableItemType != null)
-            {
-                bool itemWorkable = item.GetComponent(GameApi.WorkableItemType) != null;
-                var crates = GameObject.FindGameObjectsWithTag("Crate");
-                GameObject firstMatch = null;
-                for (int i = 0; i < crates.Length && prefab == null; i++)
-                {
-                    var sp = crates[i].GetComponent(GameApi.PickupItemSpawnerType);
-                    if (sp == null || GameApi.PickupItemPrefabField == null)
-                        continue;
-                    var cur = GameApi.PickupItemPrefabField.GetValue(sp) as GameObject;
-                    int hops = 0;
-                    while (cur != null && hops++ < 8)
-                    {
-                        if (PrefabNodeUid(cur) == uid)
-                        {
-                            if (firstMatch == null)
-                                firstMatch = cur;
-                            bool curWorkable = cur.GetComponent(GameApi.WorkableItemType) != null;
-                            if (curWorkable == itemWorkable)
-                            {
-                                prefab = cur;
-                                break;
-                            }
-                        }
-                        var w = cur.GetComponent(GameApi.WorkableItemType);
-                        cur = w != null && GameApi.WorkableNextPrefabField != null
-                            ? GameApi.WorkableNextPrefabField.GetValue(w) as GameObject
-                            : null;
-                    }
-                }
-                if (prefab == null)
-                    prefab = firstMatch;
-            }
-            if (prefab == null)
-            {
-                EnsureRegisteredForNode(node);
-                return;
-            }
-            _ingredientPrefabByUid[uid] = prefab;
-            _uidResolveFailed.Remove(uid);
-            GameApi.RegisterSpawnable(_backpackGo, prefab);
-            StubLog.Log("[WebBackpack] 放入精化注册: uid=" + uid + " → " + prefab.name
-                + "（按携带物形态匹配）");
-        }
-
-        /// <summary>uID → 裸食材 prefab：先查初填缓存，再扫场景食材箱
-        /// （PickupItemSpawner.m_itemPrefab + WorkableItem 切分链逐级比对，
-        /// 同 GameUtils.GetIngredientCrates 的原版范例）。</summary>
-        private GameObject ResolveIngredientItemPrefab(int uid)
-        {
-            if (uid < 0)
-                return null;
-            GameObject cached;
-            if (_ingredientPrefabByUid.TryGetValue(uid, out cached))
-                return cached;
-            var crates = GameObject.FindGameObjectsWithTag("Crate");
-            for (int i = 0; i < crates.Length; i++)
-            {
-                var sp = crates[i].GetComponent(GameApi.PickupItemSpawnerType);
-                if (sp == null || GameApi.PickupItemPrefabField == null)
-                    continue;
-                var cur = GameApi.PickupItemPrefabField.GetValue(sp) as GameObject;
-                int hops = 0;
-                while (cur != null && hops++ < 8)
-                {
-                    if (PrefabNodeUid(cur) == uid)
-                    {
-                        StubLog.Log("[WebBackpack] 食材箱解析: uid=" + uid + " → " + cur.name
-                            + "（来自 " + crates[i].name + "）");
-                        return cur;
-                    }
-                    var w = cur.GetComponent(GameApi.WorkableItemType);
-                    cur = w != null && GameApi.WorkableNextPrefabField != null
-                        ? GameApi.WorkableNextPrefabField.GetValue(w) as GameObject
-                        : null;
-                }
-            }
-            StubLog.Log("[WebBackpack] 食材箱解析: uid=" + uid + " 未命中（场景 Crate 数="
-                + crates.Length + "）");
-            return null;
-        }
-
         // -------------------------------------------------------------
         // 取出 / 放入
         // -------------------------------------------------------------
 
         internal bool CanDispense()
         {
-            if (!_isServer || !IsWorn())
+            if (InventoryLocked || !_isServer || !IsWorn())
                 return false;
             var sic = GetServerIngredient();
             if (sic == null)
@@ -876,9 +722,24 @@ namespace CustomStub
             return InvokeInt(sic, GameApi.IngredientGetContentsCountMethod) > 0;
         }
 
-        /// <summary>空手取出：仅队首食材型节点；组合型（成品菜/中间产物）需空盘接。</summary>
+        /// <summary>Dispense the exact physical FIFO slot, including chopped composite nodes.</summary>
         internal bool TryDispense(object carrier, object directionXZ)
         {
+            try
+            {
+                return TryDispenseInner(carrier);
+            }
+            catch (Exception ex)
+            {
+                WebBackpackPrefabDirectory.Diagnostic("pickup-error", "pickup failed; no vanilla fallback: " + ex.Message);
+                return false; // The existing shared prefix consumes failure while worn.
+            }
+        }
+
+        private bool TryDispenseInner(object carrier)
+        {
+            if (InventoryLocked)
+                return false;
             if (!_isServer || !IsWorn())
             {
                 StubLog.Log("[WebBackpack] 取出拒绝: 非" + (_isServer ? "服务端" : "") + "worn=" + SafeIsWorn() + ": " + name);
@@ -902,36 +763,34 @@ namespace CustomStub
                 StubLog.Log("[WebBackpack] 取出拒绝: 队首节点为 null（stored=" + stored + "）: " + name);
                 return false;
             }
-            if (!IsBareHandNodeType(head))
-            {
-                StubLog.Log("[WebBackpack] 取出拒绝: 队首为组合型 " + head.GetType().Name + "（需空盘接）: " + name);
-                return false;
-            }
-            int uid = NodeUidOf(head);
-            GameObject prefab = uid >= 0 ? ResolveIngredientItemPrefab(uid) : null;
-            if (prefab == null)
-            {
-                WarnOnce("disp" + uid, "[WebBackpack] 队首食材 uID=" + uid
-                    + " 无 prefab 来源，空手取出不可用（可用空盘接）");
-                return false;
-            }
-            var spawned = GameApi.ServerSpawnPrefab(_backpackGo, prefab);
-            if (spawned == null)
-            {
-                StubLog.LogWarn("[WebBackpack] 取出拒绝: ServerSpawnPrefab 失败（prefab=" + prefab.name + "）: " + name);
-                return false;
-            }
-            GameApi.IngredientRemoveIngredientMethod.Invoke(sic, new object[] { 0 });
-            CarryItemReflect(carrier, spawned);
-            _backpackGo.SendMessage("OnPickupItem", SendMessageOptions.DontRequireReceiver);
-            StubLog.Log("[WebBackpack] 取出成功: " + prefab.name + "（uid=" + uid + "，余 " + (stored - 1) + "）");
-            return true;
+            return TryDispenseStoredSlot(sic, head, stored, carrier);
         }
 
         /// <summary>放置键统一入口（Harmony HandlePlacement 前缀）：
         /// 空盘接 / 空组装基底存本体 / 食材放入。成品菜（拼好的组装品、
         /// 盘装/容器内容）不支持放入（3.8.18 移除）。</summary>
         internal bool TryHandlePlacementCarrier(object carrier)
+        {
+            if (carrier == null || !IsWorn())
+                return false;
+            if (!_isServer)
+                return true;
+            if (InventoryLocked)
+                return true;
+            try
+            {
+                HandlePlacementCarrierInner(carrier);
+            }
+            catch (Exception ex)
+            {
+                WebBackpackPrefabDirectory.Diagnostic("placement-error", "placement rejected: " + ex.Message);
+            }
+            // Worn web storage always owns the interaction, including safe rejection.
+            // The shared Harmony prefix otherwise falls through to native CanCombine.
+            return true;
+        }
+
+        private bool HandlePlacementCarrierInner(object carrier)
         {
             if (!_isServer || carrier == null || !IsWorn())
             {
@@ -979,8 +838,7 @@ namespace CustomStub
                     baseNode = OrderNodeFromCarriedItem(item);
                 if (baseNode != null)
                 {
-                    var ok = TryStoreNodeAndDestroyCarried(carrier, item, baseNode, "组装基底本体",
-                        IsBareHandNodeType(baseNode));
+                    var ok = TryStoreNodeAndDestroyCarried(carrier, item, baseNode, "组装基底本体");
                     if (!ok)
                         StubLog.Log("[WebBackpack] 放置拒绝: 基底存入失败（满/无容器）: " + item.name);
                     return ok;
@@ -1001,7 +859,7 @@ namespace CustomStub
             if (node == null)
                 node = NodeFromWorkableSource(item);
             if (node != null)
-                return TryStoreNodeAndDestroyCarried(carrier, item, node, null, true);
+                return TryStoreNodeAndDestroyCarried(carrier, item, node, null);
             StubLog.Log("[WebBackpack] 放置拒绝: 携带物无可用节点（item=" + item.name + "）");
             return false;
         }
@@ -1071,23 +929,31 @@ namespace CustomStub
                 return;
             int count = InvokeInt(sic, GameApi.IngredientGetContentsCountMethod);
             if (count <= 0)
-                return;
-            if (GameApi.IngredientEmptyMethod != null)
-                GameApi.IngredientEmptyMethod.Invoke(sic, null);
-            else
             {
-                for (int i = 0; i < count; i++)
-                    GameApi.IngredientRemoveIngredientMethod.Invoke(sic, new object[] { 0 });
+                _slots.Clear();
+                return;
             }
-            _ingredientPrefabByUid.Clear();
-            _uidResolveFailed.Clear();
+            try
+            {
+                if (GameApi.IngredientEmptyMethod != null)
+                    GameApi.IngredientEmptyMethod.Invoke(sic, null);
+                else
+                {
+                    for (int i = 0; i < count; i++)
+                        GameApi.IngredientRemoveIngredientMethod.Invoke(sic, new object[] { 0 });
+                }
+            }
+            finally
+            {
+                if (InvokeInt(sic, GameApi.IngredientGetContentsCountMethod) == 0)
+                    _slots.Clear();
+            }
             StubLog.Log("[WebBackpack] 落水清空: " + name + "（清除 " + count + " 格）");
         }
 
-        /// <summary>E/组装 公共入包：节点写入 + 注册 + 销毁手中物 + 动画。
-        /// directItem=true 时按携带物形态精化注册（切碎保持）。</summary>
+        /// <summary>Physical-source capture, per-slot append, then confirmed destruction.</summary>
         private bool TryStoreNodeAndDestroyCarried(object carrier, GameObject item, object node,
-            string label, bool directItem)
+            string label)
         {
             var sic = GetServerIngredient();
             if (sic == null)
@@ -1100,15 +966,21 @@ namespace CustomStub
                 StubLog.Log("[WebBackpack] 放置拒绝: 已满（cap=" + NormalizeCapacity(m_capacity) + "）");
                 return false;
             }
-            GameApi.IngredientAddIngredientMethod.Invoke(sic, new object[] { node });
-            if (directItem && IsBareHandNodeType(node))
-                EnsureRegisteredForNodeFromItem(node, item);
-            else
-                EnsureRegisteredForNode(node);
-            if (GameApi.CarrierDestroyCarriedMethod != null)
-                GameApi.CarrierDestroyCarriedMethod.Invoke(carrier, null);
+            StoredSlot slot;
+            if (!TryCaptureSlot(item, node, out slot) || GameApi.CarrierDestroyCarriedMethod == null)
+            {
+                WebBackpackPrefabDirectory.Diagnostic("unknown:" + item.name,
+                    "store rejected, physical item retained: " + item.name + " (unknown source/state)");
+                return true; // Interaction consumed: never fall through to vanilla CanCombine.
+            }
+            int before = InvokeInt(sic, GameApi.IngredientGetContentsCountMethod);
+            if (!SlotsMatch(sic, before))
+                return true;
+            if (!AppendSlot(sic, slot))
+                return true;
+            BeginStoreTransfer(carrier, item, slot);
             _backpackGo.SendMessage("OnPickupItem", SendMessageOptions.DontRequireReceiver);
-            StubLog.Log("[WebBackpack] 放置·入包: " + item.name + (label != null ? "（" + label + "）" : "")
+            StubLog.Log("[WebBackpack] 放置·" + (_pendingTransfer != null ? "待恢复" : "入包确认") + ": " + item.name + (label != null ? "（" + label + "）" : "")
                 + "（节点 " + node.GetType().Name
                 + (IsBareHandNodeType(node) ? "" : "·组合") + "）");
             return true;
@@ -1118,7 +990,7 @@ namespace CustomStub
         /// 可成功即放行放置交互（原版 CanCombine 链不认空盘，会误拒）。</summary>
         internal bool CanHandlePlacementCarrier(object carrier)
         {
-            if (carrier == null || !IsWorn())
+            if (InventoryLocked || carrier == null || !IsWorn())
                 return false;
             var item = InspectCarried(carrier);
             if (item == null)
@@ -1139,9 +1011,12 @@ namespace CustomStub
                 if (itemCount == 0)
                 {
                     // 真盘族空→接；组装基底空→存本体；其它空容器→拒
-                    bool baseNode = isAssembly
-                        && (OrderNodeFromCarriedItem(item) != null || NodeFromWorkableSource(item) != null);
-                    ok = (isRealPlate && stored > 0) || baseNode;
+                    StoredSlot candidate;
+                    bool baseNode = isAssembly && stored < NormalizeCapacity(m_capacity)
+                        && TryCaptureSlot(item, OrderNodeFromCarriedItem(item) ?? NodeFromWorkableSource(item), out candidate);
+                    bool plateCanTake = isRealPlate && stored > 0 && SlotsMatch(sic, stored)
+                        && CanPlateStoredSlot(_slots[0]);
+                    ok = plateCanTake || baseNode;
                     path = "空容器(真盘=" + isRealPlate + ",组装基底=" + isAssembly
                         + ",可存本体=" + baseNode + ",stored=" + stored + ")";
                 }
@@ -1153,12 +1028,14 @@ namespace CustomStub
             }
             else
             {
-                bool storable = CarriedItemHasOrder(item) || NodeFromWorkableSource(item) != null;
+                StoredSlot candidate;
+                var node = OrderNodeFromCarriedItem(item) ?? NodeFromWorkableSource(item);
+                bool storable = node != null && TryCaptureSlot(item, node, out candidate);
                 ok = stored < NormalizeCapacity(m_capacity) && storable;
                 path = "食材/源生物放入(storable=" + storable + ",stored=" + stored + ")";
             }
-            StubLog.Log("[WebBackpack] 放置判定: " + (ok ? "放行" : "拒绝") + " ← " + path + "（item="
-                + item.name + "）");
+            WebBackpackPrefabDirectory.Diagnostic("placement:" + ok + ":" + item.name,
+                "placement " + (ok ? "allowed " : "rejected, physical item retained ") + path + " item=" + item.name);
             return ok;
         }
 
@@ -1171,6 +1048,8 @@ namespace CustomStub
 
         private bool TryDispenseHeadIntoContainer(Component itemContainer)
         {
+            if (InventoryLocked || !VerifyLocalDirectory())
+                return false;
             var sic = GetServerIngredient();
             if (sic == null)
             {
@@ -1188,15 +1067,31 @@ namespace CustomStub
                 StubLog.Log("[WebBackpack] 盘接拒绝: 队首节点为 null");
                 return false;
             }
+            int stored = InvokeInt(sic, GameApi.IngredientGetContentsCountMethod);
+            if (!SlotsMatch(sic, stored))
+                return false;
+            if (ExactContents(sic) == null || ExactContents(itemContainer) == null)
+                return false;
+            // Raw/partially worked items must retain their physical form and progress.
+            if (!CanPlateStoredSlot(_slots[0]))
+                return false;
             if (!InvokeBool(itemContainer, GameApi.IngredientCanAddIngredientMethod, head))
             {
                 StubLog.Log("[WebBackpack] 盘接拒绝: 目标容器拒收（CanAddIngredient=false，节点 "
                     + head.GetType().Name + "）");
                 return false;
             }
-            GameApi.IngredientRemoveIngredientMethod.Invoke(sic, new object[] { 0 });
-            GameApi.IngredientAddIngredientMethod.Invoke(itemContainer, new object[] { head });
-            InformOfInternalChange(itemContainer);
+            int destinationCount = InvokeInt(itemContainer, GameApi.IngredientGetContentsCountMethod);
+            try { GameApi.IngredientAddIngredientMethod.Invoke(itemContainer, new object[] { head }); }
+            catch (Exception ex) { WebBackpackPrefabDirectory.Diagnostic("plate-add", "plate add callback failed: " + ex.Message); }
+            if (InvokeInt(itemContainer, GameApi.IngredientGetContentsCountMethod) != destinationCount + 1)
+                return false;
+            if (!RemoveExactSlotNode(sic, 0))
+            {
+                RemoveExactSlotNode(itemContainer, destinationCount);
+                return false;
+            }
+            _slots.RemoveAt(0);
             _backpackGo.SendMessage("OnPickupItem", SendMessageOptions.DontRequireReceiver);
              StubLog.Log("[WebBackpack] 盘接成功: 节点 " + head.GetType().Name + " → "
                  + ((Component)itemContainer).gameObject.name);
@@ -1223,17 +1118,6 @@ namespace CustomStub
             {
                 return null;
             }
-        }
-
-        private static void CarryItemReflect(object carrier, GameObject spawned)
-        {
-            if (carrier == null || spawned == null)
-                return;
-            var carry = carrier.GetType().GetMethod("CarryItem",
-                BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(GameObject) }, null);
-            if (carry == null)
-                return;
-            carry.Invoke(carrier, new object[] { spawned });
         }
 
         private static void InformOfInternalChange(object container)
@@ -1386,24 +1270,6 @@ namespace CustomStub
             }
         }
 
-        private static int PrefabNodeUid(GameObject prefab)
-        {
-            if (prefab == null)
-                return -1;
-            if (GameApi.IngredientPropertiesType != null)
-            {
-                var props = prefab.GetComponent(GameApi.IngredientPropertiesType);
-                if (props != null)
-                {
-                    var uid = NodeUidOf(InvokeOrderComposition(props));
-                    if (uid >= 0)
-                        return uid;
-                }
-            }
-            // Workable 源生物（整蔬菜/面包皮）：源节点（对称于放入路径）
-            return NodeUidOf(NodeFromWorkableSource(prefab));
-        }
-
         private static readonly HashSet<string> s_orderDiagLogged = new HashSet<string>();
 
         private static bool CarriedItemHasOrder(GameObject item)
@@ -1462,7 +1328,7 @@ namespace CustomStub
             var next = GameApi.WorkableNextPrefabField.GetValue(workable) as GameObject;
             if (next == null)
                 return null;
-            var nextNode = NodeFromPrefab(next);
+            var nextNode = HasCookableIngredient(next) ? CookablePrefabNode(next) : NodeFromPrefab(next);
             if (nextNode == null)
                 return null;
             if (GameApi.CompositeCompositionField != null

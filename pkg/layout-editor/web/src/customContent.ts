@@ -425,7 +425,7 @@ async function renderSetChooser(app: HTMLElement): Promise<void> {
   }
   content.innerHTML = `
     <div class="m-section-title">选择关卡集 <span class="cc-en">Choose a level set</span></div>
-    <p class="modal-hint">自定义内容按关卡集保存（Assets/LevelSets/&lt;set&gt;/custom_content）。模板来自 common04 / common02 / common03 / commonW1，模板本身只读、永不修改。</p>
+    <p class="modal-hint">自定义内容按关卡集保存，创建时复制模板。</p>
     <div class="m-grid">${sets
       .map(
         (s) => `<div class="m-card cc-set-card">
@@ -450,30 +450,32 @@ async function renderHub(app: HTMLElement, setId: string): Promise<void> {
   content.innerHTML = `
     <div class="cc-hero">
       <div><h2>🧩 自定义内容 <span class="cc-en">Custom content</span></h2>
-        <p>选择类型进入管理。所有引用字段都用下拉/选择器选择，无需手输 GUID。</p></div>
+        <p>选择类型，创建或编辑自定义内容。</p></div>
       <div class="cc-hero-actions">
         ${mBtnHtml("🍽️ 自定义菜谱", "default", { "data-nav-recipes": "" })}
         ${mBtnHtml("🍔 汉堡工作台", "default", { "data-nav-burger": "" })}
         ${mBtnHtml("🥩 夹心工作台", "default", { "data-nav-filling": "" })}
       </div>
     </div>
-    <p class="modal-hint">💡 命名规则：标识 id 仅限英文字母/数字/下划线，且在同一关卡集内全局唯一（跨类型也不能重名）。模板克隆自 common04 等素材库，创建后可以自由修改自己的副本。</p>
+    <details class="cc-advanced"><summary>命名与模板说明</summary>
+      <p class="muted small">标识以英文字母或下划线开头，仅含字母、数字、下划线；同一关卡集内跨类型唯一。内容保存在 Assets/LevelSets/&lt;set&gt;/custom_content，模板来自 common04 / common02 / common03 / commonW1，创建时复制，源模板只读。</p>
+    </details>
     <div class="m-grid cc-kind-grid">
       ${KIND_META.map(
         (k) => `<div class="m-card cc-kind-card" data-kind="${k.id}">
           <div class="cc-kind-icon">${k.icon}</div>
-          <h3>${esc(k.zh)} <span class="muted">(${esc(k.en)})</span></h3>
+          <h3 title="${esc(k.en)}">${esc(k.zh)}</h3>
           <div class="m-meta">${esc(k.desc)}</div>
-          <div class="m-actions">${mBtnHtml("进入管理 · Manage", "primary", { "data-kind": k.id })}</div>
+          <div class="m-actions">${mBtnHtml("进入管理", "primary", { "data-kind": k.id })}</div>
         </div>`
       ).join("")}
     </div>`;
   content.querySelectorAll<HTMLButtonElement>("[data-kind]").forEach((b) =>
     b.addEventListener("click", () => go(customContentListPath(setId, b.dataset.kind!), app))
   );
-  content.querySelector("[data-nav-recipes]")?.addEventListener("click", () => go(recipeListPath(setId), app));
-  content.querySelector("[data-nav-burger]")?.addEventListener("click", () => go(burgerPath(setId), app));
-  content.querySelector("[data-nav-filling]")?.addEventListener("click", () => go(fillingPath(setId), app));
+  content.querySelector("[data-nav-recipes]")?.addEventListener("click", () => location.assign(recipeListPath(setId)));
+  content.querySelector("[data-nav-burger]")?.addEventListener("click", () => location.assign(burgerPath(setId)));
+  content.querySelector("[data-nav-filling]")?.addEventListener("click", () => location.assign(fillingPath(setId)));
 }
 
 // ---------------------------------------------------------------------------
@@ -518,13 +520,15 @@ async function renderList(app: HTMLElement, setId: string, kind: string): Promis
           </div>
           <div class="cc-card-foot">
             <span class="cc-chip-tag">📦 ${esc(templateLabel(it.templateId))}</span>
-            ${it.orderUid ? `<span class="cc-chip-tag">uID ${it.orderUid}</span>` : ""}
             ${it.hasModel ? '<span class="cc-chip-tag ok">👁 有模型</span>' : '<span class="cc-chip-tag dim">无模型</span>'}
           </div>
-          <div class="m-meta"><span class="cc-path">${esc(it.assetPath)}</span>
-            ${it.warnings?.length ? `<div class="cc-warn">⚠ ${esc(it.warnings.join("；"))}</div>` : ""}</div>
+          <details class="cc-advanced"><summary>高级：资产信息</summary>
+            ${it.orderUid ? `<div class="muted small">uID ${it.orderUid}</div>` : ""}
+            <span class="cc-path">${esc(it.assetPath)}</span>
+          </details>
+          ${it.warnings?.length ? `<div class="cc-warn">⚠ ${esc(it.warnings.join("；"))}</div>` : ""}
           <div class="m-actions">
-            ${mBtnHtml("编辑 · Edit", "primary", { "data-edit": esc(it.id) })}
+            ${mBtnHtml("编辑", "primary", { "data-edit": esc(it.id) })}
             ${it.hasModel ? mBtnHtml("👁", "default", { "data-preview": esc(it.id), title: "3D 预览" }) : ""}
             ${dangerBtnHtml("删除", { "data-del": esc(it.id) })}
           </div>
@@ -657,7 +661,7 @@ async function previewSavedModel(item: CustomContentItem): Promise<void> {
       resourceBase: `/api/custom-content/model-file?assetPath=${encodeURIComponent(item.assetPath)}&file=`,
       modelFileName: src.modelFile,
       remoteTextures: textures.length ? textures : undefined,
-      fitTarget: "plate",
+      fitTarget: item.platingStepId === "Glass" ? "cup" : "plate",
       showReference: item.kind === "ingredient" || item.kind === "prep",
       ...transformOf(item),
     });
@@ -840,28 +844,24 @@ async function renderForm(app: HTMLElement, setId: string, kind: string, idOrNew
   const isPrepKind = kind === "prep";
   const ingredientFields = `
     <div class="cc-section"><div class="cc-section-title">🥕 食材参数 <span class="cc-en">Ingredient settings</span></div>
-      <p class="modal-hint">✅ <b>普通食材这里全部保持默认即可</b>——模板已带全套默认。只有三种情况需要改：
-        ① 食材要被切、且切完变成<b>指定</b>食材 → 填「可加工下一形态」（例：整番茄 → 切片番茄）；
-        ② 上桌容器不是普通盘子（饮料→玻璃杯、汤→马克杯）→ 改「装盘容器」；
-        ③ 备餐容器要限制能放哪些食材 → 设「容器限制」。
-        其余字段是引擎内部 UI / 装饰引用，属进阶选项。</p>
+      <p class="modal-hint">通常保持默认；按需设置装盘容器、切割后形态或容器限制。</p>
       <div class="cc-grid">
         ${refField({ label: "装盘容器 · Plating", id: "cc-plating", refs: options.plating, current: item?.platingStepId ?? "", valueField: "id", clearKey: "platingStepId", editable: !isNew, badge: "common",
-          hint: "该食材作为订单出现时用的容器：盘子（默认）/ 玻璃杯（饮料类）/ 马克杯（汤类）。普通食材不用改。" })}
+          hint: "盘子（默认）、玻璃杯（饮料）或马克杯（汤）。" })}
         ${refField({ label: "可加工下一形态 · Next form（切割后）", id: "cc-next-prefab", refs: options.prefabs, current: item?.nextPrefabGuid ?? "", clearKey: "nextPrefabGuid", editable: !isNew, badge: "common",
-          hint: "仅「可加工食材」模板生效：切完变成它（例：整番茄 → 切片番茄）。需先建好切割后食材，可先保存本条再回来指定；留空 = 自动生成的默认切割形态。" })}
+          hint: "仅可加工模板生效。选择已建好的切割后食材；留空使用自动生成形态，也可保存后再指定。" })}
         ${isPrepKind
           ? refField({ label: "容器限制 · Restrictions", id: "cc-restrictions", refs: options.lookups, current: item?.restrictionsGuid ?? "", clearKey: "restrictionsGuid", editable: !isNew, badge: "common",
               hint: "备餐容器核心参数：限制能放进本容器的食材集合（如「只许放生菜/番茄」的沙拉碗）。不设置 = 模板默认集合。" })
           : ""}
-        <label class="m-field">OrderNode 唯一 uID ${fieldBadge("adv")}
-          <input id="cc-order-uid" type="number" min="0" value="${item?.orderUid ?? 0}" class="cc-num">
-          <span class="muted small">0 = 自动分配（推荐，保持 0 即可）。手填必须全工程唯一（与原版食材也不能重复），重复会被拒绝。</span>
-        </label>
       </div>
       <details class="cc-advanced">
-        <summary>高级选项 · Advanced（引擎内部引用，保持默认）</summary>
+        <summary>高级：引擎引用与唯一编号</summary>
         <div class="cc-grid">
+          <label class="m-field">OrderNode 唯一 uID ${fieldBadge("adv")}
+            <input id="cc-order-uid" type="number" min="0" value="${item?.orderUid ?? 0}" class="cc-num">
+            <span class="muted small">0 = 自动分配。手填须全工程唯一，不能与原版食材重复。</span>
+          </label>
           ${isPrepKind
             ? ""
             : refField({ label: "容器限制 · Restrictions", id: "cc-restrictions", refs: options.lookups, current: item?.restrictionsGuid ?? "", clearKey: "restrictionsGuid", editable: !isNew, badge: "adv",
@@ -878,9 +878,8 @@ async function renderForm(app: HTMLElement, setId: string, kind: string, idOrNew
 
   const commonUiFields = `
     <div class="cc-section"><div class="cc-section-title">🎨 通用 UI / 特效 <span class="cc-en">Common UI & FX</span></div>
-      <p class="modal-hint">✅ 模板已带全套默认（进度条 / 着火火焰 / 切菜粒子 / 教程图标）。<b>通常整个区块都不用打开</b>——只有想换特效风格时才需要。</p>
       <details class="cc-advanced">
-        <summary>高级选项 · Advanced（4 项引擎引用，保持默认）</summary>
+        <summary>高级：进度条与特效（默认沿用模板）</summary>
         <div class="cc-grid">
           ${refField({ label: "进度 UI · Progress UI", id: "cc-progress-ui", refs: options.soRefs, current: item?.progressUiGuid ?? "", clearKey: "progressUiGuid", editable: !isNew, badge: "adv",
             hint: "进度条（清洗/烹饪/燃烧通用）。保持默认。" })}
@@ -903,24 +902,24 @@ async function renderForm(app: HTMLElement, setId: string, kind: string, idOrNew
         </label>
         <label class="m-field">允许站台 · Allowed stations
           <div class="cc-checks">${stationChecks(metaInfo, currentStations)}</div>
-          <span class="muted small">决定锅能放到哪种灶台上：火锅=FloorBurner、烤箱=Oven、篝火/煎盘=FirePit、烤串=Barbeque、普通灶=Hob。必须至少勾一个，否则真机无法放置。</span>
+          <span class="muted small">至少勾选一种可放置的灶台；模板已预选配套类型。</span>
         </label>
         <label class="m-field">额外食材 · Extra ingredients（多选）
           <div class="cc-multi-row">${multiButton("cc-pick-ings", "选择额外食材…")}<span id="cc-ings-count" class="muted small"></span></div>
           <span class="muted small">限制本锅能煮哪些食材。不选 = 接受所有主线食材。</span>
         </label>
-        <label class="m-field">锅内模型 prefab（多选）
-          <div class="cc-multi-row">${multiButton("cc-pick-models", "选择模型 prefab…")}<span id="cc-models-count" class="muted small"></span></div>
-          <span class="muted small">锅内食材的 3D 展示模型，顺序与「额外食材」一一对应；某个留空时用该食材默认模型。</span>
-        </label>
-        <label class="m-field">锅内模型 SO（多选）
-          <div class="cc-multi-row">${multiButton("cc-pick-model-sos", "选择模型 SO…")}<span id="cc-model-sos-count" class="muted small"></span></div>
-          <span class="muted small">同上，但引用 PseudoPrefabSO（跨 bundle 模型）。与 prefab 二选一即可。</span>
-        </label>
       </div>
       <details class="cc-advanced">
-        <summary>高级选项 · Advanced（3 项引擎引用，保持默认）</summary>
+        <summary>高级：锅内模型与引擎引用</summary>
         <div class="cc-grid">
+          <label class="m-field">锅内展示模型（多选）
+            <div class="cc-multi-row">${multiButton("cc-pick-models", "选择模型 prefab…")}<span id="cc-models-count" class="muted small"></span></div>
+            <span class="muted small">锅内食材的 3D 展示模型，顺序与「额外食材」一一对应；某个留空时用该食材默认模型。</span>
+          </label>
+          <label class="m-field">锅内模型 SO（多选）
+            <div class="cc-multi-row">${multiButton("cc-pick-model-sos", "选择模型 SO…")}<span id="cc-model-sos-count" class="muted small"></span></div>
+            <span class="muted small">同上，但引用 PseudoPrefabSO（跨 bundle 模型）。与 prefab 二选一即可。</span>
+          </label>
           ${refField({ label: "食材内容 UI · Content UI", id: "cc-ingredient-ui", refs: options.soRefs, current: item?.ingredientContentUiGuid ?? "", clearKey: "ingredientContentUiGuid", editable: !isNew, badge: "adv",
             hint: "锅内内容显示面板（引擎 UI）。保持默认。" })}
           ${refField({ label: "Sludge 焦糊模型 · Sludge", id: "cc-sludge", refs: options.soRefs, current: item?.sludgeGuid ?? "", clearKey: "sludgeGuid", editable: !isNew, badge: "adv",
@@ -933,18 +932,20 @@ async function renderForm(app: HTMLElement, setId: string, kind: string, idOrNew
 
   const sinkFields = `
     <div class="cc-section"><div class="cc-section-title">🚰 水槽参数 <span class="cc-en">Sink settings</span></div>
-      <div class="cc-grid">
-        <label class="m-field">清洗部件 · Washing part
-          <select id="cc-washing-part" class="m-select cc-select"><option value="">— 不设置 —</option>${hierarchy.map((p) => `<option value="${esc(p)}" ${p === (item?.washingPartPath ?? "") ? "selected" : ""}>${esc(p)}</option>`).join("")}</select>
-          <span class="muted small">水槽左侧「清洗」功能的子物体。通常保持模板默认。</span>
-        </label>
-        <label class="m-field">沥干部件 · Drying part
-          <select id="cc-drying-part" class="m-select cc-select"><option value="">— 不设置 —</option>${hierarchy.map((p) => `<option value="${esc(p)}" ${p === (item?.dryingPartPath ?? "") ? "selected" : ""}>${esc(p)}</option>`).join("")}</select>
-          <span class="muted small">水槽右侧「沥干/返盘」功能的子物体。通常保持模板默认。</span>
-        </label>
-        ${refField({ label: "干净盘堆 · Clean plate stack", id: "cc-clean-stack", refs: options.soRefs, current: item?.cleanPlateStackGuid ?? "", clearKey: "cleanPlateStackGuid", editable: !isNew, badge: "adv",
-          hint: "沥干完成后弹出的干净盘子堆（引擎引用）。保持默认。" })}
-      </div>
+      <details class="cc-advanced"><summary>高级：清洗、沥干部件与盘堆（默认沿用模板）</summary>
+        <div class="cc-grid">
+          <label class="m-field">清洗部件 · Washing part
+            <select id="cc-washing-part" class="m-select cc-select"><option value="">— 不设置 —</option>${hierarchy.map((p) => `<option value="${esc(p)}" ${p === (item?.washingPartPath ?? "") ? "selected" : ""}>${esc(p)}</option>`).join("")}</select>
+            <span class="muted small">水槽左侧「清洗」功能的子物体。通常保持模板默认。</span>
+          </label>
+          <label class="m-field">沥干部件 · Drying part
+            <select id="cc-drying-part" class="m-select cc-select"><option value="">— 不设置 —</option>${hierarchy.map((p) => `<option value="${esc(p)}" ${p === (item?.dryingPartPath ?? "") ? "selected" : ""}>${esc(p)}</option>`).join("")}</select>
+            <span class="muted small">水槽右侧「沥干/返盘」功能的子物体。通常保持模板默认。</span>
+          </label>
+          ${refField({ label: "干净盘堆 · Clean plate stack", id: "cc-clean-stack", refs: options.soRefs, current: item?.cleanPlateStackGuid ?? "", clearKey: "cleanPlateStackGuid", editable: !isNew, badge: "adv",
+            hint: "沥干完成后弹出的干净盘子堆（引擎引用）。保持默认。" })}
+        </div>
+      </details>
     </div>`;
 
   const trayFields = `
@@ -952,14 +953,16 @@ async function renderForm(app: HTMLElement, setId: string, kind: string, idOrNew
       <div class="cc-grid">
         ${refField({ label: "槽位配置 · Slot config", id: "cc-tray-slot", refs: options.orderLists, current: item?.traySlotGuid ?? "", clearKey: "traySlotGuid", editable: !isNew,
           hint: "每个槽接受哪些菜谱成品（OrderToPrefabListSO）。当前版本所有槽位共用此配置，一般保持默认 TraySlot。" })}
+      </div>
+      <details class="cc-advanced"><summary>高级：焦糊模型</summary>
         ${refField({ label: "Sludge 焦糊模型 · Sludge", id: "cc-sludge", refs: options.soRefs, current: item?.sludgeGuid ?? "", clearKey: "sludgeGuid", editable: !isNew, badge: "adv",
           hint: "托盘内无匹配菜谱时的「糊」模型（引擎引用）。保持默认。" })}
-      </div>
+      </details>
     </div>`;
 
   const splitterFields = `
     <div class="cc-section"><div class="cc-section-title">🔀 分料机参数 <span class="cc-en">Splitter settings</span></div>
-      <p class="modal-hint">分料机把一份「输入菜谱成品」拆成多份「输出 SO」。例：输入=一份米饭菜谱，输出=米饭食材 ×2；输出为 optional 组装定义时会自动套用（如三明治底）。</p>
+      <p class="modal-hint">将一份输入菜谱拆成多份输出食材或成品；输入、输出均必填。</p>
       <div class="cc-grid">
         <label class="m-field">容量 · Capacity
           <input id="cc-capacity" type="number" min="1" value="${currentCapacity}" class="cc-num">
@@ -973,11 +976,13 @@ async function renderForm(app: HTMLElement, setId: string, kind: string, idOrNew
           hint: "玩家投入什么会被拆分。只列自定义菜谱；没有合适的菜谱请先去「自定义菜谱」创建。" })}
         ${refField({ label: "输出食材/菜谱 · Output SO（必填）", id: "cc-output-prefab", refs: options.soRefs, current: item?.outputPrefabGuid ?? "", clearKey: "outputPrefabGuid", editable: !isNew,
           hint: "拆分后生成什么（PseudoPrefabSO；支持可选组装菜谱自动套用，如自定义食材、米饭或三明治底）。" })}
-        <label class="m-field">音效 tag · Audio tag
+      </div>
+      <details class="cc-advanced"><summary>高级：拆分音效</summary>
+        <label class="m-field">拆分音效
           <select id="cc-split-audio" class="m-select cc-select"><option value="">— 默认 PutDown —</option>${options.audioTags.map((t) => `<option value="${esc(t)}" ${t === currentAudio ? "selected" : ""}>${esc(t)}</option>`).join("")}</select>
           <span class="muted small">拆分完成时播放的音效。默认 PutDown。</span>
         </label>
-      </div>
+      </details>
     </div>`;
 
   let kindFields = "";
@@ -998,20 +1003,23 @@ async function renderForm(app: HTMLElement, setId: string, kind: string, idOrNew
       ${mBtnHtml("← 返回列表", "default", { "data-back": "" })}
       <span class="muted">关卡集：<b>${esc(setId)}</b> · ${isNew ? `新建 ${esc(meta.zh)}` : `编辑 ${esc(item?.nameZh || item!.id)}`}</span>
       <span style="flex:1"></span>
-      ${mBtnHtml("💾 保存 · Save", "primary", { "data-save": "" })}
+      ${mBtnHtml("💾 保存", "primary", { "data-save": "" })}
     </div>
     <div class="cc-form">
       <div class="cc-section cc-prep">
-        <div class="cc-section-title">🧾 开始前请准备 <span class="cc-en">Before you start</span>
+        <div class="cc-section-title">素材准备
           <span style="flex:1"></span>
           ${mBtnHtml("🧪 一键填充测试素材", "default", { "data-test-fill": "" })}
         </div>
-        <ul class="cc-prep-list" id="cc-prep-list"></ul>
-        <p class="muted small" style="margin:8px 0 0">🧪 会自动填入：图标（PNG）+ 模型（OBJ/MTL/贴图，走完整改名与预览管线）+ 中文名示例——之后直接点「💾 保存」即可体验全流程；素材也可在 <span class="cc-path">Docs/test/assets/</span> 查看。</p>
+        <p class="muted small">上传模型与贴图，或使用测试素材填入图标、模型和示例名称。</p>
+        <details class="cc-advanced"><summary>素材清单与模板提示</summary>
+          <ul class="cc-prep-list" id="cc-prep-list"></ul>
+          <p class="muted small">测试素材位于 Docs/test/assets/，使用同一上传与预览流程；填充后请检查参数并保存。</p>
+        </details>
       </div>
       <div class="cc-section"><div class="cc-section-title">🎯 模板 <span class="cc-en">Template</span></div>
         ${templateCards(templates, selectedTemplate, isNew)}
-        <p class="muted small">选择模板后自动带入容量/站台/音效等默认值；模板来自 common04 等素材库（只读），克隆副本完全归你。</p>
+        <p class="muted small">选择模板后自动填入容量、站台、音效等默认值。</p>
       </div>
       <div class="cc-section"><div class="cc-section-title">📝 基本信息 <span class="cc-en">Basics</span></div>
         <div class="cc-grid">
@@ -1039,8 +1047,8 @@ async function renderForm(app: HTMLElement, setId: string, kind: string, idOrNew
         <div class="cc-model-block">
           <label class="m-field">上传模型与贴图（FBX / OBJ + .mtl + PNG/JPG/TGA 贴图，可多选）
             <input type="file" id="cc-model" multiple accept=".fbx,.obj,.mtl,.png,.jpg,.jpeg,.tga" class="cc-text">
-            <span class="muted small">贴图按文件名自动分类（base_color/normal/roughness/metallic…，含关键词即可）；中文/空格文件名会自动改写为安全名，模型内引用同步修正。</span>
-          </label>
+           </label>
+          <details class="cc-advanced"><summary>贴图命名说明</summary><p class="muted small">贴图按文件名分类：base_color / normal / roughness / metallic。中文和空格会转为安全文件名，并同步模型内引用。</p></details>
           <div class="cc-model-state" id="cc-model-state"></div>
           <div class="cc-model-tools">
             <label class="m-field">在线预览与调整
@@ -1049,16 +1057,18 @@ async function renderForm(app: HTMLElement, setId: string, kind: string, idOrNew
                 ${mBtnHtml("👁 预览已保存模型", "default", { "data-preview-saved": "", style: !pendingModel && modelSource ? "" : "display:none" })}
                 ${!pendingModel && !modelSource ? '<span class="muted small">上传模型或保存后可预览</span>' : ""}
               </div>
-              <span class="muted small">变换（缩放/旋转/位置）请在 3D 预览里用「✨自动适配 / ✅应用」调整，保存时写回。</span>
+              <span class="muted small">在预览中调整，返回本页保存后生效。</span>
             </label>
           </div>
-          <div class="muted small" id="cc-transform-summary">${transformSummary()}</div>
+          <details class="cc-advanced"><summary>高级：模型变换参数</summary>
+            <div class="muted small" id="cc-transform-summary">${transformSummary()}</div>
+          </details>
         </div>
       </div>
       ${showSlicedSection ? `
       <div class="cc-section" id="cc-sliced-section" style="${selectedTemplate === "ingredient_workable" ? "" : "display:none"}">
         <div class="cc-section-title">🔪 切片形态（切割后食材） <span class="cc-en">Sliced form</span> ${fieldBadge("common")}</div>
-        <p class="modal-hint">可加工食材专属：在这里一并上传切片模型，保存时<b>自动创建「切割后食材」条目并自动关联</b>——整番茄 → 切片番茄一步完成（切片条目之后可单独编辑升级）。全部留空 = 系统自动生成默认切割形态（模板外观）。</p>
+        <p class="modal-hint">上传切片模型，保存时自动创建并关联切割后食材；留空使用模板默认形态。切片条目之后可单独编辑。</p>
         <div class="cc-grid">
           <label class="m-field">切片中文名<input id="cc-sliced-zh" class="cc-text" placeholder="切片·我的食材"></label>
           <label class="m-field">切片 id（默认 = 主 id + _sliced）<input id="cc-sliced-id" class="cc-text" placeholder="my_item_sliced"></label>
@@ -1078,7 +1088,7 @@ async function renderForm(app: HTMLElement, setId: string, kind: string, idOrNew
     <div class="cc-form-footer">
       ${mBtnHtml("← 返回列表", "default", { "data-back": "" })}
       <span style="flex:1"></span>
-      ${mBtnHtml("💾 保存 · Save", "primary", { "data-save": "" })}
+      ${mBtnHtml("💾 保存", "primary", { "data-save": "" })}
     </div>
     <pre id="cc-status" class="muted cc-status"></pre>`;
 
@@ -1379,7 +1389,7 @@ async function renderForm(app: HTMLElement, setId: string, kind: string, idOrNew
         ) as ArrayBuffer,
         localMtl: model.mtl ?? undefined,
         localTextures: texFiles.length ? texFiles : undefined,
-        fitTarget: "plate",
+        fitTarget: val("cc-plating") === "Glass" ? "cup" : "plate",
         showReference: kind === "ingredient" || kind === "prep",
         ...modelT,
         onAdjust: writeTransformBack,
@@ -1400,7 +1410,7 @@ async function renderForm(app: HTMLElement, setId: string, kind: string, idOrNew
         resourceBase: `/api/custom-content/model-file?assetPath=${encodeURIComponent(item.assetPath)}&file=`,
         modelFileName: modelSource!.modelFile,
         remoteTextures: textures.length ? textures : undefined,
-        fitTarget: "plate",
+        fitTarget: val("cc-plating") === "Glass" ? "cup" : "plate",
         showReference: kind === "ingredient" || kind === "prep",
         ...modelT,
         onAdjust: writeTransformBack,
@@ -1589,7 +1599,7 @@ async function renderForm(app: HTMLElement, setId: string, kind: string, idOrNew
       washingPartPath: val("cc-washing-part"),
       dryingPartPath: val("cc-drying-part"),
       cleanPlateStackGuid: val("cc-clean-stack"),
-      traySlotGuid: val("cc-tray-slot"),
+      traySlotGuid: isNew || val("cc-tray-slot") !== (item?.traySlotGuid ?? "") ? val("cc-tray-slot") : undefined,
       inputRecipeGuid: val("cc-input-recipe"),
       outputPrefabGuid: val("cc-output-prefab"),
       splitNum: num("cc-split-num"),

@@ -43,7 +43,9 @@ public static class DiagKettlePourRepro
             (stub != null && stub.levelInfo != null ? stub.levelInfo.name : "?"));
 
         // ---- 组装关卡配置（与 Play 同源）----
-        CampaignLevelConfig cfg = LevelConfigSetup.SetupConfig(
+        // 上游 GUA 的 SetupConfig 返回 CampaignLevelConfigBase（Campaign/Dynamic/Scripted
+        // 多态），本仓库旧版返回 CampaignLevelConfig；统一按基类接收以兼容两种宿主。
+        LevelConfigBase cfg = LevelConfigSetup.SetupConfig(
             stub.configTemplateSO, stub.levelInfo, 4);
         sb.AppendLine("config: " + cfg.name);
 
