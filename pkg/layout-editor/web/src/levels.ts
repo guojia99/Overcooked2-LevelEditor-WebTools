@@ -37,7 +37,7 @@ import type {
 } from "./types";
 import { closeModal, openModal } from "./modals";
 import { openDepsCheckModal } from "./editor/ui/depsCheck";
-import { showBusy, hideBusy, setBusyMessage } from "./busy";
+import { showBusy, hideBusy, setBusyMessage, setBusyStages, setBusyResult } from "./busy";
 import { suspendBridgeWatch, resumeBridgeWatch } from "./editor/sceneIO";
 import { navHtml, wireNav } from "./nav";
 import { navigateTo, depsPath, layoutPath, manageLevelListPath, manageLevelDetailPath, manageLevelSummaryPath, parseRoute } from "./route";
@@ -364,18 +364,20 @@ function confirmDeleteSet(app: HTMLElement, s: LevelSetInfo): void {
 /** 导出各阶段的提示（后端 message 已足够描述时优先用后端的）。 */
 const EXPORT_PHASE_HINT: Record<string, string> = {
   queued: "任务已排队…",
+  starting: "Unity 已执行 delayCall，正在启动导出…",
   compile: "统一运行时源码已更新，自动编译中（完成后自动继续导出）…",
+  preflight: "自动预检空可选包…",
+  "orphan-clean": "检查场景孤儿脚本引用…",
+  "dual-stub-clean": "修复双 Stub 道具…",
   prepare: "准备场景（逐个保存并清除临时物体）…",
   clean: "清理旧构建产物…",
   build: "构建 AssetBundle，请保持 Unity 打开…",
-  package: "清理 manifest / meta 文件…",
+  package: "按本次构建清单收集文件（保留缓存 manifest）…",
   zip: "生成 zip 压缩包…",
+  restore: "恢复导出前场景、levelInfos 与预览…",
 };
 
-const UNITY_FOCUS_NUDGE =
-  "排队较久：请切换到 Unity，点击编辑器窗口，并在 Unity 页面停留 5–10 秒，以免编辑器在后台卡住导致导出失败。";
-
-/** 排队 / 等编译超过此时长仍无进展，就提醒用户聚焦 Unity。 */
+/** 排队 / 等编译超过此时长仍无进展，按阶段显示排查提示。 */
 const QUEUE_NUDGE_AFTER_MS = 12_000;
 
 function queueFocusNote(state: { phase: string; since: number }, phase: string): string {
@@ -390,7 +392,9 @@ function queueFocusNote(state: { phase: string; since: number }, phase: string):
     state.since = Date.now();
   }
   if (Date.now() - state.since < QUEUE_NUDGE_AFTER_MS) return "";
-  return UNITY_FOCUS_NUDGE;
+  return phase === "queued"
+    ? "等待Unity编辑器执行任务；若长时间不动检查编译/资源导入/模态弹窗"
+    : "等待统一运行时编译与域重载完成后自动续跑；若长时间不动，请检查 Unity Console 编译错误与编译进度。";
 }
 
 function fmtElapsed(ms: number): string {
@@ -420,6 +424,21 @@ function estimateExportDuration(levelCount: number, withDeps = false): string {
   return `约 ${minutes} 分钟`;
 }
 
+/** idle 可能来自域重载；只接受当前任务的有效快照，恢复期间不清除已知行。 */
+function updateExportStages(st: SetExportStatus, expectedKey: string, mode: NonNullable<SetExportStatus["mode"]>): boolean {
+  if (st.status === "idle" || st.setName !== expectedKey || (st.mode && st.mode !== mode)) {
+    setBusyMessage("等待当前导出状态恢复…", "Unity 可能正在域重载；保留最近一次阶段进度，尚未确认完成。");
+    return false;
+  }
+  setBusyStages(st.stages, st.phase);
+  if (st.status === "error") {
+    const message = st.error || st.message || "导出失败（详见 Unity Console）。";
+    setBusyResult(message);
+    throw new Error(message);
+  }
+  return true;
+}
+
 /** 轮询导出进度直至完成并下载 zip（单集 / 多集合并导出共用）。
  *  expectedKey：与后端状态 setName 匹配的标识（单集 = 集名；多集 = "+" 连接串）。 */
 async function awaitExportAndDownload(
@@ -438,9 +457,10 @@ async function awaitExportAndDownload(
     try {
       st = await api.fetchSetExportStatus();
     } catch {
-      continue; // 瞬时网络抖动，继续轮询
+      setBusyMessage("连接恢复中，正在重新获取导出进度…", "保留最近一次阶段进度；网络或 Unity 域重载恢复后自动继续。");
+      continue;
     }
-    if (st.status === "error") throw new Error(st.error || "导出失败（详见 Unity Console）。");
+    if (!updateExportStages(st, expectedKey, withDeps ? "all" : "levels")) continue;
     if (st.status === "done" && st.setName === expectedKey) {
       setBusyMessage("导出完成，正在下载 zip…");
       const res = await api.downloadSetExportZip(expectedKey, st.zipFileName);
@@ -549,6 +569,7 @@ function confirmExportSet(app: HTMLElement, s: LevelSetInfo): void {
       await awaitExportAndDownload(s.setName, startAt, exportCount, withDeps);
       await renderSetList(app);
     } catch (e) {
+      setBusyResult((e as Error).message);
       setStatus((e as Error).message, false);
       if (okBtn) okBtn.disabled = false; // 允许重试（弹窗此时可能仍打开）
     } finally {
@@ -707,6 +728,7 @@ function confirmExportMultiSet(app: HTMLElement, sets: LevelSetInfo[]): void {
       await awaitExportAndDownload(joinedKey, startAt, totalLevels, withDeps);
       await renderSetList(app);
     } catch (e) {
+      setBusyResult((e as Error).message);
       setStatus((e as Error).message, false);
       if (okBtn) okBtn.disabled = false; // 允许重试（弹窗此时可能仍打开）
     } finally {
@@ -854,14 +876,15 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
       const queueWait = { phase: "", since: Date.now() };
       for (;;) {
         if (Date.now() > deadline) throw new Error("导出超时（15 分钟），请查看 Unity Console。");
-        await new Promise((r) => setTimeout(r, 1500));
+        await new Promise((r) => setTimeout(r, 2000));
         let st2: SetExportStatus;
         try {
           st2 = await api.fetchSetExportStatus();
         } catch {
+          setBusyMessage("连接恢复中，正在重新获取依赖包导出进度…", "保留最近一次阶段进度；网络或 Unity 域重载恢复后自动继续。");
           continue;
         }
-        if (st2.status === "error") throw new Error(st2.error || "导出失败（详见 Unity Console）。");
+        if (!updateExportStages(st2, anchorSet, "deps")) continue;
         if (st2.status === "done") {
           setBusyMessage("导出完成，正在下载 zip…");
           const res = await api.downloadSetExportZip(anchorSet, st2.zipFileName);
@@ -881,6 +904,7 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
         );
       }
     } catch (e) {
+      setBusyResult((e as Error).message);
       setStatus((e as Error).message, false);
       if (okBtn) okBtn.disabled = false; // 允许重试（弹窗此时可能仍打开）
     } finally {

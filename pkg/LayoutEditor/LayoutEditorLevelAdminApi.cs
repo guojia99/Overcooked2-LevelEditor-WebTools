@@ -1186,7 +1186,8 @@ public static class LayoutEditorLevelAdminApi
         so.maxOrderCount = ClampOrderCount(dto.maxOrderCount, so.maxOrderCount);
         if (so.minOrderCount > so.maxOrderCount)
             so.maxOrderCount = so.minOrderCount;
-        so.dependencies = dto.dependencies != null ? (string[])dto.dependencies.Clone() : so.dependencies;
+        if (dto.dependencies != null)
+            so.dependencies = FilterSetDataDependencies((string[])dto.dependencies.Clone(), SetNameFromPath(dto.assetPath));
         EditorUtility.SetDirty(so);
 
         var stub = UnityEngine.Object.FindObjectOfType<PseudoPrefabManagerStub>();
@@ -1197,6 +1198,47 @@ public static class LayoutEditorLevelAdminApi
 
         ReloadPseudo();
         return null;
+    }
+
+    /// <summary>依赖防线：custom_recipes / custom_content 属关卡集数据 bundle，由
+    /// EnsureWebDependencies 在写回 / 菜谱保存时自动登记，手动编辑不得添加。
+    /// 除本集自身两条规范名外一律静默剔除并告警（不硬报错：改名等透传保存可能携带
+    /// 历史脏条目，不能因此卡死；前端依赖管理页保存前会先给出明确报错）。</summary>
+    private static string[] FilterSetDataDependencies(string[] deps, string setName)
+    {
+        if (deps == null || deps.Length == 0)
+            return deps;
+        var kept = new List<string>(deps.Length);
+        var dropped = new List<string>();
+        var ownRecipes = setName + "/custom_recipes";
+        var ownContent = setName + "/custom_content";
+        for (int i = 0; i < deps.Length; i++)
+        {
+            var d = deps[i];
+            if (IsSetDataBundleName(d) && d != ownRecipes && d != ownContent)
+            {
+                dropped.Add(d);
+                continue;
+            }
+            kept.Add(d);
+        }
+        if (dropped.Count > 0)
+            Debug.LogWarning("[LevelAdmin] dependencies 已剔除关卡集数据 bundle（由系统自动管理，不可手动添加）："
+                + string.Join(", ", dropped.ToArray()));
+        return kept.ToArray();
+    }
+
+    /// <summary>bundle 名末段是否为关卡集数据目录（custom_recipes / custom_content，忽略大小写与任意前缀）。</summary>
+    private static bool IsSetDataBundleName(string bundleName)
+    {
+        if (string.IsNullOrEmpty(bundleName))
+            return false;
+        var seg = bundleName;
+        var slash = seg.LastIndexOf('/');
+        if (slash >= 0)
+            seg = seg.Substring(slash + 1);
+        return string.Compare(seg, "custom_recipes", StringComparison.OrdinalIgnoreCase) == 0
+            || string.Compare(seg, "custom_content", StringComparison.OrdinalIgnoreCase) == 0;
     }
 
     /// <summary>网格半宽变更应用（场景 GridManager 为唯一权威存储，LevelInfoSO 禁改）。

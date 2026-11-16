@@ -245,22 +245,14 @@ namespace OC2LevelRuntimeLoader
         /// <summary>每关卡自定义 runtime 文件后缀（预留通道；不识别旧版 runtime）。</summary>
         private const string CustomRuntimeSuffix = "_custom_runtime";
 
-        /// <summary>清单兼容截止版本（2026-09-28 用户决策）：PluginVersion &lt; 本值时，
-        /// 旧版导出集（有 requires.txt、无 stub_levels.txt）生成兼容条目 "集|*|legacy"，
-        /// EntryPoint 对其维持 v3.4 行为（探测 + tag 自愈）——**3.2.1 等已分发关卡集
-        /// 无需重导出即可继续工作**；到达 4.0.0 后不再生成兼容条目，严格按
-        /// stub_levels.txt 逐关卡清单（届时旧集需重新导出一次）。
-        /// ⚠ 长期准则（v3.5.0 起，详见 .opencode/skills/oc2-customstub「Loader 版本
-        /// 兼容规范」）：**任一版本必须保留对上一版导出格式的兼容**——本常量推移时，
-        /// 被越过的「上一版格式」仍必须兼容（如 4.0.0 移除 ≤3.4 legacy 时，3.5.0 的
-        /// stub_levels.txt 清单格式继续支持）；不允许当版直接砍掉上一版格式。</summary>
-        private const string LegacyCompatCutoff = "4.0.0";
+        private const string DependencyManifestFileName = "bundle_dependencies.txt";
 
         private static ManualLogSource _log;
         private static readonly List<byte[]> PendingRaw = new List<byte[]>();
         private static readonly HashSet<string> LoadedNames = new HashSet<string>(StringComparer.Ordinal);
         private static readonly HashSet<string> LoadedBundles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private static readonly Dictionary<string, string> LoadedSources = new Dictionary<string, string>(StringComparer.Ordinal);
+        private static readonly Dictionary<Assembly, byte[]> LoadedAssemblyBytes = new Dictionary<Assembly, byte[]>();
         private static bool _startupScanDone;
         private static bool _filesystemScanDone;
         private static bool _resolveHooked;
@@ -269,6 +261,7 @@ namespace OC2LevelRuntimeLoader
         // 协程在途时 sceneLoaded 补扫不得误判「已加载」而跳过等待）----
         /// <summary>异步加载状态：0=未开始，1=队列运行中，2=完成（含失败收场）。</summary>
         private static int _depLoadState;
+        private static bool _dependencyLoadFailed;
 
         /// <summary>队列协程在途标记（与 _depLoadState 分离：队列清空后仍可能有
         /// 后续扫描结果入队需要重启队列）。</summary>
@@ -506,9 +499,11 @@ namespace OC2LevelRuntimeLoader
             if (WebManifest.Length == 0 && !_anyWebExportedSet)
                 return; // 零介入休眠：无任何 web 导出关卡集，不加载依赖/运行时
             _depLoadState = 1;
+            _dependencyLoadFailed = false;
             var dir = OwnDir();
             if (string.IsNullOrEmpty(dir))
             {
+                _dependencyLoadFailed = true;
                 LogW("无法解析 Loader.dll 所在目录，跳过依赖/运行时加载（自愈补扫仍会尝试）");
                 EnsureQueueRunning();
                 return;
@@ -543,11 +538,10 @@ namespace OC2LevelRuntimeLoader
                 LogP("自定义关卡运行组件启动失败，部分自定义玩法可能无法使用。请将 logs 目录发送给开发者。原因: " + ex.Message);
             }
 
-            // 2. 动态发现 commonW1、commonW2、commonW3...（供 stub 组件按名解析；
-            //    不把未来新增的依赖包写死在 Loader 中）。
+            // 2. 新包按依赖清单原序加载（传递依赖在引用者前）；旧包保持数字发现。
             var dependencyNames = GetDependencyBundleNames(dir);
             if (dependencyNames.Count == 0)
-                LogI("  未找到 commonW* 依赖包（可选），跳过");
+                LogI("  无可入队的依赖 bundle（清单错误见告警），跳过");
             foreach (var name in dependencyNames)
             {
                 try
@@ -560,13 +554,15 @@ namespace OC2LevelRuntimeLoader
                     var path = Path.Combine(dir, name);
                     if (!File.Exists(path))
                     {
-                        LogI("  依赖包未含 " + name + "（可选），跳过");
+                        _dependencyLoadFailed = true;
+                        LogW("  依赖 bundle 文件不存在（可能在扫描后被移除）: " + path);
                         continue;
                     }
                     _pendingOps.Add(new LoadOp(LoadOpKind.Dep, name, path));
                 }
                 catch (Exception ex)
                 {
+                    _dependencyLoadFailed = true;
                     LogW("  " + name + " 入队异常: " + ex.Message);
                 }
             }
@@ -634,6 +630,7 @@ namespace OC2LevelRuntimeLoader
                 try { req = AssetBundle.LoadFromFileAsync(op.Path); }
                 catch (Exception ex)
                 {
+                    if (op.Kind == LoadOpKind.Dep) _dependencyLoadFailed = true;
                     LogW("  bundle 异步加载发起异常 " + op.Path + ": " + ex.Message);
                     continue;
                 }
@@ -679,6 +676,7 @@ namespace OC2LevelRuntimeLoader
                 {
                     if (op.Kind == LoadOpKind.Dep)
                     {
+                        _dependencyLoadFailed = true;
                         LogW("  " + op.Name + " 加载失败（LoadFromFileAsync 返回 null）: " + op.Path);
                         LogP("依赖资源 " + op.Name + " 加载失败，相关自定义关卡功能可能无法正常显示。请重新安装依赖包。");
                     }
@@ -716,16 +714,15 @@ namespace OC2LevelRuntimeLoader
                         if (LoadFromBytes(assetPath, asset.bytes))
                         {
                             loaded++;
-                            _qAssembliesLoaded++;
                         }
                     }
                     swProc.Stop();
                     if (loaded == 0)
                     {
-                        LogW("统一运行时 bundle 内无 *.dll.bytes（打错包或旧包？）");
+                        LogW("统一运行时 bundle 内无可用 DLL（缺少 *.dll.bytes 或加载失败，见前述告警）");
                         LogP("统一运行时文件内容不完整，自定义玩法无法启用。请重新导出或安装最新依赖包。");
                     }
-                    LogI("[断点:依赖] 统一运行时加载完成，程序集数量=" + loaded
+                    LogI("[断点:依赖] 统一运行时处理结束，可用程序集数量=" + loaded
                         + "，主线程处理耗时=" + swProc.ElapsedMilliseconds
                         + " ms（明细见上行 Assembly.Load/Install 分项）");
                 }
@@ -744,8 +741,7 @@ namespace OC2LevelRuntimeLoader
                         }
                         dllCount++;
                         LogI("  发现 " + assetPath + "（" + asset.bytes.Length + " 字节）");
-                        if (LoadFromBytes(assetPath, asset.bytes))
-                            _qAssembliesLoaded++;
+                        LoadFromBytes(assetPath, asset.bytes);
                     }
                     if (dllCount == 0)
                         LogW("  自定义 runtime 内没有任何 *.dll.bytes 资产。bundle 内全部资产: "
@@ -755,6 +751,7 @@ namespace OC2LevelRuntimeLoader
             }
             catch (Exception ex)
             {
+                if (op.Kind == LoadOpKind.Dep) _dependencyLoadFailed = true;
                 if (op.Kind == LoadOpKind.Runtime)
                 {
                     LogW("统一运行时加载异常: " + ex);
@@ -780,6 +777,7 @@ namespace OC2LevelRuntimeLoader
                 catch (Exception ex) { error = ex; }
                 if (error != null)
                 {
+                    _dependencyLoadFailed = true;
                     LogW("异步加载协程异常（队列终止）: " + error);
                     LogP("自定义关卡运行组件启动中断，部分自定义玩法可能无法使用。请将 logs 目录发送给开发者。原因: "
                         + error.Message);
@@ -805,8 +803,15 @@ namespace OC2LevelRuntimeLoader
                 return; // 已收场（同步收口先行，协程恢复后二次触达）
             _queueRunning = false;
             _depLoadState = 2;
-            LogI("[断点:依赖] 异步加载队列完成: bundle " + _qBundlesDone
-                + " 个，本次新加载程序集 " + _qAssembliesLoaded + " 个");
+            if (_dependencyLoadFailed)
+            {
+                LogW("[断点:依赖] 队列已结束，但依赖加载失败；不能视为加载成功。已处理 bundle " + _qBundlesDone
+                    + " 个，本次新加载程序集 " + _qAssembliesLoaded + " 个，失败原因见前述告警");
+                LogP("依赖加载失败，相关 common 素材可能全部缺失。请修复依赖清单或重新安装依赖包后重启游戏。");
+            }
+            else
+                LogI("[断点:依赖] 异步加载队列完成: bundle " + _qBundlesDone
+                    + " 个，本次新加载程序集 " + _qAssembliesLoaded + " 个");
         }
 
         /// <summary>v3.7.0 同步收口（进图闸门核心）：接管异步队列剩余 op，把「快速
@@ -856,8 +861,8 @@ namespace OC2LevelRuntimeLoader
                 drained++;
             }
             OnQueueFinished();
-            LogI("[断点:依赖] 进图收口（" + reason + "）：同步等待 " + drained + " 个依赖完成，耗时 "
-                + sw.ElapsedMilliseconds + " ms（解压在工作线程，主线程等待——此后场景加载全程依赖就位）");
+            LogI("[断点:依赖] 进图收口（" + reason + "）：处理 " + drained + " 个加载请求，耗时 "
+                + sw.ElapsedMilliseconds + " ms" + (_dependencyLoadFailed ? "（依赖失败，见前述告警）" : ""));
         }
 
         // ---- v3.7.0 进图闸门：AssetBundleManager.LoadLevelAsync 前缀 ----
@@ -1145,10 +1150,74 @@ namespace OC2LevelRuntimeLoader
             return 5;
         }
 
-        /// <summary>发现自身目录下所有严格匹配 commonW+数字 / common0N（N≥4）的 bundle。
-        /// common01~03 属于游戏本体，绝不在此加载；common04 起是上游通用素材包。
-        /// 采用数字排序，确保 commonW10 排在 commonW9 之后；扩展名文件不会被误加载。</summary>
+        /// <summary>有 bundle_dependencies.txt 时严格按 UTF-8 清单原序读取，非法则整份拒绝，
+        /// 不回退扫描；缺失时兼容旧包的 commonW+数字 / common0N（N≥4）数字发现。</summary>
         private static List<string> GetDependencyBundleNames(string dir)
+        {
+            var result = new List<string>();
+            var manifestPath = Path.Combine(dir, DependencyManifestFileName);
+            try
+            {
+                // File.Exists 会把访问失败当成不存在；只在真正缺失时走旧格式。
+                File.GetAttributes(manifestPath);
+            }
+            catch (FileNotFoundException) { return DiscoverLegacyDependencyBundleNames(dir); }
+            catch (DirectoryNotFoundException) { return DiscoverLegacyDependencyBundleNames(dir); }
+            catch (Exception ex)
+            {
+                _dependencyLoadFailed = true;
+                LogW("依赖清单无法访问 " + manifestPath + "，不回退扫描: " + ex.Message);
+                return result;
+            }
+            try
+            {
+                var text = new UTF8Encoding(false, true).GetString(File.ReadAllBytes(manifestPath));
+                var lines = text.TrimStart('\ufeff').Split('\n');
+                var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var valid = true;
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    var name = lines[i].Trim();
+                    if (name.Length == 0)
+                        continue;
+                    var invalid = name == "." || name == ".." || name.EndsWith(".", StringComparison.Ordinal)
+                        || name.IndexOfAny(new[] { '/', '\\', ':', '*', '?', '"', '<', '>', '|' }) >= 0
+                        || string.Equals(name, RuntimeBundleFileName, StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(name, "runtime", StringComparison.OrdinalIgnoreCase)
+                        || name.EndsWith(CustomRuntimeSuffix, StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(name, DependencyManifestFileName, StringComparison.OrdinalIgnoreCase);
+                    foreach (var ch in name)
+                        if (char.IsControl(ch)) invalid = true;
+                    if (invalid || !seen.Add(name))
+                    {
+                        LogW("依赖清单 " + manifestPath + " 第 " + (i + 1) + " 行非法或重复: " + name);
+                        valid = false;
+                    }
+                    else if (!File.Exists(Path.Combine(dir, name)))
+                    {
+                        LogW("依赖清单 " + manifestPath + " 第 " + (i + 1) + " 行文件缺失或不可读: " + name);
+                        valid = false;
+                    }
+                    else
+                        result.Add(name);
+                }
+                if (!valid)
+                {
+                    _dependencyLoadFailed = true;
+                    LogW("依赖清单校验失败，整份依赖清单不入队且不回退扫描: " + manifestPath);
+                    result.Clear();
+                }
+            }
+            catch (Exception ex)
+            {
+                _dependencyLoadFailed = true;
+                LogW("依赖清单 UTF-8 读取失败，不回退扫描 " + manifestPath + ": " + ex.Message);
+                result.Clear();
+            }
+            return result;
+        }
+
+        private static List<string> DiscoverLegacyDependencyBundleNames(string dir)
         {
             var result = new List<string>();
             try
@@ -1163,21 +1232,22 @@ namespace OC2LevelRuntimeLoader
                     {
                         var suffix = name.Substring("commonW".Length);
                         int number;
-                        if (suffix.Length > 0 && int.TryParse(suffix, out number) && number >= 1)
-                            result.Add("commonW" + number);
+                        if (IsNumericVersion(suffix) && suffix.IndexOf('.') < 0 && int.TryParse(suffix, out number) && number >= 1)
+                            result.Add(name);
                         continue;
                     }
                     if (name.StartsWith("common0", StringComparison.OrdinalIgnoreCase))
                     {
                         var suffix = name.Substring("common0".Length);
                         int number;
-                        if (suffix.Length > 0 && int.TryParse(suffix, out number) && number >= 4)
-                            result.Add("common0" + number);
+                        if (IsNumericVersion(suffix) && suffix.IndexOf('.') < 0 && int.TryParse(suffix, out number) && number >= 4)
+                            result.Add(name);
                     }
                 }
             }
             catch (Exception ex)
             {
+                _dependencyLoadFailed = true;
                 LogW("  扫描 commonW*/common0N 依赖包失败: " + ex.Message);
                 return result;
             }
@@ -1519,17 +1589,10 @@ namespace OC2LevelRuntimeLoader
                 _resolveHooked = true;
                 AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
             }
-            var legacyCount = 0;
-            for (int i = 0; i < WebManifest.Length; i++)
-            {
-                if (WebManifest[i] != null && WebManifest[i].EndsWith("|*|legacy", StringComparison.Ordinal))
-                    legacyCount++;
-            }
             if (WebManifest.Length > 0)
             {
-                LogI("stub 关卡清单命中 " + (WebManifest.Length - legacyCount) + " 关（分布于 "
+                LogI("stub 关卡清单命中 " + WebManifest.Length + " 关（分布于 "
                     + result.SetsWithManifest + " 个关卡集）"
-                    + (legacyCount > 0 ? "，另含 " + legacyCount + " 个旧版导出集（兼容模式：探测+自愈）" : "")
                     + "——激活依赖/运行时加载");
             }
             else
@@ -1646,61 +1709,38 @@ namespace OC2LevelRuntimeLoader
                     result.Warns.Add("  [" + setName + "] 检测到旧版 runtime 文件，已忽略（新版由依赖包统一运行时提供，"
                         + "请用新编辑器重新导出该关卡集一次）");
 
-                // 版本门控：requires.txt（= 关卡集要求的依赖包 SSOT 版本）
-                var requires = ReadRequires(setDir);
-                if (!string.IsNullOrEmpty(requires) && CompareSemver(PluginVersion, requires) < 0)
+                // 无清单集始终零介入，不能借其它集的激活加载其专属 runtime。
+                var manifestPath = Path.Combine(setDir, "stub_levels.txt");
+                if (!File.Exists(manifestPath) && !Directory.Exists(manifestPath))
+                {
+                    if (File.Exists(Path.Combine(setDir, "requires.txt")))
+                        result.Warns.Add("  [" + setName + "] 无 stub_levels.txt，CustomStub 运行时对该集零介入；请重新导出该集");
+                    continue;
+                }
+
+                string requires;
+                if (!ReadRequires(setDir, out requires, result))
+                    continue;
+                if (requires != null && CompareSemver(PluginVersion, requires) < 0)
                 {
                     result.Warns.Add("  [" + setName + "] 依赖包版本过旧：已装 " + PluginVersion + " < 关卡要求 " + requires
                         + "，跳过该集 stub 支持（关卡本体仍可加载）。请更新 OC2DIYLevelRuntimeWLoader 依赖包。");
                     continue;
                 }
 
-                // v3.5.0 逐关卡清单：web 导出（=有 requires.txt）且门控通过的集必有
-                // stub_levels.txt（每行 "<关卡>|<特征,...>"，'#' 注释/空行忽略）。
-                // 旧版导出（无 stub_levels.txt）：兼容期（< LegacyCompatCutoff=4.0.0）
-                // 生成 "集|*|legacy" 兼容条目——EntryPoint 对该集维持 v3.4 行为
-                // （探测+自愈），旧集无需重导出；4.0.0 起不再生成 → 零介入 + 提示重导出。
-                // 非 web 集（无 requires.txt）本就不归本加载器管。
-                var manifestPath = Path.Combine(setDir, "stub_levels.txt");
-                var manifestKey = setName;
-                if (File.Exists(manifestPath) || !string.IsNullOrEmpty(requires))
-                {
-                    // 4.0.0.16（原 4.5.0）：清单条目键改用【内部集名】——由集内 info_<set> bundle
-                    // 文件名推断（导出时与 bundle 场景内路径 assets/levelsets/<set>/
-                    // 同源，文件夹改名后不变）。此前以磁盘文件夹名为键，玩家给
-                    // levels/<set>/ 改名（加版本号/标注）即与 EntryPoint 的场景路径
-                    // 匹配断链 → stub 玩法静默失效（2026-11-08 社区 18 集 17 个中招）。
-                    // 无 info_* 或名字非法时回落文件夹名（原行为）。
-                    manifestKey = DetectManifestSetName(files, setName, result);
-                    if (!string.Equals(manifestKey, setName, StringComparison.Ordinal))
-                        result.AliasedSets.Add(setName + " → " + manifestKey);
-                }
-                if (File.Exists(manifestPath))
-                {
-                    RegisterManifestKeyOwner(manifestKey, setName, result);
-                    result.AnyStubLevelsFile = true; // v3.7.0：存在即 web 导出集（空清单也需 commonW）
-                    var added = ReadStubLevels(setName, manifestKey, manifestPath, result);
-                    if (added > 0)
-                        result.SetsWithManifest++;
-                    else if (result.Verbose)
-                        result.Infos.Add("  [" + setName + "] stub 清单存在但无条目（该集未用 CustomStub）");
-                }
-                else if (!string.IsNullOrEmpty(requires))
-                {
-                    if (CompareSemver(PluginVersion, LegacyCompatCutoff) < 0)
-                    {
-                        RegisterManifestKeyOwner(manifestKey, setName, result);
-                        result.ManifestEntries.Add(manifestKey + "|*|legacy");
-                        result.SetsWithManifest++;
-                        result.Infos.Add("  [" + setName + "] 旧版导出（无 stub_levels.txt）→ 兼容模式（探测+自愈，同 v3.4 行为，无需重导出）；"
-                            + "v4.0.0 起将严格按清单，届时请重新导出");
-                    }
-                    else
-                    {
-                        result.Warns.Add("  [" + setName + "] 旧版导出（无 stub_levels.txt），CustomStub 运行时对该集零介入；"
-                            + "请用最新编辑器重新导出该关卡集以启用自定义玩法运行时支持");
-                    }
-                }
+                // 清单键继续使用 info_<set> 推断的内部集名，保留文件夹改名兼容。
+                var manifestKey = DetectManifestSetName(files, setName, result);
+                var added = ReadStubLevels(setName, manifestKey, manifestPath, result);
+                if (added < 0)
+                    continue;
+                RegisterManifestKeyOwner(manifestKey, setName, result);
+                if (!string.Equals(manifestKey, setName, StringComparison.Ordinal))
+                    result.AliasedSets.Add(setName + " → " + manifestKey);
+                result.AnyStubLevelsFile = true; // 合法的空清单也需 commonW（3.7/3.10 格式）。
+                if (added > 0)
+                    result.SetsWithManifest++;
+                else if (result.Verbose)
+                    result.Infos.Add("  [" + setName + "] stub 清单存在但无条目（该集未用 CustomStub）");
 
                 // 每关卡自定义 runtime（预留通道）：只认 *_custom_runtime。
                 foreach (var f in files)
@@ -1713,18 +1753,28 @@ namespace OC2LevelRuntimeLoader
             }
         }
 
-        /// <summary>读关卡集 requires.txt（依赖版本门控）。不存在/读失败返回 null（不门控）。</summary>
-        private static string ReadRequires(string setDir)
+        /// <summary>裸数字版本单行；缺失兼容旧清单集并告警，存在但非法/读取失败则拒绝。</summary>
+        private static bool ReadRequires(string setDir, out string requires, ScanResult result)
         {
+            requires = null;
             try
             {
                 var p = Path.Combine(setDir, "requires.txt");
-                if (!File.Exists(p))
-                    return null;
-                var s = File.ReadAllText(p);
-                return s != null ? s.Trim() : null;
+                requires = new UTF8Encoding(false, true).GetString(File.ReadAllBytes(p)).TrimStart('\ufeff').Trim();
+                if (IsNumericVersion(requires))
+                    return true;
+                result.Warns.Add("  [" + Path.GetFileName(setDir) + "] requires.txt 非法（应为裸数字版本，如 3.10.0），跳过该集 stub 支持: " + requires);
             }
-            catch { return null; }
+            catch (FileNotFoundException)
+            {
+                result.Warns.Add("  [" + Path.GetFileName(setDir) + "] 缺少 requires.txt，未声明最低依赖版本；兼容加载已有 stub_levels.txt 清单");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                result.Warns.Add("  [" + Path.GetFileName(setDir) + "] requires.txt 读取失败，跳过该集 stub 支持: " + ex.Message);
+            }
+            return false;
         }
 
         /// <summary>4.0.0.16（原 4.5.0） 从集文件夹内文件名推断清单键【内部集名】。
@@ -1792,14 +1842,15 @@ namespace OC2LevelRuntimeLoader
                     if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
                         continue;
                     var sep = line.IndexOf('|');
-                    if (sep <= 0 || sep >= line.Length - 1)
+                    if (sep <= 0 || line.IndexOf('|', sep + 1) >= 0)
                     {
                         result.Warns.Add("  [" + setName + "] stub_levels.txt 第 " + (i + 1) + " 行格式非法（应为 关卡|特征,...）: "
                             + line + "，已跳过");
                         continue;
                     }
                     var level = line.Substring(0, sep);
-                    if (level.IndexOf('|') >= 0 || level.IndexOf('/') >= 0)
+                    if (level.IndexOfAny(new[] { '|', '/', '\\', '*', '?' }) >= 0
+                        || level == "." || level == "..")
                     {
                         result.Warns.Add("  [" + setName + "] stub_levels.txt 第 " + (i + 1) + " 行关卡名非法: " + level + "，已跳过");
                         continue;
@@ -1810,13 +1861,14 @@ namespace OC2LevelRuntimeLoader
             }
             catch (Exception ex)
             {
-                result.Warns.Add("  [" + setName + "] stub_levels.txt 读取失败（该集按旧版处理，零介入）: " + ex.Message);
+                result.Warns.Add("  [" + setName + "] stub_levels.txt 读取失败，跳过该集 stub 支持: " + ex.Message);
+                return -1;
             }
             return added;
         }
 
         /// <summary>semver 比较（a &lt; b 返回 &lt;0；相等 0；a &gt; b 返回 &gt;0）。仅比较数字段，
-        /// 缺段按 0，非数字段忽略——门控只需大小关系，足够稳健。</summary>
+        /// 缺段按 0；非法版本不允许参与比较。</summary>
         private static int CompareSemver(string a, string b)
         {
             var pa = SplitVer(a);
@@ -1834,26 +1886,62 @@ namespace OC2LevelRuntimeLoader
 
         private static int[] SplitVer(string v)
         {
-            if (string.IsNullOrEmpty(v))
-                return new int[0];
+            if (!IsNumericVersion(v))
+                throw new FormatException("非法裸数字版本: " + v);
             var segs = v.Split('.');
             var r = new int[segs.Length];
             for (int i = 0; i < segs.Length; i++)
             {
-                int x;
-                var digits = "";
-                foreach (var ch in segs[i])
-                {
-                    if (ch >= '0' && ch <= '9') digits += ch;
-                    else break;
-                }
-                int.TryParse(digits, out x);
-                r[i] = x;
+                r[i] = int.Parse(segs[i], System.Globalization.CultureInfo.InvariantCulture);
             }
             return r;
         }
 
-        /// <summary>返回 true 表示本次真正完成了程序集加载（重复跳过/失败返回 false）。
+        private static bool IsNumericVersion(string v)
+        {
+            if (string.IsNullOrEmpty(v)) return false;
+            foreach (var segment in v.Split('.'))
+            {
+                if (segment.Length == 0) return false;
+                foreach (var ch in segment)
+                    if (ch < '0' || ch > '9') return false;
+                int number;
+                if (!int.TryParse(segment, System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out number)) return false;
+            }
+            return true;
+        }
+
+        /// <summary>只复用本加载器持有原始字节、且仍在 AppDomain 的完全相同程序集。
+        /// 同名同版本不代表内容相同；外部程序集即使有 Location，磁盘也可能已被覆盖。</summary>
+        private static Assembly FindIdenticalLoadedAssembly(string displayName, byte[] raw)
+        {
+            var hint = Path.GetFileName(displayName);
+            if (hint.EndsWith(".bytes", StringComparison.OrdinalIgnoreCase))
+                hint = hint.Substring(0, hint.Length - ".bytes".Length);
+            if (hint.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                hint = hint.Substring(0, hint.Length - ".dll".Length);
+            foreach (var loaded in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                byte[] previous;
+                if (LoadedAssemblyBytes.TryGetValue(loaded, out previous))
+                {
+                    if (previous.Length == raw.Length)
+                    {
+                        var equal = true;
+                        for (int i = 0; i < raw.Length; i++)
+                            if (previous[i] != raw[i]) { equal = false; break; }
+                        if (equal) return loaded;
+                    }
+                }
+                if (string.Equals(loaded.GetName().Name, hint, StringComparison.OrdinalIgnoreCase))
+                    LogW("加载前发现同名程序集 " + loaded.FullName + "，候选=" + displayName
+                        + "；原始内容不同或不可核验，不凭名称/版本跳过候选（仍可能存在类型冲突）");
+            }
+            return null;
+        }
+
+        /// <summary>返回 true 表示有可用程序集（含原始字节完全相同的复用）；失败返回 false。
         /// v3.5.3：Assembly.Load / GetTypes / EntryPoint.Install 均为不可后台化的
         /// 主线程成本，随行输出毫秒数（常开、一次性）——残余卡顿定位的第一手数据。</summary>
         private static bool LoadFromBytes(string displayName, byte[] raw)
@@ -1861,34 +1949,34 @@ namespace OC2LevelRuntimeLoader
             try
             {
                 var swLoad = System.Diagnostics.Stopwatch.StartNew();
-                var asm = Assembly.Load(raw);
+                var asm = FindIdenticalLoadedAssembly(displayName, raw);
+                var reused = asm != null;
+                if (!reused)
+                {
+                    asm = Assembly.Load(raw);
+                }
                 swLoad.Stop();
                 var name = asm.GetName().Name;
+                // 文件名只是提示；必须按实际程序集名在登记来源与 Install 之前守卫。
                 if (LoadedNames.Contains(name))
                 {
+                    PendingRaw.Remove(raw);
+                    if (reused)
+                    {
+                        LogI("复用内容完全相同的已加载程序集: " + name + "（候选来源 " + displayName + "）");
+                        return true;
+                    }
                     string previous;
                     LoadedSources.TryGetValue(name, out previous);
-                    var previousVersion = "未知";
-                    try
-                    {
-                        foreach (var loaded in AppDomain.CurrentDomain.GetAssemblies())
-                        {
-                            if (loaded.GetName().Name == name)
-                            {
-                                previousVersion = loaded.GetName().Version != null
-                                    ? loaded.GetName().Version.ToString() : "未知";
-                                break;
-                            }
-                        }
-                    }
-                    catch { }
-                    LogW("程序集冲突，保留已加载版本: " + name
-                        + "，已加载来源=" + (previous ?? "未知")
-                        + "，候选来源=" + displayName
-                        + "，已加载版本=" + previousVersion
-                        + "，候选版本=" + (asm.GetName().Version != null
-                            ? asm.GetName().Version.ToString() : "未知"));
+                    LogW("程序集冲突，保留本 Loader 已登记版本: " + name
+                        + "，已加载来源=" + (previous ?? "未知") + "，候选来源=" + displayName
+                        + "；内容不同或不可核验，候选不提供支持，不执行 Install，不加入重试");
                     return false;
+                }
+                if (!reused)
+                {
+                    LoadedAssemblyBytes[asm] = raw;
+                    _qAssembliesLoaded++;
                 }
                 LoadedNames.Add(name);
                 LoadedSources[name] = displayName;
@@ -1900,7 +1988,7 @@ namespace OC2LevelRuntimeLoader
                 try { typeCount = asm.GetTypes().Length; }
                 catch { typeCount = -1; }
                 swTypes.Stop();
-                LogI("已加载关卡程序集: " + name + "（来自 " + displayName + "，类型数 "
+                LogI((reused ? "复用内容完全相同的已加载程序集: " : "已加载关卡程序集: ") + name + "（来自 " + displayName + "，类型数 "
                     + (typeCount >= 0 ? typeCount.ToString() : "未知") + "）"
                     + (crateType != null ? "，CustomStub.RandomCrate ✓" : "，⚠ 未找到 CustomStub.RandomCrate（旧版或空程序集）")
                     + "｜主线程耗时: Assembly.Load=" + swLoad.ElapsedMilliseconds
@@ -1958,7 +2046,12 @@ namespace OC2LevelRuntimeLoader
             {
                 try
                 {
-                    var asm = Assembly.Load(raw);
+                    var asm = FindIdenticalLoadedAssembly(simpleName, raw);
+                    if (asm == null)
+                    {
+                        asm = Assembly.Load(raw);
+                        LoadedAssemblyBytes[asm] = raw;
+                    }
                     if (asm.GetName().Name == simpleName)
                     {
                         PendingRaw.Remove(raw);

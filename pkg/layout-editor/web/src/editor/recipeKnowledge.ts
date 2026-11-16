@@ -371,6 +371,8 @@ export function isMixIntermediate(inter: RecipeEntry): boolean {
   return step === "Mixer" || step === "MixingBowl" || !!inter.mixing;
 }
 
+const PLAIN_PANCAKE_BATTER_ID = "Web_MixedFlourEgg";
+
 export function findBatterIntermediateForRecipe(r: RecipeEntry): RecipeEntry | undefined {
   const interById = new Map(S.intermediatesCache.map((x) => [x.id, x]));
   // 组成直接引用搅拌中间产物（如 mooncake_meat → Mixed_FlourEggMeat）
@@ -379,8 +381,16 @@ export function findBatterIntermediateForRecipe(r: RecipeEntry): RecipeEntry | u
     if (sub && isMixIntermediate(sub)) return sub;
   }
   const leafs = new Set(r.ingredients ?? []);
+  // This native node is only the original plain pancake's implicit batter.
+  // Other flour/egg recipes must keep their own batter or the native lookup fallback.
+  if (r.id === "Cake_Plain_SO" && !r.isCustom && r.cookingStep === "FryingPan" &&
+      (r.ingredients ?? []).length === 2 && leafs.has("FlourSO") && leafs.has("EggSO")) {
+    const plain = interById.get(PLAIN_PANCAKE_BATTER_ID);
+    if (plain && isMixIntermediate(plain)) return plain;
+  }
   let best: RecipeEntry | undefined;
   for (const inter of S.intermediatesCache) {
+    if (inter.id === PLAIN_PANCAKE_BATTER_ID) continue;
     if (!isMixIntermediate(inter)) continue;
     const ings = inter.ingredients ?? [];
     if (ings.length === 0 || !ings.every((i) => leafs.has(i))) continue;
@@ -535,7 +545,8 @@ export function computeUtensilIngredientFill(
         const vessel = subVesselOf(b) || finalVesselOf(r);
         if (vessel) {
           addInter(vessel, b.id);
-          if (vessel !== "Steamer") for (const ing of leafs) addIng(vessel, ing);
+          if (vessel !== "Steamer" && b.id !== PLAIN_PANCAKE_BATTER_ID)
+            for (const ing of leafs) addIng(vessel, ing);
           bump(vessel, 1);
         }
       }
@@ -556,7 +567,8 @@ export function computeUtensilIngredientFill(
         const vessel = subVesselOf(b) || finalVesselOf(r);
         if (vessel) {
           addInter(vessel, b.id);
-          if (vessel !== "Steamer") for (const ing of leafs) addIng(vessel, ing);
+          if (vessel !== "Steamer" && b.id !== PLAIN_PANCAKE_BATTER_ID)
+            for (const ing of leafs) addIng(vessel, ing);
           bump(vessel, 1);
         }
       }
@@ -688,7 +700,7 @@ export function computeIntermediatesForUtensils(recipes: RecipeEntry[]): Map<str
     }
   }
   for (const r of recipes) {
-    if (!isFlourBranchRecipe(r)) continue;
+    if (!isFlourBranchRecipe(r) && !(r.compositionIds ?? []).includes(PLAIN_PANCAKE_BATTER_ID)) continue;
     const inter = findBatterIntermediateForRecipe(r);
     if (!inter) continue;
     const batter = inter.ingredients ?? [];
@@ -704,6 +716,7 @@ export function computeIntermediatesForUtensils(recipes: RecipeEntry[]): Map<str
   for (const r of recipes) {
     const leafs = new Set(r.ingredients ?? []);
     for (const inter of S.intermediatesCache) {
+      if (inter.id === PLAIN_PANCAKE_BATTER_ID) continue;
       if (inter.group !== "levelset") continue;
       const container = inter.mixing ? "MixerBowl" : STEP_CONTAINER[inter.cookingStep ?? ""];
       if (!container) continue;
@@ -716,6 +729,11 @@ export function computeIntermediatesForUtensils(recipes: RecipeEntry[]): Map<str
   for (const r of recipes) {
     if (!r.mixing || !isFlourBranchRecipe(r)) continue;
     for (const ing of r.ingredients ?? []) add("MixerBowl", ing);
+  }
+  // The supplemental pass runs after the main fill: never repopulate a vessel
+  // that must retain its native lookup for another selected recipe's missing batter.
+  for (const [ut, fill] of computeUtensilIngredientFill(recipes)) {
+    if (fill.clear) result.delete(ut);
   }
   return result;
 }

@@ -175,6 +175,8 @@ flowchart TD
 | `GET /api/recipes?levelSet=`、`GET/POST /api/level-recipes` | 关卡菜谱读写 |
 | `GET /api/level/optional-presets`、`POST /api/level/optional-items`、`POST /api/level/matchlists`、`GET /api/level/matchlists/suggest`、`POST /api/recipes/compute-burger-optionals`、`POST /api/recipes/compute-pizza-optionals`、`GET /api/level/burger-optional` | 可选部件/匹配表（🍕 compute-pizza-optionals：按所选披萨生成/更新 `data/{关卡}/PizzaOptional_{Uncooked,Cooked}.asset`，浇头=原版5种∪所选披萨配料，修橄榄无法上面坯） |
 
+**原味松饼煎锅补全**：`LayoutEditorPancakeFill` 仅在已选菜谱含原版 `PseudoPrefabSORecipe`、资产文件名精确为 `Cake_Plain_SO` 时启用。现有 `POST /api/level-recipes` 同步绑定该 LevelInfo 的已加载场景；场景打开/重载、写回和导出准备同样兜底。只处理场景内原版 `FryPanSO`（含 inactive，排除 manager 环境物件），幂等追加 commonW5 `Web_MixedFlourEgg`，保留已有许可项与模型槽位，仅将非正容量补为 1；依赖通过常规存在性闸门登记 `commonW5`/`bundle18`。空许可表代表完整原生 lookup：混选其他煎锅菜、嵌套、自定义或知识缺失等输入未核验菜谱时，保留空表/未配置锅并告警，避免收窄为单一面糊。完整混选装填走前端「按菜谱自动填充」。菜谱保存仅标脏受影响场景，仍需场景写回落盘；用场景布局读回 `cookingUtensil.allowedIngredientGuids` 核对。
+
 **关卡集/关卡管理**
 | 路由 | 说明 |
 |---|---|
@@ -446,35 +448,108 @@ LayoutEditor 不直接修改它，但其编译产物提供编辑器 Play 期运�
 
 ## 6. 打包 / 导出流程
 
-**入口**：`POST /api/set/export {setName}` → `StartExport`（校验、状态机置 running、delayCall 立即应答）。状态查询/下载走监听线程 fast-path。
+**入口**：`POST /api/set/export {setNames:[set], mode}` → `StartExport` 校验、置 `running`、通过 `delayCall` 执行并立即应答；兼容单个 `setName`。状态查询/下载走监听线程 fast-path。以下以当前生产 `LayoutEditorSetExporter.cs` / `LayoutStubDllBuilder.cs` 的执行路径为准，源码中的旧“删旧重打”注释不代表正常导出行为。
 
-**统一运行时自动编译闸口（RunExport 开头）**：导出启动时经 `RuntimeReadyGate` 钩子检查母本源码 vs `Library/ScriptAssemblies/WebCustomStubRuntime.dll`——stale/missing 时自动触发编译（`RequestCompileIfStale`，含 2 次尝试 + ForceUpdate 强制重导入），任务参数（setNames/mode/depsVersion）持久化到 `SessionState` 挂起、phase=compile；编译域重载后由 `[InitializeOnLoad]` 续跑器（~1s 节流，5 分钟超时）重新走完整 `StartExport` 链自动续跑。**不再报「请等 Unity 编译结束后重试」**——只有编译真失败（母本有编译错误）/ Play 模式 / 超时才置 error（文案指向 Console）。前端轮询天然兼容：域重载断连 → `catch { continue }`，重载后 status=idle 继续等续跑。批处理（`LayoutEditorBatchExport`）同路径：挂起时状态非 done、exit 3，外层流水线等编译后再跑一遍即可。`BeforeBuild`（`StageRuntime(true)`）保留为导出进行中改源码的竞态兜底。
+### 6.1 模式、编译闸口与 staging
 
-**多集合并导出**：`POST /api/set/export {setNames: [a, b], mode}`（`setNames` 非空时优先于 `setName`）→ `StartExport(List<string>, mode)`。zip 内 `OC2DIYLevel/levels/<set1>/`、`levels/<set2>/` 并列（各集 info/s_* + 各自 requires.txt），依赖包 `OC2DIYLevelRuntimeWLoader/` 整包只带一份（commonW2 按需 = 任一集引用即携带）。prepare/clean/build/package 逐集循环，`BuildAssetBundles` 仍只调一次（全量构建，3-5 分钟不随集数翻倍）。zip 名 = 各集 `name_v<ver>` 用 `+` 连接（超 120 字符回落 `multi<N>sets`）；状态 `setName` = 各集名 `+` 连接（前端以此为完成比对键）。deps 模式与集无关，多集时只取第一个。
+| mode | 本次交付根（build map 另扩展共享归属） | RuntimeReadyGate（compiled gate） | BeforeBuild staging | zip 内容 |
+|---|---|---|---|---|
+| `all`（默认） | 本次关卡集 + commonW/统一运行时及非基础包依赖闭包 | 运行 | 运行一次 | 关卡目录 + 一份依赖包目录 |
+| `levels` | 本次关卡集；部分选择时排除未选的纯场景 bundle | **仍运行** | **不调用** | 仅关卡目录，需另装匹配依赖包 |
+| `deps` | commonW/统一运行时及非基础包依赖闭包 | 运行 | 运行一次 | 仅依赖包目录，不构建关卡场景 |
 
-**逐关卡选择性导出（v1 仅单集）**：`POST /api/set/export {setNames:[set], mode, selectedLevels:[场景名…]}`（`selectedLevels` 元素 = `LevelInfoSO.sceneName` = scenes/ 文件名去扩展；null/空/全选 = 全量导出，多集请求带选择直接报错；deps 模式忽略选择）。实现四要点（`LayoutEditorSetExporter`）：① **prepare 只打开入选场景**（被排除场景不打开不准备也不进清单——落盘场景由写回链路保证无临时伪 prefab 实例，不开即无内存态，磁盘增量构建安全；"Asset has disappeared" 崩溃只发生在构建时处于打开状态且内存含临时实例的场景，见 ExportDepsOnly 注释）；② **levelInfos 临时过滤**（`ApplyLevelSelectionFilter`，prepare 之后 build 之前）：玩家侧 OC2DIYLevel 按 `LevelSetInfoSO.levelInfos` 枚举关卡，只从 zip 剔除 s_* 会留下打不开的死关——故构建前把 levelInfos 过滤为入选（按 `sceneName` 匹配），`info_<set>` 产物随之为部分集；③ **构建后还原**（`RestoreSetInfoMutation`，RunExportCore finally + RunExport finally 双保险）：内存写回原数组引用 + SaveAssets + 删备份；④ **崩溃自愈**（`RecoverSetInfoBackups`，[InitializeOnLoad] delayCall + 每次 StartExport 前调用）：改写前先磁盘备份到 `LayoutEditorExports/._setinfo_backup_<set>`（Assets 外持久保存，Temp/ 会被 Unity 重启清空），导出被杀后按残留备份 File.Copy 还原 + ImportAsset。zip 组装时按入选场景的 **assetBundleName 末段**过滤 s_*（改名关卡可能保留历史 bundle 名，不能想当然用场景文件名）；被排除场景保留 bundle 名照常增量构建（近零成本），`Assets/AssetBundles/<set>/` 始终是全量产物。挂起编码（SessionState PendingKey）追加末段 `sel=<逗号连接场景名>`，解析端双格式兼容（旧 3 段无 sel）。前端（单集导出弹窗）拉取 `/api/sets/<set>/levels` 渲染勾选列表：**默认勾选 = hasScreenshot && hasScene**（未上传截图视为未完成默认不导出，可手动勾选；场景缺失行禁用），提供「全选 / 仅已完成（有截图）」快捷键，0 勾选禁用开始按钮；全部勾选时不传 `selectedLevels`（请求与历史全量格式一致）。
+`RunExport` 开头的 `RuntimeReadyGate` 只检查编译 DLL 是否就绪，不执行 staging。母本源码比 `Library/ScriptAssemblies/WebCustomStubRuntime.dll` 新或 DLL 缺失时，自动触发编译，把参数（含关卡选择）保存到 `SessionState`，以 `phase=compile` 挂起，域重载后续跑；编译失败、Play 模式或等待超时则报告错误。批处理挂起时不是 `done`，以 exit 3 提示外层等待后重跑。**levels 跳过 BeforeBuild 不等于跳过编译闸口，也不保证编译/域重载生命周期中的其他 staging 回调不会运行。**
 
-**依赖包单独导出（deps 模式，`ExportDepsOnly`）**：`POST /api/set/export {setNames:[锚点集], mode:"deps", depsVersion}`——不含任何关卡；`BeforeBuild`（= `StageRuntime(true)`）硬校验运行时新鲜度 → 删 `commonw1/commonw2/commonw3` 旧产物并 `BuildAssetBundles` 重建（杜绝遗留；commonW1/W2 无条件携带）→ `AddDependencyEntries(alwaysCommonW2:true)` 组条目 → 生成 `package_version.txt`（打包版本/时间/UTC 偏移/Unity 与 OS 环境/运行时与 Loader 版本 + **全部条目源文件 MD5**，store-only zip 源字节=解压字节故校验等价；自身不参与 MD5）→ zip 名 `OC2DIYLevelRuntimeWLoader_v<depsVersion>_<yyyyMMdd>.zip`。**`depsVersion` 为用户可编辑的打包版本（未传时默认 `StubVersion.Value`；弹窗预填 `deps_version.txt` 或 SSOT；导出前 `SyncLoaderDllForExport` 将 `Loader~/bin/Release/Loader.dll` 同步到 `web/public` 并校验 `PluginVersion` 与 SSOT 一致）。关卡 `requires.txt` 始终写 SSOT 版本，已装 Loader 须 ≥ 该值且清单门控要求二者对齐**——版本不变即装一次长期复用。弹窗 = 实时清单（`GET /api/set/export/deps-manifest`，失败回落前端静态清单）+ 版本输入（zip 名实时预览）+「编译 Runtime DLL」按钮（仅手动兜底；**DLL 新鲜度由导出闸口自动处理**——非 fresh 时自动编译并续跑，弹窗不再禁用导出按钮）。
+`BeforeBuild` 在 all/deps 中调用 `StageRuntime(true)`，作为构建前新鲜度硬校验。`StageDllAsset` 同时比较 DLL、磁盘 `.dll.bytes` 与已导入 TextAsset 内容，仅在字节不同、缓存过期、导入器缺失或 bundle 名需修复时复制/导入；相同内容复用已有资产，模块 DLL 也会检查。该行为用于保留增量缓存，不构成导出耗时保证。
+
+### 6.2 prepare 与选择性导出
+
+**可选 bundle 预检（2026-11-17 最终实现）**：all/levels 在逐场景准备、孤儿/双 Stub 清理及 `selectedLevels` 过滤之前调用 `LayoutEditorOptionalBundlePreflight.Run(setNames)`，检查每个本次集的 `<set>/custom_content`、`<set>/custom_recipes`。deps 分支不执行此 helper。预检同时核对 `AssetDatabase.GetAssetPathsFromAssetBundle` 的真实 payload 和 `HasSourceContent` 的源内容/配置；文件夹、配置壳及 `.meta/.json/.txt/.md` 不算 payload，`custom_content/Config.asset` 中非空 entries（包括损坏条目）仍算有内容。源内容存在但独立包没有已登记 payload 时，先核对是否全部由当前 info 包承载；不满足该条件才提前报错修复标签，旧磁盘产物不能充当来源。
+
+`SourceIsInInfoBundle` 仅在发现实际 payload，且目录内**全部 payload** 都列于当前 `<set>/info_<set>` 的 `GetAssetPathsFromAssetBundle` 结果中时成立；custom_content 的每条 Config entry 还必须有效、`prefabPath` 非空且同样归当前 info 包。部分归属、未登记 payload 或无效配置不能享受此例外。live 发现 `jia_carnival/custom_recipes` 有实际菜谱、但全部继承 info 包标签，由此补齐该承载方式：此时保留资产引用，排除不再需要独立交付的 custom 包；磁盘或内存中仍指向独立 custom 包的 bundleName 字符串继续阻断。
+
+无内容或全部由 info 承载的候选继续核验引用：以本次所有 set 下的全部 Scene 和 LevelInfoSO 为 roots，通过 `AssetDatabase.GetDependencies(root, true)` 检查磁盘 serialized GUID 闭包；仅对其中 `.asset` / `.prefab` 执行 `LoadAllAssetsAtPath` 加载资产及子资产，不对 texture/audio/model 等 native 路径调用该加载接口或触发其导入。另加入当前已加载、本次 set 场景的 `GetRootGameObjects()`，用 `EditorUtility.CollectDependencies` 收集内存引用，保障未落盘的场景引用。native 资产路径仍保留在引用证据中，依赖收集不跳过 native 对象；仅对 `ScriptableObject` / `MonoBehaviour` 创建 `SerializedObject`、遍历 `bundleName` / `m_bundleName`，避免扫描 mesh/texture 的大数组。同时检查引用文件 `.asset/.prefab/.unity` 中的对应字符串，disk regex 支持 YAML 列表形式 `- bundleName:` / `- m_bundleName:`。检查无需打开或保存场景，dirty 本身不阻断；是否阻断取决于实际资产归属和引用。因此覆盖未选择场景、合并集跨引用，以及尚未落盘的内存引用；optional 候选的 `LevelInfoSO.dependencies` 仅为加载声明。非 info 承载候选仍有实际资产引用、任一候选仍有独立包字符串引用，或引用文件无法核验时阻断。
+
+预检还通用检查本次 `<set>/` 下其他 bundle 注册名：仅 `GetAssetPathsFromAssetBundle` 返回零资产路径者进入清理候选，排除 `<set>/info_<set>`，不按具体模块名特殊处理。与 optional 陈旧 deps 的处理不同，若**任一本次 set 的 LevelInfoSO 显式 dependencies 指向该 generic 零源包，必须报错「必需依赖无源资产」**，不能盲目剔除声明；实际 SO 等对象的 bundleName 字符串及磁盘引用检查也继续保护该包。全部核验通过才移除零源注册并排除本次 roots，旧磁盘文件不能充当源资产。
+
+全部候选通过后，才统一移除本次各集 LevelInfoSO 中对应的陈旧 dependencies；预检仅 `Undo.RecordObject` + 修改数组 + `EditorUtility.SetDirty`，**不调用 `SaveAssets`**。正常导出由 `FinishPreparedExport` 在构建前 `SaveAssets` 持久化，预检失败不触发全局保存。仅在 `GetAssetPathsFromAssetBundle` 完全无资产路径时调用 `RemoveAssetBundleName(name, false)` 清除无资产 bundle 注册；目录标签不强改，不删除资源目录。`_emptyOptionalBundles` 包含空包及无需独立交付的 info 承载包，在本次 `CollectLevelBundleNames` 中排除交付 roots，每次导出启动清空。
+
+`NeedsDedicatedBundle = HasSourceContent && !SourceIsInInfoBundle` 用于 `LayoutEditorCustomIngredients.EnsureWebDependencies` 的日常依赖登记，以及 `LayoutEditorPseudoReload.EnsureCustomBundleDependency` 恢复时的判断：空目录和已由 info 承载的内容都不新增独立 custom 依赖。PseudoReload 仍要求实际包文件存在，但旧包文件本身不能重新加回已不需要的依赖。
+
+all/levels 对本次场景先运行孤儿脚本/双 Stub 修复，再逐关 `OpenScene`、迁移和补派生运行时、严格 Prepare/DeInit，让出一帧后再次严格 Prepare，再烘焙 HUD/订单/tag、收集特征。只有脏场景或 tag 有变化才走保存；保存后提交迁移标记。构建调用前再次严格 Prepare，并以 `ExportBuildInProgress` 守住构建窗口；deps 不遍历关卡，但仍清理当前打开场景的临时预览并跨帧确认准备状态。
+
+**持久 Stub/SO 特征识别**：Prepare 会移除预览 child，不能只靠临时 `Terminal` 组件或可被用户改名的 GameObject。`CollectActiveSceneStubFeatures` 保留 tag/组件/名字等通道，同时读取持久 `PseudoPrefabStub.pseudoPrefabSO.prefabName`：大锅加入 `hotpot`，可移动锅加入 `hotpot,pushable`。终端身份由 typed `PseudoPrefabTerminalStub` 独立成立，或由 SO 名含 `ControlTerminal` 且不含 `_Marker` 回退识别；确认未绑定（无 typed Stub，或其 `pilotableObject` 为空）才加入 `terminal`，不要求 typed Stub 的 SO 也叫 ControlTerminal。该持久扫描块先要求 Stub 和 SO 非空。场景和 LevelInfo 的 commonW 引用另补 `web` 特征；实际游戏行为仍需 Play/真机确认。
+
+`selectedLevels` 仅支持单集，元素为 `LevelInfoSO.sceneName`（场景文件名去扩展）；空/省略/全选按整集处理，deps 忽略选择。只打开、准备和收集入选场景，按场景的**实际 assetBundleName**构建，排除未选纯场景包；本集 info 和其他非纯场景 bundle 仍纳入。未选 bundle 可以保留在输出目录，但不会因此进入本次 zip。
+
+构建前 `ApplyLevelSelectionFilter` 临时过滤 `LevelSetInfoSO.levelInfos`，使部分集 info 不出现无法打开的关卡。原数组在构建路径及会话收尾中恢复；修改前备份到 `LayoutEditorExports/._setinfo_backup_<set>`，启动和下次导出前可恢复异常残留备份。挂起任务保留 `sel=` 参数。前端默认选择有截图且场景存在的关卡，可手动调整；零选择不启动。
+
+### 6.3 增量构建与依赖闭包
+
+**正常 levels/all/deps 均保留输出 bundle、`.manifest` 和 `.meta`，不删除集目录或 commonW 旧产物。** `BuildListedBundles` 使用显式 `AssetBundleBuild[]`、`BuildAssetBundleOptions.None` 和 `StandaloneWindows` 复用 Unity 增量构建。`CollectBuildOwnership` 从本次交付根递归直接依赖，把可达共享 base/commonW 等包纳入 build map，保持资产原有 bundle 归属，避免共享资产被重复内嵌进关卡包。这些共享包可能参与增量构建；范围由本次根可达关系决定，不是无脑全库，也不能保证完全不处理 common。强制重建/修复菜单是独立入口。
+
+**依赖交付闭包与 build ownership 是两层规则。** `CollectDependencyBundleNames` 从当前 commonW 源目录的根/子 bundle 及 `webcustomstub_runtime` 出发，`OrderDependencyBundles` 按拓扑序收集非基础依赖、忽略大小写去重，**包括 hash 命名等传递依赖**。循环、非法文件名等显式报错。基础 `common` / `common01`–`common04`（含其子包）由预装前置提供，排除在依赖 zip 之外，但可被 `CollectBuildOwnership` 纳入增量构建 map。当前依赖交付不再使用“all 仅在集引用时携带 commonW2”的旧策略。
+
+`BuildListedBundles` 保存**本次返回的 manifest**，核对整个 ownership map 的每个 bundle 同时出现在 manifest 且文件存在；无源资产、仅含文件夹、manifest 为 null 或缺产物时失败，不能拿目录中的旧文件充数。`_builtBundleNames` 仅保存传入的交付根，不扩成 ownership map；`AddDependencyEntries` 再用本次 manifest 验证非基础交付闭包完整。不能把 manifest 中所有共享包直接装入 zip。
+
+### 6.4 打包、清单与安装
+
+关卡 zip 文件从本次已验证构建列表收集，不枚举输出目录残留；旧裸 `runtime` 排除。各集包含 `info_<set>`、本次场景/数据 bundle、`requires.txt` 和 `stub_levels.txt`（即使为空也写出）。all 的依赖包只带一份；deps 只使用请求中的锚点集参数，不构建该集。
+
+新依赖包目录 `OC2DIYLevelRuntimeWLoader/` 包含 Loader、统一运行时、依赖闭包和可用的日志/说明文件，以及 **`bundle_dependencies.txt`**：UTF-8、每行一个依赖文件名，按拓扑加载顺序写入；不包含统一运行时自身（Loader 单独优先入队）。仅数字 `commonwN` 映射为 zip 文件名 `commonWN`，hash/其他合法文件名保持原样，清单使用映射后的交付名。`.manifest` / `.meta` 留作缓存，不进 zip。
+
+**导出前预检**：`GET /api/set/export/deps-manifest` 的 `BuildDepsManifest` 现在也枚举非数字/hash 传递依赖，并列出本次生成的 `bundle_dependencies.txt`；依赖计划异常会令 `dto.ok=false` 并显示失败项。预检只展示计划和当前产物参考大小，不构建、不代表实际 runtime bundle 已更新，最终仍以导出构建及交付校验为准。
+
+deps 另写 `package_version.txt`：打包版本、时间/环境、Runtime/Loader 版本及其余条目源文件 MD5（自身除外），zip 名为 `OC2DIYLevelRuntimeWLoader_v<depsVersion>_<yyyyMMdd>.zip`。`depsVersion` 是用户可编辑的包标识，不替代版本门控；`requires.txt` 写运行时 SSOT，Loader 数字段版本须不低于要求。all/deps 交付前同步构建的 Loader 到 `web/public` 并检查 Loader 与 Runtime 发布版本对齐。**本次未改发布号；同号不代表 DLL/资源字节不变，不能据此承诺旧依赖包永久免更新。**
+
+多集 zip 的集名/版本以 `+` 连接，过长回落 `multi<N>sets`；状态 `setName` 同样用 `+` 连接。产物位于 `LayoutEditorExports/`。zip 整体解压到 **`BepInEx/plugins/`**：关卡落 `OC2DIYLevel/levels/<set>/`，依赖包落同级 `OC2DIYLevelRuntimeWLoader/`。
 
 ```mermaid
 flowchart TD
-    A["POST /api/set/export {setName}"] --> B["StartExport：校验 / 状态机 running<br/>delayCall 立即应答"]
-    B --> G0{"RunExport 闸口：RuntimeReadyGate"}
-    G0 -- "compiling（源码比 DLL 新）" --> G1["SessionState 挂起任务<br/>phase=compile 自动编译中"]
-    G1 -- "域重载后续跑器 → fresh" --> B2["StartExport 重新启动"]
-    B2 --> C
-    G0 -- "就绪 / 编译失败置 error" --> C["⓪ orphan-clean（OrphanCleanHook）：<br/>磁盘文本级清理孤儿脚本引用<br/>（删僵尸/复活载体/仅报告项不阻断）<br/>① prepare：逐场景 OpenScene<br/>→ ForcePrepareForBuildingForExport（始终 DeInit）<br/>→ HUD/tag 烘焙<br/>→ 特征收集<br/>→ 有变更才 SaveScene（失败即 error）"]
-    C --> D["② clean：删除 Assets/AssetBundles/&lt;set&gt;/（含 .meta）+ Refresh"]
-    D --> E["③ build：EnsureSetInfoBundle（&lt;set&gt;/info_&lt;set&gt;）<br/>+ EnsureSceneBundleNames（&lt;set&gt;/s_*）"]
-    E --> F["BeforeBuild 钩子 → LayoutStubDllBuilder.StageRuntime<br/>Library/ScriptAssemblies/WebCustomStubRuntime.dll<br/>→ RuntimeDll/WebCustomStubRuntime.dll.bytes<br/>（bundle webcustomstub_runtime；竞态兜底硬校验）"]
-    F --> G["BuildPipeline.BuildAssetBundles<br/>（Assets/AssetBundles, None, StandaloneWindows）<br/>★ 阻塞 3-5 分钟"]
-    G --> H["④ package：删除产物内 .manifest / .meta"]
-    H --> I["⑤ zip（LayoutEditorZipWriter，store-only）：<br/>levels/&lt;set&gt;/（info、s_*、requires.txt、stub_levels.txt）<br/>+ commonW1（无条件；缺失告警）<br/>+ commonW2（SetNeedsCommonW2Bundle 判定）<br/>+ Loader.dll（build.sh → web/public，导出时自动同步）"]
-    I --> J["&lt;repo&gt;/LayoutEditorExports/&lt;set&gt;_v&lt;version&gt;_&lt;yyyyMMdd&gt;.zip<br/>（version 取 LevelSetInfoSO.version，SanitizeVersion 消毒）"]
-    J --> K["finally：ClearProgressBar<br/>回到导出前场景 + ReloadPseudoAssetsFull"]
+    A["POST /api/set/export"] --> B["StartExport 立即应答"]
+    B --> G0{"所有模式：compiled gate"}
+    G0 -- "编译中" --> G1["SessionState 挂起 / 域重载续跑"]
+    G1 --> B
+    G0 -- "失败" --> ERR["error"]
+    G0 -- "就绪" --> MODE{"mode"}
+    MODE -- "all / levels" --> PF["preflight：整集内容归属 / 磁盘及内存引用核验<br/>通过后暂存陈旧依赖清理 / 排除无需独立交付的 roots"]
+    PF --> OC["orphan-clean → dual-stub-clean<br/>各钩子执行时发布真实 phase 并计时"]
+    OC --> PREP["仅准备本次场景 / 持久 Stub-SO 特征<br/>部分集临时过滤 levelInfos"]
+    MODE -- "deps" --> DEP["当前场景严格 Prepare / 跨帧确认"]
+    PREP --> SAVE["FinishPreparedExport：构建前 SaveAssets"]
+    SAVE --> STAGE["all 执行 BeforeBuild staging<br/>levels 跳过 staging"]
+    DEP --> DS["BeforeBuild staging"]
+    STAGE --> BUILD["交付根 + 可达共享包 ownership map<br/>增量构建 / 保留缓存"]
+    DS --> BUILD
+    BUILD --> CHECK["验证本次 manifest / 文件 / 依赖闭包"]
+    CHECK --> ZIP["按本次清单生成 zip<br/>依赖包写 bundle_dependencies.txt"]
+    ZIP --> RESTORE["restore：记录 zip 耗时<br/>恢复 levelInfos / 原场景 / 预览"]
+    RESTORE --> END["显式记录 restore 耗时<br/>无既有 error 时才置 done"]
 ```
 
-**产物语义**：zip 整体解压到 `BepInEx/plugins/OC2DIYLevel/` 即就位。
+### 6.5 兼容方向、计时与验证限制
+
+新版 Loader 的支持范围是**所有带有效 `stub_levels.txt` 的旧导出集，至少覆盖 3.10.x**，并继续执行 `requires.txt` 数字段版本门控；无逐关卡清单的集不支持，不生成 legacy 通配条目。这不表示新导出支持旧 3.10 Runtime。新 `bundle_dependencies.txt` 是**依赖包**清单；旧 3.10 依赖包没有该文件时，新 Loader 仍按数字发现依赖，详见 [05 · 当前有效行为](05-运行时加载器-OC2LevelRuntimeLoader.md#31-当前有效行为与兼容边界)。
+
+**阶段快照契约（2026-11-17）**：`SetExportStatusDto` 保留 `status/setName/phase/message/error/zipFileName/fileCount`，增加实际 `mode`（`all|levels|deps`）与 `stages[]`。每行字段为 `phase`、`state`（`waiting|running|done|error|skipped`）、`elapsedMs`（累计毫秒）、`completed`、`total`、`message`。固定行序为 `queued → starting → compile → preflight → orphan-clean → dual-stub-clean → prepare → build → package → zip → restore`；无 `clean` 行，顶层 `done/error` 也不是额外行。单集、多集、deps 共用初始化、计时与收尾入口；deps 的 preflight/orphan-clean/dual-stub-clean/prepare 行为 skipped，构建前当前场景的安全准备仍执行。其他未执行行在收尾时为 skipped，不冒充 done。
+
+`GetStatus()` 在 `_lock` 内创建新 DTO、列表和每个阶段行对象，返回线程安全深拷贝；只读取锁内托管状态和计时器，不依赖 Unity 主线程 API，因此监听线程状态 fast-path 可用。前端按每行真实快照显示 progress/elapsed：`total>0` 使用 `completed/total`，`total=0` 表示不可计数、运行时用不确定条。prepare 的 `completed` 是成功完成准备的关卡数，完成一关后才递增；多集累计本次所有入选关卡，不使用当前正在处理的索引冒充完成。历史 preflight **23.36 秒**、orphan-clean **33.24 秒**不得用作预算、倒计时或模拟百分比。
+
+`SetPhase` 切换时输出 `[SetExporter] 阶段耗时 <phase>: <ms> ms`，同一阶段内消息/计数更新不重置累计时间。一般阶段使用 `Stopwatch`；compile 挂起时把参数、mode 和累计阶段快照保存到 `SessionState`，域重载后恢复，只有跨域期间无法保存计时器的 compile 缺口使用 UTC 墙钟差补入（负差按零），之后继续 Stopwatch，避免续跑丢失或重复累计。
+
+`FinishExportSession` 切入 `restore` 时记录上一段 zip 耗时，恢复/清理结束后记录 restore 耗时，最后才发布顶层 done/error。执行失败的原阶段保留 error、消息和耗时，restore 作为独立行运行并保存自身结果，成功恢复不能覆盖原错误；restore 自身失败也保留错误，最终 status=error。前端失败面板保留且可关闭，关闭不取消任务。不能凭 zip 文件存在或单行 error 判断会话已收尾，done 也不等同预览功能验收。旧后端缺 stages 时仅显示 phase/message 文字；idle、断网和域重载重连时保留已知行，不清空、不补完成、不外推耗时。阶段计时不是固定总时长或加速保证。
+
+本轮新增的 `starting`、`preflight`、`orphan-clean`、`dual-stub-clean` 是后端实际执行时发布的 phase，参与同一阶段计时：`RunExport` 进入即 starting（检查 compiled gate），`RunExportCore` 进入 preflight，各清理钩子调用前切换对应 phase，之后才进入逐场景 prepare。前端同步展示真实阶段；`queueFocusNote` 的排队执行提示仅用于 `queued`，`compile` 使用编译/域重载等待说明，执行中的上述阶段不提示为排队或聚焦问题。
+
+**日志取证（2026-11-17）**：`00:35:52.567` 导出标记至 `00:37:16.500` 首个 prepare 相隔 **83.933 秒**；其中 dual 清理约 53 秒，说明首个 prepare 前已有实际工作，不能归因于聚焦问题。前约 31 秒缺少足够分段证据，无法细分，不能全部算作 orphan 清理；新增 phase/计时供后续 live 复验使用。这段日志不证明本轮修复后的完整导出成功，也不是加速倍数证据。
+
+离线复验入口包括 `python3 layout-editor/scripts/check-optional-bundle-preflight.py`、`python3 layout-editor/scripts/check-export-contracts.py`，以及原 Loader/staging/teacup 契约脚本。最终源码验证：optional preflight **125 scenarios / 407 assertions / 4 integration 契约通过**，原 exporter **103 项通过**；此前 48/153、90/278 阶段记录保留在[验证记录](../../Docs/test/loader-export-compatibility-results.md)。helper 测试使用完整未修改生产 helper、提取的集成方法及 Unity API 替身（net8 / C# 4），覆盖 native 加载/字段扫描边界、列表字符串和 generic 零源注册保护，不等同 Unity 真实导入/构建。net35 standalone 和 full（`LayoutEditor.Standalone.Check.csproj` / `LayoutEditor.Check.csproj`）均 **0 errors**，web Vite 和 MCP 构建通过；全量 web `tsc` 仍有既有错误，不能宣称全量 TypeScript 通过。
+
+**live 最终记录（2026-11-17）**：`01:20:09.819` 的早期尝试发现 info 承载误判，随后已修复；build 暴露的另一无源残留注册也已补充通用清理。最终一次记录起点为 **01:45:23.953**，阶段日志为 queued **20 ms**、starting **75 ms**、preflight **23358 ms**（起止日志 **01:45:24.031 → 01:45:47.391**）、orphan-clean **33240 ms**、dual-stub-clean **115 ms**，之后进入 prepare 和 build。原 custom_content 陈旧依赖已从 `LevelInfo_jia_level_2_2` 清理落盘，正常恢复未复加。该次 preflight 有实际耗时证据，但不据不同尝试计算加速倍数，也不将后续错误归为排队或聚焦问题。
+
+**最终未成功生成 zip，已停止重试导出**：Windows Application Error 事件于 **2026-11-17 01:47:34** 记录 `Unity.exe` **2017.4.8f1**，异常码 **c0000005**、offset **10a447c**；重开进程后又退出。仅凭该事件无法定位崩溃根因，不能断言由 helper 导致或问题已经解决。已读回确认原始 **32 关** `LevelSetInfo` 自动恢复，`._setinfo_backup_jia_carnival` 已消失；这证明选择过滤备份恢复，不等同成功完成 zip/restore 全流程或交付验收。完整构建与分发、Play/真机仍未验收。实际已加载 Runtime 版本校验、外部预载程序集/bundle 身份冲突仍有已知限制，详见 [Loader 当前行为](05-运行时加载器-OC2LevelRuntimeLoader.md#31-当前有效行为与兼容边界) 和验证记录。
+
+本轮阶段快照同步仅涉及 UI/API 契约，可用浏览器 mock 检查固定行、真实完成计数、失败恢复、旧后端文字降级及重连保留；不得据此宣称真实 Unity build 或完整导出成功。本轮测试结果由主会话执行后追加至[验证记录](../../Docs/test/loader-export-compatibility-results.md)。本次不新增工具、请求参数或版本号。
 
 ---
 

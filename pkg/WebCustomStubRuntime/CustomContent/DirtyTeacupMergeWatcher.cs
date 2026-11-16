@@ -38,6 +38,30 @@ namespace CustomStub
 
         private IEnumerator Start()
         {
+            if (m_stackPrefab == null)
+            {
+                string lastError = null;
+                for (int attempt = 0; attempt < 10 && m_stackPrefab == null; attempt++)
+                {
+                    try
+                    {
+                        RestoreStackPrefab();
+                    }
+                    catch (Exception ex)
+                    {
+                        lastError = ex.Message;
+                    }
+                    if (m_stackPrefab == null && attempt < 9)
+                        yield return new WaitForSeconds(1f);
+                }
+                if (m_stackPrefab == null)
+                {
+                    StubLog.LogWarn("[DirtyTeacupMergeWatcher] 模板恢复尝试 10 次后仍无唯一可靠的已加载脏茶杯堆模板: "
+                        + gameObject.name + "，单杯+单杯合并停用；单杯入堆不受影响"
+                        + (lastError == null ? "" : "；最后异常: " + lastError));
+                    yield break;
+                }
+            }
             // 仅服务端权威合并（生成/销毁经 vanilla 实体消息同步各端）
             while (true)
             {
@@ -53,6 +77,40 @@ namespace CustomStub
                     StubLog.LogWarn("[DirtyTeacupMergeWatcher] 合并异常: " + ex.Message);
                 }
             }
+        }
+
+        private void RestoreStackPrefab()
+        {
+            var stackType = GameApi.Find("DirtyPlateStack");
+            if (stackType == null)
+                return;
+            // Missing Script 无法读回 watcher 字段；只复用已加载的原生堆资产，
+            // 不把场景实例当 prefab，也不按名字猜造或加载其它杯盘家族。
+            var stacks = Resources.FindObjectsOfTypeAll(stackType);
+            GameObject candidate = null;
+            foreach (var obj in stacks)
+            {
+                var stack = obj as Component;
+                if (stack == null || stack.gameObject.scene.IsValid()
+                    || stack.gameObject.name != "web_teacup_stack_dirty")
+                    continue;
+                var plate = FindFieldInHierarchy(stack, "m_platePrefab") as GameObject;
+                var washed = FindFieldInHierarchy(stack, "m_washedPrefab") as GameObject;
+                if (plate == null || plate.scene.IsValid() || washed == null
+                    || washed.scene.IsValid() || washed.name != "web_teacup_stack_clean")
+                    continue;
+                var tag = plate.GetComponent<SpecificPseudoPrefabTag>();
+                if (tag == null || string.IsNullOrEmpty(tag.prefabTag)
+                    || !tag.prefabTag.StartsWith(TagPrefix, StringComparison.Ordinal))
+                    continue;
+                if (candidate != null && candidate != stack.gameObject)
+                    return; // 多个同名资产无法确定网络 prefab 身份，保留 null。
+                candidate = stack.gameObject;
+            }
+            m_stackPrefab = candidate;
+            if (m_stackPrefab != null)
+                StubLog.Dbg("[DirtyTeacupMergeWatcher] 已从原生脏茶杯堆资产恢复 m_stackPrefab: "
+                    + gameObject.name);
         }
 
         private void MergeStep()

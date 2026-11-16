@@ -1550,12 +1550,23 @@ export interface LevelSetList {
   sets: LevelSetInfo[];
 }
 
+export interface SetExportStage {
+  phase: string;
+  state: "waiting" | "running" | "done" | "error" | "skipped";
+  elapsedMs: number;
+  completed: number;
+  total: number;
+  message: string;
+}
+
 /** 关卡集导出任务状态（GET /api/set/export/status，构建期间由桥接监听线程直答）。 */
 export interface SetExportStatus {
   status: "idle" | "running" | "done" | "error";
+  mode?: "levels" | "all" | "deps";
+  stages?: SetExportStage[];
   /** 导出标识：单集 = 集名；多集合并导出 = 各集名 "+" 连接（如 "setA+setB"）。 */
   setName: string;
-  /** queued | prepare | clean | build | package | zip | done */
+  /** queued | starting（delayCall 已执行）| compile | preflight（空可选包预检）| orphan-clean | dual-stub-clean | prepare | clean | build | package | zip | restore | done */
   phase: string;
   message: string;
   error: string;

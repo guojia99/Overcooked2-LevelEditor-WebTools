@@ -873,6 +873,7 @@ public static class LayoutEditorCatalogApi
         LayoutEditorRoastTrayFill.SyncRoastTrayIngredients(info);
         LayoutEditorHotPotFill.SyncHotPotIngredients(info);
         LayoutEditorSteamerFill.SyncSteamerIngredients(info);
+        LayoutEditorPancakeFill.SyncLoadedScenes(info);
 
         EditorUtility.SetDirty(info);
 

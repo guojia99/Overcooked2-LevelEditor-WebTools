@@ -352,6 +352,14 @@
       ]
     },
     {
+      "id": "Web_MixedFlourEgg",
+      "step": "Mixer",
+      "ingredients": [
+        "FlourSO",
+        "EggSO"
+      ]
+    },
+    {
       "id": "MixedFlourEggBlueberry",
       "step": "Mixer",
       "ingredients": [

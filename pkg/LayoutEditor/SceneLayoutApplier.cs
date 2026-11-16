@@ -534,6 +534,7 @@ public static class SceneLayoutApplier
         var steamerLevelInfo = LayoutEditorLevelInfoResolver.ResolveForScene(document.sceneAssetPath);
         if (steamerLevelInfo != null)
             LayoutEditorSteamerFill.SyncSteamerIngredients(steamerLevelInfo);
+        LayoutEditorPancakeFill.SyncForScene(scene, steamerLevelInfo);
         // 订单顺序（4.0.0.18（原 4.7.0））：order_seq~/order_seq.json 为权威，写回幂等烘焙/清理
         // 场景载体（组件 + tag）；失败不吞写回（告警定位）。
         if (steamerLevelInfo != null)

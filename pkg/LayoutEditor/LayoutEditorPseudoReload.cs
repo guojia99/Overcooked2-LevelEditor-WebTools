@@ -179,6 +179,9 @@ public static class LayoutEditorPseudoReload
             return;
 
         EnsureCustomBundleDependency(manager);
+        var pancakeManager = manager.GetComponent<PseudoPrefabManagerStub>();
+        LayoutEditorPancakeFill.SyncForScene(manager.gameObject.scene,
+            pancakeManager != null ? pancakeManager.levelInfo : null);
         // 旧场景半损状态先提升派生运行时（缺运行时的回收台会让 Init/LateSetup NRE）。
         LayoutEditorStubIO.PromoteAllDerivedStubsInScene();
 
@@ -227,6 +230,9 @@ public static class LayoutEditorPseudoReload
             return;
 
         EnsureCustomBundleDependency(manager);
+        var pancakeManager = manager.GetComponent<PseudoPrefabManagerStub>();
+        LayoutEditorPancakeFill.SyncForScene(manager.gameObject.scene,
+            pancakeManager != null ? pancakeManager.levelInfo : null);
         // 写回主路径：先把存量派生 stub 提升为派生运行时，再 DeInit/Init。
         LayoutEditorStubIO.PromoteAllDerivedStubsInScene();
         // 外观材质 SO 先校验：非 .mat 的 SO 会让宿主导入重入并在 Setup 中销毁 child。
@@ -604,6 +610,8 @@ public static class LayoutEditorPseudoReload
         if (manager.stub == null)
             manager.stub = manager.GetComponent<PseudoPrefabManagerStub>();
         var info = manager.stub != null ? manager.stub.levelInfo : null;
+        // Run before taking the dependency snapshot and before native Init/preload.
+        LayoutEditorPancakeFill.SyncForScene(manager.gameObject.scene, info);
         string[] persistentDependencies = info != null ? info.dependencies : null;
         bool filteredDependencies = false;
         bool previousCallingOriginal = CallingOriginalInit;
@@ -819,6 +827,8 @@ public static class LayoutEditorPseudoReload
         if (parts.Length <= 2 || parts[1] != "LevelSets")
             return;
         var customBundle = parts[2] + "/custom_recipes";
+        if (!LayoutEditorOptionalBundlePreflight.NeedsDedicatedBundle(parts[2], "custom_recipes"))
+            return; // An old product is not proof that source content still exists.
         var deps = info.dependencies != null ? new List<string>(info.dependencies) : new List<string>();
         if (deps.Contains(customBundle))
             return;
@@ -871,6 +881,7 @@ static class LayoutEditorPseudoMaterialRepairHook
             var levelInfo = LayoutEditorLevelInfoResolver.ResolveForScene(activeScene.path);
             if (levelInfo != null)
                 LayoutEditorSteamerFill.SyncSteamerIngredients(levelInfo);
+            LayoutEditorPancakeFill.SyncForScene(activeScene, levelInfo);
         }
         LayoutEditorPseudoReload.RepairMissingPseudoMaterials();
         LayoutEditorPseudoReload.RepairMissingSwitchChildren();

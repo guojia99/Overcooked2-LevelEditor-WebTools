@@ -618,12 +618,13 @@ public static class LayoutEditorCustomIngredients
         if (levelSet != null)
         {
             var customBundle = levelSet + "/custom_recipes";
-            if (LayoutEditorCatalogApi.BundleFileExists(customBundle))
-                AddDependency(deps, customBundle);
+            if (LayoutEditorOptionalBundlePreflight.NeedsDedicatedBundle(levelSet, "custom_recipes")
+                && !deps.Contains(customBundle))
+                deps.Add(customBundle);
             var customContentBundle = levelSet + "/" + CustomContentDirName;
             // 自定义内容可能刚创建、bundle 尚未构建：依赖必须先写入，导出时
             // BuildAssetBundles 会产出该 bundle；否则导出后运行时缺依赖。
-            if (AssetDatabase.IsValidFolder("Assets/LevelSets/" + levelSet + "/" + CustomContentDirName))
+            if (LayoutEditorOptionalBundlePreflight.NeedsDedicatedBundle(levelSet, CustomContentDirName))
             {
                 if (!deps.Contains(customContentBundle))
                     deps.Add(customContentBundle);
@@ -649,6 +650,12 @@ public static class LayoutEditorCustomIngredients
         // commonW5：卷饼库 / Web 食材 / OC1·AYCE BGM / 桌台皮肤被引用时注册。
         if (ReferencesCommonW5(info) || _pendingDocBundles.Contains(CommonW5BundleName))
             AddDependency(deps, CommonW5BundleName);
+        // The pan's native batter wrapper is recipe-driven, not an Optional item.
+        if (LayoutEditorPancakeFill.HasPlainPancake(info))
+        {
+            AddDependency(deps, CommonW5BundleName);
+            AddDependency(deps, "bundle18");
+        }
         if (_pendingDocBundles.Contains(CommonW4BundleName))
             AddDependency(deps, CommonW4BundleName);
         foreach (var b in _pendingDocBundles)

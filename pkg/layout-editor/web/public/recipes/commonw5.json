@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 11,
+  "group": "commonw5",
+  "itemCount": 1,
+  "recipes": [
+    {
+      "guid": "41c013c02d5956cccc44e018fa7817a6",
+      "id": "Web_MixedFlourEgg",
+      "nameZh": "原味松饼面糊",
+      "nameEn": "Plain Pancake Batter",
+      "assetPath": "Assets/commonW5/custom_recipes/pancake/Web_MixedFlourEgg.asset",
+      "cookingStep": "Mixer",
+      "platingStep": "",
+      "ingredients": [
+        "FlourSO",
+        "EggSO"
+      ],
+      "ingredientCount": 2,
+      "cookingStepCount": 1,
+      "score": 0,
+      "isCustom": false,
+      "group": "commonw5",
+      "type": "batter",
+      "intermediate": true,
+      "cookingGroups": [
+        {
+          "step": "Mixer",
+          "utensils": [
+            "Mixer",
+            "MixerBowl",
+            "Oven"
+          ],
+          "ingredients": [
+            "FlourSO",
+            "EggSO"
+          ]
+        }
+      ]
+    }
+  ]
+}

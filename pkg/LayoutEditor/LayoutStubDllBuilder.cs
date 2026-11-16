@@ -41,12 +41,12 @@ public static class LayoutStubDllBuilder
 
     private static void OnBeforeBuild(string setName)
     {
-        // 导出任意关卡集/依赖包前，保证统一 runtime 新鲜（过期直接抛错中断导出）。
+        // 导出依赖包前，保证统一 runtime 新鲜（过期直接抛错中断导出）。
         StageRuntime(true);
     }
 
     /// <summary>导出前统一运行时就绪闸口（LayoutEditorSetExporter.RunExport 经钩子
-    /// 调用）：返回 null=就绪（顺手补一次静默 staging，把最新 DLL 迁移为 .dll.bytes）；
+    /// 调用）：仅校验编译产物，返回 null=就绪（staging 由 BeforeBuild 负责）；
     /// "compiling"=编译进行中/已触发，调用方挂起导出任务、待域重载后自动续跑；
     /// 其他=不可自动恢复的原因（Play 模式、自动编译未生效等，调用方按错误展示）。</summary>
     private static string OnRuntimeReadyGate()
@@ -55,10 +55,7 @@ public static class LayoutStubDllBuilder
             return "compiling";
         var state = GetRuntimeStageState();
         if (state == "fresh")
-        {
-            StageRuntimeQuiet(); // bytes 落后时顺手补迁移（不留窗口给 BeforeBuild）
             return null;
-        }
         if (EditorApplication.isPlaying)
             return "Play 模式中无法自动编译，请退出 Play 后重新导出。";
         if (RequestCompileIfStale())
@@ -76,30 +73,17 @@ public static class LayoutStubDllBuilder
         return ProjectRoot() + "/Library/ScriptAssemblies/" + RuntimeAsmName + ".dll";
     }
 
-    private static string BytesAbs()
-    {
-        return ProjectRoot() + "/" + BytesAssetPath;
-    }
-
-    /// <summary>域重载后的静默 staging：当 Library DLL 比 .dll.bytes 新（或缺失/未赋
-    /// bundle 名）时自动重新打包。返回是否 staged。与 CustomStubAutoBake 的域重载钩子
+    /// <summary>域重载/写回后的静默 staging：DLL 内容不同（或缺失/未赋
+    /// bundle 名）时自动重新打包，始终检查模块。返回是否 staged。与 CustomStubAutoBake 的域重载钩子
     /// 配合形成「改母本→编译→自动打包」闭环，杜绝导出打进过期 DLL。</summary>
     public static bool StageRuntimeQuiet()
     {
         try
         {
-            var dllAbs = RuntimeDllAbs();
-            if (!File.Exists(dllAbs))
+            if (!File.Exists(RuntimeDllAbs()))
                 return false; // 未编译（异常态，交给导出时的显式报错）
-            var bytesAbs = BytesAbs();
-            var importer = AssetImporter.GetAtPath(BytesAssetPath);
-            var needsStage = !File.Exists(bytesAbs)
-                || File.GetLastWriteTime(dllAbs) > File.GetLastWriteTime(bytesAbs).AddSeconds(2)
-                || (importer != null && importer.assetBundleName != RuntimeBundleName);
-            if (!needsStage)
-                return false;
-            StageRuntime(false);
-            return true;
+            // 调用点是域重载/写回事件，不在逐帧路径；不以主 DLL 的状态跳过模块检查。
+            return StageRuntimeCore(false);
         }
         catch (Exception ex)
         {
@@ -364,25 +348,21 @@ public static class LayoutStubDllBuilder
 
     public static void StageRuntime(bool throwOnStale)
     {
+        StageRuntimeCore(throwOnStale);
+    }
+
+    private static bool StageRuntimeCore(bool throwOnStale)
+    {
         var dllAbs = RuntimeDllAbs();
         var error = "";
-        if (!File.Exists(dllAbs))
+        var state = GetRuntimeStageState();
+        if (state == "missing")
         {
             error = "未找到 " + RuntimeAsmName + ".dll（Library/ScriptAssemblies）。请等待 Unity 编译完成后重试。";
         }
-        else
+        else if (state == "stale")
         {
-            var dllTime = File.GetLastWriteTime(dllAbs);
-            foreach (var f in Directory.GetFiles(RuntimeRoot, "*.cs", SearchOption.AllDirectories))
-            {
-                if (IsIgnoredRuntimeSource(f))
-                    continue;
-                if (File.GetLastWriteTime(f) > dllTime.AddSeconds(2))
-                {
-                    error = "母本源码比 " + RuntimeAsmName + ".dll 新（编辑后尚未编译完成）。请等 Unity 编译结束后重试。";
-                    break;
-                }
-            }
+            error = "母本源码比 " + RuntimeAsmName + ".dll 新（编辑后尚未编译完成）。请等 Unity 编译结束后重试。";
         }
 
         if (!string.IsNullOrEmpty(error))
@@ -390,29 +370,23 @@ public static class LayoutStubDllBuilder
             if (throwOnStale)
                 throw new Exception("[LayoutEditor/CustomStub] " + error);
             Debug.LogWarning("[LayoutEditor/CustomStub] " + error);
-            return;
+            return false;
         }
 
         if (!Directory.Exists(RuntimeDllDir))
             Directory.CreateDirectory(RuntimeDllDir);
-        File.Copy(dllAbs, BytesAbs(), true);
-        AssetDatabase.ImportAsset(BytesAssetPath, ImportAssetOptions.ForceUpdate);
-        var importer = AssetImporter.GetAtPath(BytesAssetPath);
-        if (importer != null && importer.assetBundleName != RuntimeBundleName)
-        {
-            importer.assetBundleName = RuntimeBundleName;
-            importer.SaveAndReimport();
-        }
-        Debug.Log("[LayoutEditor/CustomStub] 已打包统一运行时 " + RuntimeAsmName + ".dll → " + BytesAssetPath
-            + "（bundle " + RuntimeBundleName + "）");
+        var staged = StageDllAsset(dllAbs, BytesAssetPath);
+        if (staged)
+            Debug.Log("[LayoutEditor/CustomStub] 已打包统一运行时 " + RuntimeAsmName + ".dll → " + BytesAssetPath
+                + "（bundle " + RuntimeBundleName + "）");
 
         // 上游模块：新版 LevelEditorStub（SetupCustom*/OrderToPrefabListSO 等类型）
         // + 分料机 Stub 组件 + 运行时模块 DLL（loader 按依赖顺序加载）。
-        StageModuleDll("LevelEditorStub",
+        staged |= StageModuleDll("LevelEditorStub",
             ProjectRoot() + "/Library/ScriptAssemblies/LevelEditorStub.dll", false);
-        StageModuleDll("IngredientSplitterStub",
+        staged |= StageModuleDll("IngredientSplitterStub",
             ProjectRoot() + "/Library/ScriptAssemblies/IngredientSplitterStub.dll", false);
-        StageModuleDll("IngredientSplitterRuntime",
+        staged |= StageModuleDll("IngredientSplitterRuntime",
             ProjectRoot() + "/Assets/WebCustomStubRuntime/Modules~/IngredientSplitter/bin/Release/IngredientSplitterRuntime.dll", false);
         // This compiled module ships with the source distribution; Unity ignores Modules~/.
         // Never silently export a runtime whose multiplayer backpack protocol is missing/stale.
@@ -425,19 +399,26 @@ public static class LayoutStubDllBuilder
             foreach (var source in Directory.GetFiles(protocolRoot, "*.cs.txt", SearchOption.TopDirectoryOnly))
                 if (File.GetLastWriteTime(source) > File.GetLastWriteTime(protocolAbs).AddSeconds(2))
                     throw new Exception("[LayoutEditor/CustomStub] BackpackProtocol 源码比打包 DLL 新，请重新构建协议模块（Release）后再导出。");
-        AssetDatabase.ImportAsset(protocolAsset, ImportAssetOptions.ForceUpdate);
         var protocolImporter = AssetImporter.GetAtPath(protocolAsset);
+        var protocolChanged = !FileMatchesImportedAsset(protocolAbs, protocolAsset);
+        if (protocolChanged || protocolImporter == null)
+        {
+            AssetDatabase.ImportAsset(protocolAsset, protocolChanged ? ImportAssetOptions.ForceUpdate : ImportAssetOptions.Default);
+            protocolImporter = AssetImporter.GetAtPath(protocolAsset);
+            staged = true;
+        }
         if (protocolImporter == null)
             throw new Exception("[LayoutEditor/CustomStub] BackpackProtocol TextAsset 导入失败。");
         if (protocolImporter.assetBundleName != RuntimeBundleName)
         {
             protocolImporter.assetBundleName = RuntimeBundleName;
             protocolImporter.SaveAndReimport();
+            staged = true;
         }
-        Debug.Log("[LayoutEditor/CustomStub] BackpackProtocol 已纳入 " + RuntimeBundleName);
+        return staged;
     }
 
-    private static void StageModuleDll(string asmName, string sourceAbs, bool throwOnMissing)
+    private static bool StageModuleDll(string asmName, string sourceAbs, bool throwOnMissing)
     {
         try
         {
@@ -448,22 +429,88 @@ public static class LayoutStubDllBuilder
                     throw new Exception("未找到模块 DLL: " + sourceAbs);
                 Debug.LogWarning("[LayoutEditor/CustomStub] 模块 DLL 未构建，跳过 staging: " + sourceAbs
                     + "（分料机真机功能不可用；先构建 IngredientSplitterRuntime.csproj）");
-                return;
+                return false;
             }
-            File.Copy(sourceAbs, ProjectRoot() + "/" + bytesAsset, true);
-            AssetDatabase.ImportAsset(bytesAsset, ImportAssetOptions.ForceUpdate);
-            var imp = AssetImporter.GetAtPath(bytesAsset);
-            if (imp != null && imp.assetBundleName != RuntimeBundleName)
-            {
-                imp.assetBundleName = RuntimeBundleName;
-                imp.SaveAndReimport();
-            }
-            Debug.Log("[LayoutEditor/CustomStub] 已打包模块 " + asmName + ".dll → " + bytesAsset);
+            var staged = StageDllAsset(sourceAbs, bytesAsset);
+            if (staged)
+                Debug.Log("[LayoutEditor/CustomStub] 已打包模块 " + asmName + ".dll → " + bytesAsset);
+            return staged;
         }
         catch (Exception ex)
         {
             if (throwOnMissing) throw;
             Debug.LogWarning("[LayoutEditor/CustomStub] 模块 staging 失败 " + asmName + ": " + ex.Message);
+            return false;
         }
+    }
+
+    private static bool StageDllAsset(string sourceAbs, string bytesAsset)
+    {
+        var bytesAbs = ProjectRoot() + "/" + bytesAsset;
+        var changed = !FilesHaveSameContent(sourceAbs, bytesAbs);
+        if (changed)
+            File.Copy(sourceAbs, bytesAbs, true);
+        var importer = AssetImporter.GetAtPath(bytesAsset);
+        // External writes can leave the TextAsset cache stale even when disk bytes match.
+        var importChanged = changed || !FileMatchesImportedAsset(bytesAbs, bytesAsset);
+        var staged = changed;
+        if (importChanged || importer == null)
+        {
+            AssetDatabase.ImportAsset(bytesAsset, importChanged ? ImportAssetOptions.ForceUpdate : ImportAssetOptions.Default);
+            importer = AssetImporter.GetAtPath(bytesAsset);
+            staged = true;
+        }
+        if (importer == null)
+            throw new Exception("[LayoutEditor/CustomStub] TextAsset 导入失败: " + bytesAsset);
+        if (importer.assetBundleName != RuntimeBundleName)
+        {
+            importer.assetBundleName = RuntimeBundleName;
+            importer.SaveAndReimport();
+            staged = true;
+        }
+        return staged;
+    }
+
+    private static bool FileMatchesImportedAsset(string diskPath, string assetPath)
+    {
+        var asset = AssetDatabase.LoadAssetAtPath<TextAsset>(assetPath);
+        if (asset == null)
+            return false;
+        using (var disk = File.OpenRead(diskPath))
+        using (var imported = new MemoryStream(asset.bytes))
+            return StreamsHaveSameContent(disk, imported);
+    }
+
+    private static bool FilesHaveSameContent(string firstPath, string secondPath)
+    {
+        if (!File.Exists(firstPath) || !File.Exists(secondPath))
+            return false;
+        using (var first = File.OpenRead(firstPath))
+        using (var second = File.OpenRead(secondPath))
+            return StreamsHaveSameContent(first, second);
+    }
+
+    private static bool StreamsHaveSameContent(Stream first, Stream second)
+    {
+        if (first.Length != second.Length)
+            return false;
+        var firstBuffer = new byte[8192];
+        var secondBuffer = new byte[firstBuffer.Length];
+        int count;
+        while ((count = first.Read(firstBuffer, 0, firstBuffer.Length)) > 0)
+        {
+            var read = 0;
+            while (read < count)
+            {
+                var n = second.Read(secondBuffer, read, count - read);
+                if (n == 0)
+                    return false;
+                read += n;
+            }
+            for (var i = 0; i < count; i++)
+                if (firstBuffer[i] != secondBuffer[i])
+                    return false;
+        }
+        return second.ReadByte() == -1;
     }
 }

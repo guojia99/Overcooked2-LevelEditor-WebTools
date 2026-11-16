@@ -1960,6 +1960,7 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge, ingredientIds) {
     "Assets/common03/food/Recipes_Patch",
     "Assets/commonW1/pseudo_prefab_so/dlc11/food",
     "Assets/commonW3/custom_recipes/salad",
+    "Assets/commonW5/custom_recipes/pancake",
   ];
   const customByGuid = new Map();
   const originalByGuid = new Map();
@@ -1989,6 +1990,10 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge, ingredientIds) {
   const saladNamesPath = path.join(repoRoot, "Assets/commonW3/custom_recipes/names.json");
   const saladNames = new Map(fs.existsSync(saladNamesPath)
     ? (JSON.parse(fs.readFileSync(saladNamesPath, "utf8").replace(/^\uFEFF/, "")).names || []).map((n) => [n.id, n])
+    : []);
+  const w5NamesPath = path.join(repoRoot, "Assets/commonW5/custom_recipes/names.json");
+  const w5Names = new Map(fs.existsSync(w5NamesPath)
+    ? (JSON.parse(fs.readFileSync(w5NamesPath, "utf8").replace(/^\uFEFF/, "")).names || []).map((n) => [n.id, n])
     : []);
 
   for (const entry of customByGuid.values()) {
@@ -2086,6 +2091,8 @@ function scanRecipes(dictionary, idToRow, guidIndex, knowledge, ingredientIds) {
       guid: entry.guid,
       id,
       ...lookupName(dictionary, idToRow, id),
+      ...(group === "commonw5" && w5Names.has(id)
+        ? { nameZh: w5Names.get(id).zh, nameEn: w5Names.get(id).en } : {}),
       assetPath: entry.assetPath,
       cookingStep: step,
       // 官方菜谱也输出组成/装盘（如月饼=搅拌中间产物→烤箱、md_* 套餐=产物组装+餐盘），
@@ -2918,6 +2925,7 @@ function main() {
     "Assets/commonW1/food",
     "Assets/commonW1/pseudo_prefab_so/dlc11/food",
     "Assets/commonW3/custom_recipes/salad",
+    "Assets/commonW5/custom_recipes/pancake",
   ]);
   const knowledge = loadKnowledge();
 

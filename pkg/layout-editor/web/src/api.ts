@@ -328,6 +328,10 @@ export async function fetchRecipeCatalog(levelSet: string): Promise<RecipeEntry[
     recipes = dropLevelSetCopies(recipes, "recipes.json");
   }
   for (const r of recipes) {
+    // The commonW5 bridge name map supplies Chinese but returns the asset id as English.
+    if (r.id === "Web_MixedFlourEgg" && r.group === "commonw5") {
+      r.nameEn = "Plain Pancake Batter";
+    }
     if (r.type === "sushi" && r.cookingStep === "Steamer") {
       r.cookingStep = "Pot";
     }

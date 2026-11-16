@@ -2,6 +2,11 @@
   "schemaVersion": 1,
   "names": [
     {
+      "id": "Web_MixedFlourEgg",
+      "zh": "原味松饼面糊",
+      "en": "Plain Pancake Batter"
+    },
+    {
       "id": "Web_Burrito_Meat_Chicken",
       "zh": "Web 肉馅鸡肉卷饼",
       "en": "Web Meat & Chicken Burrito"

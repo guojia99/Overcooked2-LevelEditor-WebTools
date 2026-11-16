@@ -110,7 +110,7 @@ flowchart LR
 | **summaryRecipes.ts** | 汇总页/分工页共用分组：官方按 `RECIPE_TYPE_ORDER`、自定义按 `category→subcategory`；`category` 优先取 API 字段，缺失时从 `assetPath` 的 `custom_recipes/<category>[/<sub>]/` 解析（覆盖 commonW3/commonW2/LevelSets）；显示名取 `fetchCustomRecipeConfig`，缺配置回退 `CUSTOM_CATEGORY_ZH`/id，Web 分类按固定顺序；每个分组/子分类内部按分数升序（`byScoreAsc`，同分稳定保持原顺序） |
 | **levelAssignment.ts** | 🧑‍🍳 菜谱分工模式页（**关卡级严格路由 `/assignment/{set}/{levelId}`**，汇总页「🧑‍🍳 分工模式」经 `goAssignment` 整页跳转，可刷新/分享；标题落到具体关卡名）：左菜谱备选池（约 1/3，分组+分数排序，**条目两列网格**）+ 右玩家拖拽框（**两列网格：2P=2×1、3P=2+1、4P=2×2，固定高度+内部滚动**；HTML5 DnD：池→框 = 分配、框间 = 移动、拖回池/✕ = 移除；框内自动去重，已用菜谱池中置灰仍可拖；**落卡后显示完整菜谱卡预览** rlCardHtml + ✕ 悬浮角标）。2P/3P/4P 三套独立配置，JSON 落盘 `data/<level>/assignment~/assignment.json`（前端唯一读写方）；分工区块/导出图：玩家条目**从上到下**、每个玩家内部按汇总分组**子分类**，卡片**按宽度自适应换行（同 .rl-grid，不固定每行格数）**；导出图头部含**关卡名/场景名/作者/关卡截图**（`exportPng` 离屏 `createOffscreenStage` 1280px + `assignmentModeBlockHtml`，与汇总页分工区块共用渲染） |
 | **richText.ts** | 汇总页 readme 富文本（仅文字）：`sanitizeRichTextHtml` 白名单净化（p/h2/h3/b/i/u/s/ul/ol/li/blockquote/br/a[href^=http]，未放行标签拆壳保文字、剥全部属性）+ contenteditable 编辑弹窗（execCommand 工具条、粘贴转纯文本）；存 `readme~/readme.json` |
-| **dependencies.ts** | 依赖管理页：两级列表、`BundleAnalysis` 展示（缺失红/未用黄）、手动编辑 dependencies、依赖闭包 |
+| **dependencies.ts** | 依赖管理页：两级列表、`BundleAnalysis` 展示（缺失红/未用黄）、手动编辑 dependencies、依赖闭包。2026-11-16：保存前校验 `isForbiddenManualBundle`——末段为 `custom_recipes`/`custom_content`（裸名或任意前缀，忽略大小写）一律报错阻止保存（本集自身 `<set>/custom_recipes`、`<set>/custom_content` 两条规范名除外，系统自动登记、原样保留）；后端 `UpdateLevelInfo` → `FilterSetDataDependencies` 同步静默剔除非本集条目作防线 |
 | **customRecipes.ts** | 自定义菜谱管理页（1963 行）：卡片 + 分类侧栏、新建/编辑表单（组成多选/烹饪/装盘/图标/FBX+MTL+贴图上传/cm 校准/3D 预览）、分类管理。<br>2026-09-17：顶栏「🍞 统一面包皮」→ `openBunSwapModal`（`groupBunUsages` 把面包层按菜谱合并成行；目标三选一默认 `BUN_DLC8_ID`，切目标后整体重绘因「已是目标」行会变；调 `api.fetchBunUsage` / `api.replaceBun`）。只改本集 custom_recipes 资产，关卡 BurgerOptional/matchlist/依赖与场景食材箱不联动，弹窗底部固定提醒作者自行处理。<br>2026-09-23：顶栏「📦 资产瘦身」→ `openAssetOptimizeModal`（`api.fetchAssetOptimizeUsage` 概览贴图档位/模型面数分桶 → 材质贴图/图标各选档（128~1024，默认 256）+ 网格精度档（off~high，默认 medium）→ `api.optimizeCustomRecipeAssets` 只改 .meta 导入参数，源 FBX/PNG 不动、GUID 不变；结果弹窗逐项列 变更前→后；commonW2 后端不枚举） |
 | **burgerMaker.ts** | 汉堡组装工作台（严格路由 `/custom-recipes/burger-maker/{set}[/{burgerId}]`，URL 中的 burgerId 自动载入已存成品）：顶部菜谱卡片实时预览（共用 `rlCardHtml`）+ 层层堆叠夹心（拖动排序、候选计数徽标）、夹心>32 层软上限提醒（含超规格实拍弹窗），调 `/api/burger/create`；候选面板按「面包/中间产物/成品菜/官方菜谱/官方食材」五组 + 徽标（DLC / bundle缺失 / 荐）+ 仅推荐/显示无模型筛选 + 👁 3D 预览 + 图标逐级降级（`candIconChain`）；「🥩 夹心工作台 ↗」新开一页跳 `/custom-recipes/filling-maker/{set}` |
 | **sandwichMaker.ts** | 🥪 三明治组装工作台（严格路由 `/custom-recipes/sandwich-maker/{set}[/{sandwichId}]`）：toast 底层 + 夹心（optionalSOs）+ 酱料（sauceSOs）+ 容量/分数/装盘模型；保存走 `/api/custom-recipes/create|update`（`optionalKind=sandwich`），列表回显 `CustomRecipeSummary.toastId/fillingIds/sauceIds/...`。上游 2026-11 `CustomRecipeOptionalSandwichSO` / `ICustomRecipeOptional` 的编辑入口。 |
@@ -237,6 +237,8 @@ flowchart LR
 | **ui/screenshotModal.ts** | 关卡截图：预览/选图/画布拖拽裁剪/JPEG 压缩/base64 上传 |
 | **ui/depsCheck.ts** | 依赖状态检查弹窗（读 envStatus 逐项展示） |
 | **ui/constants.ts** | 燃烧器火焰模式、传送门颜色名 |
+
+**原味松饼自动装填**（`recipeKnowledge.ts` / `utensilManager.ts`）：隐式面糊仅匹配原版 `Cake_Plain_SO`（`!isCustom`、`FryingPan`、叶食材恰为 `FlourSO`+`EggSO`），使用 `Web_MixedFlourEgg`；不参与其他面粉/鸡蛋菜谱的泛化匹配，显式组成引用仍有效。锅具管理「按菜谱自动填充」按完整已选菜谱合并输入：仅原味松饼时煎锅填面糊 GUID、容量 1，搅拌碗填面粉/鸡蛋、容量 2，生面粉/鸡蛋不进煎锅。混选菜谱缺面糊、需回落原生 lookup 时，`clear` 优先清空终锅许可表，补充中间产物遍历也不会重新填回；容量按单份最大用量。普通菜谱保存另有后端安全追加，不能代替完整混选装填；写回后读回 `cookingUtensil.allowedIngredientGuids` 验证。
 
 ### 4.3 src/guide/（功能说明页）
 

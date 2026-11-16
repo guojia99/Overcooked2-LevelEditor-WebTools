@@ -68,6 +68,34 @@ function layerGroupDetailsOpen(layer: SceneListLayer, gk: string, title: string,
   );
 }
 
+/** 装饰层 🎞/✨ 特殊节内部：按显示名分组渲染（与普通装饰组同款 👁 开关）。
+ *  分组 key 与 enumerateGroupKeysForLayer 同源，「全部隐藏」后可逐组单独开启。 */
+function decorSectionGroupsHtml(items: EditorItem[], idHtmlOf: (it: EditorItem) => string): string {
+  const groups = new Map<string, EditorItem[]>();
+  for (const it of items) {
+    const gk = decorGroupKey(it);
+    if (!groups.has(gk)) groups.set(gk, []);
+    groups.get(gk)!.push(it);
+  }
+  const sorted = [...groups.keys()].sort((a, b) => a.localeCompare(b, "zh"));
+  const parts: string[] = [];
+  for (const gk of sorted) {
+    const list = groups.get(gk)!;
+    list.sort((a, b) => a._editorKey.localeCompare(b._editorKey));
+    parts.push(layerGroupDetailsOpen("decor", gk, gk, list.length));
+    for (const it of list) {
+      parts.push(
+        `<div class="scene-item-row layer-child-row${isSelected(it._editorKey) ? " active" : ""}" data-key="${it._editorKey}">` +
+          `<span class="zh">${escHtml(itemLabel(it))}</span> <span class="id">${idHtmlOf(it)}</span>` +
+          `<button type="button" class="scene-item-samename" data-samename="${it._editorKey}" title="选中所有同名物品">⌂</button>` +
+          `</div>`
+      );
+    }
+    parts.push("</details>");
+  }
+  return parts.join("");
+}
+
 function groupFloorsByKey(floors: EditorFloor[]): Map<string, EditorFloor[]> {
   const map = new Map<string, EditorFloor[]>();
   for (const f of floors) {
@@ -463,39 +491,30 @@ export function refreshSceneItemList(): void {
     });
   } else if (layer === "decor") {
     const parts: string[] = [];
-    const npcs = sceneNpcAnimItems();
+    // 与 enumerateGroupKeysForLayer("decor") 同范围（装饰层 + 当前 P），保证
+    // 👁 分组 key 与「全部隐藏 / prune」一致；非装饰层条目不在此列出。
+    const npcs = sceneNpcAnimItems().filter(
+      (it) => itemLayerOfIt(it) === "decor" && itemInCurrentPart(it)
+    );
     const npcKeys = new Set(npcs.map((it) => it._editorKey));
     parts.push(
       `<details class="cat-group" open><summary>🎞 自带行走动画的 NPC（${npcs.length}）</summary>` +
         (npcs.length > 0
-          ? npcs
-              .map(
-                (it) =>
-                  `<div class="scene-item-row" data-key="${it._editorKey}">` +
-                  `<span class="zh">${escHtml(itemLabel(it))}</span> <span class="id">🎞</span>` +
-                  `</div>`
-              )
-              .join("")
+          ? decorSectionGroupsHtml(npcs, () => "🎞")
           : `<div class="npc-types-empty">场景中暂无自带动画的 NPC。${npcTypesHintHtml()}</div>`) +
         `</details>`
     );
-    const envAnims = sceneEnvAnimDecorItems();
+    const envAnims = sceneEnvAnimDecorItems().filter(
+      (it) => itemLayerOfIt(it) === "decor" && itemInCurrentPart(it)
+    );
     const envKeys = new Set(envAnims.map((it) => it._editorKey));
     parts.push(
       `<details class="cat-group" open><summary>✨ 自带环境动画的装饰（${envAnims.length}）</summary>` +
         (envAnims.length > 0
-          ? envAnims
-              .map((it) => {
-                const id = prefabIdFromPath(it.prefabAssetPath) || it.instanceId;
-                const match = matchBuiltinAnimDecor(id, it.displayName);
-                const badge = match?.emoji ?? "✨";
-                return (
-                  `<div class="scene-item-row" data-key="${it._editorKey}">` +
-                  `<span class="zh">${escHtml(itemLabel(it))}</span> <span class="id">${badge}</span>` +
-                  `</div>`
-                );
-              })
-              .join("")
+          ? decorSectionGroupsHtml(envAnims, (it) => {
+              const id = prefabIdFromPath(it.prefabAssetPath) || it.instanceId;
+              return matchBuiltinAnimDecor(id, it.displayName)?.emoji ?? "✨";
+            })
           : `<div class="npc-types-empty">场景中暂无环境动画装饰。${envAnimTypesHintHtml()}</div>`) +
         `</details>`
     );

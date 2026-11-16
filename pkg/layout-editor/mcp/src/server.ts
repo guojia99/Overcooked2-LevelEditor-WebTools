@@ -45,7 +45,7 @@ const toolDefinitions = [
   },
   {
     name: "oc2_get_level_recipe_context",
-    description: "读取关卡绑定菜谱和完整菜谱目录，供 AI 规划订单和设备。目录排除 Web_SauceSalad_Optional_ 内部锚点，保留 optional 登记；saladSubgroups 的 non_dlc11_official 独占剧情食材沙拉及其酱扩展，其余按互斥酱料组和可交叉的 official 来源组，按菜谱 id 去重计数。只读。",
+    description: "读取关卡绑定菜谱和完整菜谱目录，供 AI 规划订单和设备。目录排除 Web_SauceSalad_Optional_ 内部锚点，保留 optional 登记；saladSubgroups 的 non_dlc11_official 独占剧情食材沙拉及其酱扩展，其余按互斥酱料组和可交叉的 official 来源组，按菜谱 id 去重计数。只读，无菜谱写工具；现有 HTTP/Web 保存原版 Cake_Plain_SO 时安全追加煎锅 Web_MixedFlourEgg，混选输入未核验则保留空表原生 lookup。完整混选用前端显式自动填充；另用 oc2_get_scene_layout 读回 cookingUtensil.allowedIngredientGuids，场景仍需写回落盘。",
     inputSchema: { type: "object", properties: { assetPath: { type: "string", minLength: 1 }, levelSet: { type: "string" } }, required: ["assetPath"], additionalProperties: false },
   },
   {
@@ -120,17 +120,17 @@ const toolDefinitions = [
   },
   {
     name: "oc2_start_export",
-    description: "启动关卡集导出。立即返回，AI 必须使用 taskId 继续等待；通常 3-30 分钟。需要 confirm=true。",
+    description: "启动增量导出，自动预检空可选包。levels 仅交付关卡且不 staging 运行时；all/deps 携带依赖闭包。构建 map 保留可达共享资源归属。单集/多集/deps 共用 mode 与 stages 快照，deps 不适用阶段为 skipped。立即返回后轮询至 restore 收尾及 status=done/error，失败不重复启动；需要 confirm=true。",
     inputSchema: { type: "object", properties: { setNames: { type: "array", minItems: 1, items: { type: "string", minLength: 1 } }, mode: { type: "string", enum: ["all", "levels", "deps"] }, depsVersion: { type: "string" }, selectedLevels: { type: "array", items: { type: "string" } }, confirm: { type: "boolean", const: true } }, required: ["setNames", "confirm"], additionalProperties: false },
   },
   {
     name: "oc2_get_export_status",
-    description: "查询当前 Unity 导出任务状态。建议每 2 秒调用一次。",
+    description: "查询 SetExportStatusDto 线程安全深拷贝快照：mode；stages[] 每行 phase/state(waiting|running|done|error|skipped)/elapsedMs/completed/total/message。固定行序 queued、starting、compile、preflight、orphan-clean、dual-stub-clean、prepare、build、package、zip、restore。只按后端快照展示进度/耗时，total=0 用不确定条；prepare 为真实已完成 n/N，非当前处理索引，不按历史耗时估预算。失败原阶段保持 error，restore 独立运行后终态 error，面板保留可关闭。缺 stages 的旧后端仅文字；idle/断网保留已知行，不推断完成。compile 域重载由 SessionState 恢复累计，仅重载缺口用 UTC 墙钟，其余用 Stopwatch。每 2 秒轮询至 restore 收尾及 status=done/error；zip 不代表完成。",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
     name: "oc2_wait_export",
-    description: "等待导出任务完成，内部每 2 秒轮询，最长默认 30 分钟。",
+    description: "等待导出任务终态 done/error，内部每 2 秒轮询，最长默认 30 分钟；返回原始 mode/stages 快照。zip 或 idle 不代表完成；连接异常结束本次等待，恢复后先查状态再继续轮询，不重复启动导出。",
     inputSchema: { type: "object", properties: { timeoutMs: { type: "integer", minimum: 1000, maximum: 1800000 } }, additionalProperties: false },
   },
 ];

@@ -1874,12 +1874,27 @@ public class SetExportStatusDto
     /** idle | running | done | error */
     public string status;
     public string setName;
-    /** queued | compile(统一运行时自动编译中，域重载后自动续跑) | prepare | clean | build | package | zip | done */
+    /** 当前阶段；终态为 done | error。 */
     public string phase;
+    public string mode;
+    public List<SetExportStageDto> stages;
     public string message;
     public string error;
     public string zipFileName;
     public int fileCount;
+}
+
+[Serializable]
+public class SetExportStageDto
+{
+    public string phase;
+    /** waiting | running | done | error | skipped */
+    public string state;
+    public long elapsedMs;
+    public int completed;
+    /** 0 = 不可计数，显示不确定进度。 */
+    public int total;
+    public string message;
 }
 
 [Serializable]

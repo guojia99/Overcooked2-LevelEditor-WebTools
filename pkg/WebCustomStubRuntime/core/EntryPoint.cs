@@ -2030,6 +2030,7 @@ namespace CustomStub
                  || prefabTag.StartsWith(WebBackpackStorage.TagPrefix, StringComparison.Ordinal)
                  || prefabTag.StartsWith(WebKillerGhost.TagPrefix, StringComparison.Ordinal)
                   || prefabTag.StartsWith(Kettle.TagPrefix, StringComparison.Ordinal)
+                  || prefabTag.StartsWith(DirtyTeacupMergeWatcher.TagPrefix, StringComparison.Ordinal)
                   || prefabTag.StartsWith(SwitchTint.TagPrefix, StringComparison.Ordinal)
                   || prefabTag.StartsWith(OrderSequenceSettings.TagPrefix, StringComparison.Ordinal);
         }
@@ -2261,7 +2262,7 @@ namespace CustomStub
                     return;
                 go.AddComponent<DirtyTeacupMergeWatcher>();
                 StubLog.Dbg("[CustomStub] 自愈 DirtyTeacupMergeWatcher: " + go.name
-                    + "（缺序列化 m_stackPrefab，单杯+单杯合并不可用；单杯入堆不受影响）");
+                    + "（Start 时从已加载脏茶杯堆资产恢复 m_stackPrefab）");
             }
             else if (prefabTag.StartsWith(SwitchTint.TagPrefix, StringComparison.Ordinal))
             {
