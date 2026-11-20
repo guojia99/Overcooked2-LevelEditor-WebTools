@@ -306,6 +306,9 @@ export interface LayoutPlateReturnStub {
 }
 
 export interface LayoutServingStationStub {
+  /** 原生 Horde 服务窗口的订单、血条 UI 局部偏移。 */
+  orderUIOffset?: LayoutVector3;
+  healthUIOffset?: LayoutVector3;
   /** Legacy single binding (one PlateReturn). Kept for back-compat; superseded
    *  by plateReturnInstanceIds. */
   plateReturnInstanceId?: string;
@@ -421,6 +424,8 @@ export interface LayoutItem {
   burner?: LayoutBurnerStub;
   player?: LayoutPlayerStub;
   servingStation?: LayoutServingStationStub;
+  /** 原生 Horde 铁门解锁费用（0..2147483647）。 */
+  lockable?: { unlockCost?: number };
   plateReturn?: LayoutPlateReturnStub;
   switchStub?: LayoutSwitchStub;
   pressureSwitch?: LayoutPressureSwitchStub;
@@ -1561,6 +1566,7 @@ export interface SetExportStage {
 
 /** 关卡集导出任务状态（GET /api/set/export/status，构建期间由桥接监听线程直答）。 */
 export interface SetExportStatus {
+  exportId?: string;
   status: "idle" | "running" | "done" | "error";
   mode?: "levels" | "all" | "deps";
   stages?: SetExportStage[];
@@ -1621,6 +1627,7 @@ export interface LevelSummary {
   dataDir: string;
   levelName: string;
   levelNameZH: string;
+  gameMode?: "Campaign" | "Dynamic" | "Horde";
   sceneName: string;
   sceneAssetPath: string;
   hasScreenshot: boolean;
@@ -1673,6 +1680,48 @@ export interface PerPlayerConfig {
   twoStarScore: number;
   threeStarScore: number;
   fourStarScore: number;
+  targetRepairCostMax?: number;
+  /** Campaign native sequence: omitted/null POST preserves, [] clears; duplicates/order retained.
+   * GET returns "" for a missing GUID slot and diagnostics instead of filtering it out. */
+  scriptedRecipes?: string[] | null;
+  /** Read-only, entry positions are 1-based. */
+  scriptedRecipeErrors?: string[];
+}
+
+export type LevelGameMode = "Campaign" | "Dynamic" | "Horde";
+
+export interface LevelModeRecipePhase {
+  id: string;
+  durationSeconds: number;
+  recipeGuids: string[];
+}
+
+export interface HordeWave {
+  id: string;
+  intervalSeconds: number;
+  recipeGuids: string[];
+  enemyGuids: string[];
+  spawnTimes: number[];
+}
+
+export interface HordePlayerConfig {
+  targetRepairCostMax: number;
+  waves: HordeWave[];
+}
+
+export interface LevelModeConfig {
+  assetPath: string;
+  gameMode: LevelGameMode;
+  targetHealth: number;
+  targetRepairSpeed: number;
+  targetRepairThreshold: number;
+  kitchenHealth: number;
+  minOrderCount: number;
+  maxOrderCount: number;
+  phases: LevelModeRecipePhase[];
+  hordeConfigs: HordePlayerConfig[];
+  /** Read-only common04 enemy catalog; spawn events live in each wave. */
+  enemies: IngredientEntry[];
 }
 
 export interface AudioConfig {
@@ -1713,6 +1762,13 @@ export interface LevelDetail {
   levelInfoAssetPath: string;
   levelName: string;
   levelNameZH: string;
+  gameMode: LevelGameMode;
+  targetHealth: number;
+  targetRepairSpeed: number;
+  targetRepairThreshold: number;
+  kitchenHealth: number;
+  dynamicRecipeListGuids: string[];
+  dynamicRoundTimes: number[];
   sceneName: string;
   sceneAssetPath: string;
   hasScreenshot: boolean;
@@ -1725,6 +1781,7 @@ export interface LevelDetail {
   summaryBgDim?: number;
   debugRecipeCount: number;
   disableDynamicParenting: boolean;
+  enableRespawnBounds: boolean;
   minOrderCount: number;
   maxOrderCount: number;
   /** 主网格（CampaignGameEnvironment/GridManager）半宽格数；0 = 不调整（保持场景当前值）。Y 默认 1。 */

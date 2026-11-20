@@ -65,38 +65,75 @@ public static class LayoutEditorPseudoReload
 
     public static void PrepareSceneForWrite(Scene scene, bool requireManager)
     {
+        var scenePath = scene.IsValid() ? scene.path : "<invalid>";
+        LayoutEditorLog.Log("[SetExporter] strict prepare enter scene=" + scenePath
+            + " requireManager=" + requireManager + " sceneCount=" + SceneManager.sceneCount);
         var block = LayoutEditorSafety.PlayModeWriteBlockReason();
         if (!string.IsNullOrEmpty(block))
+        {
+            LayoutEditorLog.LogWarning("[SetExporter] strict prepare blocked scene=" + scenePath + " reason=" + block);
             throw new LayoutEditorExportPrepareException(block);
+        }
         if (!scene.IsValid() || !scene.isLoaded)
+        {
+            LayoutEditorLog.LogWarning("[SetExporter] strict prepare invalid scene=" + scenePath
+                + " valid=" + scene.IsValid() + " loaded=" + scene.isLoaded);
             throw new LayoutEditorExportPrepareException("Cannot prepare an unloaded scene.");
+        }
         // Host DeInit clears pseudo children globally, even when called on one manager.
         for (int i = 0; i < SceneManager.sceneCount; i++)
         {
             var other = SceneManager.GetSceneAt(i);
             if (other == scene || !other.IsValid() || !other.isLoaded)
                 continue;
+            LayoutEditorLog.Log("[SetExporter] strict prepare inspect loaded scene=" + other.path);
             foreach (var root in other.GetRootGameObjects())
             {
                 if (root.GetComponentInChildren<PseudoPrefabManager>(true) != null
                     || root.GetComponentInChildren<PseudoPrefab>(true) != null
                     || root.GetComponentInChildren<SetupCustomPrefab>(true) != null)
+                {
+                    LayoutEditorLog.LogWarning("[SetExporter] strict prepare rejected other scene=" + other.path
+                        + " targetScene=" + scenePath);
                     throw new LayoutEditorExportPrepareException(
                         "请先关闭其他已加载的伪预制体场景再写回，避免全局 DeInit 清理其他场景：" + other.path);
+                }
             }
         }
+        LayoutEditorLog.Log("[SetExporter] strict prepare ClearCleanPlateStackPreviews begin scene=" + scenePath);
         ClearCleanPlateStackPreviews();
+        LayoutEditorLog.Log("[SetExporter] strict prepare ClearCleanPlateStackPreviews complete scene=" + scenePath);
         int prepared = 0;
         foreach (var root in scene.GetRootGameObjects())
         {
             foreach (var manager in root.GetComponentsInChildren<PseudoPrefabManager>(true))
             {
+                LayoutEditorLog.Log("[SetExporter] strict prepare manager found scene=" + scenePath
+                    + " manager=" + GetHierarchyPath(manager.transform)
+                    + " instanceId=" + manager.GetInstanceID() + " prepareForBuilding=" + manager.prepareForBuilding);
                 ForcePrepareManagerStrict(manager, scene.path);
                 prepared++;
             }
         }
+        LayoutEditorLog.Log("[SetExporter] strict prepare managers complete scene=" + scenePath + " count=" + prepared);
         if (prepared == 0 && requireManager)
+        {
+            LayoutEditorLog.LogWarning("[SetExporter] strict prepare manager missing scene=" + scenePath);
             throw new LayoutEditorExportPrepareException("No PseudoPrefabManager in scene: " + scene.path);
+        }
+        LayoutEditorLog.Log("[SetExporter] strict prepare exit scene=" + scenePath);
+    }
+
+    private static string GetHierarchyPath(Transform transform)
+    {
+        if (transform == null) return "<null>";
+        var path = transform.name;
+        while (transform.parent != null)
+        {
+            transform = transform.parent;
+            path = transform.name + "/" + path;
+        }
+        return path;
     }
 
     public static void SaveScenePrepared(Scene scene, bool restorePreview)
@@ -155,14 +192,28 @@ public static class LayoutEditorPseudoReload
 
     private static void ForcePrepareManagerStrict(PseudoPrefabManager manager, string scenePath)
     {
+        var stub = manager.GetComponent<PseudoPrefabManagerStub>();
+        LayoutEditorLog.Log("[SetExporter] strict prepare manager native dependency clean begin scene=" + scenePath
+            + " manager=" + GetHierarchyPath(manager.transform) + " hasStub=" + (stub != null));
+        if (stub != null) LayoutEditorNativeDependencies.Clean(stub.levelInfo);
+        LayoutEditorLog.Log("[SetExporter] strict prepare manager native dependency clean complete scene=" + scenePath
+            + " manager=" + GetHierarchyPath(manager.transform));
         manager.prepareForBuilding = true;
+        LayoutEditorLog.Log("[SetExporter] strict prepare DeInit begin scene=" + scenePath
+            + " manager=" + GetHierarchyPath(manager.transform)
+            + " instanceId=" + manager.GetInstanceID());
         try
         {
             manager.DeInit();
+            LayoutEditorLog.Log("[SetExporter] strict prepare DeInit complete scene=" + scenePath
+                + " manager=" + GetHierarchyPath(manager.transform)
+                + " prepareForBuilding=" + manager.prepareForBuilding);
         }
         catch (Exception ex)
         {
             manager.prepareForBuilding = false;
+            LayoutEditorLog.LogWarning("[SetExporter] strict prepare DeInit exception scene=" + scenePath
+                + " manager=" + GetHierarchyPath(manager.transform) + " exception=" + ex);
             throw new LayoutEditorExportPrepareException(
                 "Prepare For Building DeInit 失败（" + scenePath + "）：" + ex.Message, ex);
         }
@@ -607,48 +658,22 @@ public static class LayoutEditorPseudoReload
 
     internal static void SafeInit(PseudoPrefabManager manager)
     {
+        if (!LayoutEditorAssetBundleLifetime.CanRepair(manager))
+        {
+            LayoutEditorAssetBundleLifetime.QueueRecovery();
+            return;
+        }
         if (manager.stub == null)
             manager.stub = manager.GetComponent<PseudoPrefabManagerStub>();
         var info = manager.stub != null ? manager.stub.levelInfo : null;
-        // Run before taking the dependency snapshot and before native Init/preload.
+        // Sync and clean before native Init/preload.
         LayoutEditorPancakeFill.SyncForScene(manager.gameObject.scene, info);
-        string[] persistentDependencies = info != null ? info.dependencies : null;
-        bool filteredDependencies = false;
+        LayoutEditorNativeDependencies.Clean(info);
         bool previousCallingOriginal = CallingOriginalInit;
         try
         {
             CallingOriginalInit = true;
-            if (info != null && persistentDependencies != null)
-            {
-                string setName = GetLevelSetName(info);
-                if (!string.IsNullOrEmpty(setName))
-                {
-                    var runtimeDependencies = new List<string>();
-                    var skippedDependencies = new List<string>();
-                    bool skipCommon04 = Array.IndexOf(persistentDependencies, "common04") >= 0
-                        && AssetDatabase.IsValidFolder("Assets/LevelSets/" + setName + "/custom_content")
-                        && !File.Exists(Path.Combine(Application.streamingAssetsPath, "Windows/common04"))
-                        && CanPreviewWithoutCommon04(manager, info);
-                    for (int i = 0; i < persistentDependencies.Length; i++)
-                    {
-                        string dependency = persistentDependencies[i];
-                        if (IsUnbuiltLocalCustomDependency(setName, dependency)
-                            || (dependency == "common04" && skipCommon04))
-                            skippedDependencies.Add(dependency);
-                        else
-                            runtimeDependencies.Add(dependency);
-                    }
-                    if (skippedDependencies.Count > 0)
-                    {
-                        info.dependencies = runtimeDependencies.ToArray();
-                        filteredDependencies = true;
-                        LayoutEditorLog.LogWarning("[pseudo-reload] Init 临时跳过未构建的本地自定义 bundle："
-                            + string.Join(", ", skippedDependencies.ToArray())
-                            + "；LevelInfoSO.dependencies 将在 Init 后恢复");
-                    }
-                }
-            }
-
+            LayoutEditorAssetBundleLifetime.ClearStaleState(manager, info != null ? info.dependencies : null);
             // PreloadAndSeed also traverses dependencies; filter before it as well as Init.
             var bundleField = manager.GetType().GetField("bundleDict", BindingFlags.Instance | BindingFlags.NonPublic);
             var bundles = bundleField != null
@@ -672,6 +697,9 @@ public static class LayoutEditorPseudoReload
             }
             else if (ManagerHasManifest(manager))
                 LayoutEditorLog.Log("[preview-init] Existing manifest/bundle set; skip duplicate preload");
+            // Assign the native manifest and load dependencies before recipe/atlas access,
+            // including scenes where the dispenser preloader has nothing to do.
+            LayoutEditorAssetBundleLifetime.EnsureBundlesLoaded(manager);
             HealSpecialDispenserRuntimesInScene();
             // Local cloned nodes can retain atlas references from bundles unloaded by DeInit.
             foreach (var dispenser in UnityEngine.Object.FindObjectsOfType<PseudoPrefabDispenserStub>())
@@ -729,12 +757,6 @@ public static class LayoutEditorPseudoReload
         finally
         {
             CallingOriginalInit = previousCallingOriginal;
-            if (filteredDependencies && info != null)
-            {
-                info.dependencies = persistentDependencies;
-                LayoutEditorLog.Log("[pseudo-reload] Restored dependencies: "
-                    + string.Join(", ", info.dependencies));
-            }
         }
         LayoutEditorDispenserIconFix.SyncSeededIcons();
         LayoutEditorLog.Log("[dispenser-icon] SafeReinit: end");
@@ -746,75 +768,20 @@ public static class LayoutEditorPseudoReload
         string path = AssetDatabase.GetAssetPath(info);
         string[] parts = (path ?? "").Replace('\\', '/').Split('/');
         return parts.Length > 2 && parts[0] == "Assets" && parts[1] == "LevelSets"
-            ? parts[2]
-            : "";
+            ? parts[2] : "";
     }
 
     private static bool ManagerHasManifest(PseudoPrefabManager manager)
     {
-        var field = typeof(PseudoPrefabManager).GetField("assetBundleManifest",
-            BindingFlags.Instance | BindingFlags.NonPublic);
-        return field != null && field.GetValue(manager) != null;
+        return LayoutEditorAssetBundleLifetime.HasManifest(manager);
     }
 
-    private static bool CanPreviewWithoutCommon04(PseudoPrefabManager manager, LevelInfoSO info)
+    internal static string[] GetPreviewDependencies(PseudoPrefabManager manager, LevelInfoSO info)
     {
-        var roots = new List<UnityEngine.Object>();
-        roots.Add(info);
-        // OnEnable runs before Scene.isLoaded, when GetRootGameObjects throws.
-        var scene = manager.gameObject.scene;
-        foreach (var go in Resources.FindObjectsOfTypeAll<GameObject>())
-            if (go.scene == scene && go.transform.parent == null)
-                roots.Add(go);
-        // Include disk references too: restoration may not have created every root yet.
-        if (!string.IsNullOrEmpty(scene.path))
-        foreach (var path in AssetDatabase.GetDependencies(scene.path, true))
-        {
-            var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
-            if (asset != null)
-                roots.Add(asset);
-        }
-        var dependencies = EditorUtility.CollectDependencies(roots.ToArray());
-        int inspected = 0;
-        bool safe = true;
-        foreach (var dependency in dependencies)
-        {
-            var so = dependency as PseudoPrefabSO;
-            if (so == null)
-                continue;
-            string path = AssetDatabase.GetAssetPath(so);
-            if (!path.StartsWith("Assets/common04/", StringComparison.Ordinal)
-                && so.bundleName != "common04")
-                continue;
-            inspected++;
-            LayoutEditorLog.Log("[pseudo-reload] common04 SO: " + path + " name=" + so.name
-                + " direct=" + (so.asset != null) + " bundle=" + so.bundleName);
-            if (so.bundleName == "common04")
-                safe = false;
-        }
-        LayoutEditorLog.Log("[pseudo-reload] common04 audit: inspected=" + inspected
-            + " requiresBundle=" + !safe);
-        return safe;
+        return LayoutEditorNativeDependencies.Filter(info.dependencies);
     }
 
-    private static bool IsUnbuiltLocalCustomDependency(string setName, string dependency)
-    {
-        if (string.IsNullOrEmpty(dependency))
-            return false;
-        string prefix = setName + "/";
-        if (!dependency.StartsWith(prefix, StringComparison.Ordinal))
-            return false;
-        string bundleName = dependency.Substring(prefix.Length);
-        if (bundleName != "custom_content" && bundleName != "custom_recipes")
-            return false;
-        string bundlePath = Path.Combine(Application.streamingAssetsPath, "Windows/" + dependency)
-            .Replace('\\', '/');
-        return !File.Exists(bundlePath)
-            && AssetDatabase.IsValidFolder("Assets/LevelSets/" + setName + "/" + bundleName);
-    }
-
-    /// <summary>若本关卡集的自定义菜谱 bundle 已构建，则补入 levelInfo.dependencies，
-    ///  保证宿主原版 PseudoPrefabManager 在 Init 时能加载它；未构建时不写入（避免异常）。</summary>
+    /// <summary>Clean legacy load declarations and sync native scene references.</summary>
     private static void EnsureCustomBundleDependency(PseudoPrefabManager manager)
     {
         var info = manager.stub != null ? manager.stub.levelInfo : null;
@@ -822,24 +789,7 @@ public static class LayoutEditorPseudoReload
             return;
         // commonW6 已切换为 bundle 引用：Init 前补齐 SO 指向的游戏 bundle。
         LayoutEditorCommonW6Dependencies.SyncForScene(SceneManager.GetActiveScene(), info);
-        var assetPath = AssetDatabase.GetAssetPath(info);
-        var parts = (assetPath ?? "").Replace('\\', '/').Split('/');
-        if (parts.Length <= 2 || parts[1] != "LevelSets")
-            return;
-        var customBundle = parts[2] + "/custom_recipes";
-        if (!LayoutEditorOptionalBundlePreflight.NeedsDedicatedBundle(parts[2], "custom_recipes"))
-            return; // An old product is not proof that source content still exists.
-        var deps = info.dependencies != null ? new List<string>(info.dependencies) : new List<string>();
-        if (deps.Contains(customBundle))
-            return;
-        var bundlePath = Path.Combine(Application.streamingAssetsPath, "Windows/" + customBundle).Replace('\\', '/');
-        if (!File.Exists(bundlePath))
-            return;
-        Undo.RecordObject(info, "Layout Editor Ensure Custom Bundle");
-        deps.Add(customBundle);
-        info.dependencies = deps.ToArray();
-        EditorUtility.SetDirty(info);
-        AssetDatabase.SaveAssets();
+        if (LayoutEditorNativeDependencies.Clean(info)) AssetDatabase.SaveAssets();
     }
 }
 

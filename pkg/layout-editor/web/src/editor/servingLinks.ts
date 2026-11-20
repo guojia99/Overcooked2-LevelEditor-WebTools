@@ -97,6 +97,7 @@ export function servingBoundReturns(s: EditorItem): string[] {
 export function setServingReturns(s: EditorItem, ids: string[]): void {
   s.stubKind = "ServingStation";
   s.servingStation = {
+    ...s.servingStation,
     plateReturnInstanceIds: ids,
     plateReturnInstanceId: ids[0] ?? "",
   };

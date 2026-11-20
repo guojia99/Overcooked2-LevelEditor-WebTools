@@ -19,6 +19,42 @@
   },
   "tools": [
     {
+      "name": "oc2_save_level_respawn_bounds",
+      "description": "assetPath/enableRespawnBounds:boolean/confirm=true；GET /api/level 合并完整基础标量，POST /api/level/info 显式 updateEnableRespawnBounds=true，再 GET 验证。stdio 与 Unity HTTP 同契约，不自动重试。",
+      "category": "level", "sideEffect": "write_asset", "estimatedMs": 30000, "deadlineMs": 180000,
+      "safeToRetry": false, "requiresConfirmation": true
+    },
+    {
+      "name": "oc2_save_native_scripted_recipes",
+      "description": "assetPath/playerCount:1..4/scriptedRecipes:GUID[]/confirm=true；仅 Campaign。保留顺序重复，[] 清空，缺省/null 拒绝。GET 详情合并指定人数完整标量，仅 POST 此 config_Np，再 GET 逐项验证。不清除 Web 序列、不自动重试。stdio 与 Unity HTTP 同契约。",
+      "category": "level", "sideEffect": "write_asset", "estimatedMs": 30000, "deadlineMs": 180000,
+      "safeToRetry": false, "requiresConfirmation": true
+    },
+    {
+      "name": "oc2_get_level_mode_config",
+      "description": "读取原生模式、阶段/1P-4P波次和 common04 六种敌人目录；Web partLevel 独立。支持 stdio 与 HTTP /api/mcp。",
+      "category": "level", "sideEffect": "read", "estimatedMs": 5000, "deadlineMs": 30000,
+      "safeToRetry": true
+    },
+    {
+      "name": "oc2_save_level_mode_config",
+      "description": "config=完整 Dynamic/Horde DTO，confirm=true；POST /api/level/mode-config，移除只读 enemies，2 MiB 上限，同步本关专属 SO；不切模式，强制 GET 读回核对。读回失败也禁止自动重试。",
+      "category": "level", "sideEffect": "write_asset", "estimatedMs": 30000, "deadlineMs": 180000,
+      "safeToRetry": false, "requiresConfirmation": true
+    },
+    {
+      "name": "oc2_change_level_mode",
+      "description": "assetPath/gameMode/convertHordeObjects?/confirm=true；POST /api/level/mode，convertHordeObjects 精确布尔默认 false。仅用户明确同意 true 才原子双向转换受支持普通 ServingStation/Horde Service_Window wrapper，保留原 GO/位置/名称/回收绑定，改变外观及组件；不得自动开启。金币 gate 不转换，切出前先删除；Horde 允许无金币 gate，仍需激活窗且无普通口。切出用 true 转换最后 Horde 窗，勿预删。场景干净且唯一 Manager，Dynamic 需 N-1 原生有效 transition；partLevel.enabled 拒切 Dynamic/Horde。GET 模式及详情读回。",
+      "category": "level", "sideEffect": "write_scene", "estimatedMs": 30000, "deadlineMs": 180000,
+      "safeToRetry": false, "requiresConfirmation": true
+    },
+    {
+      "name": "oc2_create_level",
+      "description": "setName/levelId/levelName?/levelNameZH?/gameMode?/confirm=true；POST /api/level/create，gameMode 默认 Campaign，可选 Dynamic/Horde。列表解析真实路径后 GET 模式/详情验证，不可盲重试。",
+      "category": "level", "sideEffect": "write_scene", "estimatedMs": 30000, "deadlineMs": 180000,
+      "safeToRetry": false, "requiresConfirmation": true
+    },
+    {
       "name": "oc2_editor_health",
       "category": "discovery",
       "sideEffect": "read",
@@ -86,6 +122,7 @@
     },
     {
       "name": "oc2_analyze_level_dependencies",
+      "description": "仅分析原生 ^bundle[0-9]+$ 依赖；读取时自动清理并保存历史非法 dependencies。共享依赖包分发清单独立管理。",
       "category": "dependencies",
       "sideEffect": "compute",
       "estimatedMs": 10000,
@@ -202,7 +239,7 @@
     },
     {
       "name": "oc2_start_export",
-      "description": "启动增量导出，自动预检空可选包。levels 仅交付关卡且不 staging 运行时；all/deps 携带依赖闭包。构建 map 保留可达共享资源归属。单集/多集/deps 共用 mode 与 stages 快照，deps 不适用阶段为 skipped。立即返回后轮询至 restore 收尾及 status=done/error，失败不重复启动；需要 confirm=true。",
+      "description": "启动导出，接受响应含后端 exportId，状态持续携带同一 ID。编译挂起重载继续，其他阶段重载明确 error 并恢复场景和备份。启动响应不确定时先读状态，禁止自动重放 POST。",
       "category": "export",
       "sideEffect": "build",
       "estimatedMs": 300000,
@@ -213,7 +250,7 @@
     },
     {
       "name": "oc2_get_export_status",
-      "description": "查询 SetExportStatusDto 线程安全深拷贝快照：mode；stages[] 每行 phase/state(waiting|running|done|error|skipped)/elapsedMs/completed/total/message。固定行序 queued、starting、compile、preflight、orphan-clean、dual-stub-clean、prepare、build、package、zip、restore。只按后端快照展示进度/耗时，total=0 用不确定条；prepare 为真实已完成 n/N，非当前处理索引，不按历史耗时估预算。失败原阶段保持 error，restore 独立运行后终态 error，面板保留可关闭。缺 stages 的旧后端仅文字；idle/断网保留已知行，不推断完成。compile 域重载由 SessionState 恢复累计，仅重载缺口用 UTC 墙钟，其余用 Stopwatch。每 2 秒轮询至 restore 收尾及 status=done/error；zip 不代表完成。",
+      "description": "查询包含 exportId、mode、stages 的后台状态快照。单次请求应设超时；断线/idle 不代表完成，核对任务 ID 后继续轮询至 restore 收尾及 done/error。",
       "category": "export",
       "sideEffect": "read",
       "estimatedMs": 1000,

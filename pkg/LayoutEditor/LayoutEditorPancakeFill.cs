@@ -14,9 +14,9 @@ public static class LayoutEditorPancakeFill
 
     public static bool HasPlainPancake(LevelInfoSO info)
     {
-        if (info == null || info.recipes == null)
+        if (info == null)
             return false;
-        foreach (var recipe in info.recipes)
+        foreach (var recipe in LayoutEditorLevelModeStore.CollectAllRecipes(info))
         {
             // Decorative SOs and custom/flavoured recipes must not enable this fix.
             if (recipe is PseudoPrefabSORecipe && string.Equals(
@@ -51,8 +51,9 @@ public static class LayoutEditorPancakeFill
 
         // Register through the normal gated collector, including for old scenes.
         var deps = info.dependencies ?? new string[0];
-        if ((Array.IndexOf(deps, "commonW5") < 0 && LayoutEditorCatalogApi.BundleFileExists("commonW5"))
-            || (Array.IndexOf(deps, "bundle18") < 0 && LayoutEditorCatalogApi.BundleFileExists("bundle18")))
+        // Shared commonW5 delivery is separate; it must never enter dependencies
+        // or keep this native dependency repair firing on every scene reload.
+        if (Array.IndexOf(deps, "bundle18") < 0 && LayoutEditorCatalogApi.BundleFileExists("bundle18"))
             LayoutEditorCustomIngredients.EnsureWebDependencies(null, info);
 
         var batter = AssetDatabase.LoadAssetAtPath<PseudoPrefabSORecipe>(BatterAssetPath);
@@ -131,7 +132,7 @@ public static class LayoutEditorPancakeFill
 
     private static string EmptyPanRestrictionReason(LevelInfoSO info)
     {
-        foreach (var recipe in info.recipes)
+        foreach (var recipe in LayoutEditorLevelModeStore.CollectAllRecipes(info))
         {
             string id = Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(recipe));
             var original = recipe as PseudoPrefabSORecipe;

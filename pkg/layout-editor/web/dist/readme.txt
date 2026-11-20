@@ -14,8 +14,8 @@ OC2DIYLevelRuntimeWLoader
   package_version.txt   依赖包打包版本 + 打包时间/环境 + 全部文件 MD5（排查用）
   version.txt           Loader.dll / debugLog.dll 的构建版本（build.sh 生成）
 
-  依赖包打包版本独立于 Loader 版本与关卡集版本，仅用于辨识依赖包是否需要更新：
-  只要打包版本不变，装一次即可长期复用；版本递增后重新解压覆盖安装。
+  依赖包打包版本独立于 Loader 版本与关卡集版本，仅用于依赖包文件名和构建追溯；
+  同一打包版本的文件内容仍可能更新，更新依赖包时请按发布说明覆盖安装。
 
 主要功能
 --------

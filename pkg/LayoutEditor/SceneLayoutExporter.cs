@@ -568,6 +568,7 @@ public static class SceneLayoutExporter
             if (prefabAsset == null)
                 continue;
 
+            prefabAsset = LayoutEditorLevelModeChange.ResolveStationPrefab(go, prefabAsset);
             var assetPath = AssetDatabase.GetAssetPath(prefabAsset);
             var guid = AssetDatabase.AssetPathToGUID(assetPath);
             var parentPath = t.parent != null

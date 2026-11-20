@@ -314,6 +314,11 @@ public static class LayoutEditorBunSwapApi
                 skipped.Add(p + "：资产不存在或不是自定义菜谱");
                 continue;
             }
+            if (!LayoutEditorOptionalRecipe.CanEdit(so))
+            {
+                skipped.Add(p + "：此类型暂不支持 Web 编辑：" + so.GetType().Name);
+                continue;
+            }
 
             var hits = new List<int>();
             var comps = so.compositionSOs;

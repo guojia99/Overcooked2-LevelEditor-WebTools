@@ -1,8 +1,44 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 13,
   "itemCount": 200,
   "items": [
+    {
+      "id": "p_dlc5_road_white_line_01",
+      "guid": "bf4ae7a5611ba77b09e35ad8b2fa787f",
+      "assetPath": "Assets/commonW2/prefabs/dlc05/art/dlc05_camping/p_dlc5_road_white_line_01.prefab",
+      "category": "art",
+      "theme": "dlc05_camping",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC5 路白线 1",
+      "nameEn": "dlc5 road white line 1",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
+    {
+      "id": "p_dlc5_road_white_line_01_c6d6f3dd_be0fb4b5",
+      "guid": "be0fb4b512907f1756af933d6f3d5409",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/city/p_dlc5_road_white_line_01_c6d6f3dd_be0fb4b5.prefab",
+      "category": "art",
+      "theme": "city",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "DLC5 路白线 1",
+      "nameEn": "dlc5 road white line 1",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
     {
       "id": "p_dlc5_road_yellow_x_01",
       "guid": "c7f4a039beebf8da2066e3796cee41fc",
@@ -4045,48 +4081,6 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 庭院卵石边缘 5",
       "nameEn": "dlc7 courtyard cobble edge 5",
-      "typeKind": "ground",
-      "usage": "flooring",
-      "icon": false
-    },
-    {
-      "id": "p_dlc7_courtyard_cobble_edge_06",
-      "guid": "25f80e51b59345746bc20a1d80f57c85",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc7_courtyard_cobble_edge_06.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.6835654973983765
-      },
-      "height": 0.684,
-      "baseY": -0.342,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院卵石边缘 6",
-      "nameEn": "dlc7 courtyard cobble edge 6",
-      "typeKind": "ground",
-      "usage": "flooring",
-      "icon": false
-    },
-    {
-      "id": "p_dlc7_courtyard_cobble_edge_06",
-      "guid": "f1674c960bb69f6c40d702dcee219f41",
-      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc7_courtyard_cobble_edge_06.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.6835654973983765
-      },
-      "height": 0.684,
-      "baseY": -0.342,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 庭院卵石边缘 6",
-      "nameEn": "dlc7 courtyard cobble edge 6",
       "typeKind": "ground",
       "usage": "flooring",
       "icon": false

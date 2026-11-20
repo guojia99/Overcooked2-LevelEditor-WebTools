@@ -1,8 +1,49 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 3,
   "itemCount": 200,
   "items": [
+    {
+      "id": "ladder_02",
+      "guid": "12f886b85a646d01a8dd8155e5e64e4e",
+      "assetPath": "Assets/common03/prefabs/art/dlc11_summer/ladder_02.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2,
+        "sizeY": 3.0805649757385254
+      },
+      "height": 3.081,
+      "baseY": -1.665,
+      "layoutTier": "decor",
+      "nameZh": "梯子 2",
+      "nameEn": "ladder 2",
+      "typeKind": "building",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "lantern_suspended_01",
+      "guid": "12d359167eafaa54a8de31bc0702301a",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/lantern_suspended_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 2,
+        "sizeY": 2.130157947540283
+      },
+      "height": 2.13,
+      "layoutTier": "decor",
+      "nameZh": "悬挂灯笼 1",
+      "nameEn": "lantern suspended 1",
+      "typeKind": "lighting",
+      "usage": "ambience",
+      "icon": false
+    },
     {
       "id": "Large Water_6f20a89c_ff2bcb64",
       "guid": "ff2bcb64e207b3184dc5a1542b86237d",
@@ -4055,48 +4096,6 @@
       "layoutTier": "decor",
       "nameZh": "DLC3 冰崖转角 270°",
       "nameEn": "dlc3 icecliff 270",
-      "typeKind": "rock",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "m_dlc3_icecliff_90",
-      "guid": "a219a44b013140f4d9468fd3195ee012",
-      "assetPath": "Assets/common01/prefabs/art/dlc03_christmas/m_dlc3_icecliff_90.prefab",
-      "category": "art",
-      "theme": "dlc03_christmas",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2.0651559829711914
-      },
-      "height": 2.065,
-      "baseY": -2.065,
-      "layoutTier": "decor",
-      "nameZh": "DLC3 冰崖转角 90°",
-      "nameEn": "dlc3 icecliff 90",
-      "typeKind": "rock",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "m_dlc3_icecliff_90",
-      "guid": "0ba2d4b5c6ee64e42942016cfe78a036",
-      "assetPath": "Assets/common03/prefabs/art/dlc03_christmas/m_dlc3_icecliff_90.prefab",
-      "category": "art",
-      "theme": "dlc03_christmas",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2.0651559829711914
-      },
-      "height": 2.065,
-      "baseY": -2.065,
-      "layoutTier": "decor",
-      "nameZh": "DLC3 冰崖转角 90°",
-      "nameEn": "dlc3 icecliff 90",
       "typeKind": "rock",
       "usage": "dressing",
       "icon": false

@@ -54,7 +54,12 @@ using LevelEditorStub;
 
 namespace UnityEngine
 {
-    public class Object { public string name; }
+    public class Object
+    {
+        public string name;
+        public static T Instantiate<T>(T original) where T : Object { return (T)original.MemberwiseClone(); }
+        public static void DestroyImmediate(Object value) { }
+    }
     public class ScriptableObject : Object { }
     public class Component : Object { public GameObject gameObject; public Transform transform { get { return gameObject.transform; } } }
     public class Transform { public GameObject gameObject; public bool ManagerEnvironment; }
@@ -114,6 +119,8 @@ namespace LevelEditorStub
     { public ScriptableObject[] compositionSOs, optionalSOs; public PseudoPrefabSO cookingStepSO, platingStepSO; }
     public class LevelInfoSO : ScriptableObject
     {
+        public enum LevelType { Campaign, Dynamic, Horde }
+        public LevelType levelType;
         public ScriptableObject[] recipes, optionalRecipeMatchListItems;
         public PseudoPrefabSO[] allIngredients, allCookingSteps, includeRecipeMatchLists;
         public string[] dependencies;
@@ -138,6 +145,9 @@ namespace UnityEditor
         { UnityEngine.Object o; return Assets.TryGetValue(path, out o) ? o as T : null; }
         public static string GetAssetPath(UnityEngine.Object value)
         { foreach (var pair in Assets) if (object.ReferenceEquals(pair.Value, value)) return pair.Key; return ""; }
+        public static string[] GetDependencies(string[] paths, bool recursive)
+        { return (string[])paths.Clone(); }
+        public static string GetImplicitAssetBundleName(string path) { return ""; }
     }
     public static class Undo
     { public static readonly List<object> Recorded = new List<object>(); public static void RecordObject(object o, string label) { Recorded.Add(o); } }
@@ -217,6 +227,15 @@ static class LayoutEditorSaladSauceFactory
 {
     public static void SyncOptionals(LevelInfoSO info) { }
     public static void AddDependencies(LevelInfoSO info, List<string> deps) { }
+}
+static class LayoutEditorLevelModeStore
+{
+    public static ScriptableObject[] CollectAllRecipes(LevelInfoSO info)
+    { return info.recipes ?? new ScriptableObject[0]; }
+    public static PseudoPrefabSO[] CollectHordeEnemies(LevelInfoSO info)
+    { return new PseudoPrefabSO[0]; }
+    public static ScriptableObject[] CollectModeReferences(LevelInfoSO info)
+    { throw new Exception("Unexpected native mode references in Campaign pancake fixture"); }
 }
 static class LayoutEditorCatalogApi
 {
@@ -414,11 +433,12 @@ class Tests
             Case("production gated dependencies mask=" + mask, delegate {
                 if ((mask & 1) != 0) LayoutEditorCatalogApi.Bundles.Add("commonW5");
                 if ((mask & 2) != 0) LayoutEditorCatalogApi.Bundles.Add("bundle18");
-                var p = Pan(); var info = Info(); info.dependencies = new[] { "keep", "keep", "other/custom_recipes" };
+                var p = Pan(); var info = Info(); info.dependencies = new[] { "bundle47", "bundle47", "other/custom_recipes" };
                 var scene = Scene(info, p.gameObject); LayoutEditorPancakeFill.SyncForScene(scene, info);
-                Check(string.Join(",", info.dependencies).StartsWith("keep,keep,other/custom_recipes", StringComparison.Ordinal), "dependencies replaced");
-                Check((Array.IndexOf(info.dependencies, "commonW5") >= 0) == ((mask & 1) != 0)
-                    && (Array.IndexOf(info.dependencies, "bundle18") >= 0) == ((mask & 2) != 0), "missing bundle registered or existing bundle omitted");
+                Check(string.Join(",", info.dependencies) == ((mask & 2) != 0 ? "bundle47,bundle18" : "bundle47,bundle47,other/custom_recipes"),
+                    "repair preserves native order, deduplicates and filters legacy declarations only when the native bundle exists");
+                Check(Array.IndexOf(info.dependencies, "commonW5") < 0
+                    && (Array.IndexOf(info.dependencies, "bundle18") >= 0) == ((mask & 2) != 0), "shared bundle registered or native bundle gate ignored");
                 var before = info.dependencies; int dirty = EditorUtility.Dirty.Count;
                 LayoutEditorPancakeFill.SyncForScene(scene, info);
                 Check(object.ReferenceEquals(before, info.dependencies) && dirty == EditorUtility.Dirty.Count, "dependency repeat writes");
@@ -427,7 +447,7 @@ class Tests
             LayoutEditorCatalogApi.Bundles.Add("commonW5"); LayoutEditorCatalogApi.Bundles.Add("bundle18");
             var p = Pan(); var info = Info(Recipe("Burger_Plain_SO")); info.dependencies = null;
             Check(LayoutEditorPancakeFill.SyncForScene(Scene(info, p.gameObject), info) == 0, "mixed pan changed");
-            Check(string.Join(",", info.dependencies) == "commonW5,bundle18", "null deps not repaired"); NoPanWrites();
+            Check(string.Join(",", info.dependencies) == "bundle18", "null deps repaired with native bundles only"); NoPanWrites();
         });
         foreach (var id in new[] { "plain-only", "Burger_Plain_SO", "Pasta_MeatOnly_SO" })
             Case("missing knowledge JSON uses conservative production fallback: " + id, delegate {
@@ -463,7 +483,8 @@ def source_contracts():
         method = extract(reload, r"    public static void " + name + r"\(")
         before(method, call, next_call, name + " sync precedes reload/native reinit")
     safe = extract(reload, r"    internal static void SafeInit\(")
-    before(safe, call, "string[] persistentDependencies", "SafeInit sync precedes dependency snapshot")
+    before(safe, call, "LayoutEditorNativeDependencies.Clean(info)", "SafeInit sync precedes native dependency cleanup")
+    before(safe, "LayoutEditorNativeDependencies.Clean(info)", "LayoutEditorAssetBundleLifetime.ClearStaleState(", "SafeInit cleans dependencies before stale-state repair")
     before(safe, call, "LayoutEditorDispenserIconFix.PreloadAndSeed", "SafeInit sync precedes preload")
     before(safe, call, "manager.Init();", "SafeInit sync precedes native Init")
     guard = (EDITOR / "LayoutEditorDependencyRepair.cs").read_text(encoding="utf-8-sig")
@@ -532,7 +553,7 @@ def main():
     dependencies += [extract(ingredients, r"    public static void EnsureWebDependencies\(string levelSet, LevelInfoSO info\)"),
                      extract(ingredients, r"    public static void EnsureWebDependencies\(string levelSet, LevelInfoSO info, bool replaceExisting\)")]
     dependencies += [extract(ingredients, r"    private static [^\n]+\b" + name + r"\(")
-                     for name in ("AddDependency", "ReadBundleNameField")]
+                     for name in ("EnsureWebDependenciesCore", "DependencyRecipes", "AddDependency", "ReadBundleNameField")]
     doubles = DOUBLES.replace("__TYPE__", extract(catalog, r"    internal static string RecipeTypeOf\("))
     doubles = doubles.replace("__DEPENDENCIES__", "\n".join(dependencies))
     dtos = "\n".join(extract(models, r"public class " + name + r"\b")
@@ -542,7 +563,9 @@ def main():
     with tempfile.TemporaryDirectory(prefix="plain-pancake-backend-", dir=temp_parent) as temp:
         directory = Path(temp)
         (directory / "NuGet.Config").write_text('<configuration><packageSources><clear /></packageSources></configuration>', encoding="utf-8")
-        (directory / "Program.cs").write_text(doubles + dtos + TESTS, encoding="utf-8")
+        native = extract((EDITOR / "LayoutEditorNativeDependencies.cs").read_text(encoding="utf-8-sig"),
+                         r"public static class LayoutEditorNativeDependencies\b")
+        (directory / "Program.cs").write_text(doubles + native + dtos + TESTS, encoding="utf-8")
         for name in ("LayoutEditorPancakeFill.cs", "LayoutEditorRecipeKnowledge.cs"):
             (directory / name).write_text((EDITOR / name).read_text(encoding="utf-8-sig"), encoding="utf-8")
         (directory / "Checks.csproj").write_text(

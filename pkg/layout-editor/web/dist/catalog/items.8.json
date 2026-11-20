@@ -1,8 +1,48 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 8,
   "itemCount": 200,
   "items": [
+    {
+      "id": "p_dlc07_large_window_stainglass_01",
+      "guid": "6178dcec65c75e44bb44315fdee7852c",
+      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/throne/p_dlc07_large_window_stainglass_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 2,
+        "sizeY": 10.657173156738281
+      },
+      "height": 10.657,
+      "layoutTier": "decor",
+      "nameZh": "DLC07 大窗彩绘玻璃 1",
+      "nameEn": "dlc07 large window stainglass 1",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_large_window_stainglass_02",
+      "guid": "1aaa991eb9c76e941b79bffa6cd49594",
+      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/throne/p_dlc07_large_window_stainglass_02.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 2,
+        "sizeY": 10.657173156738281
+      },
+      "height": 10.657,
+      "layoutTier": "decor",
+      "nameZh": "DLC07 大窗彩绘玻璃 2",
+      "nameEn": "dlc07 large window stainglass 2",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
     {
       "id": "p_dlc07_liftbase_01",
       "guid": "8ceb313727b672249a3e3e1574730ea4",
@@ -4028,48 +4068,6 @@
       "nameEn": "dlc07 Wall Window",
       "typeKind": "building",
       "usage": "enclosure",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_weapon_stand_01",
-      "guid": "655cb43ae8f792045b423c92df91bff8",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/dressing_assets/p_dlc07_weapon_stand_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 2,
-        "sizeY": 2.3440542221069336
-      },
-      "height": 2.344,
-      "baseY": 0.01,
-      "layoutTier": "decor",
-      "nameZh": "DLC07 武器架 1",
-      "nameEn": "dlc07 weapon stand 1",
-      "typeKind": "other",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_weapon_stand_01",
-      "guid": "ddbd44a0c21ec95ed58e95920b264595",
-      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_weapon_stand_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 2,
-        "sizeY": 2.3440542221069336
-      },
-      "height": 2.344,
-      "baseY": 0.01,
-      "layoutTier": "decor",
-      "nameZh": "DLC07 武器架 1",
-      "nameEn": "dlc07 weapon stand 1",
-      "typeKind": "other",
-      "usage": "dressing",
       "icon": false
     }
   ]

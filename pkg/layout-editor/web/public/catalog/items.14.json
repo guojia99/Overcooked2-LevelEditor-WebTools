@@ -1,8 +1,50 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 14,
   "itemCount": 200,
   "items": [
+    {
+      "id": "p_dlc7_courtyard_cobble_edge_06",
+      "guid": "25f80e51b59345746bc20a1d80f57c85",
+      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/courtyard/p_dlc7_courtyard_cobble_edge_06.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.6835654973983765
+      },
+      "height": 0.684,
+      "baseY": -0.342,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院卵石边缘 6",
+      "nameEn": "dlc7 courtyard cobble edge 6",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
+    {
+      "id": "p_dlc7_courtyard_cobble_edge_06",
+      "guid": "f1674c960bb69f6c40d702dcee219f41",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc7_courtyard_cobble_edge_06.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.6835654973983765
+      },
+      "height": 0.684,
+      "baseY": -0.342,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 庭院卵石边缘 6",
+      "nameEn": "dlc7 courtyard cobble edge 6",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
     {
       "id": "p_dlc7_courtyard_cobble_edge_07",
       "guid": "1dd3d9d353871814f8171bdb5a4a0ea9",
@@ -4094,48 +4136,6 @@
       "layoutTier": "decor",
       "nameZh": "屋顶瓦转角 3",
       "nameEn": "rooftiles corner 3",
-      "typeKind": "ground",
-      "usage": "flooring",
-      "icon": false
-    },
-    {
-      "id": "rooftiles_corner_04",
-      "guid": "9ab4f048ae465fa0446672be67dfab93",
-      "assetPath": "Assets/common03/prefabs/art/dlc11_summer/rooftiles_corner_04.prefab",
-      "category": "art",
-      "theme": "dlc11_summer",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.1131752729415894
-      },
-      "height": 1.113,
-      "baseY": -0.553,
-      "layoutTier": "decor",
-      "nameZh": "屋顶瓦转角 4",
-      "nameEn": "rooftiles corner 4",
-      "typeKind": "ground",
-      "usage": "flooring",
-      "icon": false
-    },
-    {
-      "id": "rooftiles_straight_01",
-      "guid": "7255be0d6c1056b4587a18606a872cc1",
-      "assetPath": "Assets/common01/prefabs/art/city_sushi/rooftiles_straight_01.prefab",
-      "category": "art",
-      "theme": "city_sushi",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.117577314376831
-      },
-      "height": 1.118,
-      "baseY": -0.474,
-      "layoutTier": "decor",
-      "nameZh": "直瓦屋顶",
-      "nameEn": "rooftiles straight 1",
       "typeKind": "ground",
       "usage": "flooring",
       "icon": false

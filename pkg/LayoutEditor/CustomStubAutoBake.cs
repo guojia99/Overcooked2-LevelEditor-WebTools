@@ -253,6 +253,6 @@ public static class CustomStubAutoBake
     {
         return EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling
             || EditorApplication.isUpdating || BuildPipeline.isBuildingPlayer
-            || LayoutEditorPseudoReload.ExportBuildInProgress;
+            || LayoutEditorPseudoReload.ExportBuildInProgress || LayoutEditorSetExporter.IsExportActive;
     }
 }

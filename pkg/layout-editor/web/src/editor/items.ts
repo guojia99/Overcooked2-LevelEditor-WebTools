@@ -28,7 +28,7 @@ import {
   EditorItem,
   EditorFloor
 } from "./state";
-import type { LayoutItem } from "../types";
+import { normalizeHordeStub } from "./hordeStub";
 import {
   itemLayerOfIt,
   isBackgroundPlaneCat,
@@ -144,6 +144,7 @@ function migrateAirWallScale(raw: LayoutItem): void {
 }
 
 export function enrichItem(raw: LayoutItem, editorKey: string): EditorItem {
+  normalizeHordeStub(raw);
   // 历史场景里的裸 pushable_object（载体，无锅）已删除：迁移到可推动大火锅包装器。
   if (raw.prefabAssetPath === "Assets/common03/prefabs/core/mechanisms/pushable_object.prefab") {
     // 迁移目标随 common03 正式版重组迁至 commonW1（GUID 不变，场景引用不断）
@@ -780,6 +781,7 @@ export function addFromCatalog(
     _parentWx: 0,
     _parentWz: 0,
   };
+  normalizeHordeStub(item);
   syncItemLocalFromEditor(item);
   item.localPosition.y = baseY;
   // 分 P：新建物件归入当前 P（P 层内默认 partScoped）。

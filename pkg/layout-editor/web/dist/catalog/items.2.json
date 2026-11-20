@@ -1,8 +1,48 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 2,
   "itemCount": 200,
   "items": [
+    {
+      "id": "exterior_road_01",
+      "guid": "edea3814fed09f74f8df7abc7f2e619c",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/exterior_road_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 5.329070200563396e-16
+      },
+      "height": 0,
+      "layoutTier": "decor",
+      "nameZh": "马路",
+      "nameEn": "exterior road 1",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
+    {
+      "id": "exterior_road_centre_01",
+      "guid": "9d544e73669857c42b81e3e6f161ed46",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/exterior_road_centre_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 5.329070200563396e-16
+      },
+      "height": 0,
+      "layoutTier": "decor",
+      "nameZh": "马路中央",
+      "nameEn": "exterior road centre 1",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
     {
       "id": "exterior_road_crossing_01",
       "guid": "cc5a9ddc2f27c7645917e9da46164756",
@@ -4107,47 +4147,6 @@
       "nameEn": "ladder 1",
       "typeKind": "building",
       "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "ladder_02",
-      "guid": "12f886b85a646d01a8dd8155e5e64e4e",
-      "assetPath": "Assets/common03/prefabs/art/dlc11_summer/ladder_02.prefab",
-      "category": "art",
-      "theme": "dlc11_summer",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 2,
-        "sizeY": 3.0805649757385254
-      },
-      "height": 3.081,
-      "baseY": -1.665,
-      "layoutTier": "decor",
-      "nameZh": "梯子 2",
-      "nameEn": "ladder 2",
-      "typeKind": "building",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "lantern_suspended_01",
-      "guid": "12d359167eafaa54a8de31bc0702301a",
-      "assetPath": "Assets/common01/prefabs/art/city_sushi/lantern_suspended_01.prefab",
-      "category": "art",
-      "theme": "city_sushi",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 2,
-        "sizeY": 2.130157947540283
-      },
-      "height": 2.13,
-      "layoutTier": "decor",
-      "nameZh": "悬挂灯笼 1",
-      "nameEn": "lantern suspended 1",
-      "typeKind": "lighting",
-      "usage": "ambience",
       "icon": false
     }
   ]

@@ -43,12 +43,10 @@ namespace OC2LevelRuntimeLoader
     ///     `[断点:闸门] 场景 … → 集=… 关卡=… 清单命中/未命中（特征=…）`——
     ///     直接解析 scene.path 与 WebManifest，不依赖 EntryPoint/Verbose，用于快速
     ///     区分「该关本就不适用 stub」与「导出清单漏项」；其余逻辑零变更。
-    /// v4.0.0（2026-11-10 首个发布版 · 收敛内部迭代 4.0.0–4.8.0）：**loader 逻辑
-    ///     零变更**，发布号统一为 4.0.0；原 4.0.1–4.8.0 全部并入本版，不再单独发号。
-    ///     包含：commonW5 增量库、清单键改名免疫（原 4.5.0，内部号 4.0.0.16）、
-    ///     屏幕点探针（原 4.5.0）、上游 sandwich/optional 同步（原 4.6.0，
-    ///     内部号 4.0.0.17）；其余 4.1–4.8 的运行时代码变更均在 CustomStub/EntryPoint
-    ///     侧，loader 仅同步版本号。
+    /// v4.1.0（2026-11-20）：汇总 4.0.0 发布后的 Loader 与导出修复；后续修复继续
+    ///     并入 4.1.0，不擅自增加发布号，只在本 changelog 记录内部修订号。
+    ///     包含：common01_textures 由上游 OC2DIYLevel 前置包提供，导出依赖闭包不再重复
+    ///     打包/加载该 bundle；以及 4.0.0 的全部功能与兼容行为。
     ///     ⚠ 兼容期截止：本版起不再为旧版导出集（有 requires.txt、无 stub_levels.txt）
     ///     生成 "集|*|legacy" 兼容条目，此类老集需重新导出；全新导出集不受影响
     ///     （3.5.0 起 stub_levels.txt 清单格式继续支持）。
@@ -236,7 +234,7 @@ namespace OC2LevelRuntimeLoader
     {
         public const string PluginGuid = "oc2.oc2diylevelruntimewloader";
         public const string PluginName = "OC2DIYLevelRuntimeWLoader";
-        public const string PluginVersion = "4.0.0";
+        public const string PluginVersion = "4.1.0";
 
         /// <summary>统一运行时 bundle 文件名（依赖包内，固定；不与关卡目录下的
         /// *_custom_runtime 混淆，也绝不叫裸 runtime）。</summary>

@@ -48,7 +48,7 @@ const source = read('layout-editor/scripts/build-catalog.mjs')
   .replace('path.dirname(fileURLToPath(import.meta.url))', JSON.stringify(__dirname))
   .replace(/main\(\);\s*$/, '');
 const build = vm.runInNewContext(source + '\n({scanRecipes, loadKnowledge, buildGuidIndex, loadDictionary, parseManualTable})',
-  {fs, path, console: {log() {}, warn() {}}}, {filename: buildFile});
+  {fs, path, process: {argv: []}, console: {log() {}, warn() {}}}, {filename: buildFile});
 const guidIndex = build.buildGuidIndex([
   'Assets/common01/food', 'Assets/common02/food', 'Assets/common03/food',
   'Assets/commonW3/custom_recipes/salad', 'Assets/commonW5/custom_recipes/pancake',

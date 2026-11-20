@@ -20,6 +20,12 @@ public static class LayoutEditorOptionalRecipe
         return so is ICustomRecipeOptional;
     }
 
+    /// <summary>未知 optional 仍是组装定义，但 Web 尚不能安全编辑其字段。</summary>
+    public static bool CanEdit(CustomRecipeSO so)
+    {
+        return so != null && (!IsAssembly(so) || !string.IsNullOrEmpty(KindOf(so)));
+    }
+
     public static bool IsAssemblyKind(string kind)
     {
         return kind == "burger" || kind == "pizza" || kind == "sandwich";

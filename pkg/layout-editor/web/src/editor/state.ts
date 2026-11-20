@@ -233,6 +233,8 @@ export const PX_PER_UNIT = 48;
 
 export const FOOTPRINT_BY_ID: Record<string, { cellsX: number; cellsZ: number }> = {
   ServingStation: { cellsX: 2, cellsZ: 1 },
+  Service_Window: { cellsX: 2, cellsZ: 1 },
+  gate: { cellsX: 2, cellsZ: 1 },
   // 所有水槽 2×1
   Sink: { cellsX: 2, cellsZ: 1 },
   SinkGlass: { cellsX: 2, cellsZ: 1 },

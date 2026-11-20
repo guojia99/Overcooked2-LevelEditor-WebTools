@@ -1,8 +1,50 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 5,
   "itemCount": 200,
   "items": [
+    {
+      "id": "mi_floor_01_1x10_5ac84420",
+      "guid": "5ac844205249fca2ea04a9e83b5809bf",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/mine/mi_floor_01_1x10_5ac84420.prefab",
+      "category": "art",
+      "theme": "mine",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "solid",
+      "nameZh": "mi 地板 1 1x10",
+      "nameEn": "mi floor 1 1x10",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
+    {
+      "id": "mi_floor_01_1x6",
+      "guid": "877d96be269c80561c822f0d4631f5db",
+      "assetPath": "Assets/commonW1/prefabs/core/art/mine/mi_floor_01_1x6.prefab",
+      "category": "art",
+      "theme": "mine",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 6,
+        "cellsZ": 1,
+        "sizeY": 2.664535364979494e-16
+      },
+      "height": 0,
+      "layoutTier": "floor",
+      "surfaceTier": "floor",
+      "surfaceKind": "solid",
+      "nameZh": "mi 地板 1 1x6",
+      "nameEn": "mi floor 1 1x6",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
     {
       "id": "mi_floor_01_1x6_e2b9cb7a",
       "guid": "e2b9cb7a5de3b2a127ab217029335362",
@@ -3980,46 +4022,6 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 拱门中段 4",
       "nameEn": "dlc07 arch middle 4",
-      "typeKind": "building",
-      "usage": "enclosure",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_arch_middle_04",
-      "guid": "c207d07c723099599110d6b6cae5e7b2",
-      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_arch_middle_04.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 4,
-        "cellsZ": 1,
-        "sizeY": 5.1021223068237305
-      },
-      "height": 5.102,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 拱门中段 4",
-      "nameEn": "dlc07 arch middle 4",
-      "typeKind": "building",
-      "usage": "enclosure",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_arch_middle_05",
-      "guid": "1c156aa612e03bc45b3c2d1126e38d43",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_arch_middle_05.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 4,
-        "cellsZ": 1,
-        "sizeY": 5.1021223068237305
-      },
-      "height": 5.102,
-      "layoutTier": "decor",
-      "nameZh": "DLC7 拱门中段 5",
-      "nameEn": "dlc07 arch middle 5",
       "typeKind": "building",
       "usage": "enclosure",
       "icon": false

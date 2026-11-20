@@ -1,8 +1,48 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 7,
   "itemCount": 200,
   "items": [
+    {
+      "id": "p_dlc07_courtyard_stone_block_03_a 1",
+      "guid": "2b4b44a9d24b31ded56689bc3f62e7fa",
+      "assetPath": "Assets/commonW1/prefabs/dlc07/art/courtyard/p_dlc07_courtyard_stone_block_03_a 1.prefab",
+      "category": "art",
+      "theme": "courtyard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
+      },
+      "height": 0.894,
+      "layoutTier": "decor",
+      "nameZh": "DLC07 庭院石块 3 a 1",
+      "nameEn": "dlc07 courtyard stone block 3 a 1",
+      "typeKind": "rock",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_courtyard_stone_block_03_d 1",
+      "guid": "f4b0c74682b431cadcc7369def0909dd",
+      "assetPath": "Assets/commonW1/prefabs/dlc07/art/courtyard/p_dlc07_courtyard_stone_block_03_d 1.prefab",
+      "category": "art",
+      "theme": "courtyard",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.8938923478126526
+      },
+      "height": 0.894,
+      "layoutTier": "decor",
+      "nameZh": "DLC07 庭院石块 3 d 1",
+      "nameEn": "dlc07 courtyard stone block 3 d 1",
+      "typeKind": "rock",
+      "usage": "dressing",
+      "icon": false
+    },
     {
       "id": "p_dlc07_courtyard_stone_block_04_a 1",
       "guid": "20002104452a83b4e9850449d0e9b2ad",
@@ -4054,46 +4094,6 @@
       "layoutTier": "decor",
       "nameZh": "DLC7 大窗 1",
       "nameEn": "dlc07 large window 1",
-      "typeKind": "building",
-      "usage": "enclosure",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_large_window_stainglass_01",
-      "guid": "6178dcec65c75e44bb44315fdee7852c",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/throne/p_dlc07_large_window_stainglass_01.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 6,
-        "cellsZ": 2,
-        "sizeY": 10.657173156738281
-      },
-      "height": 10.657,
-      "layoutTier": "decor",
-      "nameZh": "DLC07 大窗彩绘玻璃 1",
-      "nameEn": "dlc07 large window stainglass 1",
-      "typeKind": "building",
-      "usage": "enclosure",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_large_window_stainglass_02",
-      "guid": "1aaa991eb9c76e941b79bffa6cd49594",
-      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/throne/p_dlc07_large_window_stainglass_02.prefab",
-      "category": "art",
-      "theme": "dlc07_horde",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 6,
-        "cellsZ": 2,
-        "sizeY": 10.657173156738281
-      },
-      "height": 10.657,
-      "layoutTier": "decor",
-      "nameZh": "DLC07 大窗彩绘玻璃 2",
-      "nameEn": "dlc07 large window stainglass 2",
       "typeKind": "building",
       "usage": "enclosure",
       "icon": false

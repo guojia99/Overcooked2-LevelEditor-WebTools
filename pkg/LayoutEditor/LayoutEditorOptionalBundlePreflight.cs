@@ -7,7 +7,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>Only empty, unreferenced per-set optional bundles may be omitted.</summary>
+/// <summary>Normalize native ownership, then validate obsolete optional bundle references.</summary>
 public static class LayoutEditorOptionalBundlePreflight
 {
     public static bool HasSourceContent(string setName, string kind)
@@ -72,6 +72,8 @@ public static class LayoutEditorOptionalBundlePreflight
 
     public static HashSet<string> Run(List<string> setNames)
     {
+        foreach (var setName in setNames)
+            LayoutEditorSetBundleOwnership.Normalize(setName);
         var empty = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var changes = new List<LevelInfoSO>();
         var replacements = new List<string[]>();

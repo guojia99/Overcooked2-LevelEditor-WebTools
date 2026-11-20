@@ -1,8 +1,50 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 11,
   "itemCount": 200,
   "items": [
+    {
+      "id": "p_dlc09_rope_bunting_11",
+      "guid": "c0bceee92afba2f6a49cbf698a145977",
+      "assetPath": "Assets/common03/prefabs/art/dlc09_festivemashup/dlc09_circus/p_dlc09_rope_bunting_11.prefab",
+      "category": "art",
+      "theme": "dlc09_festivemashup",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 5,
+        "sizeY": 3.301434278488159
+      },
+      "height": 3.301,
+      "baseY": -1.905,
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳彩旗 11",
+      "nameEn": "dlc09 rope bunting 11",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_rope_bunting_12",
+      "guid": "b9c64535ada7cb28f2e26c169e7e09e1",
+      "assetPath": "Assets/common03/prefabs/art/dlc09_festivemashup/dlc09_circus/p_dlc09_rope_bunting_12.prefab",
+      "category": "art",
+      "theme": "dlc09_festivemashup",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 10,
+        "sizeY": 6.905767440795898
+      },
+      "height": 6.906,
+      "baseY": -4.088,
+      "layoutTier": "decor",
+      "nameZh": "DLC9 绳彩旗 12",
+      "nameEn": "dlc09 rope bunting 12",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
     {
       "id": "p_dlc09_rope_fence",
       "guid": "f2f0e3f4dc51bb3f8098a4a67f67779b",
@@ -4072,47 +4114,6 @@
       "nameEn": "dlc13 flyinglanternsgroup 1",
       "typeKind": "lighting",
       "usage": "ambience",
-      "icon": false
-    },
-    {
-      "id": "p_dlc13_grass_02",
-      "guid": "ae981fd0e1f0af11088c8f64d7358c1f",
-      "assetPath": "Assets/commonW2/prefabs/dlc13/art/dlc13/p_dlc13_grass_02.prefab",
-      "category": "art",
-      "theme": "dlc13",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "height": 1.2,
-      "baseY": -0.6,
-      "layoutTier": "decor",
-      "nameZh": "DLC13 草 2",
-      "nameEn": "dlc13 grass 2",
-      "typeKind": "vegetation",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "p_dlc13_grass_card_a_1",
-      "guid": "d966ed9a194c77ac140895e36fbc7bdd",
-      "assetPath": "Assets/common03/prefabs/art/dlc13_moonfestival/p_dlc13_grass_card_a_1.prefab",
-      "category": "art",
-      "theme": "dlc13",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.9763060212135315
-      },
-      "height": 0.976,
-      "baseY": -0.036,
-      "layoutTier": "decor",
-      "nameZh": "DLC13 草卡片 a 1",
-      "nameEn": "dlc13 grass card a 1",
-      "typeKind": "ground",
-      "usage": "flooring",
       "icon": false
     }
   ]

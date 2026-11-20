@@ -300,6 +300,14 @@ public class LayoutServingStationStubDto
     /** One-to-many binding: "u:<instanceID>" (or doc instanceId) of each bound
      *  return station (PlateReturn / GlassReturn). */
     public string[] plateReturnInstanceIds;
+    public LayoutVector3 orderUIOffset;
+    public LayoutVector3 healthUIOffset;
+}
+
+[Serializable]
+public class LayoutLockableStubDto
+{
+    public int unlockCost;
 }
 
 [Serializable]
@@ -693,6 +701,7 @@ public class LayoutItemDto
     public LayoutBurnerStubDto burner;
     public LayoutPlayerStubDto player;
     public LayoutServingStationStubDto servingStation;
+    public LayoutLockableStubDto lockable;
     public LayoutPlateReturnStubDto plateReturn;
     public LayoutSwitchStubDto switchStub;
     public LayoutPressureSwitchStubDto pressureSwitch;
@@ -1871,6 +1880,7 @@ public class LevelSetInfoUpdateDto
 [Serializable]
 public class SetExportStatusDto
 {
+    public string exportId;
     /** idle | running | done | error */
     public string status;
     public string setName;
@@ -1932,10 +1942,16 @@ public class McpRpcParamsDto
 [Serializable]
 public class McpArgumentsDto
 {
+    public bool convertHordeObjects;
     public string operation;
     public string setName;
     public string levelSet;
     public string assetPath;
+    public string gameMode;
+    public string levelId;
+    public string levelName;
+    public string levelNameZH;
+    public LevelModeConfigDto config;
     public string record;
     public string mode;
     public string depsVersion;
@@ -1991,6 +2007,7 @@ public class LevelSummaryDto
     public string dataDir;
     public string levelName;
     public string levelNameZH;
+    public string gameMode;
     public string sceneName;
     public string sceneAssetPath;
     public bool hasScreenshot;
@@ -2059,6 +2076,67 @@ public class PerPlayerConfigDto
     public int twoStarScore;
     public int threeStarScore;
     public int fourStarScore;
+    /** Read-only here; write Horde repair costs through LevelModeConfigDto.hordeConfigs. */
+    public int targetRepairCostMax;
+    /** Native Campaign sequence. POST null/omitted preserves; [] clears; order and duplicates survive.
+     * GET keeps one slot per reference ("" for missing/unrepresentable references; see errors). */
+    public string[] scriptedRecipes;
+    /** GET-only diagnostics with 1-based entry positions; never silently drop broken references. */
+    public string[] scriptedRecipeErrors;
+}
+
+[Serializable]
+public class LevelModeRecipePhaseDto
+{
+    public string id;
+    public int durationSeconds;
+    public string[] recipeGuids;
+}
+
+[Serializable]
+public class HordeWaveDto
+{
+    public string id;
+    public int intervalSeconds;
+    public string[] recipeGuids;
+    public string[] enemyGuids;
+    public int[] spawnTimes;
+}
+
+[Serializable]
+public class HordePlayerConfigDto
+{
+    public int targetRepairCostMax;
+    public HordeWaveDto[] waves;
+}
+
+[Serializable]
+public class LevelModeChangeDto
+{
+    public string assetPath;
+    public string gameMode;
+    /** Explicit consent to replace native serving-station visuals/components in this transaction.
+     *  Defaults to false. Never converts/removes coin gates, full-game objects or unknown subtypes. */
+    public bool convertHordeObjects;
+}
+
+[Serializable]
+public class LevelModeConfigDto
+{
+    public string assetPath;
+    public string gameMode;
+    /** Dynamic only. Web IDs survive in the sidecar; native RecipeListSO assets drive runtime. */
+    public LevelModeRecipePhaseDto[] phases;
+    /** Horde only: exactly four entries, ordered 1P through 4P, with distinct native graphs. */
+    public HordePlayerConfigDto[] hordeConfigs;
+    public int targetHealth;
+    public float targetRepairSpeed;
+    public float targetRepairThreshold;
+    public int kitchenHealth;
+    public int minOrderCount;
+    public int maxOrderCount;
+    /** Read-only six-entry upstream enemy catalog; never used as the saved spawn list. */
+    public IngredientEntryDto[] enemies;
 }
 
 [Serializable]
@@ -2112,6 +2190,13 @@ public class LevelDetailDto
     public string levelInfoAssetPath;
     public string levelName;
     public string levelNameZH;
+    public string gameMode;
+    public int targetHealth;
+    public float targetRepairSpeed;
+    public float targetRepairThreshold;
+    public int kitchenHealth;
+    public string[] dynamicRecipeListGuids;
+    public int[] dynamicRoundTimes;
     public string sceneName;
     public string sceneAssetPath;
     public bool hasScreenshot;
@@ -2124,6 +2209,7 @@ public class LevelDetailDto
     public float summaryBgDim;
     public int debugRecipeCount;
     public bool disableDynamicParenting;
+    public bool enableRespawnBounds;
     public int minOrderCount;
     public int maxOrderCount;
     public int gridHalfSizeX;
@@ -2141,6 +2227,7 @@ public class LevelCreateDto
     public string levelId;
     public string levelName;
     public string levelNameZH;
+    public string gameMode;
 }
 
 [Serializable]
@@ -2165,6 +2252,9 @@ public class LevelInfoUpdateDto
     // sceneName 已移除直改入口（不挪文件的直改会导致场景失联），改名统一走 LevelRenameDto。
     public int debugRecipeCount;
     public bool disableDynamicParenting;
+    /** Only updateEnableRespawnBounds=true writes this bool; legacy POSTs preserve the stored value. */
+    public bool enableRespawnBounds;
+    public bool updateEnableRespawnBounds;
     public int minOrderCount;
     public int maxOrderCount;
     public int gridHalfSizeX;
@@ -2378,7 +2468,7 @@ public class OrderSequenceGroupDto
     public int mode;
     /** random 组抽菜数 N（0 = 整池 = 组内去重菜谱数；N > 池大小时有放回补足）。 */
     public int batchSize;
-    /** 组内菜谱 guid 列表（须 ⊆ LevelInfoSO.recipes）。 */
+    /** 组内菜谱 GUID（须属于 CollectAllRecipes 的本关有效菜谱；保留重复与顺序）。 */
     public string[] recipeGuids;
 }
 

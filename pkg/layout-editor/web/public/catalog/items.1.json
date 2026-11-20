@@ -1,8 +1,47 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 1,
   "itemCount": 200,
   "items": [
+    {
+      "id": "Citywall_wallpaper_corner_in_01",
+      "guid": "ab4a6db3087a62e44966390c1f442745",
+      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/Citywall_wallpaper_corner_in_01.prefab",
+      "category": "art",
+      "theme": "dlc02_beach",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 2
+      },
+      "height": 2,
+      "baseY": -1,
+      "layoutTier": "decor",
+      "nameZh": "城市墙纸内角墙",
+      "nameEn": "Citywall wallpaper corner in 1",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "close water edge_abb2a10f",
+      "guid": "abb2a10f28d18d4927a195f03b82f0a9",
+      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/dynamic/close water edge_abb2a10f.prefab",
+      "category": "art",
+      "theme": "dynamic",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "layoutTier": "decor",
+      "nameZh": "close water edge_abb2a10f",
+      "nameEn": "close water edge_abb2a10f",
+      "typeKind": "water",
+      "usage": "waterscape",
+      "icon": false
+    },
     {
       "id": "cobble_01",
       "guid": "d4c402175d59d2fb971cee8c27199b93",
@@ -4039,46 +4078,6 @@
       "layoutTier": "decor",
       "nameZh": "人行道边缘",
       "nameEn": "exterior path side 1",
-      "typeKind": "ground",
-      "usage": "flooring",
-      "icon": false
-    },
-    {
-      "id": "exterior_road_01",
-      "guid": "edea3814fed09f74f8df7abc7f2e619c",
-      "assetPath": "Assets/common01/prefabs/art/city_sushi/exterior_road_01.prefab",
-      "category": "art",
-      "theme": "city_sushi",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 5.329070200563396e-16
-      },
-      "height": 0,
-      "layoutTier": "decor",
-      "nameZh": "马路",
-      "nameEn": "exterior road 1",
-      "typeKind": "ground",
-      "usage": "flooring",
-      "icon": false
-    },
-    {
-      "id": "exterior_road_centre_01",
-      "guid": "9d544e73669857c42b81e3e6f161ed46",
-      "assetPath": "Assets/common01/prefabs/art/city_sushi/exterior_road_centre_01.prefab",
-      "category": "art",
-      "theme": "city_sushi",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 5.329070200563396e-16
-      },
-      "height": 0,
-      "layoutTier": "decor",
-      "nameZh": "马路中央",
-      "nameEn": "exterior road centre 1",
       "typeKind": "ground",
       "usage": "flooring",
       "icon": false

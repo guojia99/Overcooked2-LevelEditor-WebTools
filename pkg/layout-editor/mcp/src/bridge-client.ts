@@ -23,13 +23,14 @@ export class BridgeClient {
 
   async json<T>(path: string, init?: RequestInit): Promise<T> {
     let response: Response;
+    let text: string;
     try {
       response = await fetch(`${this.baseUrl}${path}`, init);
+      text = await response.text();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       throw new BridgeError(`无法连接 Unity Bridge: ${message}`);
     }
-    const text = await response.text();
     if (text.trimStart().startsWith("<") || (response.headers.get("content-type") || "").includes("text/html")) {
       throw new BridgeError("Unity Bridge 返回了 HTML，可能正在重载或前端资源已过期");
     }
@@ -48,15 +49,16 @@ export class BridgeClient {
     return data as T;
   }
 
-  get<T>(path: string): Promise<T> {
-    return this.json<T>(path);
+  get<T>(path: string, timeoutMs?: number): Promise<T> {
+    return this.json<T>(path, timeoutMs === undefined ? undefined : { signal: AbortSignal.timeout(timeoutMs) });
   }
 
-  post<T>(path: string, body: JsonObject): Promise<T> {
+  post<T>(path: string, body: JsonObject, timeoutMs?: number): Promise<T> {
     return this.json<T>(path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      ...(timeoutMs === undefined ? {} : { signal: AbortSignal.timeout(timeoutMs) }),
     });
   }
 }

@@ -70,7 +70,7 @@ public static class LayoutEditorMatchlistMap
         if (info == null)
             return keys;
         var visited = new HashSet<UnityEngine.Object>();
-        CollectFrom(info.recipes, keys, visited);
+        CollectFrom(LayoutEditorLevelModeStore.CollectAllRecipes(info), keys, visited);
         CollectFrom(info.optionalRecipeMatchListItems, keys, visited);
         CollectFromPseudo(info.allIngredients, keys, visited);
         CollectFromPseudo(info.allCookingSteps, keys, visited);

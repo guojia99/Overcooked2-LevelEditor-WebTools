@@ -44,7 +44,7 @@ public static class LayoutEditorHotPotFill
         bool sceneDirty = false;
         foreach (var stub in Object.FindObjectsOfType<PseudoPrefabStub>())
         {
-            if (stub == null || stub.gameObject == null)
+            if (stub == null || stub.gameObject == null || !LayoutEditorLevelModeStore.OwnsRecipeConsumer(info, stub))
                 continue;
             // 清理：可移动火锅此前被误挂的锅具 stub（Setup NRE 源），直接移除。
             if (IsPushablePot(stub) || IsTrack(stub))
@@ -106,7 +106,7 @@ public static class LayoutEditorHotPotFill
         bool sceneDirty = false;
         foreach (var stub in Object.FindObjectsOfType<PseudoPrefabStub>())
         {
-            if (stub == null || stub.gameObject == null)
+            if (stub == null || stub.gameObject == null || !LayoutEditorLevelModeStore.OwnsRecipeConsumer(info, stub))
                 continue;
             if (IsPushablePot(stub) || IsTrack(stub))
                 continue;
@@ -259,11 +259,11 @@ public static class LayoutEditorHotPotFill
     public static List<ScriptableObject> CollectHotPotNodes(LevelInfoSO info)
     {
         var result = new List<ScriptableObject>();
-        if (info == null || info.recipes == null)
+        if (info == null)
             return result;
         var seen = new HashSet<Object>();
         var recipeBundles = new HashSet<string>(System.StringComparer.Ordinal);
-        foreach (var r in info.recipes)
+        foreach (var r in LayoutEditorLevelModeStore.CollectAllRecipes(info))
         {
             if (r == null)
                 continue;

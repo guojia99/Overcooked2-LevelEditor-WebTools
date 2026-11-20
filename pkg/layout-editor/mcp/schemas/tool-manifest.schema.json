@@ -3,6 +3,7 @@
   "type": "object",
   "required": ["protocolVersion", "server", "defaults", "tools"],
   "properties": {
+    "$schema": { "type": "string" },
     "protocolVersion": { "type": "string" },
     "server": { "type": "object" },
     "defaults": { "type": "object" },
@@ -15,13 +16,14 @@
           "name": { "type": "string" },
           "description": { "type": "string" },
           "category": { "type": "string" },
-          "sideEffect": { "enum": ["read", "compute", "draft", "write_scene", "build"] },
+          "sideEffect": { "enum": ["read", "compute", "draft", "write_scene", "write_asset", "build"] },
           "estimatedMs": { "type": "integer", "minimum": 0 },
           "pollAfterMs": { "type": "integer", "minimum": 0 },
           "deadlineMs": { "type": "integer", "minimum": 1 },
           "safeToRetry": { "type": "boolean" },
            "requiresConfirmation": { "type": "boolean" }
-          ,"httpOnly": { "type": "boolean" }
+          ,"httpOnly": { "type": "boolean" },
+          "stdioOnly": { "type": "boolean" }
         },
         "additionalProperties": false
       }

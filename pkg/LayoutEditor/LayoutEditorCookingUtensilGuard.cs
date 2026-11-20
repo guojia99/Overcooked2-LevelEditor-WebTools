@@ -30,6 +30,8 @@ static class LayoutEditorCookingUtensilGuard
     private static bool _armed;
     private static double _deadline;
     private static FieldInfo _stubField;
+    private static readonly FieldInfo BundleDictionaryField = typeof(PseudoPrefabManager).GetField(
+        "bundleDict", BindingFlags.Instance | BindingFlags.NonPublic);
 
     static LayoutEditorCookingUtensilGuard()
     {
@@ -68,6 +70,24 @@ static class LayoutEditorCookingUtensilGuard
         return name == "utensil_ingredient_spray_01" || name == "dlc09_utensil_ingredient_spray";
     }
 
+    // Prepare/DeInit intentionally leaves the cache empty during ApplyStub. These
+    // probes must never invoke the host's loading getter or rebuild scene previews.
+    private static GameObject LoadedPrefabOrNull(PseudoPrefabSO so)
+    {
+        if (so == null) return null;
+        var direct = so.asset as GameObject;
+        if (direct != null) return direct;
+        var manager = PseudoPrefabManager.Instance;
+        if (manager == null || BundleDictionaryField == null || string.IsNullOrEmpty(so.bundleName)
+            || string.IsNullOrEmpty(so.assetPath)) return null;
+        var bundles = BundleDictionaryField.GetValue(manager)
+            as System.Collections.Generic.Dictionary<string, AssetBundle>;
+        AssetBundle bundle;
+        if (bundles == null || !bundles.TryGetValue(so.bundleName, out bundle) || bundle == null)
+            return null;
+        return bundle.LoadAsset<GameObject>(so.assetPath);
+    }
+
     /// <summary>真实 prefab 是否为锅具容器（有 IngredientContainer）。
     ///  判定失败（bundle 未加载/资产缺失/加载异常）一律放行返回 true，
     ///  仅在**确实加载到真实 prefab 且无 IngredientContainer** 时返回 false，
@@ -78,18 +98,7 @@ static class LayoutEditorCookingUtensilGuard
             return true;
         try
         {
-            AssetBundle bundle;
-            try
-            {
-                bundle = PseudoPrefabManager.GetAssetBundle(so.bundleName);
-            }
-            catch
-            {
-                return true; // bundle 未加载：无法判定，放行
-            }
-            if (bundle == null)
-                return true;
-            var prefab = bundle.LoadAsset<GameObject>(so.assetPath);
+            var prefab = LoadedPrefabOrNull(so);
             if (prefab == null)
                 return true; // 加载失败：无法判定，放行
             return prefab.GetComponent("IngredientContainer") != null;
@@ -110,18 +119,7 @@ static class LayoutEditorCookingUtensilGuard
             return false;
         try
         {
-            AssetBundle bundle;
-            try
-            {
-                bundle = PseudoPrefabManager.GetAssetBundle(so.bundleName);
-            }
-            catch
-            {
-                return true;
-            }
-            if (bundle == null)
-                return true;
-            var prefab = bundle.LoadAsset<GameObject>(so.assetPath);
+            var prefab = LoadedPrefabOrNull(so);
             if (prefab == null)
                 return true;
             return prefab.GetComponent("WorkableItem") != null
@@ -353,18 +351,7 @@ static class LayoutEditorCookingUtensilGuard
             return false;
         try
         {
-            AssetBundle bundle;
-            try
-            {
-                bundle = PseudoPrefabManager.GetAssetBundle(so.bundleName);
-            }
-            catch
-            {
-                return true;
-            }
-            if (bundle == null)
-                return true;
-            var prefab = bundle.LoadAsset<GameObject>(so.assetPath);
+            var prefab = LoadedPrefabOrNull(so);
             if (prefab == null)
                 return true;
             return prefab.GetComponent("EditorGridSnap") != null;

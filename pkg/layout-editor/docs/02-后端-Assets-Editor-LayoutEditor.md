@@ -1,5 +1,9 @@
 # 02 · 后端 Assets/Editor/LayoutEditor
 
+**写回缓存判定修复（2026-11-18）**：`PrepareSceneForApply → DeInit` 会按设计清空 manifest/bundleDict。`LayoutEditorCookingUtensilGuard` 的食材可生成、锅具容器及盘子网格三项探针改为仅查询 SO 直接引用或 manager 已加载缓存，不再调用会隐式加载的 `GetAssetBundle`。缓存未就绪仍按原策略“无法判定则放行”，不把未初始化误报为 bundle47 文件缺失，也不在写回中途 Init 重建预览。专项 `check-cooking-guard-cache.py` 执行生产方法，1,227 断言通过；生命周期原回归 68 场景/567 断言通过，完整当前源码 C#4/net35 编译通过。真实 Unity 写回复测另行记录。
+
+首次 QA 写回（9 个食材箱）返回 ok，日志确认 CookingUtensilGuard/bundle47 原报错未再出现，但另发现烹饪步骤索引及食材补全在 Prepare 中调用运行时 getter。后续修复为名称索引只读 SO、UID 索引仅缓存就绪时补全且失败不封存；移除食材补全中未使用的运行时匹配表加载。收集不完整保留旧 allIngredients/allCookingSteps，Dynamic/Horde 继续按全部有效菜单聚合。`check-recipe-metadata-cache.py` 93 项、模式消费端 27 项及完整当前源码编译通过。该第二批修复尚无新 Unity 写回日志：Bridge 不可连接，Windows VM 中未检测到 Unity 进程。
+
 > 目录：`Assets/Editor/LayoutEditor/`（84 个 .cs，约 42,000 行，Unity Editor 程序集 / .NET 3.5）
 > 一句话定位：Unity Editor 插件——在内嵌 HttpListener 上同时提供 **REST API 后端 + Web 前端静态托管**，把浏览器画布数据写回 Unity 场景 / `LevelInfoSO`，并完成 AssetBundle 构建与 zip 导出。
 > 返回 [00-架构总览.md](00-架构总览.md)
@@ -188,6 +192,9 @@ flowchart TD
 | `GET /api/set/stub/status`、`POST /api/set/stub/copy \| compile` | CustomStub 状态/拷贝/编译（经 `CustomStubApi` 钩子，未安装 501） |
 | `GET /api/level`、`GET /api/level/bundles`（依赖分析）、`GET /api/level/delete-preview`、`POST /api/level/delete-preview-batch` | 关卡查询/删除预览（批量预览 body `{setName, levelIds}` → `{levels:[{levelId, paths}]}`，按关卡分组） |
 | `POST /api/level/create \| info \| config \| audio \| delete \| delete-batch \| reorder \| rename` | 关卡操作（create 起 sceneName=levelId 不再加 s_ 前缀；rename 以 newSceneName 为场景文件 / sceneName / bundle 后缀，可保留 s_。目录：场景原本是 s_+目录或等于目录时，新目录去掉一层 s_；否则目录不动。旧 bundle 名若已无资产则删除。delete-batch body `{setName, levelIds}`：先全量校验，任一关卡不存在则不删任何文件；统一删场景 + `data/<level>`、LevelSetInfo 只剔除成功删除条目、末尾仅一次 SaveAssets/Refresh/ReloadPseudo；当前打开场景在待删批内时先切到批外场景） |
+| `GET /api/level/mode-config?assetPath=` | LevelInfoSO 路径，返回 LevelModeConfigDto：gameMode、phases、hordeConfigs[4]、生命/修复/订单参数及 common04 六种只读 enemies；GET 不写入 |
+| `POST /api/level/mode-config` | 完整 LevelModeConfigDto body，2 MiB UTF-8 上限；保存 `mode_config~/mode_config.json` 并同步本关专属原生 SO，不切控制器；成功后必须 GET 读回 |
+| `POST /api/level/mode` | `{assetPath,gameMode,convertHordeObjects?}` 原生控制器迁移。bool flag 默认 false，仅用户明确同意 true 后原子双向转换已支持普通 ServingStation/Horde Service_Window wrapper，保留原 GO/位置/名称/回收绑定，外观及组件改变；切出勿预删最后 Horde 窗，交给事务转换。金币 gate 不转换，切出须先删除，正常 Horde 可无金币 gate。目标场景打开激活、所有场景干净、唯一有效 Manager；Horde 最终需激活窗且无普通口；Dynamic 需 N−1 原生有效 transition；Web partLevel.enabled 拒切 Dynamic/Horde；读回模式及详情 |
 | `POST /api/level/image-upload`（贴图地板）、`POST /api/level/screenshot-upload`、`POST /api/level/screenshot-capture`（当前 Unity 场景游戏相机渲染为 JPEG base64）、`GET /api/level/data-file` | 上传/预览 |
 | `POST /api/level/summary-bg-upload`、`POST /api/level/summary-bg-clear` | 汇总页导出背景图：写进关卡 data 目录的 `summary_bg~/bg.*` + `meta.json{dim}`。`~` 结尾目录 Unity 完全忽略 → 不被关卡集 folder 级 `assetBundleName`（`<set>/info_<set>`）打进玩家分发包，但随 git 跟关卡版本管理；读取复用 `GET /api/level/data-file`。空 fileName/base64 = 只改遮罩浓度 |
 | `GET /api/level/assignment?assetPath=`、`POST /api/level/assignment-save \| assignment-clear` | 菜谱分工配置：读写关卡 data 目录 `assignment~/assignment.json`（2p/3p/4p 三套玩家→菜谱 guid 列表）。后端不解析 JSON 内部结构（前端唯一读写方），只做 LevelSets 路径守卫 + `{` 开头轻校验 + 512KB 上限；同 `~` 目录范式不进 AssetBundle |
@@ -195,7 +202,12 @@ flowchart TD
 | `GET /api/level/readme?assetPath=`、`POST /api/level/readme-save \| readme-clear` | 汇总页 readme 说明：读写 `readme~/readme.json`（`{schemaVersion, html}`，白名单净化 HTML 仅文字排版，净化在前端 richText.ts）。256KB 上限；同 `~` 目录范式不进 AssetBundle |
 | `GET /api/level/group?assetPath=`、`POST /api/level/group-save` | 关卡分组（4.0.0.19，原 4.8.0）：读写每关 `group~/group.json`（`{schemaVersion, group}`，仅存组名；"" = 未分组即删除目录）。`group-save` body `{setName, items:[{levelId, assetPath, group}]}` 批量写（前端只传变更项）；16KB 上限；同 `~` 目录范式不进 AssetBundle。`ScanLevels` 已顺带把组名填进 `LevelSummaryDto.group`（列表一次带回，免 N 次请求）。接口本身只改 group.json；「分组看板」保存时由前端按分区阅读序调用 `/api/level/reorder` 写回 `levelInfos`（分组即分区排序） |
 
+**原生模式补充**：`POST /api/level/create` 的 `gameMode` 可选、默认 Campaign，支持 Dynamic/Horde 专用模板。`LayoutEditorLevelModeStore` 负责 sidecar、独立 SO 图和全部阶段/人数波次依赖同步；`LayoutEditorLevelModeChange` 负责原生迁移。Web 分 P 与 native Dynamic/Horde 分离，不能互用 transition。门具布局 DTO 新增 `items[].lockable.unlockCost` 和 `items[].servingStation.orderUIOffset/healthUIOffset`（各 `{x,y,z}`）；写回后另读布局。字段与约束见[模式指南](14-Horde与Dynamic原生模式指南.md)及[MCP 模式接口](mcp/10-原生模式接口.md)。stdio 已通过 REST 接入；原生 HTTP MCP 注册/args 的主代理接入项见后者，不能仅更新本地清单即宣称在线 RPC 已支持。
+
+**创建模板完整复制（2026-11-19）**：`LayoutEditorLevelTemplate` 预读所选 `Assets/Template/campaign|dynamic|horde` 目录中的 YAML 私有资产，校验文件、GUID、唯一场景及 LevelInfo 绑定和外部引用；未知格式、缺失引用、跨模式/其他关卡私有引用均在创建前拒绝。四个人数配置以所选模式显式文件名为准，在内存计划中覆盖上游 Dynamic levelinfo 错指 Horde 的引用，不修改模板、不扩张复制 Horde 依赖。私有材质/controller/clip 等复制到 `data/<level>/template_assets/`，四份 config 与 LevelInfo 使用本关路径；全部 GUID 映射写盘后才显式导入副本，绝不开源模板场景。Campaign 保留模板 recipes 并补菜单元数据；Dynamic/Horde 保留阶段/波次/参数，再由模式 store 生成独立 SO 图，仅清理本次复制且已不可达的被替代模式 SO。新关卡非场景文件/目录清空显式 bundle 名和 variant，继承关卡集 info；场景独占 `<set>/<levelId>`。关卡集根 bundle 异常时先拒绝，不借创建改动旧集资产。目录创建、setup/backup 和登记均纳入错误处理，失败恢复登记并清理本次新路径；DeleteAsset 返回 false、抛错或磁盘残留会附在返回错误中。生产 helper 的真实 YAML/替身行为测试与 CreateLevel 故障注入测试不替代真实 Unity 导入、场景恢复、Play/导出验收，本轮未调用真实 Unity 创建或导出。
+
 **自定义菜谱 / 汉堡工作台**
+
 | 路由 | 说明 |
 |---|---|
 | `GET/POST /api/custom-recipes*` | config、list、debug-scan、references、diagnose、create、update、delete、upload-icon、upload-model、category/* |
@@ -265,7 +277,16 @@ flowchart TD
 | **LayoutEditorOrderSequenceBake.cs** | 订单顺序烘焙（4.0.0.18，原 4.7.0）：`order_seq~/order_seq.json`（权威配置，前端菜谱管理「订单顺序」tab 编辑）→ 场景载体，挂在 **PseudoPrefabManagerStub 所在物体**（关卡级配置锚点）：`CustomStub.OrderSequenceSettings` 组件（反射软接入，字段 endBehavior/groupModes/groupSizes/groupBatches/**recipeUids**）+ `OrderSeq\|e=…\|m=…\|s=…\|b=…\|u=…` tag（全标量）。**菜谱引用编码为 OrderDefinitionNode uID**（`RecipeHelper.GetOrderDefinitionNode(so).m_uID`：PseudoPrefabSORecipe=bundle 资产固有 uID、CustomRecipeSO=SO.uID）——运行时 `OrderSequenceDirector` 按 uID 在关卡 RecipeList 解析 Entry，与编辑器 LevelConfigSetup / 真机 OC2DIYLevel 两条构建链同源，场景零 SO 引用、tag 可无损自愈。`ApplyForOpenScene(info)` 幂等（禁用/缺失/无有效组 → `RemoveFromScene` 清理组件+tag）；调用点=SceneLayoutApplier 写回（SaveScene 前）+ SetExporter 导出 prepare（`CollectActiveSceneStubFeatures` 前，特征 `orderseq` 靠载体识别）；失效 guid 跳过并告警（整组失效跳组） |
 | **AirFloorRig.cs** | 空气地板动画"岛式"层级（`AirFloor(ObjectContainer)/Ground(BoxCollider)`）：`IsColliderObject/IsWrapperName/GetAnimatedMember/EnsureRig`。被 SceneLayoutApplier/SceneFloorExporter/AnimGroupBakery 共用 |
 | **LayoutEditorPseudoReload.cs** | 伪预制件生命周期适配层：`LayoutEditorSceneCleanup`（sceneClosing 清理）、`EnsurePrepareForBuilding`、`ReloadPseudoAssets`（轻量）、`ReloadPseudoAssetsFull`（DeInit+Init+Sanitize+预载 bundle+补种子+重试）、`EnsureCustomBundleDependency`。所有写回/管理端点的"保存后刷新"统一走这里；写回/场景打开/导出前会调用 `PromoteAllDerivedStubsInScene` 修半损派生运行时 |
+| **LayoutEditorAssetBundleLifetime.cs** | 参考社区 `PreviewInitAssetBundleFix`，在 `SafeInit` 预加载前检查 Unity 假空 bundle/manifest、Windows manifest 包及本关实际依赖闭包，清理失效缓存并沿既有初始化链恢复；不用 bundle 数量阈值。`ResetChild`（含材质替换 override）发现坏缓存时延迟恢复，不嵌套全量 Init。域重载和退出 Play 后在 15 秒窗口内、0.5 秒间隔检查，最多两次初始化尝试；重建后补跑所有伪对象与自定义对象的 LateSetup，恢复跨对象引用。Play/切换、编译/导入、构建、prepare/export 期间不清理缓存。无 HTTP/MCP 参数或运行时包变更 |
 | **LayoutEditorLayoutMigrations.cs** | 关卡级一次性迁移：旧关卡 `web_teacup_return.returnClean=true` → false，标记落 `data/<level>/layout_migrations~/layout_migrations.json`。`MarkLevelCreated` 在 CreateLevel 时写基线（新关卡手动勾选干净杯不被误迁移）；`ApplyBeforeWriteBack` 只迁移旧实例（`u:`）并延后到 SaveScene 后 `CommitPending`；`ApplyToOpenScene` 供场景打开/导出 prepare 兜底 |
+
+**预览 bundle 生命周期验证（2026-11-17）**：`python3 layout-editor/scripts/check-preview-bundle-lifetime.py` 使用完整生产 helper/守卫与 Unity API 替身，C#4/net8 下通过 43 场景、302 断言和 11 项集成源码契约；覆盖假空、缺依赖、健康小缓存、延迟恢复、重试上限、材质 override 和 LateSetup 顺序。`python3 layout-editor/scripts/check-plain-pancake-backend.py --net35` 的既有回归通过，整个 LayoutEditor 独立 C#4/net35 编译 0 errors（41 项不同警告）。
+
+通过既有 `/api/compile` 刷新后，真实 Unity 于 14:04:41 记录 `Cleared stale preview state: destroyed manifest`，14:04:45 初始化结果为 `total=18 present=18 missing=0`，14:04:51 记录 `child 重建: ok=18 failed=0` 和 `Preview bundle recovery completed`。同轮检测到 3 个材质异常 child 并重建（失败 0）；随后将材质/压力开关修复移到 LateSetup 前，避免再次替换已绑定对象。最终顺序修订再次刷新后，14:07:35 命中 destroyed manifest，14:07:40 Init ok，14:07:46 依次记录 18 个 child 重建成功、3 个材质异常 child 重建（失败 0）、恢复完成；桥接 health 恢复正常。该日志证明域重载时失效缓存恢复路径实际执行，不证明画面无洋红或完整 Play/导出成功；仍须连续两轮 Play→退出、场景重开及一次写回/导出回归。
+
+**初始化窗口补修（2026-11-17）**：此前 `CanResetChild` 在 `CanRepair=false`（编译/导入、Play 切换、prepare/export 等）时直接放行，而 SafeInit 同时暂缓执行，导致 `PseudoPrefab.Start` 访问空缓存并报 `Please initialize AssetBundleManifest`。编辑模式现在暂缓 ResetChild 并排队恢复；即使处于 CallingOriginalInit/恢复过程，也必须验证 manifest 和请求 bundle，只有实际 Play 中保留宿主加载行为。SafeInit 暂缓时同步排队。`bundle47` 本机文件存在，manifest 未就绪后的“缺文件”提示不能当成缺资源证据。新增回归通过 **68 场景 / 567 断言 / 12 项源码契约**，独立 C#4/net35 编译 **0 errors**；尚须真实 Play 切换回归。
+
+本次刷新后的实际日志：16:15:13 清理 destroyed manifest，16:15:17 的 `test_new_commonw5` 初始化为 `total=18 present=18 missing=0`，16:15:22 重建 18 个 child（失败 0）并记录恢复完成；后续重载在 16:15:25 再次记录缺失 child 为 0。桥接 health 正常。该记录只覆盖本次脚本刷新/域重载，不等同连续 Play 切换或画面验收。
 
 ### 3.4 动画与按钮烘焙
 
@@ -310,7 +331,7 @@ flowchart TD
 | **LayoutEditorPushablePotPreview.cs** | 编辑模式下为 `web_utensil_large_pot_01_pushable` 载具实例化预览锅；进 Play 销毁（运行时由 CustomStub.PushablePot 权威装配） |
 | **LayoutEditorSceneRepair.cs** | `RemoveBrokenPrefabInstances`：删除 MissingPrefabInstance 实例；恢复被置空的 stub.pseudoPrefabSO。菜单（场景修复 → 清理损坏的预制件实例）+ `/api/scene/repair-broken` |
 | **LayoutEditorLevelInfoSanitizer.cs** | [InitializeOnLoad]（静态构造即跑，赶在宿主 OnEnable 前）：null 音频数组补空、空配置用模板回填、剔除死 ambience |
-| **LayoutEditorDependencyRepair.cs** | [InitializeOnLoad] + 菜单（场景修复 → 修复缺失的 Bundle 依赖）：磁盘不存在时从 LevelInfoSO.dependencies 移除**仅插件自己的** `<set>/custom_recipes` |
+| **LayoutEditorDependencyRepair.cs** | 初始化前清理历史非法 dependencies；原生 manifest 加载后独立加载引用到的 common 包，覆盖 Edit/Play，不污染 LevelInfo 字段 |
 
 ### 3.7 Play 期运行时补丁（编辑器内验证用）
 
@@ -406,8 +427,8 @@ Assets/LevelSets/<set>/                     ← 关卡集根（bundle 名 "<set>
 │   ├── animations/…                        ← AnimGroupBakery 生成的动画资产
 │   └── img|screenshot 贴图、custom_recipes…
 ├── scenes/s_<levelId>.unity                ← 场景（bundle 名 "<set>/s_<levelId>"）
-├── custom_recipes/                         ← 本集自定义菜谱（bundle 名 "<set>/custom_recipes"）
-├── stub/                                   ← Stub_<set> 源码 + asmdef + .dll.bytes(bundle "<set>/runtime")
+├── custom_recipes/                         ← 本集自定义菜谱（继承 info，无独立标签）
+├── custom_content/                         ← 本集自定义内容（继承 info，无独立标签）
 └── materials/                              ← 本集地板材质
 ```
 
@@ -425,7 +446,7 @@ Assets/LevelSets/<set>/                     ← 关卡集根（bundle 名 "<set>
 | common03 | 通用内容源库（food/Ingredients、pseudo_prefab_so、prefabs 含 dlc 分目录） | CustomIngredients（IsCommon03Asset/EnsureWebDependencies）、StubIO（全库递归找 SO、dlc11 洋葱映射）、CatalogApi/FoodGroupOf |
 | commonW1 | question_mark/ 图标库、RandomDispenser 包装、web 火锅专区 | HttpServer questionmarks 端点、StubIO.LoadQuestionMarkTexture、SetExporter（zip 携带 commonw1） |
 | commonW2 | Burger 大全共享库 | BurgerApi、SetNeedsCommonW2Bundle |
-| Assets/Template | s_template / config_1p..4p / levelinfo_template | CreateLevel、Sanitizer 回填 |
+| Assets/Template/campaign\|dynamic\|horde | 各模式场景 / config / levelinfo，以及私有材质与动画、菜单/波次 SO | CreateLevel 经 LayoutEditorLevelTemplate 完整复制并重绑定；Sanitizer 按模式回填音频 |
 | Assets/StreamingAssets/Windows | 原版游戏 bundle | `BundleFileExists` 守卫、BundleDumper、Diag、DispenserIconFix.PreloadAndSeed |
 
 ### 5.2 `Assets/Scripts`（详见 [07](07-游戏核心-Assets-Scripts.md)）
@@ -464,6 +485,12 @@ LayoutEditor 不直接修改它，但其编译产物提供编辑器 Play 期运�
 
 ### 6.2 prepare 与选择性导出
 
+**当前原生归属规则**：`LayoutEditorOptionalBundlePreflight.Run` 首先调用 `LayoutEditorSetBundleOwnership.Normalize`，将本次目标集根目录规范为 `<set>/info_<set>`，`scenes/` 下每个 `.unity` 各自设置 `<set>/<sceneName>`；其余本集目录和文件清除显式 bundle 名与 variant（包括 custom 内容、模式 SO 版本目录和旧 runtime 标签）。不改集外共享资产。目录改名遗留根标签一并纠正，仅无资产旧注册名被移除；磁盘旧产物保留为缓存，不作为交付来源。准备可能创建资产，构建收集前再次规范。部分导出也规范整集，但只构建交付 info 与入选场景。`CollectBuildOwnership` 继续扩展共享依赖归属，交付 roots 不随之扩张。
+
+规范标签前检查磁盘资产依赖闭包的 `bundleName` / `m_bundleName` 字符串；指向旧 `*/custom_recipes` 或 `*/custom_content` 时报告资产路径并阻断，须修复为有效直接引用，不能猜测目标或仅清字符串。场景不在 `scenes/`、同集场景 basename 重复也在标签写入前拒绝。CustomContent 创建、更新、图标/模型上传不再写独立 bundle，复制模板的显式标签和 variant 会清除以继承 info。Config 的空显式标签同样继承 info，不等于排除打包。
+
+以下空包预检段落描述保留的引用校验与陈旧声明清理机制；其中独立 custom 包承载属于历史输入，当前导出先执行上述统一归属，不再保留有内容的独立 custom 包。统一 `webcustomstub_runtime` 与集外 common/commonW 仍独立分发。
+
 **可选 bundle 预检（2026-11-17 最终实现）**：all/levels 在逐场景准备、孤儿/双 Stub 清理及 `selectedLevels` 过滤之前调用 `LayoutEditorOptionalBundlePreflight.Run(setNames)`，检查每个本次集的 `<set>/custom_content`、`<set>/custom_recipes`。deps 分支不执行此 helper。预检同时核对 `AssetDatabase.GetAssetPathsFromAssetBundle` 的真实 payload 和 `HasSourceContent` 的源内容/配置；文件夹、配置壳及 `.meta/.json/.txt/.md` 不算 payload，`custom_content/Config.asset` 中非空 entries（包括损坏条目）仍算有内容。源内容存在但独立包没有已登记 payload 时，先核对是否全部由当前 info 包承载；不满足该条件才提前报错修复标签，旧磁盘产物不能充当来源。
 
 `SourceIsInInfoBundle` 仅在发现实际 payload，且目录内**全部 payload** 都列于当前 `<set>/info_<set>` 的 `GetAssetPathsFromAssetBundle` 结果中时成立；custom_content 的每条 Config entry 还必须有效、`prefabPath` 非空且同样归当前 info 包。部分归属、未登记 payload 或无效配置不能享受此例外。live 发现 `jia_carnival/custom_recipes` 有实际菜谱、但全部继承 info 包标签，由此补齐该承载方式：此时保留资产引用，排除不再需要独立交付的 custom 包；磁盘或内存中仍指向独立 custom 包的 bundleName 字符串继续阻断。
@@ -474,13 +501,13 @@ LayoutEditor 不直接修改它，但其编译产物提供编辑器 Play 期运�
 
 全部候选通过后，才统一移除本次各集 LevelInfoSO 中对应的陈旧 dependencies；预检仅 `Undo.RecordObject` + 修改数组 + `EditorUtility.SetDirty`，**不调用 `SaveAssets`**。正常导出由 `FinishPreparedExport` 在构建前 `SaveAssets` 持久化，预检失败不触发全局保存。仅在 `GetAssetPathsFromAssetBundle` 完全无资产路径时调用 `RemoveAssetBundleName(name, false)` 清除无资产 bundle 注册；目录标签不强改，不删除资源目录。`_emptyOptionalBundles` 包含空包及无需独立交付的 info 承载包，在本次 `CollectLevelBundleNames` 中排除交付 roots，每次导出启动清空。
 
-`NeedsDedicatedBundle = HasSourceContent && !SourceIsInInfoBundle` 用于 `LayoutEditorCustomIngredients.EnsureWebDependencies` 的日常依赖登记，以及 `LayoutEditorPseudoReload.EnsureCustomBundleDependency` 恢复时的判断：空目录和已由 info 承载的内容都不新增独立 custom 依赖。PseudoReload 仍要求实际包文件存在，但旧包文件本身不能重新加回已不需要的依赖。
+`LevelInfoSO.dependencies` 仅允许严格匹配 `^bundle[0-9]+$`。统一入口 `LayoutEditorNativeDependencies.IsNativeBundle/Validate/Filter/Clean` 分别负责校验、报错、过滤去重和迁移脏资产；新提交非法项整体拒绝，历史值在迁移、读回、分析、自动同步及保存准备时清理。`EnsureWebDependencies` 不再登记 commonW/custom_recipes/custom_content，LevelAdmin 不再给新建 custom_recipes 目录创建独立标签。`NeedsDedicatedBundle` 仅服务打包预检，不再决定此字段。共享包分发闭包、`bundle_dependencies.txt` 与该字段是不同契约，不能套用原生 bundle 过滤。编辑器 Edit/Play 在原生 manifest 就绪后由 `LayoutEditorDependencyRepair` 独立收集 SO/资产引用并加载存在的 common 包，过程不改写 dependencies。
 
 all/levels 对本次场景先运行孤儿脚本/双 Stub 修复，再逐关 `OpenScene`、迁移和补派生运行时、严格 Prepare/DeInit，让出一帧后再次严格 Prepare，再烘焙 HUD/订单/tag、收集特征。只有脏场景或 tag 有变化才走保存；保存后提交迁移标记。构建调用前再次严格 Prepare，并以 `ExportBuildInProgress` 守住构建窗口；deps 不遍历关卡，但仍清理当前打开场景的临时预览并跨帧确认准备状态。
 
 **持久 Stub/SO 特征识别**：Prepare 会移除预览 child，不能只靠临时 `Terminal` 组件或可被用户改名的 GameObject。`CollectActiveSceneStubFeatures` 保留 tag/组件/名字等通道，同时读取持久 `PseudoPrefabStub.pseudoPrefabSO.prefabName`：大锅加入 `hotpot`，可移动锅加入 `hotpot,pushable`。终端身份由 typed `PseudoPrefabTerminalStub` 独立成立，或由 SO 名含 `ControlTerminal` 且不含 `_Marker` 回退识别；确认未绑定（无 typed Stub，或其 `pilotableObject` 为空）才加入 `terminal`，不要求 typed Stub 的 SO 也叫 ControlTerminal。该持久扫描块先要求 Stub 和 SO 非空。场景和 LevelInfo 的 commonW 引用另补 `web` 特征；实际游戏行为仍需 Play/真机确认。
 
-`selectedLevels` 仅支持单集，元素为 `LevelInfoSO.sceneName`（场景文件名去扩展）；空/省略/全选按整集处理，deps 忽略选择。只打开、准备和收集入选场景，按场景的**实际 assetBundleName**构建，排除未选纯场景包；本集 info 和其他非纯场景 bundle 仍纳入。未选 bundle 可以保留在输出目录，但不会因此进入本次 zip。
+`selectedLevels` 仅支持单集，元素为 `LevelInfoSO.sceneName`（场景文件名去扩展）；空/省略/全选按整集处理，deps 忽略选择。只打开、准备入选场景；收集器明确列出规范 info 和入选场景包，拒绝不规范的场景标签，不枚举本集历史注册包。未选及旧 custom/runtime 产物可以保留在输出目录，但不会进入本次 zip。
 
 构建前 `ApplyLevelSelectionFilter` 临时过滤 `LevelSetInfoSO.levelInfos`，使部分集 info 不出现无法打开的关卡。原数组在构建路径及会话收尾中恢复；修改前备份到 `LayoutEditorExports/._setinfo_backup_<set>`，启动和下次导出前可恢复异常残留备份。挂起任务保留 `sel=` 参数。前端默认选择有截图且场景存在的关卡，可手动调整；零选择不启动。
 
@@ -488,13 +515,13 @@ all/levels 对本次场景先运行孤儿脚本/双 Stub 修复，再逐关 `Ope
 
 **正常 levels/all/deps 均保留输出 bundle、`.manifest` 和 `.meta`，不删除集目录或 commonW 旧产物。** `BuildListedBundles` 使用显式 `AssetBundleBuild[]`、`BuildAssetBundleOptions.None` 和 `StandaloneWindows` 复用 Unity 增量构建。`CollectBuildOwnership` 从本次交付根递归直接依赖，把可达共享 base/commonW 等包纳入 build map，保持资产原有 bundle 归属，避免共享资产被重复内嵌进关卡包。这些共享包可能参与增量构建；范围由本次根可达关系决定，不是无脑全库，也不能保证完全不处理 common。强制重建/修复菜单是独立入口。
 
-**依赖交付闭包与 build ownership 是两层规则。** `CollectDependencyBundleNames` 从当前 commonW 源目录的根/子 bundle 及 `webcustomstub_runtime` 出发，`OrderDependencyBundles` 按拓扑序收集非基础依赖、忽略大小写去重，**包括 hash 命名等传递依赖**。循环、非法文件名等显式报错。基础 `common` / `common01`–`common04`（含其子包）由预装前置提供，排除在依赖 zip 之外，但可被 `CollectBuildOwnership` 纳入增量构建 map。当前依赖交付不再使用“all 仅在集引用时携带 commonW2”的旧策略。
+**依赖交付闭包与 build ownership 是两层规则。** `CollectDependencyBundleNames` 从当前 commonW 源目录的根/子 bundle 及 `webcustomstub_runtime` 出发，`OrderDependencyBundles` 按拓扑序收集非基础依赖、忽略大小写去重，**包括 hash 命名等传递依赖**。循环、非法文件名等显式报错。基础 `common` / `common01`–`common04`（本体及 `/` 子包）由预装前置提供，排除在依赖 zip 之外，但可被 `CollectBuildOwnership` 纳入增量构建 map。**common01 仍外供，但遍历继续读取它的依赖**；可达的独立包 `common01_textures` 不属于基础排除规则，须随 all/deps 依赖 zip 交付并进入 `bundle_dependencies.txt`，按依赖先于引用者的顺序加载。当前依赖交付不再使用“all 仅在集引用时携带 commonW2”的旧策略。
 
 `BuildListedBundles` 保存**本次返回的 manifest**，核对整个 ownership map 的每个 bundle 同时出现在 manifest 且文件存在；无源资产、仅含文件夹、manifest 为 null 或缺产物时失败，不能拿目录中的旧文件充数。`_builtBundleNames` 仅保存传入的交付根，不扩成 ownership map；`AddDependencyEntries` 再用本次 manifest 验证非基础交付闭包完整。不能把 manifest 中所有共享包直接装入 zip。
 
 ### 6.4 打包、清单与安装
 
-关卡 zip 文件从本次已验证构建列表收集，不枚举输出目录残留；旧裸 `runtime` 排除。各集包含 `info_<set>`、本次场景/数据 bundle、`requires.txt` 和 `stub_levels.txt`（即使为空也写出）。all 的依赖包只带一份；deps 只使用请求中的锚点集参数，不构建该集。
+关卡 zip 文件从本次已验证构建列表收集，不枚举输出目录残留；旧裸 `runtime` 排除。各集包含 `info_<set>`、本次入选场景 bundle、`requires.txt` 和 `stub_levels.txt`（即使为空也写出），本集其余数据均由 info 承载。all 的依赖包只带一份；deps 只使用请求中的锚点集参数，不构建该集。
 
 新依赖包目录 `OC2DIYLevelRuntimeWLoader/` 包含 Loader、统一运行时、依赖闭包和可用的日志/说明文件，以及 **`bundle_dependencies.txt`**：UTF-8、每行一个依赖文件名，按拓扑加载顺序写入；不包含统一运行时自身（Loader 单独优先入队）。仅数字 `commonwN` 映射为 zip 文件名 `commonWN`，hash/其他合法文件名保持原样，清单使用映射后的交付名。`.manifest` / `.meta` 留作缓存，不进 zip。
 

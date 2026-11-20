@@ -4,9 +4,9 @@
 Run: python3 layout-editor/scripts/check-export-contracts.py
 Requires dotnet SDK 8; no Unity, export, NuGet packages, or repository outputs.
 Full methods cover dependency ordering, build ownership, and dependency delivery.
-Feature scope is ONLY the original PseudoPrefabStub foreach block inside
-CollectActiveSceneStubFeatures, not the full scene scan or Unity's Prepare logic.
-The mock removes preview children before running that unchanged production block.
+Feature checks execute the complete CollectActiveSceneStubFeatures method with
+scene API doubles, including pure-vanilla PartSlots and empty/absent slot roots.
+The mock removes preview children; Unity's Prepare/serialization are not executed.
 """
 import os
 from pathlib import Path
@@ -18,9 +18,9 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "Assets/Editor/LayoutEditor/LayoutEditorSetExporter.cs"
 METHODS = [
-    "IsBaseGameBundle", "OrderDependencyBundles", "VisitDependencyBundle",
+    "IsBaseGameBundle", "OrderDependencyBundles", "VisitDependencyBundle", "CompareSemver",
     "CollectBuildOwnership", "AddBundleName", "BuildListedBundles",
-    "AddDependencyEntries", "TryGetCommonWIndex",
+    "AddDependencyEntries", "TryGetCommonWIndex", "DeleteStaleDependencyOutput",
 ]
 
 
@@ -49,6 +49,8 @@ using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using UnityEngine;
+using LevelEditorStub;
 
 // These doubles describe API inputs/outputs; they do not reimplement the sorter
 // or feature classifier. Unexpected API calls fail rather than silently succeed.
@@ -133,12 +135,45 @@ namespace UnityEngine
         internal static PseudoPrefabStub[] Stubs = new PseudoPrefabStub[0];
         public static T[] FindObjectsOfType<T>()
         {
-            if (typeof(T) != typeof(PseudoPrefabStub))
-                throw new Exception("Feature test scope expanded unexpectedly");
-            return (T[])(object)Stubs;
+            if (typeof(T) == typeof(PseudoPrefabStub)) return (T[])(object)Stubs;
+            if (typeof(T) == typeof(MonoBehaviour) || typeof(T) == typeof(Transform)
+                || typeof(T) == typeof(SpecificPseudoPrefabTag)
+                || typeof(T) == typeof(SetupCannonStub)
+                || typeof(T) == typeof(SetupCustomPrefabStub)
+                || typeof(T) == typeof(DestroyComponentOfChildStub)
+                || typeof(T) == typeof(PseudoPrefabSwitchStub)) return new T[0];
+            throw new Exception("Unexpected scene API type: " + typeof(T));
         }
     }
+    class MonoBehaviour : Object { public GameObject gameObject; }
+    class Transform : Object { public string name; public int childCount; }
+    class GameObject : Object
+    {
+        internal static readonly Dictionary<string, GameObject> Roots = new Dictionary<string, GameObject>();
+        public string name;
+        public Transform transform = new Transform();
+        public static GameObject Find(string path)
+        { GameObject result; return Roots.TryGetValue(path, out result) ? result : null; }
+    }
 }
+namespace UnityEngine.SceneManagement
+{
+    struct Scene { public string path; }
+    static class SceneManager { public static Scene GetActiveScene() { return new Scene(); } }
+}
+namespace LevelEditorStub
+{
+    class SpecificPseudoPrefabTag { public string prefabTag; }
+    class SetupCannonStub { }
+    class SetupCustomPrefabStub { }
+    class DestroyComponentOfChildStub { }
+    class PseudoPrefabSwitchStub { public bool startEnabled; }
+}
+class LevelInfoSO { }
+static class LayoutEditorLevelInfoResolver
+{ public static LevelInfoSO ResolveForScene(string path) { return null; } }
+static class LayoutEditorSaladSauceFactory
+{ public static bool UsesSauces(LevelInfoSO info) { return false; } }
 class PseudoPrefabSO { internal string prefabName; }
 class PseudoPrefabStub
 {
@@ -150,6 +185,7 @@ class PseudoPrefabTerminalStub : PseudoPrefabStub { internal object pilotableObj
 
 class ExportContracts
 {
+    static bool AssetTextReferencesCommonW(string path) { return false; }
     const string BundlesRoot = "bundles";
     static string RuntimeBundleName;
     static string root;
@@ -212,9 +248,15 @@ class ExportContracts
     }
     static void DependencyChecks()
     {
-        foreach (var name in new[] { "common", "COMMON01", "common02/bundle18", "common03", "common04/hash" })
+        Check(CompareSemver("4.1.0", "4.0.0") >= 0,
+            "Loader release newer than Runtime SSOT is compatible");
+        Check(CompareSemver("4.0.0", "4.1.0") < 0,
+            "Loader release below Runtime SSOT is incompatible");
+        Check(CompareSemver("4.1.0", "4.1.0") == 0,
+            "equal Loader and Runtime versions are compatible");
+        foreach (var name in new[] { "common", "COMMON01", "common01_textures", "COMMON01_TEXTURES", "common02/bundle18", "common03", "common04/hash" })
             Check(IsBaseGameBundle(name), "base prerequisite recognized: " + name);
-        foreach (var name in new[] { "commonw1", "commonW2", "common05", "common010", "common04hash", "hash_abc123" })
+        foreach (var name in new[] { "commonw1", "commonW2", "common05", "common010", "common04hash", "common01_textures_extra", "hash_abc123" })
             Check(!IsBaseGameBundle(name), "web/hash not classified as base: " + name);
         Graph("commonw1", "commonw2", "commonw5", "hash_abc123");
         AssetDatabase.Dependencies["commonw1"] = new[] { "commonw2" };
@@ -237,6 +279,19 @@ class ExportContracts
         AssetDatabase.Dependencies["commonw1"] = new[] { "common", "common01/bundle18", "COMMON04/hash" };
         Check(Join(Order("commonw1", "common02")) == "commonw1"
             && AssetDatabase.Queries.Count == 1, "base prerequisite remains external and is never traversed/rebuilt");
+        Graph("commonw2", "common01", "common01_textures", "common");
+        AssetDatabase.Dependencies["commonw2"] = new[] { "common01" };
+        AssetDatabase.Dependencies["common01"] = new[] { "common01_textures", "common" };
+        Check(Join(Order("commonw2")) == "commonw2"
+            && AssetDatabase.Queries.Count == 2,
+            "traverse common01 as prerequisite root but skip its externally supplied texture bundle");
+        Graph("commonw2", "common01", "common01_textures", "texture_support", "common");
+        AssetDatabase.Dependencies["commonw2"] = new[] { "common01" };
+        AssetDatabase.Dependencies["common01"] = new[] { "common01_textures", "common" };
+        AssetDatabase.Dependencies["common01_textures"] = new[] { "texture_support" };
+        Check(Join(Order("commonw2")) == "commonw2"
+            && AssetDatabase.Queries.Count == 2,
+            "externally supplied common01_textures and its dependencies are not delivered");
         foreach (var invalid in new[] { "../escape", "sub/file", "sub\\file", ".", "..", "name.manifest", "C:bundle", "a|b", " name", "name " })
         {
             Reject(delegate { Order(invalid); }, "文件名", "reject illegal root: " + invalid);
@@ -256,13 +311,13 @@ class ExportContracts
     }
     static void OwnershipChecks()
     {
-        BuildFixture("fixture/s_selected", "fixture/info_fixture", "commonw1", "commonw2", "common01/bundle18");
+        BuildFixture("fixture/s_selected", "fixture/info_fixture", "commonw1", "commonw2", "game_common01_bundle18");
         AssetDatabase.Dependencies["fixture/s_selected"] = new[] { "commonw1" };
         AssetDatabase.Dependencies["fixture/info_fixture"] = new[] { "COMMONW1" };
         AssetDatabase.Dependencies["commonw1"] = new[] { "commonw2" };
-        AssetDatabase.Dependencies["commonw2"] = new[] { "common01/bundle18" };
+        AssetDatabase.Dependencies["commonw2"] = new[] { "game_common01_bundle18" };
         var roots = new List<string> { "fixture/s_selected", "fixture/info_fixture" };
-        var expected = "fixture/s_selected,fixture/info_fixture,commonw1,commonw2,common01/bundle18";
+        var expected = "fixture/s_selected,fixture/info_fixture,commonw1,commonw2,game_common01_bundle18";
         Check(Join(CollectBuildOwnership(roots)) == expected, "levels -> W1 -> W2 -> base ownership closure");
         AssetDatabase.Queries.Clear();
         BuildListedBundles(roots, true);
@@ -280,12 +335,12 @@ class ExportContracts
         roots.Add("unrequested");
         Check(_builtBundleNames.Count == 2, "caller mutation cannot add an ownership bundle to delivery");
 
-        Graph("fixture/s_selected", "commonw1", "common01/bundle18");
+        Graph("fixture/s_selected", "commonw1", "game_common01_bundle18");
         AssetDatabase.Dependencies["fixture/s_selected"] = new[] { "COMMONW1", "commonw1" };
-        AssetDatabase.Dependencies["commonw1"] = new[] { "common01/bundle18", "FIXTURE/S_SELECTED" };
-        AssetDatabase.Dependencies["common01/bundle18"] = new[] { "COMMONW1", "common01/bundle18" };
+        AssetDatabase.Dependencies["commonw1"] = new[] { "game_common01_bundle18", "FIXTURE/S_SELECTED" };
+        AssetDatabase.Dependencies["game_common01_bundle18"] = new[] { "COMMONW1", "game_common01_bundle18" };
         Check(Join(CollectBuildOwnership(new List<string> { "FIXTURE\\s_selected", "fixture/s_selected" }))
-            == "fixture/s_selected,commonw1,common01/bundle18", "ownership cycle, self edge and case-duplicate roots terminate with unique normalized names");
+            == "fixture/s_selected,commonw1,game_common01_bundle18", "ownership cycle, self edge and case-duplicate roots terminate with unique normalized names");
         Check(AssetDatabase.Queries.Count == 3, "cyclic ownership queries each bundle once");
         Graph("leaf");
         AssetDatabase.Dependencies["leaf"] = null;
@@ -313,34 +368,36 @@ class ExportContracts
     }
     static void BuildAndDeliveryChecks()
     {
-        BuildFixture("commonw1", "commonw2", "hash_abc123", RuntimeBundleName, "common01/bundle18");
+        BuildFixture("commonw1", "commonw2", "hash_abc123", RuntimeBundleName,
+            "common01", "common01_textures");
         AssetDatabase.Dependencies["commonw1"] = new[] { "commonw2", "hash_abc123" };
-        AssetDatabase.Dependencies["commonw2"] = new[] { "common01/bundle18" };
+        AssetDatabase.Dependencies["commonw2"] = new[] { "common01", "common01_textures" };
         Product("unlisted_stale");
         Product("commonw1.manifest");
         Product("commonw1.meta");
         var names = new List<string> { "hash_abc123", "commonw2", "commonw1", RuntimeBundleName };
         BuildListedBundles(names, false);
         Check(object.ReferenceEquals(_buildManifest, BuildPipeline.Result), "keep actual returned manifest for delivery");
-        Check(Join(_builtBundleNames) == Join(names) && BuildPipeline.Builds.Length == 5,
-            "delivery roots preserved while base prerequisite participates in build map");
+        Check(Join(_builtBundleNames) == Join(names) && BuildPipeline.Builds.Length == 6,
+            "delivery roots preserved while external base prerequisites participate in build map");
         Check(!LayoutEditorPseudoReload.ExportBuildInProgress && !LayoutEditorPseudoReload.LastRequireManager, "build guard restored; deps need no manager");
         _dependencyBundleNames = names;
-        _buildManifest.Dependencies["commonw1"] = new[] { "commonw2", "hash_abc123", "common01/bundle18" };
+        _buildManifest.Dependencies["commonw1"] = new[] { "commonw2", "hash_abc123", "common01", "common01_textures" };
+        _buildManifest.Dependencies["commonw2"] = new[] { "common01", "common01_textures" };
         var entries = Deliver();
-        Check(entries.Count == 5, "only four explicit bundles plus dependency manifest delivered");
+        Check(entries.Count == 5, "all explicit bundles and dependency manifest delivered");
         Check(entries[0].Name == "OC2DIYLevelRuntimeWLoader/hash_abc123"
             && entries[1].Name == "OC2DIYLevelRuntimeWLoader/commonW2"
-            && entries[2].Name == "OC2DIYLevelRuntimeWLoader/commonW1", "zip preserves dependency order and commonW filename mapping");
+            && entries[2].Name == "OC2DIYLevelRuntimeWLoader/commonW1", "zip preserves hash and commonW dependency order without external base textures");
         Check(File.ReadAllText(ExportRootAbsPath() + "/._bundle_dependencies.txt").Replace("\r", "")
-            == "hash_abc123\ncommonW2\ncommonW1\n", "manifest order exact, no runtime/base/stale/meta entries");
+            == "hash_abc123\ncommonW2\ncommonW1\n", "manifest excludes external base bundles/runtime while retaining web hash dependencies");
         Check(File.Exists(AbsPath(BundlesRoot) + "/commonw1.manifest")
             && File.Exists(AbsPath(BundlesRoot) + "/unlisted_stale"), "incremental cache preserved without delivery leakage");
         _buildManifest.Dependencies["commonw1"] = new[] { "not_in_closure" };
         Reject(delegate { Deliver(); }, "闭包不完整", "manifest reveals omitted transitive bundle");
         _buildManifest.Dependencies["commonw1"] = new string[0];
         var produced = _buildManifest.Produced;
-        _buildManifest.Produced = new[] { "commonw1", "commonw2", RuntimeBundleName };
+        _buildManifest.Produced = new[] { "commonw1", "commonw2", "common01_textures", RuntimeBundleName };
         Reject(delegate { Deliver(); }, "未出现在本次构建 manifest: hash_abc123",
             "delivery independently rejects existing product absent from current manifest");
         _buildManifest.Produced = produced;
@@ -411,7 +468,7 @@ class ExportContracts
         // Model the post-Prepare state, without pretending to execute Prepare.
         if (stub != null) stub.childGameObject = null;
         UnityEngine.Object.Stubs = new[] { stub };
-        var actual = ScanPersistedStubBlock();
+        var actual = CollectActiveSceneStubFeatures();
         actual.Sort(StringComparer.Ordinal);
         Check(Join(actual) == expected, label);
     }
@@ -432,9 +489,20 @@ class ExportContracts
         var pot = Stub("web_utensil_large_pot_01", false, false);
         pot.childGameObject = null;
         UnityEngine.Object.Stubs = new[] { pot, pot, Stub("ControlTerminal", false, false) };
-        var features = ScanPersistedStubBlock();
+        var features = CollectActiveSceneStubFeatures();
         features.Sort(StringComparer.Ordinal);
         Check(Join(features) == "hotpot,terminal", "repeated persisted Stubs deduplicate features");
+        UnityEngine.Object.Stubs = new[] { Stub("ordinary_counter", false, false) };
+        Check(CollectActiveSceneStubFeatures().Count == 0, "vanilla ordinary scene stays dormant");
+        GameObject.Roots["Design/PartSlots"] = new GameObject();
+        Check(CollectActiveSceneStubFeatures().Count == 0, "empty PartSlots stays dormant");
+        GameObject.Roots["Design/PartSlots"].transform.childCount = 1;
+        Check(Join(CollectActiveSceneStubFeatures()) == "web", "pure vanilla part scene activates existing web gate");
+        GameObject.Roots.Remove("Design/PartSlots");
+        GameObject.Roots["PartSlots"] = new GameObject();
+        GameObject.Roots["PartSlots"].transform.childCount = 2;
+        Check(CollectActiveSceneStubFeatures().Count == 0, "unrelated PartSlots name stays dormant");
+        GameObject.Roots.Clear();
     }
     static int Main(string[] args)
     {
@@ -446,7 +514,7 @@ class ExportContracts
         FeatureChecks();
         Console.WriteLine((failures == 0 ? "PASS: " : "FAILED: ") + checks
             + " exporter contract checks, " + failures + " failures (production code, C# 4).");
-        Console.WriteLine("Feature scope: persisted PseudoPrefabStub foreach only; not full Collect/Prepare or Unity bundle serialization.");
+        Console.WriteLine("Feature scope: complete production collector with scene API doubles; not Unity Prepare/bundle serialization.");
         return failures == 0 ? 0 : 1;
     }
 '''
@@ -457,10 +525,19 @@ def main():
     members = [extract(source, r"    private static [^\n]+\b" + name + r"\(")
                for name in METHODS]
     collect = extract(source, r"    public static List<string> CollectActiveSceneStubFeatures\(")
-    persisted = extract(collect, r"        foreach \(var stub in UnityEngine\.Object\.FindObjectsOfType<PseudoPrefabStub>\(\)\)")
-    members.append("static List<string> ScanPersistedStubBlock() {\n"
-                   "var feats = new HashSet<string>(StringComparer.Ordinal);\n"
-                   + persisted + "\nreturn new List<string>(feats);\n}")
+    members.append(collect)
+    for name in ("StubTagFeatureMap", "StubComponentFeatureMap"):
+        members.append(extract(source, r"    private static readonly Dictionary<string, string> " + name + r"\s*=") + ";")
+    entry = (ROOT / "Assets/WebCustomStubRuntime/core/EntryPoint.cs").read_text(encoding="utf-8")
+    process = extract(entry, r"        private static void ProcessScene\(")
+    assert process.index("if (lookup == LevelMiss)") < process.index("s_activeFeatures = features;")
+    assert 'ActivateCore("stub 清单命中 ' in process
+    assert process.index("s_activeFeatures = features;") < process.rindex("HealScene(scene);")
+    heal = extract(entry, r"        internal static void HealScene\(")
+    assert 'var hasPartSlots = GameObject.Find("Design/PartSlots") != null;' in heal
+    assert "PartSlotRespawnGuard.OnSceneChanged(hasPartSlots);" in heal
+    assert re.search(r"if \(hasPartSlots\)\s+PartSlotRespawnGuard.EnsurePatches\(\);", heal)
+    print("PASS: EntryPoint manifest hit reaches existing PartSlotRespawnGuard installation (source contract).", flush=True)
     runtime = re.search(r'private const string RuntimeBundleName = "([^"]+)";', source)
     if not runtime:
         raise AssertionError("Missing production RuntimeBundleName")

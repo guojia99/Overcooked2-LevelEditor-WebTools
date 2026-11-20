@@ -1,9 +1,16 @@
 ﻿# OC2LevelRuntimeLoader（Loader.dll）
 
-统一运行时加载器（BepInEx 插件，PluginGuid `oc2.oc2diylevelruntimewloader`，v4.0.0）。
+统一运行时加载器（BepInEx 插件，PluginGuid `oc2.oc2diylevelruntimewloader`，v4.1.0）。
 把依赖包 `webcustomstub_runtime` bundle 里的统一运行时程序集（`WebCustomStubRuntime`，
 含随机食材箱等自定义玩法）在**关卡场景加载之前**注入游戏 AppDomain——**代码随依赖包
 分发，不进 Assembly-CSharp / common 包**。
+
+## v4.1.0（2026-11-20）
+
+- 发布号固定为 4.1.0；后续修复并入 4.1.0，只记录内部修订号，不自行递增发布号。
+- 汇总 4.0.0 的全部功能与兼容行为，并修复依赖包重复携带上游已提供的
+  `common01_textures`，避免 Loader 与 OC2DIYLevel 重复加载同一 bundle。
+- 依赖包需重新导出并更新 Loader.dll；关卡包本身无需仅为该修复重导。
 
 ## v4.0.0（2026-11-10 首个发布版）：收敛内部迭代 4.0.0–4.8.0
 

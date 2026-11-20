@@ -72,6 +72,11 @@ public class LayoutEditorBridgeWindow : EditorWindow
             _server.Stop();
     }
 
+    internal static void BeforeReload()
+    {
+        if (_server != null) _server.Stop();
+    }
+
     /// <summary>
     /// 看门狗：只要"自动保活"开启，就保证服务一直运行。
     /// 中断时自动重启，限流：60 秒窗口内最多 5 次、相邻重启间隔 ≥2 秒；超限后暂停，窗口滑动后自动恢复重试，不会永久放弃。
@@ -231,5 +236,6 @@ internal static class LayoutEditorServerLifecycle
     static LayoutEditorServerLifecycle()
     {
         EditorApplication.update += LayoutEditorBridgeWindow.WatchdogTick;
+        AssemblyReloadEvents.beforeAssemblyReload += LayoutEditorBridgeWindow.BeforeReload;
     }
 }

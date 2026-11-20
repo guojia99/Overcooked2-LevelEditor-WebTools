@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$ref": "#/$defs/modeConfig",
+  "$defs": {
+    "gameMode": { "type": "string", "enum": ["Campaign", "Dynamic", "Horde"] },
+    "convertHordeObjects": {
+      "type": "boolean", "default": false,
+      "description": "Explicit user opt-in to atomically convert supported ordinary ServingStation wrappers and Horde Service_Window wrappers in either direction. Preserves the original GameObject, position, name and return bindings; changes appearance and components. Does not convert coin gates; remove gates before leaving Horde. Never enable automatically."
+    },
+    "assetPath": { "type": "string", "minLength": 1, "maxLength": 1024 },
+    "guids": {
+      "type": "array", "minItems": 1, "maxItems": 256,
+      "items": { "type": "string", "pattern": "^[0-9a-fA-F]{32}$" }
+    },
+    "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+$" },
+    "phase": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "durationSeconds", "recipeGuids"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "durationSeconds": { "type": "integer", "minimum": 1, "maximum": 86400 },
+        "recipeGuids": { "$ref": "#/$defs/guids" }
+      }
+    },
+    "wave": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "intervalSeconds", "recipeGuids", "enemyGuids", "spawnTimes"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "intervalSeconds": { "type": "integer", "minimum": 0, "maximum": 86400 },
+        "recipeGuids": { "$ref": "#/$defs/guids" },
+        "enemyGuids": { "$ref": "#/$defs/guids" },
+        "spawnTimes": { "type": "array", "minItems": 1, "maxItems": 256, "items": { "type": "integer", "minimum": 0, "maximum": 86400 } }
+      }
+    },
+    "player": {
+      "type": "object", "additionalProperties": false,
+      "required": ["targetRepairCostMax", "waves"],
+      "properties": {
+        "targetRepairCostMax": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+        "waves": { "type": "array", "minItems": 1, "maxItems": 128, "items": { "$ref": "#/$defs/wave" } }
+      }
+    },
+    "modeConfig": {
+      "type": "object", "additionalProperties": false,
+      "description": "GET LevelModeConfigDto. enemies is read-only; remove it before saving. Campaign uses the existing recipe API. POST UTF-8 JSON and saved sidecar each have a 2 MiB limit.",
+      "required": ["assetPath", "gameMode", "targetHealth", "targetRepairSpeed", "targetRepairThreshold", "kitchenHealth", "minOrderCount", "maxOrderCount"],
+      "properties": {
+        "assetPath": { "$ref": "#/$defs/assetPath" },
+        "gameMode": { "$ref": "#/$defs/gameMode" },
+        "phases": { "type": ["array", "null"], "maxItems": 64, "items": { "$ref": "#/$defs/phase" } },
+        "hordeConfigs": { "type": ["array", "null"], "maxItems": 4, "items": { "$ref": "#/$defs/player" } },
+        "targetHealth": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+        "targetRepairSpeed": { "type": "number", "minimum": 0, "maximum": 1000000 },
+        "targetRepairThreshold": { "type": "number", "minimum": 0, "maximum": 1000000 },
+        "kitchenHealth": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+        "minOrderCount": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "maxOrderCount": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "enemies": {
+          "type": ["array", "null"], "maxItems": 6, "readOnly": true,
+          "items": {
+            "type": "object", "required": ["guid", "id", "nameZh", "nameEn", "assetPath"],
+            "properties": {
+              "guid": { "type": "string", "pattern": "^[0-9a-fA-F]{32}$" },
+              "id": { "type": "string", "enum": ["horde_biscuit_a", "horde_candy_b", "horde_puddin_c", "unbread_a", "unbread_b", "unbread_c"] },
+              "nameZh": { "type": "string" }, "nameEn": { "type": ["string", "null"] },
+              "assetPath": { "type": "string", "pattern": "^Assets/common04/game_environment/horde/enemies/(horde_biscuit_a|horde_candy_b|horde_puddin_c|unbread_a|unbread_b|unbread_c)\\.asset$" }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "gameMode": { "const": "Dynamic" } } },
+          "then": { "required": ["phases"], "properties": { "phases": { "type": "array", "minItems": 2 }, "hordeConfigs": { "maxItems": 0 } } }
+        },
+        {
+          "if": { "properties": { "gameMode": { "const": "Horde" } } },
+          "then": { "required": ["hordeConfigs"], "properties": { "hordeConfigs": { "type": "array", "minItems": 4 }, "phases": { "maxItems": 0 } } }
+        }
+      ]
+    }
+  }
+}

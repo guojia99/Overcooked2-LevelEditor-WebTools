@@ -33,6 +33,15 @@
       "required": ["op", "item"],
       "properties": { "op": { "const": "add_item" }, "item": { "type": "object" } },
       "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["op", "document"],
+      "properties": {
+        "op": { "const": "replace_document" },
+        "document": { "type": "object", "required": ["sceneAssetPath", "items"], "properties": { "sceneAssetPath": { "type": "string", "minLength": 1 }, "items": { "type": "array", "items": { "type": "object" } } } }
+      },
+      "additionalProperties": false
     }
   ]
 }

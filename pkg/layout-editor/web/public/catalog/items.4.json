@@ -1,8 +1,50 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 4,
   "itemCount": 200,
   "items": [
+    {
+      "id": "m_dlc3_icecliff_90",
+      "guid": "a219a44b013140f4d9468fd3195ee012",
+      "assetPath": "Assets/common01/prefabs/art/dlc03_christmas/m_dlc3_icecliff_90.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 2.0651559829711914
+      },
+      "height": 2.065,
+      "baseY": -2.065,
+      "layoutTier": "decor",
+      "nameZh": "DLC3 冰崖转角 90°",
+      "nameEn": "dlc3 icecliff 90",
+      "typeKind": "rock",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "m_dlc3_icecliff_90",
+      "guid": "0ba2d4b5c6ee64e42942016cfe78a036",
+      "assetPath": "Assets/common03/prefabs/art/dlc03_christmas/m_dlc3_icecliff_90.prefab",
+      "category": "art",
+      "theme": "dlc03_christmas",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 2.0651559829711914
+      },
+      "height": 2.065,
+      "baseY": -2.065,
+      "layoutTier": "decor",
+      "nameZh": "DLC3 冰崖转角 90°",
+      "nameEn": "dlc3 icecliff 90",
+      "typeKind": "rock",
+      "usage": "dressing",
+      "icon": false
+    },
     {
       "id": "m_dlc3_icecliff_straight_01",
       "guid": "6abdbf27f38cbb94b8265c4901667159",
@@ -4022,48 +4064,6 @@
       "surfaceKind": "solid",
       "nameZh": "mi 地板 1 1x10",
       "nameEn": "mi floor 1 1x10",
-      "typeKind": "ground",
-      "usage": "flooring",
-      "icon": false
-    },
-    {
-      "id": "mi_floor_01_1x10_5ac84420",
-      "guid": "5ac844205249fca2ea04a9e83b5809bf",
-      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/mine/mi_floor_01_1x10_5ac84420.prefab",
-      "category": "art",
-      "theme": "mine",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "floor",
-      "surfaceTier": "floor",
-      "surfaceKind": "solid",
-      "nameZh": "mi 地板 1 1x10",
-      "nameEn": "mi floor 1 1x10",
-      "typeKind": "ground",
-      "usage": "flooring",
-      "icon": false
-    },
-    {
-      "id": "mi_floor_01_1x6",
-      "guid": "877d96be269c80561c822f0d4631f5db",
-      "assetPath": "Assets/commonW1/prefabs/core/art/mine/mi_floor_01_1x6.prefab",
-      "category": "art",
-      "theme": "mine",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 6,
-        "cellsZ": 1,
-        "sizeY": 2.664535364979494e-16
-      },
-      "height": 0,
-      "layoutTier": "floor",
-      "surfaceTier": "floor",
-      "surfaceKind": "solid",
-      "nameZh": "mi 地板 1 1x6",
-      "nameEn": "mi floor 1 1x6",
       "typeKind": "ground",
       "usage": "flooring",
       "icon": false

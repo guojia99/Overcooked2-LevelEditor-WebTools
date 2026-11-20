@@ -1,4 +1,5 @@
 using LevelEditorStub;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,7 +13,7 @@ using UnityEngine;
 [InitializeOnLoad]
 public static class LayoutEditorLevelInfoSanitizer
 {
-    private const string TemplateLevelInfoPath = "Assets/Template/levelinfo_template.asset";
+    private const string TemplateLevelInfoPath = "Assets/Template/campaign/levelinfo_template.asset";
     private static double _lastMigrateTime = -10.0;
     private static LevelInfoSO _template;
     private static bool _templateLoaded;
@@ -30,6 +31,7 @@ public static class LayoutEditorLevelInfoSanitizer
         {
         }
         EditorApplication.delayCall += MigrateAll;
+        EditorApplication.delayCall += delegate { SyncOpenSceneDependencies(); };
         EditorApplication.hierarchyWindowChanged += OnHierarchyChanged;
     }
 
@@ -42,6 +44,7 @@ public static class LayoutEditorLevelInfoSanitizer
         try
         {
             MigrateAll();
+            SyncOpenSceneDependencies();
         }
         catch (System.Exception ex)
         {
@@ -56,6 +59,7 @@ public static class LayoutEditorLevelInfoSanitizer
         foreach (var guid in AssetDatabase.FindAssets("t:LevelInfoSO"))
         {
             var path = AssetDatabase.GUIDToAssetPath(guid);
+            if (!path.StartsWith("Assets/LevelSets/", System.StringComparison.Ordinal)) continue;
             var info = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(path);
             Sanitize(info);
         }
@@ -67,8 +71,11 @@ public static class LayoutEditorLevelInfoSanitizer
     {
         if (info == null)
             return false;
+        // Template/common assets are immutable inputs, including when a template scene opens.
+        if (LayoutEditorLevelModeStore.ValidateLevelPath(AssetDatabase.GetAssetPath(info), info) != null)
+            return false;
 
-        var changed = false;
+        var changed = LayoutEditorNativeDependencies.Clean(info);
         if (info.inLevelAmbiences == null)
         {
             info.inLevelAmbiences = new LevelInfoSO.GameLoopingAudioTag[0];
@@ -89,7 +96,11 @@ public static class LayoutEditorLevelInfoSanitizer
         // AudioManager.FindEntry 会越界，用模板默认值回填未设置的字段。
         if (info.audioDirectorySOs.Length == 0)
         {
-            var tpl = LoadTemplate();
+            var tpl = info.levelType == LevelInfoSO.LevelType.Dynamic
+                ? AssetDatabase.LoadAssetAtPath<LevelInfoSO>("Assets/Template/dynamic/levelinfo_template_dynamic.asset")
+                : info.levelType == LevelInfoSO.LevelType.Horde
+                    ? AssetDatabase.LoadAssetAtPath<LevelInfoSO>("Assets/Template/horde/levelinfo_template_horde.asset")
+                    : LoadTemplate();
             if (tpl != null && tpl.audioDirectorySOs != null && tpl.audioDirectorySOs.Length > 0
                 && tpl != info)
             {
@@ -122,6 +133,61 @@ public static class LayoutEditorLevelInfoSanitizer
         EditorUtility.SetDirty(info);
         AssetDatabase.SaveAssets();
         Debug.Log("[LayoutEditor] Migrated LevelInfoSO audio fields: " + AssetDatabase.GetAssetPath(info));
+        return true;
+    }
+
+    /// <summary>把当前打开场景里所有 PseudoPrefab/PseudoPrefabSOArray 实际引用的 bundle
+    /// 增量合并进本场景 LevelInfoSO.dependencies（只加不减；仅限磁盘上存在的 bundle 文件）。
+    /// 修复：向场景摆入新物件后，其 bundle 不在 dependencies 传递闭包内，宿主
+    /// PseudoPrefabManager 加载时 KeyNotFoundException。编辑器侧已由 GetAssetBundle 按需
+    /// 补载兜底，这里保证导出/真机运行时依赖清单同样完整。返回是否有改动。</summary>
+    public static bool SyncOpenSceneDependencies()
+    {
+        var manager = LevelEditor.PseudoPrefabManager.Instance;
+        if (manager == null || manager.stub == null)
+            return false;
+        var info = manager.stub.levelInfo;
+        if (info == null)
+            return false;
+        if (LayoutEditorLevelModeStore.ValidateLevelPath(AssetDatabase.GetAssetPath(info), info) != null)
+            return false;
+
+        var referenced = new HashSet<string>();
+        foreach (var stub in UnityEngine.Object.FindObjectsOfType<LevelEditorStub.PseudoPrefabStub>())
+        {
+            if (stub != null && stub.pseudoPrefabSO != null
+                && !string.IsNullOrEmpty(stub.pseudoPrefabSO.bundleName))
+                referenced.Add(stub.pseudoPrefabSO.bundleName);
+        }
+        foreach (var arr in UnityEngine.Object.FindObjectsOfType<LevelEditorStub.PseudoPrefabSOArray>())
+        {
+            if (arr == null || arr.pseudoPrefabSOs == null)
+                continue;
+            foreach (var so in arr.pseudoPrefabSOs)
+                if (so != null && !string.IsNullOrEmpty(so.bundleName))
+                    referenced.Add(so.bundleName);
+        }
+
+        bool cleaned = LayoutEditorNativeDependencies.Clean(info);
+        var deps = new List<string>(info.dependencies ?? new string[0]);
+        var added = new List<string>();
+        foreach (var b in referenced)
+        {
+            // 与 AutoMergeAudioDependencies 相同约束：已在清单或磁盘无文件的 bundle 跳过
+            if (!LayoutEditorNativeDependencies.IsNativeBundle(b)
+                || deps.Contains(b) || !LayoutEditorCatalogApi.BundleFileExists(b))
+                continue;
+            deps.Add(b);
+            added.Add(b);
+        }
+        if (added.Count == 0 && !cleaned)
+            return false;
+
+        info.dependencies = LayoutEditorNativeDependencies.Filter(deps);
+        EditorUtility.SetDirty(info);
+        AssetDatabase.SaveAssets();
+        Debug.Log("[LayoutEditor] synced scene bundle dependencies into "
+            + AssetDatabase.GetAssetPath(info) + " (+" + string.Join(", ", added.ToArray()) + ")");
         return true;
     }
 

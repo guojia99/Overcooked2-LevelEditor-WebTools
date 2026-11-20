@@ -1344,6 +1344,17 @@ public static class LayoutEditorBurgerApi
         if (string.Equals(category, LayoutEditorLevelAdminApi.BurgerCategoryId, StringComparison.Ordinal))
             return "「burger」为 Burger大全共享库保留分类 id，请换一个（如 burger_local）。";
 
+        var updating = !string.IsNullOrEmpty(dto.updateAssetPath);
+        CustomRecipeSO recipe = null;
+        if (updating)
+        {
+            recipe = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(dto.updateAssetPath);
+            if (recipe == null)
+                return "要更新的汉堡不存在：" + dto.updateAssetPath;
+            if (!LayoutEditorOptionalRecipe.CanEdit(recipe))
+                return "此类型暂不支持 Web 编辑：" + recipe.GetType().Name;
+        }
+
         // 关卡集 custom_recipes 与分类目录（首次使用时初始化，与 CreateCustomRecipe 同规则）
         string recipesDir;
         string categoryDir;
@@ -1352,15 +1363,10 @@ public static class LayoutEditorBurgerApi
         if (initErr != null)
             return initErr;
 
-        var updating = !string.IsNullOrEmpty(dto.updateAssetPath);
-        CustomRecipeSO recipe = null;
         string assetPath = categoryDir + "/" + recipeName + ".asset";
         int uid = 0;
         if (updating)
         {
-            recipe = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(dto.updateAssetPath);
-            if (recipe == null)
-                return "要更新的汉堡不存在：" + dto.updateAssetPath;
             if (!IsFinishedBurgerRecipe(recipe))
                 return "指定资产不是成品汉堡菜谱。";
             assetPath = dto.updateAssetPath;

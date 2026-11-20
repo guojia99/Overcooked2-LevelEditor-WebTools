@@ -1,8 +1,50 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 9,
   "itemCount": 200,
   "items": [
+    {
+      "id": "p_dlc07_weapon_stand_01",
+      "guid": "655cb43ae8f792045b423c92df91bff8",
+      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/dressing_assets/p_dlc07_weapon_stand_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 2,
+        "sizeY": 2.3440542221069336
+      },
+      "height": 2.344,
+      "baseY": 0.01,
+      "layoutTier": "decor",
+      "nameZh": "DLC07 武器架 1",
+      "nameEn": "dlc07 weapon stand 1",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_weapon_stand_01",
+      "guid": "ddbd44a0c21ec95ed58e95920b264595",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_weapon_stand_01.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 2,
+        "sizeY": 2.3440542221069336
+      },
+      "height": 2.344,
+      "baseY": 0.01,
+      "layoutTier": "decor",
+      "nameZh": "DLC07 武器架 1",
+      "nameEn": "dlc07 weapon stand 1",
+      "typeKind": "other",
+      "usage": "dressing",
+      "icon": false
+    },
     {
       "id": "p_dlc07_WideWall_01",
       "guid": "d82ac5372966ac047a843a8a93ff84ae",
@@ -4166,48 +4208,6 @@
       "layoutTier": "decor",
       "nameZh": "DLC9 气球 2",
       "nameEn": "dlc09 balloon 2",
-      "typeKind": "building",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "p_dlc09_balloon_03",
-      "guid": "fb472618cf41e7ef4307fb2905af90de",
-      "assetPath": "Assets/common03/prefabs/art/dlc09_festivemashup/dlc09_circus/p_dlc09_balloon_03.prefab",
-      "category": "art",
-      "theme": "dlc09_festivemashup",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 6.101937770843506
-      },
-      "height": 6.102,
-      "baseY": -0.174,
-      "layoutTier": "decor",
-      "nameZh": "DLC9 气球 3",
-      "nameEn": "dlc09 balloon 3",
-      "typeKind": "building",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "p_dlc09_balloon_butterfly_01",
-      "guid": "4355beace0da55845610dab2187cc45f",
-      "assetPath": "Assets/common03/prefabs/art/dlc09_festivemashup/dlc09_circus/p_dlc09_balloon_butterfly_01.prefab",
-      "category": "art",
-      "theme": "dlc09_festivemashup",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 1.2024319171905518
-      },
-      "height": 1.202,
-      "baseY": -0.601,
-      "layoutTier": "decor",
-      "nameZh": "DLC09 气球蝴蝶 1",
-      "nameEn": "dlc09 balloon butterfly 1",
       "typeKind": "building",
       "usage": "dressing",
       "icon": false

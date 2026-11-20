@@ -19,7 +19,7 @@ using UnityEngine.SceneManagement;
 /// LevelConfigSetup / 真机 OC2DIYLevel 两条 Entry 构建链同源（同一菜谱资产
 /// uID 必然一致），场景载体不携带 SO 引用，tag 可无损往返。
 ///
-/// 调用点（幂等：JSON 为权威，禁用/缺失/无效即清理场景残留）：
+/// 调用点（幂等：缺失/显式禁用清理载体；损坏/冲突抛错，禁止静默丢弃配置）：
 ///  - SceneLayoutApplier 写回链路；
 ///  - LayoutEditorSetExporter 导出 prepare（SettleCurrentScene 后）。
 /// 导出特征 orderseq 经 SetExporter 三表（CustomStubTagPrefixes /
@@ -30,62 +30,95 @@ public static class LayoutEditorOrderSequenceBake
 {
     public const string TagPrefix = "OrderSeq|";
 
-    /// <summary>按 LevelInfo 烘焙当前打开场景。返回告警文本（null = 成功/无需烘焙）。
-    /// 配置缺失 / enabled=false / 解析后无有效组 = 清理场景残留（原版随机出单）。</summary>
-    public static string ApplyForOpenScene(LevelInfoSO info)
+    public sealed class PreparedSequence
     {
-        if (info == null)
-            return null;
-        var scene = SceneManager.GetActiveScene();
-        if (!scene.IsValid() || !scene.isLoaded)
-            return "[OrderSeq] 场景未打开，跳过订单顺序烘焙";
+        internal LevelInfoSO info;
+        internal bool enabled;
+        internal string end;
+        internal int[] modes, sizes, batches, uids;
+    }
 
-        var infoPath = AssetDatabase.GetAssetPath(info);
-        var cfg = LayoutEditorLevelAdminApi.LoadLevelOrderSequence(infoPath);
-        if (cfg == null || !cfg.enabled || cfg.groups == null || cfg.groups.Length == 0)
+    /// <summary>Resolve native and Web UIDs before scene mutation. The returned request-local plan
+    /// is consumed unchanged after strip/Prepare; no second asset/bundle lookup can fail late.</summary>
+    public static PreparedSequence Prepare(LevelInfoSO info)
+    {
+        var plan = new PreparedSequence { info = info };
+        if (info == null) return plan;
+        var web = LayoutEditorLevelAdminApi.LoadLevelOrderSequence(AssetDatabase.GetAssetPath(info));
+        var error = LayoutEditorOrderSequencePolicy.Validate(info, web, null);
+        if (error != null) throw new InvalidOperationException(error);
+        var warned = new HashSet<string>();
+        if (info.levelType == LevelInfoSO.LevelType.Campaign)
         {
-            RemoveFromScene(scene);
-            return null;
+            var configs = LayoutEditorOrderSequencePolicy.Configs(info);
+            for (int p = 0; p < configs.Length; p++)
+            {
+                string[] errors;
+                var ids = LayoutEditorOrderSequencePolicy.Read(configs[p], out errors);
+                for (int r = 0; r < ids.Length; r++)
+                {
+                    int uid;
+                    if (!TryResolveRecipeUid(ids[r], warned, out uid))
+                        throw new InvalidOperationException((p + 1) + "P 原生序列第 " + (r + 1) + " 项无法解析 UID：" + ids[r]);
+                }
+            }
         }
-
-        // 组 → uID（失效 guid 跳过并告警；整组失效跳过整组）
+        if (web == null || !web.enabled) return plan;
         var modes = new List<int>();
         var sizes = new List<int>();
         var batches = new List<int>();
         var uids = new List<int>();
-        var warned = new HashSet<string>();
-        for (int i = 0; i < cfg.groups.Length; i++)
+        for (int g = 0; g < web.groups.Length; g++)
         {
-            var g = cfg.groups[i];
-            if (g == null || g.recipeGuids == null || g.recipeGuids.Length == 0)
-                continue;
-            var groupUids = new List<int>();
-            for (int j = 0; j < g.recipeGuids.Length; j++)
+            var group = web.groups[g];
+            modes.Add(group.mode);
+            sizes.Add(group.recipeGuids.Length);
+            batches.Add(group.mode == 1 ? group.batchSize : 0);
+            for (int r = 0; r < group.recipeGuids.Length; r++)
             {
-                var guid = g.recipeGuids[j];
                 int uid;
-                if (!TryResolveRecipeUid(guid, warned, out uid))
-                    continue;
-                groupUids.Add(uid);
+                if (!TryResolveRecipeUid(group.recipeGuids[r], warned, out uid))
+                    throw new InvalidOperationException("[OrderSeq] 第 " + (g + 1) + " 组第 " + (r + 1) + " 项无法解析菜谱 UID：" + group.recipeGuids[r]);
+                uids.Add(uid);
             }
-            if (groupUids.Count == 0)
-            {
-                LayoutEditorLog.LogWarning("[OrderSeq] 第 " + (i + 1) + " 组无有效菜谱，整组跳过");
-                continue;
-            }
-            modes.Add(g.mode == 1 ? 1 : 0);
-            sizes.Add(groupUids.Count);
-            batches.Add(g.mode == 1 ? Mathf.Clamp(g.batchSize, 0, 999) : 0);
-            uids.AddRange(groupUids);
         }
-        if (modes.Count == 0)
+        plan.enabled = true;
+        plan.end = web.endBehavior;
+        plan.modes = modes.ToArray(); plan.sizes = sizes.ToArray();
+        plan.batches = batches.ToArray(); plan.uids = uids.ToArray();
+        return plan;
+    }
+
+    /// <summary>按 LevelInfo 烘焙当前打开场景。返回告警文本（null = 成功/无需烘焙）。
+    /// 配置缺失 / enabled=false = 清理场景残留；坏引用或双序列冲突抛错。</summary>
+    public static string ApplyForOpenScene(LevelInfoSO info)
+    {
+        return ApplyPreparedForOpenScene(info, Prepare(info));
+    }
+
+    public static string ApplyPreparedForOpenScene(LevelInfoSO info, PreparedSequence plan)
+    {
+        if (info == null)
+            return null;
+        if (plan == null || plan.info != info) throw new InvalidOperationException("订单顺序预检与目标关卡不一致。");
+        var scene = SceneManager.GetActiveScene();
+        if (!scene.IsValid() || !scene.isLoaded)
+            return "[OrderSeq] 场景未打开，跳过订单顺序烘焙";
+        if (info.levelType != LevelInfoSO.LevelType.Campaign)
         {
-            LayoutEditorLog.LogWarning("[OrderSeq] 订单顺序无有效组（guid 全部失效？），清理场景载体");
             RemoveFromScene(scene);
             return null;
         }
 
-        var end = cfg.endBehavior == "pingpong" || cfg.endBehavior == "stop" ? cfg.endBehavior : "loop";
+        if (!plan.enabled)
+        {
+            RemoveFromScene(scene);
+            return null;
+        }
+
+        var modes = plan.modes; var sizes = plan.sizes;
+        var batches = plan.batches; var uids = plan.uids;
+        var end = plan.end;
 
         // 挂载点：PseudoPrefabManagerStub（关卡数据锚点）
         var stub = UnityEngine.Object.FindObjectOfType<PseudoPrefabManagerStub>();
@@ -109,10 +142,10 @@ public static class LayoutEditorOrderSequenceBake
             else
                 Undo.RecordObject(comp, "Layout Editor Order Sequence");
             SetField(comp, "m_endBehavior", end);
-            SetField(comp, "m_groupModes", modes.ToArray());
-            SetField(comp, "m_groupSizes", sizes.ToArray());
-            SetField(comp, "m_groupBatches", batches.ToArray());
-            SetField(comp, "m_recipeUids", uids.ToArray());
+            SetField(comp, "m_groupModes", modes);
+            SetField(comp, "m_groupSizes", sizes);
+            SetField(comp, "m_groupBatches", batches);
+            SetField(comp, "m_recipeUids", uids);
             EditorUtility.SetDirty(comp);
         }
 
@@ -122,12 +155,12 @@ public static class LayoutEditorOrderSequenceBake
             tag = Undo.AddComponent<SpecificPseudoPrefabTag>(go);
         else
             Undo.RecordObject(tag, "Layout Editor Order Sequence");
-        tag.prefabTag = BuildTag(end, modes.ToArray(), sizes.ToArray(), batches.ToArray(), uids.ToArray());
+        tag.prefabTag = BuildTag(end, modes, sizes, batches, uids);
         EditorUtility.SetDirty(tag);
 
         EditorSceneManager.MarkSceneDirty(scene);
-        LayoutEditorLog.Log("[OrderSeq] 订单顺序烘焙: " + modes.Count + " 组，"
-            + uids.Count + " 条菜谱引用，结束行为=" + end);
+        LayoutEditorLog.Log("[OrderSeq] 订单顺序烘焙: " + modes.Length + " 组，"
+            + uids.Length + " 条菜谱引用，结束行为=" + end);
         return null;
     }
 

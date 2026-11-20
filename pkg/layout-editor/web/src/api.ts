@@ -58,6 +58,8 @@ import type {
   MatchlistSuggestion,
   MusicCatalog,
   PerPlayerConfig,
+  LevelGameMode,
+  LevelModeConfig,
   RecipeEntry,
   SetExportStatus,
   SetStubStatus,
@@ -471,7 +473,7 @@ export async function fetchResourceStats(setName: string): Promise<SetResourceSt
 
 export async function fetchLevelDetail(assetPath: string): Promise<LevelDetail> {
   const q = new URLSearchParams({ assetPath });
-  const r = await fetch(`/api/level?${q}`);
+  const r = await fetch(`/api/level?${q}`, { cache: "no-store" });
   return readApiJson<LevelDetail>(r);
 }
 
@@ -679,20 +681,26 @@ export async function startSetExport(
   mode: "all" | "levels" | "deps" = "all",
   depsVersion?: string,
   selectedLevels?: string[]
-): Promise<void> {
+): Promise<string> {
   const body: Record<string, unknown> = { setNames, mode };
   if (depsVersion) body.depsVersion = depsVersion;
   if (selectedLevels && selectedLevels.length > 0) body.selectedLevels = selectedLevels;
-  const r = await fetch("/api/set/export", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  await readApiJson<{ ok?: boolean }>(r);
+  try {
+    const r = await fetch("/api/set/export", {
+      method: "POST",
+      signal: AbortSignal.timeout(30000),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const accepted = await readApiJson<{ ok?: boolean; exportId: string }>(r);
+    return accepted.exportId;
+  } catch (error) {
+    throw new Error(`${error instanceof Error ? error.message : error}。启动结果尚未确认，请先查询导出状态，勿直接重复启动。`);
+  }
 }
 
 export async function fetchSetExportStatus(): Promise<SetExportStatus> {
-  const r = await fetch("/api/set/export/status");
+  const r = await fetch("/api/set/export/status", { cache: "no-store", signal: AbortSignal.timeout(10000) });
   return readApiJson<SetExportStatus>(r);
 }
 
@@ -817,7 +825,7 @@ export async function downloadSetExportZip(
   fileName: string
 ): Promise<{ blob: Blob; fileName: string }> {
   const q = new URLSearchParams({ setName, fileName });
-  const r = await fetch(`/api/set/export/download?${q}`);
+  const r = await fetch(`/api/set/export/download?${q}`, { signal: AbortSignal.timeout(300000) });
   if (!r.ok) {
     const err = await r.json().catch(() => ({}));
     throw new Error(err.error ?? `下载失败（HTTP ${r.status}）`);
@@ -832,6 +840,7 @@ export interface LevelCreateBody {
   levelId: string;
   levelName: string;
   levelNameZH: string;
+  gameMode?: LevelGameMode;
 }
 
 export async function createLevel(body: LevelCreateBody): Promise<void> {
@@ -860,12 +869,48 @@ export interface LevelInfoUpdateBody {
   // sceneName 已移除直改入口（不挪文件的直改会导致场景失联），改名走 renameLevel。
   debugRecipeCount: number;
   disableDynamicParenting: boolean;
+  /** Omitted/false update flag preserves existing value, including legacy requests. */
+  updateEnableRespawnBounds?: boolean;
+  enableRespawnBounds?: boolean;
   minOrderCount: number;
   maxOrderCount: number;
   gridHalfSizeX: number;
   gridHalfSizeY: number;
   gridHalfSizeZ: number;
   dependencies: string[];
+}
+
+export async function fetchLevelModeConfig(assetPath: string): Promise<LevelModeConfig> {
+  const r = await fetch(`/api/level/mode-config?assetPath=${encodeURIComponent(assetPath)}`, { cache: "no-store" });
+  return readApiJson<LevelModeConfig>(r);
+}
+
+export async function updateLevelModeConfig(body: LevelModeConfig): Promise<void> {
+  const r = await fetch("/api/level/mode-config", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const result = await readApiJson<{ ok?: boolean; error?: string }>(r);
+  if (result.error || result.ok === false) throw new Error(result.error || "保存模式配置失败。");
+}
+
+/** Changing controllers is separate from saving phase/wave data. Always verify the resulting mode. */
+export async function changeLevelMode(assetPath: string, gameMode: LevelGameMode, convertHordeObjects = false): Promise<LevelDetail> {
+  const r = await fetch("/api/level/mode", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assetPath, gameMode, convertHordeObjects }),
+  });
+  const result = await readApiJson<{ ok?: boolean; error?: string }>(r);
+  if (result.error || result.ok !== true) throw new Error(result.error || "切换模式未得到成功确认。");
+  try {
+    const detail = await fetchLevelDetail(assetPath);
+    if (!detail || detail.gameMode !== gameMode) throw new Error("回读的关卡模式与请求不一致。");
+    return detail;
+  } catch (error) {
+    throw new Error(`后端已确认切换，但详情回读失败：${error instanceof Error ? error.message : error}。请先重新加载详情核实当前模式。`);
+  }
 }
 
 export async function updateLevelInfo(body: LevelInfoUpdateBody): Promise<void> {
@@ -875,14 +920,20 @@ export async function updateLevelInfo(body: LevelInfoUpdateBody): Promise<void> 
     body: JSON.stringify(body),
   });
   await readApiJson<{ ok?: boolean }>(r);
+  if (body.updateEnableRespawnBounds) {
+    const saved = await fetchLevelDetail(body.assetPath);
+    if (saved.enableRespawnBounds !== body.enableRespawnBounds) throw new Error("enableRespawnBounds 保存后读回不一致，请重新加载核实。");
+  }
 }
 
 export interface LevelConfigUpdateBody {
   assetPath: string;
-  config_1p: PerPlayerConfig;
-  config_2p: PerPlayerConfig;
-  config_3p: PerPlayerConfig;
-  config_4p: PerPlayerConfig;
+  /** Each omitted/null config is unchanged. All supplied players validate before any mutation.
+   * scriptedRecipes null/omitted preserves, [] clears; Campaign only; Web enabled is exclusive. */
+  config_1p?: PerPlayerConfig | null;
+  config_2p?: PerPlayerConfig | null;
+  config_3p?: PerPlayerConfig | null;
+  config_4p?: PerPlayerConfig | null;
 }
 
 export async function updateLevelConfig(body: LevelConfigUpdateBody): Promise<void> {
@@ -1196,24 +1247,36 @@ export async function clearLevelAssignment(assetPath: string): Promise<void> {
 /** 读取订单顺序配置；未配置或文件缺失返回 null（= 原版随机出单）。 */
 export async function fetchLevelOrderSequence(assetPath: string): Promise<LevelOrderSequence | null> {
   const q = new URLSearchParams({ assetPath });
-  const r = await fetch(`/api/level/order-sequence?${q}`);
+  const r = await fetch(`/api/level/order-sequence?${q}`, { cache: "no-store" });
   const data = await readApiJson<OrderSequenceResult>(r);
-  if (!data.exists || !data.json) return null;
+  if (!data.exists) return null;
   try {
-    return JSON.parse(data.json) as LevelOrderSequence;
+    const parsed = JSON.parse(data.json);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("Expected object");
+    return parsed as LevelOrderSequence;
   } catch {
     throw new Error("订单顺序配置解析失败（order_seq.json 不是合法 JSON，可在菜谱管理重新保存覆盖）");
   }
 }
 
-/** 保存订单顺序配置（后端结构校验：组数/guid/mode/batchSize/endBehavior）。 */
+/** Enabled Web sequence requires Campaign and empty native arrays for every player.
+ * Never clear native sequences implicitly. Backend is authoritative; verify saved JSON by GET. */
 export async function saveLevelOrderSequence(assetPath: string, data: LevelOrderSequence): Promise<void> {
+  if (data.enabled) {
+    const detail = await fetchLevelDetail(assetPath);
+    if (detail.gameMode !== "Campaign") throw new Error("Web OrderSequence 仅支持 Campaign。");
+    if (detail.configs.some(config => (config.scriptedRecipes?.length ?? 0) > 0)) {
+      throw new Error("原生 scriptedRecipes 非空；请先在关卡配置中显式清空全部人数序列。");
+    }
+  }
   const r = await fetch("/api/level/order-sequence-save", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ assetPath, json: JSON.stringify(data) }),
   });
   await readApiJson<OrderSequenceResult>(r);
+  const saved = await fetchLevelOrderSequence(assetPath);
+  if (JSON.stringify(saved) !== JSON.stringify(data)) throw new Error("订单顺序保存后读回不一致，请重新加载核实。");
 }
 
 /** 清除订单顺序配置（场景载体由下一次写回/导出清理）。 */

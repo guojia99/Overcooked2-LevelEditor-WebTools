@@ -17,7 +17,7 @@ public static class LayoutEditorRecipeKnowledge
     ///  写回会静默丢参数）。
     ///  v8（2026-10-08）：燃烧弹射器波次（item.burner.waves）——旧桥不认识
     ///  waves 字段，写回会静默丢落点/时序，靠版本告警拦旧桥。</summary>
-    public const int BridgeSchemaVersion = 11;
+    public const int BridgeSchemaVersion = 12;
 
     // Mirrors deriveSaladSubgroups in recipeGroups.ts / build-catalog.mjs.
     public static string[] ComputeSaladSubgroups(RecipeEntryDto recipe)

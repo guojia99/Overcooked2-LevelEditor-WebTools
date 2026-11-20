@@ -1,8 +1,43 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 17,
   "itemCount": 200,
   "items": [
+    {
+      "id": "workstation_mug_return",
+      "guid": "f88b1d0679b4473778fb38035edb4c8c",
+      "assetPath": "Assets/commonW1/prefabs/dlc03/counters/workstation_mug_return.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "height": 0.503,
+      "layoutTier": "core",
+      "nameZh": "马克杯回收台",
+      "nameEn": "Mug Return Station",
+      "icon": false
+    },
+    {
+      "id": "workstation_sink_mug_01_wood",
+      "guid": "49354d3fd6a94884fba5706962e22816",
+      "assetPath": "Assets/commonW1/prefabs/dlc03/counters/workstation_sink_mug_01_wood.prefab",
+      "category": "counters/sinks",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "height": 1.352,
+      "baseY": -0.076,
+      "layoutTier": "core",
+      "nameZh": "马克杯水槽（木制）",
+      "nameEn": "Mug Sink (Wooden)",
+      "icon": false
+    },
     {
       "id": "apple",
       "guid": "6ab6c04c8870e8d4d843ce46383569ef",
@@ -4297,50 +4332,6 @@
       "recipeGuid": "fbd107281a4092b4f9f24f7bce2f75de",
       "nameZh": "鸡肉披萨",
       "nameEn": "Chicken Pizza",
-      "typeKind": "food_model",
-      "usage": "dressing",
-      "icon": true
-    },
-    {
-      "id": "Pizza_Olives",
-      "guid": "d6d25d86f88ed8bf49573ac1e7052ba1",
-      "assetPath": "Assets/commonW1/prefabs/dlc05/decor/recipes/Pizza_Olives.prefab",
-      "category": "decor/recipes",
-      "theme": null,
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "height": 0.137,
-      "baseY": -0.007,
-      "layoutTier": "decor",
-      "recipeDecor": true,
-      "recipeGuid": "fbd107281a4092b4f9f24f7bce2f75de",
-      "nameZh": "橄榄披萨",
-      "nameEn": "Olive Pizza",
-      "typeKind": "food_model",
-      "usage": "dressing",
-      "icon": true
-    },
-    {
-      "id": "Pizza_Peperoni_80_SO",
-      "guid": "7b0cda279f35190738f1ada6b90eb5d0",
-      "assetPath": "Assets/commonW1/prefabs/core/decor/recipes/Pizza_Peperoni_80_SO.prefab",
-      "category": "decor/recipes",
-      "theme": null,
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "height": 0.137,
-      "baseY": -0.007,
-      "layoutTier": "decor",
-      "recipeDecor": true,
-      "recipeGuid": "fbd107281a4092b4f9f24f7bce2f75de",
-      "nameZh": "辣香肠披萨（80 分）",
-      "nameEn": "Pepperoni Pizza 80",
       "typeKind": "food_model",
       "usage": "dressing",
       "icon": true

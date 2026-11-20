@@ -9,8 +9,8 @@ namespace CustomStub
     /// 半成品入杯/盘回落判定（移植自被禁改的 GameUtils.CanStillFormOrder 补丁，
     /// 2026-10-27）。原版 Plate.CanPlaceOnPlate 只在「放进去后恰好等于某个配方」
     /// 时放行，空杯放牛奶/蜂蜜、热水+牛奶 这类半成品组合被弹回，玩家必须先按
-    /// 配方顺序操作（例如先放茶叶凑成纯茶）。本类复刻补丁逻辑：组合是某个同
-    /// platingStep 配方的真子集（还能继续加料凑成）→ 放行。
+    /// 配方顺序操作（例如先放茶叶凑成纯茶）。只允许同 platingStep 的普通组装
+    /// 配方真子集；烹饪/搅拌节点保持单项语义，不能拆出叶食材凑子集。
     /// 全部经反射访问宿主类型；任何成员缺失/异常 → 恒 false（=原版行为兜底）。
     /// </summary>
     internal static class PlatePartialOrderFallback
@@ -116,31 +116,68 @@ namespace CustomStub
             return result;
         }
 
-        /// <summary>与宿主补丁 GameUtils.CanStillFormOrder 等价：
-        /// node 化简后的组成是某同 platingStep 配方化简组成的真子集 → true。</summary>
-        public static bool CanStillFormOrder(object node, object platingStep)
+        internal static bool IsWebLevelPath(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return false;
+            string[] parts = path.Replace('\\', '/').Split('/');
+            return parts.Length == 5
+                && string.Equals(parts[0], "Assets", StringComparison.OrdinalIgnoreCase)
+                && string.Equals(parts[1], "LevelSets", StringComparison.OrdinalIgnoreCase)
+                && parts[2].Length > 0
+                && string.Equals(parts[3], "scenes", StringComparison.OrdinalIgnoreCase)
+                && parts[4].Length > 6 && parts[4].EndsWith(".unity", StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Only plain composites are assembly lists. Cooked/mixed nodes are atomic
+        // ingredients; simplifying Raw/Unmixed must not erase their processing step.
+        private static bool PreservesProcessing(object node)
+        {
+            if (node == null) return false;
+            if (!s_compositeType.IsInstanceOfType(node)) return true;
+            object simple = s_simplify.Invoke(node, null);
+            if (simple == null || (node.GetType() != s_compositeType
+                && simple.GetType() != node.GetType())) return false;
+            foreach (object part in Union((Array)s_compComposition.GetValue(node),
+                (Array)s_compOptional.GetValue(node)))
+                if (!PreservesProcessing(part)) return false;
+            return true;
+        }
+
+        private static Array AssemblyParts(object node)
+        {
+            if (!PreservesProcessing(node)) return null;
+            Array parts;
+            if (node.GetType() == s_compositeType)
+                parts = Union((Array)s_compComposition.GetValue(node), (Array)s_compOptional.GetValue(node));
+            else
+            {
+                parts = Array.CreateInstance(s_assembledType, 1);
+                parts.SetValue(node, 0);
+            }
+            for (int i = 0; i < parts.Length; i++)
+            {
+                object part = parts.GetValue(i);
+                if (part == null) return null;
+                object simple = s_simplify.Invoke(part, null);
+                if (simple == null || ReferenceEquals(simple, s_nullNode.GetValue(null))) return null;
+                parts.SetValue(simple, i);
+            }
+            return parts;
+        }
+
+        /// <summary>Only unprocessed assembly recipes admit partial assembly.
+        /// sourceNode is read from the unchanged source, not the simplified adapter.</summary>
+        public static bool CanStillFormOrder(object node, object platingStep, object sourceNode)
         {
             if (!EnsureInit())
                 return false;
             try
             {
-                if (node == null || platingStep == null)
+                if (node == null || platingStep == null || sourceNode == null)
                     return false;
-                object simple = s_simplify.Invoke(node, null);
-                if (simple == null || ReferenceEquals(simple, s_nullNode.GetValue(null)))
-                    return false;
-                Array subSet;
-                if (s_compositeType.IsInstanceOfType(simple))
-                {
-                    subSet = Union((Array)s_compComposition.GetValue(simple),
-                        (Array)s_compOptional.GetValue(simple));
-                }
-                else
-                {
-                    subSet = Array.CreateInstance(s_assembledType, 1);
-                    subSet.SetValue(simple, 0);
-                }
-                if (subSet.Length == 0)
+                if (!PreservesProcessing(sourceNode)) return false;
+                Array subSet = AssemblyParts(node);
+                if (subSet == null || subSet.Length == 0)
                     return false;
                 Array orders = s_getAllOrderNodes.Invoke(null, null) as Array;
                 if (orders == null)
@@ -157,14 +194,10 @@ namespace CustomStub
                     if (!ReferenceEquals(s_odnPlatingStep.GetValue(order), platingStep))
                         continue;
                     object recipeRoot = s_odnConvert.Invoke(order, null);
-                    if (recipeRoot == null)
+                    if (recipeRoot == null || recipeRoot.GetType() != s_compositeType)
                         continue;
-                    object recipeSimple = s_simplify.Invoke(recipeRoot, null);
-                    if (!s_compositeType.IsInstanceOfType(recipeSimple))
-                        continue;
-                    Array superSet = Union((Array)s_compComposition.GetValue(recipeSimple),
-                        (Array)s_compOptional.GetValue(recipeSimple));
-                    if (superSet.Length > subSet.Length
+                    Array superSet = AssemblyParts(recipeRoot);
+                    if (superSet != null && superSet.Length > subSet.Length
                         && (bool)s_compContains.Invoke(null, new object[] { superSet, subSet }))
                         return true;
                 }

@@ -33,6 +33,7 @@ public static class LayoutEditorCommonW6Dependencies
     {
         if (info == null || !scene.IsValid())
             return 0;
+        if (LayoutEditorNativeDependencies.Clean(info)) AssetDatabase.SaveAssets();
         string scenePath = scene.path;
         if (string.IsNullOrEmpty(scenePath) || !File.Exists(scenePath))
             return 0;
@@ -85,7 +86,7 @@ public static class LayoutEditorCommonW6Dependencies
         var verified = new List<string>();
         foreach (string b in bundles)
         {
-            if (b == CommonW6Bundle || BundleExists(b))
+            if (LayoutEditorNativeDependencies.IsNativeBundle(b) && BundleExists(b))
                 verified.Add(b);
         }
         if (verified.Count == 0)
@@ -105,7 +106,7 @@ public static class LayoutEditorCommonW6Dependencies
             return 0;
 
         Undo.RecordObject(info, "Layout Editor Sync commonW6 Dependencies");
-        info.dependencies = deps.ToArray();
+        info.dependencies = LayoutEditorNativeDependencies.Filter(deps);
         EditorUtility.SetDirty(info);
         AssetDatabase.SaveAssets();
         Debug.Log("[commonW6] 同步依赖 +" + added + "（" + scenePath + "）："

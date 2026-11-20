@@ -10,18 +10,23 @@ public static class LayoutEditorSteamerFill
     {
         if (info == null)
             return;
-        RemoveSushiFromSteamers();
-        ApplyIngredients(CollectSteamerInputs(info), IsSteamer, 1);
-        ApplyIngredients(CollectMixerInputs(info), IsMixerBowl, 4);
+        RemoveSushiFromSteamers(info);
+        ApplyIngredients(CollectSteamerInputs(info), delegate(PseudoPrefabStub stub) {
+            return IsSteamer(stub) && LayoutEditorLevelModeStore.OwnsRecipeConsumer(info, stub);
+        }, 1);
+        ApplyIngredients(CollectMixerInputs(info), delegate(PseudoPrefabStub stub) {
+            return IsMixerBowl(stub) && LayoutEditorLevelModeStore.OwnsRecipeConsumer(info, stub);
+        }, 4);
     }
 
     /// <summary>寿司不是蒸笼菜。米饭走煮锅，寿司鱼/虾/海苔不进蒸笼；这里清掉历史自动填充写进蒸笼的寿司食材。</summary>
-    private static void RemoveSushiFromSteamers()
+    private static void RemoveSushiFromSteamers(LevelInfoSO info)
     {
         bool sceneDirty = false;
         foreach (var stub in Object.FindObjectsOfType<PseudoPrefabStub>())
         {
-            if (stub == null || stub.gameObject == null || !IsSteamer(stub))
+            if (stub == null || stub.gameObject == null || !IsSteamer(stub)
+                || !LayoutEditorLevelModeStore.OwnsRecipeConsumer(info, stub))
                 continue;
             var derived = stub.gameObject.GetComponent<PseudoPrefabCookingUtensilStub>();
             if (derived == null || derived.allowedIngredientSOs == null)
@@ -123,10 +128,10 @@ public static class LayoutEditorSteamerFill
     private static List<ScriptableObject> CollectSteamerInputs(LevelInfoSO info)
     {
         var result = new List<ScriptableObject>();
-        if (info == null || info.recipes == null)
+        if (info == null)
             return result;
         var seen = new HashSet<Object>();
-        foreach (var recipe in info.recipes)
+        foreach (var recipe in LayoutEditorLevelModeStore.CollectAllRecipes(info))
         {
             var custom = recipe as CustomRecipeSO;
             if (custom == null)
@@ -161,10 +166,10 @@ public static class LayoutEditorSteamerFill
     private static List<ScriptableObject> CollectMixerInputs(LevelInfoSO info)
     {
         var result = new List<ScriptableObject>();
-        if (info == null || info.recipes == null)
+        if (info == null)
             return result;
         var seen = new HashSet<Object>();
-        foreach (var recipe in info.recipes)
+        foreach (var recipe in LayoutEditorLevelModeStore.CollectAllRecipes(info))
         {
             var custom = recipe as CustomRecipeSO;
             if (custom == null)

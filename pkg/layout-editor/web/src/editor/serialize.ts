@@ -33,6 +33,7 @@ import {
 } from "./stubControls";
 import { partLevelActive, partIdOf } from "./partLevel";
 import { clampChefHeadLightRange } from "./lightsUtil";
+import { normalizeHordeStub } from "./hordeStub";
 import type {
   LayoutItem,
   FloorObject,
@@ -53,6 +54,7 @@ function partParentPath(pid: string, defaultParent: string | undefined): string 
 }
 
 export function serializeItemForDoc({ _editorKey, _wx, _wz, _parentWx, _parentWz, ...rest }: EditorItem): LayoutItem {
+  normalizeHordeStub(rest);
   const fp = isResizableBackgroundItem(rest)
     ? planeCatalogFootprint(rest)
     : resolveFootprint(rest);

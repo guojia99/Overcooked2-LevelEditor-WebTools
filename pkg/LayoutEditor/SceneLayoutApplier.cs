@@ -60,6 +60,18 @@ public static class SceneLayoutApplier
             scene = EditorSceneManager.GetActiveScene();
         }
 
+        var nativeInfo = LayoutEditorLevelInfoResolver.ResolveForScene(scene.path);
+        LayoutEditorOrderSequenceBake.PreparedSequence preparedOrders;
+        try { preparedOrders = LayoutEditorOrderSequenceBake.Prepare(nativeInfo); }
+        catch (Exception ex) { return "订单顺序预检失败，尚未修改场景：" + ex.Message; }
+        if (nativeInfo != null && nativeInfo.levelType != LevelEditorStub.LevelInfoSO.LevelType.Campaign)
+        {
+            if (document.partLevel != null && document.partLevel.enabled)
+                return "Web 分 P 与原生 Dynamic/Horde 模式不可混用。";
+            var nativeError = LayoutEditorNativeModeValidation.ValidateScene(scene, nativeInfo);
+            if (nativeError != null)
+                return "原生模式场景校验失败：" + nativeError;
+        }
         if (!LayoutEditorSafety.PrepareSceneForApply())
             return LayoutEditorSafety.LastError;
 
@@ -535,25 +547,37 @@ public static class SceneLayoutApplier
         if (steamerLevelInfo != null)
             LayoutEditorSteamerFill.SyncSteamerIngredients(steamerLevelInfo);
         LayoutEditorPancakeFill.SyncForScene(scene, steamerLevelInfo);
+        if (steamerLevelInfo != null)
+        {
+            var modeError = LayoutEditorLevelModeStore.SyncSavedForScene(document.sceneAssetPath);
+            if (modeError != null)
+                return "模式配置同步失败，未保存场景：" + modeError;
+        }
         // 订单顺序（4.0.0.18（原 4.7.0））：order_seq~/order_seq.json 为权威，写回幂等烘焙/清理
-        // 场景载体（组件 + tag）；失败不吞写回（告警定位）。
+        // 场景载体（组件 + tag）；失败拒绝保存，避免静默导出部分序列。
         if (steamerLevelInfo != null)
         {
             try
             {
-                var orderSeqWarn = LayoutEditorOrderSequenceBake.ApplyForOpenScene(steamerLevelInfo);
+                var orderSeqWarn = LayoutEditorOrderSequenceBake.ApplyPreparedForOpenScene(steamerLevelInfo, preparedOrders);
                 if (orderSeqWarn != null)
-                    LayoutEditorLog.LogWarning("[Applier] " + orderSeqWarn);
+                    return orderSeqWarn;
             }
             catch (System.Exception e)
             {
-                LayoutEditorLog.LogWarning("[Applier] 订单顺序烘焙失败（其余写回不受影响）: " + e.Message);
+                return "订单顺序烘焙失败，未保存场景；内存布局可能已改动，请重新加载核实：" + e.Message;
             }
         }
         // 分料机 2026-11 字段迁移（outputPrefab -> outputPrefabSO）：必须在 SaveScene 前。
         LayoutEditorIngredientSplitterMigration.MigrateOpenScene();
         if (beforeSave != null)
             beforeSave();
+        if (nativeInfo != null && nativeInfo.levelType != LevelEditorStub.LevelInfoSO.LevelType.Campaign)
+        {
+            var nativeError = LayoutEditorNativeModeValidation.ValidateScene(scene, nativeInfo);
+            if (nativeError != null)
+                return "原生模式场景校验失败，未保存：" + nativeError;
+        }
         var removedMissingScripts = LayoutEditorMissingScriptCleanup.RemoveMissingScripts(scene);
         if (removedMissingScripts > 0)
             LayoutEditorLog.Log("[Applier] 清理 Missing Script 组件: " + removedMissingScripts);

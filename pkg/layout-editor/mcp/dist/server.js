@@ -3,9 +3,14 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema, } from "@modelcontextprotocol/sdk/types.js";
 import { BridgeClient, BridgeError } from "./bridge-client.js";
+import { handleModeTool, ModeToolError, modeToolDefinitions } from "./level-mode.js";
+import { handleSettingsTool, settingsToolDefinitions } from "./level-settings.js";
 const bridge = new BridgeClient();
 const drafts = new Map();
+let lastExportId = "";
 const toolDefinitions = [
+    ...settingsToolDefinitions,
+    ...modeToolDefinitions,
     {
         name: "oc2_editor_health",
         description: "检查 Overcooked2 Unity 关卡编辑器 Bridge 是否在线。只读。",
@@ -23,7 +28,7 @@ const toolDefinitions = [
     },
     {
         name: "oc2_get_level_detail",
-        description: "读取关卡配置、菜谱依赖、音频和场景路径。只读。",
+        description: "读取关卡配置、原生 bundle 依赖、音频和场景路径；自动清理并保存历史非法 dependencies。",
         inputSchema: { type: "object", properties: { assetPath: { type: "string", minLength: 1 } }, required: ["assetPath"], additionalProperties: false },
     },
     {
@@ -43,7 +48,7 @@ const toolDefinitions = [
     },
     {
         name: "oc2_analyze_level_dependencies",
-        description: "分析关卡所需 AssetBundle、缺失依赖和多余依赖。只读。",
+        description: "分析关卡原生 bundle 依赖、缺失和多余项，仅返回 ^bundle[0-9]+$。读取时自动清理并保存历史非法 dependencies；共享包分发清单独立管理。",
         inputSchema: { type: "object", properties: { assetPath: { type: "string", minLength: 1 } }, required: ["assetPath"], additionalProperties: false },
     },
     {
@@ -123,8 +128,8 @@ const toolDefinitions = [
     },
     {
         name: "oc2_wait_export",
-        description: "等待导出任务终态 done/error，内部每 2 秒轮询，最长默认 30 分钟；返回原始 mode/stages 快照。zip 或 idle 不代表完成；连接异常结束本次等待，恢复后先查状态再继续轮询，不重复启动导出。",
-        inputSchema: { type: "object", properties: { timeoutMs: { type: "integer", minimum: 1000, maximum: 1800000 } }, additionalProperties: false },
+        description: "等待导出终态，单次状态请求最多10秒，总等待默认30分钟。断线/HTML暂态自动重连；exportId可显式传入，默认核对最近启动的任务，任务替换明确失败。idle或zip不代表完成，不重复启动导出。",
+        inputSchema: { type: "object", properties: { exportId: { type: "string" }, timeoutMs: { type: "integer", minimum: 1000, maximum: 1800000 } }, additionalProperties: false },
     },
 ];
 function now() { return new Date().toISOString(); }
@@ -139,11 +144,17 @@ function result(name, data, kind, sideEffect, estimate, resource) {
     };
 }
 function errorResult(name, error, resource) {
+    const modeTool = modeToolDefinitions.some((tool) => tool.name === name);
+    const settingsWrite = settingsToolDefinitions.some((tool) => tool.name === name);
+    const modeWrite = settingsWrite || (modeTool && name !== "oc2_get_level_mode_config");
+    const exportWrite = name === "oc2_start_export";
+    const sideEffect = exportWrite ? "build" : modeWrite ? (settingsWrite || name === "oc2_save_level_mode_config" ? "write_asset" : "write_scene") : "read";
     const e = error instanceof BridgeError ? error : new Error(error instanceof Error ? error.message : String(error));
     return {
         ok: false,
-        error: { code: error instanceof BridgeError && error.status === 404 ? "NOT_FOUND" : "BRIDGE_ERROR", message: e.message, retryable: error instanceof BridgeError ? error.retryable : false },
-        operation: { name, kind: "read", sideEffect: "read" },
+        error: { code: error instanceof ModeToolError ? error.code : error instanceof BridgeError && error.status === 404 ? "NOT_FOUND" : "BRIDGE_ERROR", message: e.message, retryable: modeWrite || exportWrite ? false : error instanceof BridgeError ? error.retryable : false },
+        ...(error instanceof ModeToolError ? { data: { writeOutcome: error.writeOutcome }, warnings: error.writeOutcome === "not_started" ? [] : ["先执行只读核对，禁止自动重试写操作。"] } : {}),
+        operation: { name, kind: sideEffect, sideEffect },
         resource,
         bridge: { online: false, url: bridge.baseUrl },
         timing: { estimatedMs: 1000, pollAfterMs: 3000, deadlineMs: 30000 },
@@ -244,6 +255,21 @@ function applyOperations(document, operations) {
     return next;
 }
 async function handle(name, input) {
+    if (settingsToolDefinitions.some((tool) => tool.name === name)) {
+        const data = await handleSettingsTool(name, input, bridge);
+        const response = result(name, data, "write_asset", "write_asset", 30000, { assetPath: String(input.assetPath) });
+        response.timing.deadlineMs = 180000;
+        return response;
+    }
+    if (modeToolDefinitions.some((tool) => tool.name === name)) {
+        const data = await handleModeTool(name, input, bridge);
+        const sideEffect = name === "oc2_get_level_mode_config" ? "read" : name === "oc2_save_level_mode_config" ? "write_asset" : "write_scene";
+        const readback = (data.readback || data);
+        const response = result(name, data, sideEffect, sideEffect, sideEffect === "read" ? 5000 : 30000, { assetPath: String(readback.assetPath), ...(typeof input.setName === "string" ? { setName: input.setName, levelId: String(input.levelId) } : {}) });
+        if (sideEffect !== "read")
+            response.timing.deadlineMs = 180000;
+        return response;
+    }
     if (name === "oc2_editor_health")
         return result(name, await bridge.get("/api/health"), "read", "read", 1000);
     if (name === "oc2_list_level_sets")
@@ -372,19 +398,33 @@ async function handle(name, input) {
             body.depsVersion = input.depsVersion;
         if (Array.isArray(input.selectedLevels))
             body.selectedLevels = input.selectedLevels;
-        const accepted = await bridge.post("/api/set/export", body);
-        return result(name, { accepted, taskId: `export-${randomUUID()}`, setNames: input.setNames, pollAfterMs: 2000, deadlineMs: 1800000 }, "build", "build", 300000);
+        const accepted = await bridge.post("/api/set/export", body, 30000);
+        lastExportId = String(accepted.exportId || "");
+        return result(name, { accepted, exportId: lastExportId, taskId: lastExportId, setNames: input.setNames, pollAfterMs: 2000, deadlineMs: 1800000 }, "build", "build", 300000);
     }
     if (name === "oc2_get_export_status")
-        return result(name, await bridge.get("/api/set/export/status"), "read", "read", 1000);
+        return result(name, await bridge.get("/api/set/export/status", 10000), "read", "read", 1000);
     if (name === "oc2_wait_export") {
         const timeoutMs = typeof input.timeoutMs === "number" ? Math.min(Math.max(input.timeoutMs, 1000), 1800000) : 1800000;
         const started = Date.now();
         let status = {};
+        let expectedId = typeof input.exportId === "string" ? input.exportId : lastExportId;
         while (Date.now() - started < timeoutMs) {
-            status = await bridge.get("/api/set/export/status");
+            try {
+                status = await bridge.get("/api/set/export/status", Math.min(10000, timeoutMs - (Date.now() - started)));
+            }
+            catch (error) {
+                if (!(error instanceof BridgeError) || !error.retryable)
+                    throw error;
+                await new Promise((resolve) => setTimeout(resolve, Math.min(2000, Math.max(0, timeoutMs - (Date.now() - started)))));
+                continue;
+            }
+            if (expectedId && status.exportId && status.exportId !== expectedId)
+                throw new BridgeError("导出任务已被替换，请核对 exportId；未重新启动导出。", 409, false);
+            if (!expectedId && status.exportId)
+                expectedId = String(status.exportId);
             const state = String(status.status || "");
-            if (state === "done" || state === "error")
+            if ((!expectedId || status.exportId === expectedId) && (state === "done" || state === "error"))
                 return result(name, { status, elapsedMs: Date.now() - started }, "build", "build", 300000);
             await new Promise((resolve) => setTimeout(resolve, 2000));
         }

@@ -7,6 +7,8 @@ public static class LayoutEditorCatalogLookup
     private static readonly Dictionary<string, LayoutFootprint> Footprints = new Dictionary<string, LayoutFootprint>
     {
         { "ServingStation", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
+        { "Service_Window", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
+        { "gate", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
         // 所有水槽 2×1（含洗茶杯水槽 / 洗杯槽 / 各 DLC 水槽）
         { "Sink", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
         { "SinkMug", new LayoutFootprint { cellsX = 2, cellsZ = 1 } },
@@ -166,6 +168,10 @@ public static class LayoutEditorCatalogLookup
     {
         if (string.IsNullOrEmpty(assetPath))
             return "Art";
+
+        if (assetPath == "Assets/common04/game_environment/horde/prefabs/Service_Window.prefab"
+            || assetPath == "Assets/common04/game_environment/horde/prefabs/gate.prefab")
+            return "Design/Counters";
 
         // 可推动方块 = 可推动大火锅，归入锅具目录
         if (assetPath.EndsWith("pushable_object.prefab", System.StringComparison.OrdinalIgnoreCase)

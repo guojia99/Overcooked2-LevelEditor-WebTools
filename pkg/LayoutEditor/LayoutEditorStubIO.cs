@@ -59,6 +59,7 @@ public static class LayoutEditorStubIO
         item.soArray = null;
         item.timedSwitch = null;
         item.ratHeist = null;
+        item.lockable = null;
 
         var playerStub = go.GetComponent<PseudoPrefabPlayerStub>();
         if (playerStub != null)
@@ -68,24 +69,39 @@ public static class LayoutEditorStubIO
             return;
         }
 
-        var serving = go.GetComponent<PseudoPrefabServingStationStub>();
+        var hordeServing = go.GetComponent<PseudoPrefabServingStationHordeStub>();
+        var serving = hordeServing != null ? hordeServing : go.GetComponent<PseudoPrefabServingStationStub>();
         if (serving != null)
         {
             item.stubKind = "ServingStation";
             var sdto = new LayoutServingStationStubDto();
+            if (hordeServing != null)
+            {
+                sdto.orderUIOffset = LayoutVector3.From(hordeServing.orderUIOffset);
+                sdto.healthUIOffset = LayoutVector3.From(hordeServing.healthUIOffset);
+            }
             if (serving.plateReturn != null)
                 sdto.plateReturnInstanceId = "u:" + serving.plateReturn.gameObject.GetInstanceID();
 
             // Collect all bound returns (array + legacy single), de-duplicated.
             var ids = new System.Collections.Generic.List<string>();
-            if (serving.plateReturns != null)
+            foreach (var station in go.GetComponents<PseudoPrefabServingStationStub>())
             {
-                foreach (var pr in serving.plateReturns)
-                    if (pr != null)
-                    {
-                        var pid = "u:" + pr.gameObject.GetInstanceID();
-                        if (!ids.Contains(pid)) ids.Add(pid);
-                    }
+                if (station == null) continue;
+                if (station.plateReturns != null)
+                {
+                    foreach (var pr in station.plateReturns)
+                        if (pr != null)
+                        {
+                            var pid = "u:" + pr.gameObject.GetInstanceID();
+                            if (!ids.Contains(pid)) ids.Add(pid);
+                        }
+                }
+                if (station.plateReturn != null)
+                {
+                    var pid = "u:" + station.plateReturn.gameObject.GetInstanceID();
+                    if (!ids.Contains(pid)) ids.Add(pid);
+                }
             }
             if (!string.IsNullOrEmpty(sdto.plateReturnInstanceId) && !ids.Contains(sdto.plateReturnInstanceId))
                 ids.Add(sdto.plateReturnInstanceId);
@@ -94,6 +110,17 @@ public static class LayoutEditorStubIO
             item.servingStation = sdto;
             // 提前 return 的分支须自行导出外观皮肤 guid（否则回读丢失）。
             ExportPseudoPrefabGuidIfPresent(go, item);
+            ExportSoArrayIfPresent(go, item);
+            return;
+        }
+
+        var lockable = go.GetComponent<PseudoPrefabLockableStub>();
+        if (lockable != null)
+        {
+            item.stubKind = "Lockable";
+            item.lockable = new LayoutLockableStubDto { unlockCost = Math.Max(0, lockable.unlockCost) };
+            ExportPseudoPrefabGuidIfPresent(go, item);
+            ExportSoArrayIfPresent(go, item);
             return;
         }
 
@@ -1520,18 +1547,38 @@ public static class LayoutEditorStubIO
 
         if (item.stubKind == "ServingStation")
         {
-            // 上菜台变体（dlc13_workstation_plate_station 等）wrapper 无专属 stub：补挂
-            // （未绑定回收台时不走二阶段，须在此保证组件存在，否则运行时不工作）
-            if (go.GetComponent<PseudoPrefabServingStationStub>() == null)
+            // 原生 subtype 优先；绝不能先补普通上菜台再补 Horde。
+            var hordeServingStub = EnsureServingStationStub(go, item.prefabAssetPath) as PseudoPrefabServingStationHordeStub;
+            if (hordeServingStub != null && item.servingStation != null)
             {
-                var servingStub = Undo.AddComponent<PseudoPrefabServingStationStub>(go);
-                var baseStub = go.GetComponent<PseudoPrefabStub>();
-                if (baseStub != null && baseStub.pseudoPrefabSO != null)
-                    servingStub.pseudoPrefabSO = baseStub.pseudoPrefabSO;
+                Undo.RecordObject(hordeServingStub, "Layout Editor Horde Service Window");
+                if (item.servingStation.orderUIOffset != null)
+                    hordeServingStub.orderUIOffset = item.servingStation.orderUIOffset.ToVector3();
+                if (item.servingStation.healthUIOffset != null)
+                    hordeServingStub.healthUIOffset = item.servingStation.healthUIOffset.ToVector3();
+                EditorUtility.SetDirty(hordeServingStub);
             }
 
             // 「双 stub」修复（2026-10-06）：同 Dispenser 分支——移除基础组件对 +
             // 保证派生运行时存在（详见 PromoteDerivedStub 注释）。
+            PromoteDerivedStub(go);
+            return;
+        }
+
+        if (item.stubKind == "Lockable")
+        {
+            var lockableStub = go.GetComponent<PseudoPrefabLockableStub>();
+            if (lockableStub == null)
+            {
+                lockableStub = Undo.AddComponent<PseudoPrefabLockableStub>(go);
+                var baseStub = go.GetComponent<PseudoPrefabStub>();
+                if (baseStub != null && baseStub.pseudoPrefabSO != null)
+                    lockableStub.pseudoPrefabSO = baseStub.pseudoPrefabSO;
+            }
+            Undo.RecordObject(lockableStub, "Layout Editor Lockable");
+            if (item.lockable != null)
+                lockableStub.unlockCost = Math.Max(0, item.lockable.unlockCost);
+            EditorUtility.SetDirty(lockableStub);
             PromoteDerivedStub(go);
             return;
         }
@@ -2101,17 +2148,8 @@ public static class LayoutEditorStubIO
         if (go == null)
             return;
 
-        var serving = go.GetComponent<PseudoPrefabServingStationStub>();
-        if (serving == null)
-        {
-            // 上菜台变体（dlc13_workstation_plate_station 等）wrapper 无专属 stub：补挂
-            serving = Undo.AddComponent<PseudoPrefabServingStationStub>(go);
-            var baseStub = go.GetComponent<PseudoPrefabStub>();
-            if (baseStub != null && baseStub.pseudoPrefabSO != null)
-                serving.pseudoPrefabSO = baseStub.pseudoPrefabSO;
-            // 「双 stub」修复（2026-10-06）：补挂派生 stub 后清理基础组件对。
-            PromoteDerivedStub(go);
-        }
+        var serving = EnsureServingStationStub(go, null);
+        PromoteDerivedStub(go);
 
         var resolved = new System.Collections.Generic.List<PseudoPrefabPlateReturnStub>();
         if (plateReturnInstanceIds != null)
@@ -3003,7 +3041,8 @@ public static class LayoutEditorStubIO
     /// （写回侧 ApplyStub 的外观应用位于所有分支之前，不受影响）。</summary>
     private static void ExportPseudoPrefabGuidIfPresent(GameObject go, LayoutItemDto item)
     {
-        var pseudoStub = go.GetComponent<PseudoPrefabStub>();
+        PseudoPrefabStub pseudoStub = go.GetComponent<PseudoPrefabServingStationHordeStub>();
+        if (pseudoStub == null) pseudoStub = go.GetComponent<PseudoPrefabStub>();
         if (pseudoStub != null && pseudoStub.pseudoPrefabSO != null)
             item.pseudoPrefabGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(pseudoStub.pseudoPrefabSO));
     }
@@ -3315,6 +3354,38 @@ public static class LayoutEditorStubIO
         }
     }
 
+    /// <summary>按原生身份补挂最具体的上菜台 stub，保留已有 SO 与回收绑定。</summary>
+    private static PseudoPrefabServingStationStub EnsureServingStationStub(GameObject go, string assetPath)
+    {
+        var horde = go.GetComponent<PseudoPrefabServingStationHordeStub>();
+        if (horde != null) return horde;
+        var prefab = PrefabUtility.GetPrefabParent(go) as GameObject;
+        bool isHorde = go.GetComponent<PseudoPrefabServingStationHorde>() != null
+            || (prefab != null && prefab.GetComponent<PseudoPrefabServingStationHordeStub>() != null)
+            || string.Equals(assetPath, "Assets/common04/game_environment/horde/prefabs/Service_Window.prefab", StringComparison.OrdinalIgnoreCase);
+        var serving = go.GetComponent<PseudoPrefabServingStationStub>();
+        if (!isHorde && serving != null) return serving;
+        var source = go.GetComponent<PseudoPrefabStub>();
+        var result = isHorde
+            ? (PseudoPrefabServingStationStub)Undo.AddComponent<PseudoPrefabServingStationHordeStub>(go)
+            : Undo.AddComponent<PseudoPrefabServingStationStub>(go);
+        if (source != null) result.pseudoPrefabSO = source.pseudoPrefabSO;
+        if (serving != null)
+        {
+            result.plateReturn = serving.plateReturn;
+            result.plateReturns = serving.plateReturns;
+        }
+        var native = prefab != null ? prefab.GetComponent<PseudoPrefabServingStationHordeStub>() : null;
+        if (isHorde && native != null)
+        {
+            horde = (PseudoPrefabServingStationHordeStub)result;
+            horde.orderUIOffset = native.orderUIOffset;
+            horde.healthUIOffset = native.healthUIOffset;
+            if (result.pseudoPrefabSO == null) result.pseudoPrefabSO = native.pseudoPrefabSO;
+        }
+        return result;
+    }
+
     /// <summary>「双 stub」清理 + 派生晋升（2026-10-06 真机卡加载事故）：
     ///  物体上存在派生 stub 时，移除恰好为基类的基础 PseudoPrefabStub / 基础 PseudoPrefab
     ///  组件对，并保证派生 stub 对应的派生运行时组件存在。
@@ -3328,6 +3399,48 @@ public static class LayoutEditorStubIO
     {
         if (go == null)
             return false;
+        bool changed = false;
+        var horde = go.GetComponent<PseudoPrefabServingStationHordeStub>();
+        if (horde == null && go.GetComponent<PseudoPrefabServingStationHorde>() != null)
+        {
+            horde = EnsureServingStationStub(go, null) as PseudoPrefabServingStationHordeStub;
+            changed = horde != null;
+        }
+        if (horde != null)
+        {
+            // 只删除恰好为普通站台的组件；GetComponent<基类> 会误命中 Horde。
+            foreach (var ordinary in go.GetComponents<PseudoPrefabServingStationStub>())
+                if (ordinary != null && ordinary.GetType() == typeof(PseudoPrefabServingStationStub))
+                {
+                    Undo.RecordObject(horde, "Layout Editor Horde Stub Recovery");
+                    if (horde.pseudoPrefabSO == null) horde.pseudoPrefabSO = ordinary.pseudoPrefabSO;
+                    var returns = new List<PseudoPrefabPlateReturnStub>();
+                    if (horde.plateReturns != null)
+                        foreach (var pr in horde.plateReturns)
+                            if (pr != null && !returns.Contains(pr)) returns.Add(pr);
+                    if (horde.plateReturn != null && !returns.Contains(horde.plateReturn)) returns.Add(horde.plateReturn);
+                    if (ordinary.plateReturns != null)
+                        foreach (var pr in ordinary.plateReturns)
+                            if (pr != null && !returns.Contains(pr)) returns.Add(pr);
+                    if (ordinary.plateReturn != null && !returns.Contains(ordinary.plateReturn)) returns.Add(ordinary.plateReturn);
+                    var serialized = new SerializedObject(horde);
+                    var prop = serialized.FindProperty("plateReturns");
+                    prop.arraySize = returns.Count;
+                    for (int i = 0; i < returns.Count; i++)
+                        prop.GetArrayElementAtIndex(i).objectReferenceValue = returns[i];
+                    serialized.ApplyModifiedProperties();
+                    if (horde.plateReturn == null && returns.Count > 0) horde.plateReturn = returns[0];
+                    EditorUtility.SetDirty(horde);
+                    Undo.DestroyObjectImmediate(ordinary);
+                    changed = true;
+                }
+            foreach (var runtime in go.GetComponents<PseudoPrefabServingStation>())
+                if (runtime != null && runtime.GetType() == typeof(PseudoPrefabServingStation))
+                {
+                    Undo.DestroyObjectImmediate(runtime);
+                    changed = true;
+                }
+        }
         var baseStub = FindExactBaseStub(go);
         var baseRuntime = FindExactBaseRuntime(go);
         var derivedStubs = GetDerivedStubs(go);
@@ -3339,7 +3452,7 @@ public static class LayoutEditorStubIO
                 // 继承 prefab 资产上的基础 SO 后补派生运行时。
                 bool fixedData = EnsureDerivedStubData(go, null);
                 bool fixedRuntime = EnsureDerivedRuntimeForStubs(go);
-                return fixedData || fixedRuntime;
+                return changed || fixedData || fixedRuntime;
             }
             // 已写坏场景：饮料/酱料机只剩 PseudoPrefabDispenser 运行时，无基础对。
             string orphanPid;
@@ -3469,11 +3582,15 @@ public static class LayoutEditorStubIO
         if (prefab == null)
             return null;
         var baseStub = FindExactBaseStub(prefab);
-        return baseStub != null ? baseStub.pseudoPrefabSO : null;
+        if (baseStub != null && baseStub.pseudoPrefabSO != null) return baseStub.pseudoPrefabSO;
+        var nativeStub = prefab.GetComponent<PseudoPrefabStub>();
+        return nativeStub != null ? nativeStub.pseudoPrefabSO : null;
     }
 
     private static Type FindRuntimeType(string runtimeName)
     {
+        if (runtimeName == "PseudoPrefabServingStationHorde") return typeof(PseudoPrefabServingStationHorde);
+        if (runtimeName == "PseudoPrefabLockable") return typeof(PseudoPrefabLockable);
         var type = Type.GetType("LevelEditor." + runtimeName + ", Assembly-CSharp");
         if (type != null)
             return type;
@@ -4513,12 +4630,13 @@ public static class LayoutEditorStubIO
             return;
 
         var info = managerStub.levelInfo;
+        LayoutEditorNativeDependencies.Clean(info);
         var deps = new System.Collections.Generic.List<string>(info.dependencies ?? new string[0]);
         var changed = false;
 
         System.Action<string> tryAdd = delegate(string bundle)
         {
-            if (string.IsNullOrEmpty(bundle) || deps.Contains(bundle))
+            if (!LayoutEditorNativeDependencies.IsNativeBundle(bundle) || deps.Contains(bundle))
                 return;
             if (!System.IO.File.Exists(System.IO.Path.Combine(
                 System.IO.Path.Combine(Application.streamingAssetsPath, "Windows"), bundle)))
@@ -4542,7 +4660,7 @@ public static class LayoutEditorStubIO
         if (changed)
         {
             Undo.RecordObject(info, "Layout Editor Random Crate Dependencies");
-            info.dependencies = deps.ToArray();
+            info.dependencies = LayoutEditorNativeDependencies.Filter(deps);
             EditorUtility.SetDirty(info);
         }
     }
@@ -4773,12 +4891,13 @@ public static class LayoutEditorStubIO
             return;
 
         var info = managerStub.levelInfo;
+        LayoutEditorNativeDependencies.Clean(info);
         var deps = new System.Collections.Generic.List<string>(info.dependencies ?? new string[0]);
         var changed = false;
 
         System.Action<string> tryAdd = delegate(string bundle)
         {
-            if (string.IsNullOrEmpty(bundle) || deps.Contains(bundle))
+            if (!LayoutEditorNativeDependencies.IsNativeBundle(bundle) || deps.Contains(bundle))
                 return;
             if (!RatHeistBundleFileExists(bundle))
             {
@@ -4801,7 +4920,7 @@ public static class LayoutEditorStubIO
         if (changed)
         {
             Undo.RecordObject(info, "Layout Editor RatHeist Dependencies");
-            info.dependencies = deps.ToArray();
+            info.dependencies = LayoutEditorNativeDependencies.Filter(deps);
             EditorUtility.SetDirty(info);
         }
     }

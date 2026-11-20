@@ -1,8 +1,49 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 12,
   "itemCount": 200,
   "items": [
+    {
+      "id": "p_dlc13_grass_02",
+      "guid": "ae981fd0e1f0af11088c8f64d7358c1f",
+      "assetPath": "Assets/commonW2/prefabs/dlc13/art/dlc13/p_dlc13_grass_02.prefab",
+      "category": "art",
+      "theme": "dlc13",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "height": 1.2,
+      "baseY": -0.6,
+      "layoutTier": "decor",
+      "nameZh": "DLC13 草 2",
+      "nameEn": "dlc13 grass 2",
+      "typeKind": "vegetation",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "p_dlc13_grass_card_a_1",
+      "guid": "d966ed9a194c77ac140895e36fbc7bdd",
+      "assetPath": "Assets/common03/prefabs/art/dlc13_moonfestival/p_dlc13_grass_card_a_1.prefab",
+      "category": "art",
+      "theme": "dlc13",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 0.9763060212135315
+      },
+      "height": 0.976,
+      "baseY": -0.036,
+      "layoutTier": "decor",
+      "nameZh": "DLC13 草卡片 a 1",
+      "nameEn": "dlc13 grass card a 1",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
     {
       "id": "p_dlc13_grass_card_b_1",
       "guid": "aba613851408aad97f3cde77a0e304e9",
@@ -4096,42 +4137,6 @@
       "layoutTier": "decor",
       "nameZh": "DLC5 路中心线 1",
       "nameEn": "dlc5 road centreline 1",
-      "typeKind": "ground",
-      "usage": "flooring",
-      "icon": false
-    },
-    {
-      "id": "p_dlc5_road_white_line_01",
-      "guid": "bf4ae7a5611ba77b09e35ad8b2fa787f",
-      "assetPath": "Assets/commonW2/prefabs/dlc05/art/dlc05_camping/p_dlc5_road_white_line_01.prefab",
-      "category": "art",
-      "theme": "dlc05_camping",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC5 路白线 1",
-      "nameEn": "dlc5 road white line 1",
-      "typeKind": "ground",
-      "usage": "flooring",
-      "icon": false
-    },
-    {
-      "id": "p_dlc5_road_white_line_01_c6d6f3dd_be0fb4b5",
-      "guid": "be0fb4b512907f1756af933d6f3d5409",
-      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/city/p_dlc5_road_white_line_01_c6d6f3dd_be0fb4b5.prefab",
-      "category": "art",
-      "theme": "city",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "DLC5 路白线 1",
-      "nameEn": "dlc5 road white line 1",
       "typeKind": "ground",
       "usage": "flooring",
       "icon": false

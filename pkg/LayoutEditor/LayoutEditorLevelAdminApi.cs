@@ -10,12 +10,6 @@ using UnityEngine;
 public static class LayoutEditorLevelAdminApi
 {
     internal const string LevelSetsRoot = "Assets/LevelSets";
-    private const string TemplateScene = "Assets/Template/s_template.unity";
-    private const string TemplateConfig1p = "Assets/Template/config_1p.asset";
-    private const string TemplateConfig2p = "Assets/Template/config_2p.asset";
-    private const string TemplateConfig3p = "Assets/Template/config_3p.asset";
-    private const string TemplateConfig4p = "Assets/Template/config_4p.asset";
-    private const string TemplateLevelInfo = "Assets/Template/levelinfo_template.asset";
     // ==================== Catalogs ====================
 
     public static MusicCatalogDto ScanMusic()
@@ -451,6 +445,7 @@ public static class LayoutEditorLevelAdminApi
                 dataDir = DirectoryName(path),
                 levelName = so.levelName ?? "",
                 levelNameZH = so.levelNameZH ?? "",
+                gameMode = LevelModeName(so),
                 sceneName = sceneName,
                 sceneAssetPath = sceneAssetPath,
                 hasScreenshot = so.screenshot != null,
@@ -515,6 +510,8 @@ public static class LayoutEditorLevelAdminApi
         var so = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(assetPath);
         if (so == null)
             return null;
+        if (LayoutEditorLevelModeStore.ValidateLevelPath(assetPath, so) == null
+            && LayoutEditorNativeDependencies.Clean(so)) AssetDatabase.SaveAssets();
 
         var setName = SetNameFromPath(assetPath);
         var sceneName = !string.IsNullOrEmpty(so.sceneName) ? so.sceneName : "";
@@ -537,6 +534,13 @@ public static class LayoutEditorLevelAdminApi
             levelInfoAssetPath = assetPath,
             levelName = so.levelName ?? "",
             levelNameZH = so.levelNameZH ?? "",
+            gameMode = LevelModeName(so),
+            targetHealth = so.targetHealth,
+            targetRepairSpeed = so.targetRepairSpeed,
+            targetRepairThreshold = so.targetRepairThreshold,
+            kitchenHealth = so.kitchenHealth,
+            dynamicRecipeListGuids = CollectDynamicRecipeListIds(so),
+            dynamicRoundTimes = so.roundTimes != null ? (int[])so.roundTimes.Clone() : new int[0],
             sceneName = sceneName,
             sceneAssetPath = sceneAssetPath,
             hasScreenshot = so.screenshot != null,
@@ -545,12 +549,13 @@ public static class LayoutEditorLevelAdminApi
             summaryBgDim = summaryBgDim,
             debugRecipeCount = so.debugRecipeCount,
             disableDynamicParenting = so.disableDynamicParenting,
+            enableRespawnBounds = so.enableRespawnBounds,
             minOrderCount = ClampOrderCount(so.minOrderCount, 2),
             maxOrderCount = ClampOrderCount(so.maxOrderCount, 5),
             gridHalfSizeX = gridHalfX,
             gridHalfSizeY = gridHalfY,
             gridHalfSizeZ = gridHalfZ,
-            dependencies = so.dependencies != null ? (string[])so.dependencies.Clone() : new string[0],
+            dependencies = LayoutEditorNativeDependencies.Filter(so.dependencies),
             configs = new[]
             {
                 ConfigToDto(so.config_1p),
@@ -656,13 +661,10 @@ public static class LayoutEditorLevelAdminApi
         var so = string.IsNullOrEmpty(assetPath) ? null : AssetDatabase.LoadAssetAtPath<LevelInfoSO>(assetPath);
         if (so != null)
         {
+            if (LayoutEditorNativeDependencies.Clean(so)) AssetDatabase.SaveAssets();
             if (so.dependencies != null)
                 current.AddRange(so.dependencies);
-            CollectBundleNames(so.recipes, referenced);
-            CollectBundleNames(so.allIngredients, referenced);
-            CollectBundleNames(so.allCookingSteps, referenced);
-            CollectBundleNames(so.includeRecipeMatchLists, referenced);
-            CollectBundleNames(so.optionalRecipeMatchListItems, referenced);
+            CollectBundleNames(CollectUsageRoots(so), referenced);
 
             if (!string.IsNullOrEmpty(so.sceneName))
             {
@@ -673,7 +675,7 @@ public static class LayoutEditorLevelAdminApi
             }
         }
 
-        referenced.RemoveWhere(b => always.Contains(b) || string.IsNullOrEmpty(b));
+        referenced.RemoveWhere(b => always.Contains(b) || !LayoutEditorNativeDependencies.IsNativeBundle(b));
 
         // What actually loads = transitive closure of the declared dependencies (LoadAssetBundle
         // pulls each bundle's GetAllDependencies recursively). A bundle is only "missing" if the
@@ -868,11 +870,7 @@ public static class LayoutEditorLevelAdminApi
             var so = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(sum.assetPath);
             if (so != null)
             {
-                CollectUsagePaths(so.recipes, paths);
-                CollectUsagePaths(so.allIngredients, paths);
-                CollectUsagePaths(so.allCookingSteps, paths);
-                CollectUsagePaths(so.includeRecipeMatchLists, paths);
-                CollectUsagePaths(so.optionalRecipeMatchListItems, paths);
+                CollectUsagePaths(CollectUsageRoots(so), paths);
             }
 
             var libPaths = new Dictionary<string, HashSet<string>>();
@@ -946,6 +944,19 @@ public static class LayoutEditorLevelAdminApi
         });
 
         return new SetResourceStatsDto { levels = list.ToArray(), summary = summary.ToArray() };
+    }
+
+    // Shared read-only roots: native menus, waves/enemies and derived recipe data.
+    private static UnityEngine.Object[] CollectUsageRoots(LevelInfoSO info)
+    {
+        var roots = new List<UnityEngine.Object>();
+        if (info == null) return roots.ToArray();
+        roots.AddRange(LayoutEditorLevelModeStore.CollectModeReferences(info));
+        if (info.allIngredients != null) roots.AddRange(info.allIngredients);
+        if (info.allCookingSteps != null) roots.AddRange(info.allCookingSteps);
+        if (info.includeRecipeMatchLists != null) roots.AddRange(info.includeRecipeMatchLists);
+        if (info.optionalRecipeMatchListItems != null) roots.AddRange(info.optionalRecipeMatchListItems);
+        return roots.ToArray();
     }
 
     /// <summary>读场景 .unity 文本，抓全部 32 位 guid → AssetDatabase.GUIDToAssetPath，
@@ -1067,97 +1078,215 @@ public static class LayoutEditorLevelAdminApi
 
     public static string CreateLevel(LevelCreateDto dto)
     {
+        var block = LayoutEditorSafety.PlayModeWriteBlockReason();
+        if (!string.IsNullOrEmpty(block)) return block;
         if (dto == null || string.IsNullOrEmpty(dto.setName) || string.IsNullOrEmpty(dto.levelId))
             return "缺少关卡集或关卡标识。";
         var setName = dto.setName;
         var levelId = dto.levelId.Trim();
-        if (!IsLowerIdent(levelId))
+        if (!IsLowerIdent(setName) || !IsLowerIdent(levelId))
             return "关卡标识只能包含小写字母、数字和下划线。";
+        if (!string.IsNullOrEmpty(dto.gameMode) && dto.gameMode != "Campaign"
+            && dto.gameMode != "Dynamic" && dto.gameMode != "Horde")
+            return "未知的关卡模式。";
 
         var setDir = LevelSetsRoot + "/" + setName;
         if (!AssetDatabase.IsValidFolder(setDir))
             return "关卡集不存在：" + setName;
 
         var levelDataDir = setDir + "/data/" + levelId;
-        if (AssetDatabase.IsValidFolder(levelDataDir))
+        if (AssetDatabase.IsValidFolder(levelDataDir) || Directory.Exists(AbsPath(levelDataDir))
+            || File.Exists(AbsPath(levelDataDir) + ".meta"))
             return "关卡已存在：" + levelId;
 
         var setInfo = FindSetInfo(setName);
         if (setInfo == null)
             return "未找到关卡集配置 LevelSetInfoSO。";
 
-        AssetDatabase.CreateFolder(setDir + "/data", levelId);
-
-        var c1Path = levelDataDir + "/config_1p.asset";
-        var c2Path = levelDataDir + "/config_2p.asset";
-        var c3Path = levelDataDir + "/config_3p.asset";
-        var c4Path = levelDataDir + "/config_4p.asset";
-        AssetDatabase.CopyAsset(TemplateConfig1p, c1Path);
-        AssetDatabase.CopyAsset(TemplateConfig2p, c2Path);
-        AssetDatabase.CopyAsset(TemplateConfig3p, c3Path);
-        AssetDatabase.CopyAsset(TemplateConfig4p, c4Path);
-
-        var config1 = AssetDatabase.LoadAssetAtPath<LevelConfigSetupPerPlayerCountSO>(c1Path);
-        var config2 = AssetDatabase.LoadAssetAtPath<LevelConfigSetupPerPlayerCountSO>(c2Path);
-        var config3 = AssetDatabase.LoadAssetAtPath<LevelConfigSetupPerPlayerCountSO>(c3Path);
-        var config4 = AssetDatabase.LoadAssetAtPath<LevelConfigSetupPerPlayerCountSO>(c4Path);
-
-        // 2026-09-22 起关卡 id 不再自带 s_ 前缀：场景名 = levelId（旧关卡的 s_ 历史名保留，
-        // 可用 /api/level/rename 重命名时统一迁移到新约定）。
-        var sceneName = levelId;
-        var info = ScriptableObject.CreateInstance<LevelInfoSO>();
-        info.levelName = !string.IsNullOrEmpty(dto.levelName) ? dto.levelName : levelId;
-        info.levelNameZH = !string.IsNullOrEmpty(dto.levelNameZH) ? dto.levelNameZH : levelId;
-        info.sceneName = sceneName;
-        info.recipes = new ScriptableObject[0];
-        info.debugRecipeCount = 0;
-        info.disableDynamicParenting = true;
-        info.config_1p = config1;
-        info.config_2p = config2;
-        info.config_3p = config3;
-        info.config_4p = config4;
-        info.dependencies = new[] { "bundle47" };
-        ApplyTemplateAudioDefaults(info);
+        var gameMode = NormalizeLevelMode(dto.gameMode);
+        var scenePath = setDir + "/scenes/" + levelId + ".unity";
+        if (File.Exists(AbsPath(scenePath)) || File.Exists(AbsPath(scenePath) + ".meta")) return "场景文件已存在：" + scenePath;
+        if (!AssetDatabase.IsValidFolder(setDir + "/data") || !AssetDatabase.IsValidFolder(setDir + "/scenes"))
+            return "关卡集缺少 data 或 scenes 目录。";
+        var rootImporter = AssetImporter.GetAtPath(setDir);
+        var dataImporter = AssetImporter.GetAtPath(setDir + "/data");
+        var infoBundle = setName + "/info_" + setName;
+        if (rootImporter == null || dataImporter == null || rootImporter.assetBundleName != infoBundle
+            || !string.IsNullOrEmpty(rootImporter.assetBundleVariant)
+            || (!string.IsNullOrEmpty(dataImporter.assetBundleName) && dataImporter.assetBundleName != infoBundle)
+            || !string.IsNullOrEmpty(dataImporter.assetBundleVariant))
+            return "关卡集根目录 bundle 归属无效，请先修复为 " + infoBundle + "。";
+        for (int s = 0; s < UnityEngine.SceneManagement.SceneManager.sceneCount; s++)
+            if (UnityEngine.SceneManagement.SceneManager.GetSceneAt(s).isDirty)
+                return "请先保存已打开的场景，再创建关卡。";
         var infoPath = levelDataDir + "/LevelInfo_" + levelId + ".asset";
-        AssetDatabase.CreateAsset(info, infoPath);
-
-        var scenePath = setDir + "/scenes/" + sceneName + ".unity";
-        if (File.Exists(AbsPath(TemplateScene)))
+        LayoutEditorLevelTemplate template;
+        try { template = LayoutEditorLevelTemplate.Read(gameMode, levelDataDir, scenePath, infoPath); }
+        catch (Exception ex) { return "模式模板预检失败：" + ex.Message; }
+        LevelInfoSO preview = null;
+        try
         {
-            AssetDatabase.CopyAsset(TemplateScene, scenePath);
-            var prevActive = EditorSceneManager.GetActiveScene().path;
-            EditorSceneManager.OpenScene(scenePath);
-            ForcePrepareForBuilding();
-            var stub = UnityEngine.Object.FindObjectOfType<PseudoPrefabManagerStub>();
-            if (stub != null)
+            preview = UnityEngine.Object.Instantiate(template.info);
+            preview.config_1p = template.configs[0]; preview.config_2p = template.configs[1];
+            preview.config_3p = template.configs[2]; preview.config_4p = template.configs[3];
+            if (gameMode != "Campaign")
             {
-                Undo.RecordObject(stub, "Bind new LevelInfo");
-                stub.levelInfo = info;
-                EditorUtility.SetDirty(stub);
+                var initialMode = LayoutEditorLevelModeStore.LoadFromAssets(infoPath, preview);
+                var validationError = LayoutEditorLevelModeStore.Validate(initialMode);
+                if (validationError != null) return "原生模式模板校验失败：" + validationError;
             }
-            var newScene = EditorSceneManager.GetActiveScene();
-            LayoutEditorPseudoReload.SaveScenePrepared(newScene, false);
-            if (!string.IsNullOrEmpty(prevActive) && File.Exists(AbsPath(prevActive)))
-                EditorSceneManager.OpenScene(prevActive);
-            SetAssetBundleName(scenePath, setName + "/" + sceneName);
         }
-        // 新关卡迁移基线：新放置的茶杯回收台默认脏杯；用户手动勾选干净杯要保留。
-        LayoutEditorLayoutMigrations.MarkLevelCreated(scenePath);
-
-        var setInfoFresh = FindSetInfo(setName);
-        var infoFresh = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(infoPath);
-        if (setInfoFresh != null && infoFresh != null)
+        catch (Exception ex) { return "原生模式模板读取失败：" + ex.Message; }
+        finally { if (preview != null) UnityEngine.Object.DestroyImmediate(preview); }
+        UnityEditor.SceneManagement.SceneSetup[] previousSetup = null;
+        var completed = false;
+        var restoreSceneSetup = false;
+        LevelSetInfoSO setInfoBackup = null;
+        string createError = null;
+        try
         {
-            var newInfos = new List<LevelInfoSO>(setInfoFresh.levelInfos ?? new LevelInfoSO[0]) { infoFresh };
-            Undo.RecordObject(setInfoFresh, "Add Level");
-            setInfoFresh.levelInfos = newInfos.ToArray();
-            EditorUtility.SetDirty(setInfoFresh);
-        }
+            previousSetup = EditorSceneManager.GetSceneManagerSetup();
+            setInfoBackup = UnityEngine.Object.Instantiate(setInfo);
+            if (string.IsNullOrEmpty(AssetDatabase.CreateFolder(setDir + "/data", levelId)))
+                throw new IOException("无法创建关卡数据目录。");
+            template.Copy();
+            LayoutEditorLevelTemplate.NormalizeLabels(levelDataDir, scenePath, setName);
 
-        AssetDatabase.SaveAssets();
-        AssetDatabase.Refresh();
-        ReloadPseudo();
-        return null;
+            // New scene names use levelId verbatim; historical s_ names are unchanged.
+            var info = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(infoPath);
+            if (info == null) throw new IOException("无法读取新建 LevelInfoSO。");
+            info.name = Path.GetFileNameWithoutExtension(infoPath);
+            info.levelName = !string.IsNullOrEmpty(dto.levelName) ? dto.levelName : levelId;
+            info.levelNameZH = !string.IsNullOrEmpty(dto.levelNameZH) ? dto.levelNameZH : levelId;
+            info.sceneName = levelId;
+            info.levelType = gameMode == "Horde" ? LevelInfoSO.LevelType.Horde
+                : gameMode == "Dynamic" ? LevelInfoSO.LevelType.Dynamic : LevelInfoSO.LevelType.Campaign;
+            // Keep native mode defaults, including Dynamic parenting/respawn settings.
+            LayoutEditorNativeDependencies.Clean(info);
+            EditorUtility.SetDirty(info);
+            if (gameMode != "Campaign")
+            {
+                var modeError = LayoutEditorLevelModeStore.Save(infoPath, info,
+                    LayoutEditorLevelModeStore.LoadFromAssets(infoPath, info));
+                if (modeError != null)
+                    throw new InvalidDataException("初始化模式配置失败：" + modeError);
+            }
+            else
+            {
+                LayoutEditorAllIngredientsFill.AutoFillIngredientsFromSelectedRecipes(info);
+                LayoutEditorCatalogApi.SyncCookingStepsFromSelectedRecipes(info);
+                LayoutEditorMatchlistMap.EnsureRequiredMatchlists(info);
+            }
+            AssetDatabase.SaveAssets();
+            template.RemoveSupersededModeAssets();
+            LayoutEditorLevelTemplate.NormalizeLabels(levelDataDir, scenePath, setName);
+
+            {
+                LayoutEditorLog.Log("[LevelMode/Create] OpenScene begin: " + scenePath);
+                restoreSceneSetup = true;
+                var newScene = EditorSceneManager.OpenScene(scenePath);
+                LayoutEditorLog.Log("[LevelMode/Create] OpenScene complete: " + scenePath);
+                PseudoPrefabManagerStub stub = null;
+                foreach (var root in newScene.GetRootGameObjects())
+                    foreach (var candidate in root.GetComponentsInChildren<PseudoPrefabManagerStub>(true))
+                    {
+                        if (stub != null) throw new InvalidOperationException("模式模板包含多个 PseudoPrefabManagerStub。");
+                        stub = candidate;
+                    }
+                if (stub == null) throw new InvalidOperationException("模式模板缺少 PseudoPrefabManagerStub。");
+                if (stub.levelInfo != info) throw new InvalidOperationException("新建场景 LevelInfoSO 绑定不一致。");
+                LayoutEditorLog.Log("[LevelMode/Create] ValidateScene begin: " + scenePath);
+                var sceneError = LayoutEditorNativeModeValidation.ValidateScene(newScene, info);
+                if (sceneError != null) throw new InvalidOperationException(sceneError);
+                LayoutEditorLog.Log("[LevelMode/Create] SaveScene begin: " + scenePath);
+                LayoutEditorPseudoReload.SaveScenePrepared(newScene, false);
+                LayoutEditorLog.Log("[LevelMode/Create] SaveScene complete: " + scenePath);
+                LayoutEditorLog.Log("[LevelMode/Create] RestoreSceneManagerSetup begin: " + scenePath);
+                EditorSceneManager.RestoreSceneManagerSetup(previousSetup);
+                restoreSceneSetup = false;
+                LayoutEditorLog.Log("[LevelMode/Create] RestoreSceneManagerSetup complete: " + scenePath);
+                LayoutEditorLog.Log("[LevelMode/Create] SetAssetBundleName begin: " + scenePath);
+                LayoutEditorLevelTemplate.NormalizeLabels(levelDataDir, scenePath, setName);
+                LayoutEditorLog.Log("[LevelMode/Create] SetAssetBundleName complete: " + scenePath);
+            }
+            // 新关卡迁移基线：新放置的茶杯回收台默认脏杯；用户手动勾选干净杯要保留。
+            LayoutEditorLayoutMigrations.MarkLevelCreated(scenePath);
+
+            var setInfoFresh = FindSetInfo(setName);
+            var infoFresh = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(infoPath);
+            if (setInfoFresh == null || infoFresh == null) throw new IOException("新关卡或关卡集资源无法重新加载。");
+            {
+                var newInfos = new List<LevelInfoSO>(setInfoFresh.levelInfos ?? new LevelInfoSO[0]) { infoFresh };
+                Undo.RecordObject(setInfoFresh, "Add Level");
+                setInfoFresh.levelInfos = newInfos.ToArray();
+                EditorUtility.SetDirty(setInfoFresh);
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            ReloadPseudo();
+            completed = true;
+        }
+        catch (Exception ex)
+        {
+            LayoutEditorLog.LogWarning("[LevelMode/Create] " + scenePath + ": " + ex);
+            createError = "创建关卡失败：" + ex.Message;
+        }
+        finally
+        {
+            var failures = new List<string>();
+            if (restoreSceneSetup)
+            {
+                try { EditorSceneManager.RestoreSceneManagerSetup(previousSetup); }
+                catch (Exception ex) { failures.Add("恢复原场景失败：" + ex.Message); }
+            }
+            if (!completed)
+            {
+                try
+                {
+                    if (setInfoBackup != null)
+                    {
+                        var restoreInfo = FindSetInfo(setName) ?? setInfo;
+                        EditorUtility.CopySerialized(setInfoBackup, restoreInfo);
+                        EditorUtility.SetDirty(restoreInfo);
+                        AssetDatabase.SaveAssets();
+                    }
+                }
+                catch (Exception ex) { failures.Add("恢复关卡集失败：" + ex.Message); }
+                failures.AddRange(LayoutEditorLevelTemplate.Cleanup(new[] { scenePath, levelDataDir }));
+            }
+            if (failures.Count > 0) createError += "；" + string.Join("；", failures.ToArray());
+            if (setInfoBackup != null) UnityEngine.Object.DestroyImmediate(setInfoBackup);
+        }
+        return createError;
+    }
+
+    private static string NormalizeLevelMode(string mode)
+    {
+        if (string.Equals(mode, "Dynamic", StringComparison.OrdinalIgnoreCase)) return "Dynamic";
+        if (string.Equals(mode, "Horde", StringComparison.OrdinalIgnoreCase)) return "Horde";
+        return "Campaign";
+    }
+
+    private static string LevelModeName(LevelInfoSO info)
+    {
+        if (info == null) return "Campaign";
+        if (info.levelType == LevelInfoSO.LevelType.Dynamic) return "Dynamic";
+        if (info.levelType == LevelInfoSO.LevelType.Horde) return "Horde";
+        return "Campaign";
+    }
+
+    private static string[] CollectDynamicRecipeListIds(LevelInfoSO info)
+    {
+        if (info == null || info.recipeListSOs == null) return new string[0];
+        var ids = new List<string>();
+        foreach (var recipeList in info.recipeListSOs)
+        {
+            if (recipeList == null) { ids.Add(""); continue; }
+            var path = AssetDatabase.GetAssetPath(recipeList);
+            ids.Add(!string.IsNullOrEmpty(path) ? AssetDatabase.AssetPathToGUID(path) : "");
+        }
+        return ids.ToArray();
     }
 
     public static string UpdateLevelInfo(LevelInfoUpdateDto dto)
@@ -1167,6 +1296,10 @@ public static class LayoutEditorLevelAdminApi
         var so = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(dto.assetPath);
         if (so == null)
             return "未找到 LevelInfoSO。";
+        var pathError = LayoutEditorLevelModeStore.ValidateLevelPath(dto.assetPath, so);
+        if (pathError != null) return pathError;
+        var dependencyError = LayoutEditorNativeDependencies.Validate(dto.dependencies);
+        if (dependencyError != null) return dependencyError;
 
         // 网格半宽：场景 GridManager 为唯一权威存储（LevelInfoSO 禁改，2026-09-12）。
         // 值有变化时要求该关卡场景当前在编辑器中打开并即时烘焙进场景 prefab 覆盖；
@@ -1182,12 +1315,16 @@ public static class LayoutEditorLevelAdminApi
         // 统一走 /api/level/rename 原子改名（2026-09-22）。
         so.debugRecipeCount = dto.debugRecipeCount;
         so.disableDynamicParenting = dto.disableDynamicParenting;
+        if (dto.updateEnableRespawnBounds)
+            so.enableRespawnBounds = dto.enableRespawnBounds;
         so.minOrderCount = ClampOrderCount(dto.minOrderCount, so.minOrderCount);
         so.maxOrderCount = ClampOrderCount(dto.maxOrderCount, so.maxOrderCount);
         if (so.minOrderCount > so.maxOrderCount)
             so.maxOrderCount = so.minOrderCount;
         if (dto.dependencies != null)
-            so.dependencies = FilterSetDataDependencies((string[])dto.dependencies.Clone(), SetNameFromPath(dto.assetPath));
+            so.dependencies = LayoutEditorNativeDependencies.Filter(dto.dependencies);
+        else
+            LayoutEditorNativeDependencies.Clean(so);
         EditorUtility.SetDirty(so);
 
         var stub = UnityEngine.Object.FindObjectOfType<PseudoPrefabManagerStub>();
@@ -1198,47 +1335,6 @@ public static class LayoutEditorLevelAdminApi
 
         ReloadPseudo();
         return null;
-    }
-
-    /// <summary>依赖防线：custom_recipes / custom_content 属关卡集数据 bundle，由
-    /// EnsureWebDependencies 在写回 / 菜谱保存时自动登记，手动编辑不得添加。
-    /// 除本集自身两条规范名外一律静默剔除并告警（不硬报错：改名等透传保存可能携带
-    /// 历史脏条目，不能因此卡死；前端依赖管理页保存前会先给出明确报错）。</summary>
-    private static string[] FilterSetDataDependencies(string[] deps, string setName)
-    {
-        if (deps == null || deps.Length == 0)
-            return deps;
-        var kept = new List<string>(deps.Length);
-        var dropped = new List<string>();
-        var ownRecipes = setName + "/custom_recipes";
-        var ownContent = setName + "/custom_content";
-        for (int i = 0; i < deps.Length; i++)
-        {
-            var d = deps[i];
-            if (IsSetDataBundleName(d) && d != ownRecipes && d != ownContent)
-            {
-                dropped.Add(d);
-                continue;
-            }
-            kept.Add(d);
-        }
-        if (dropped.Count > 0)
-            Debug.LogWarning("[LevelAdmin] dependencies 已剔除关卡集数据 bundle（由系统自动管理，不可手动添加）："
-                + string.Join(", ", dropped.ToArray()));
-        return kept.ToArray();
-    }
-
-    /// <summary>bundle 名末段是否为关卡集数据目录（custom_recipes / custom_content，忽略大小写与任意前缀）。</summary>
-    private static bool IsSetDataBundleName(string bundleName)
-    {
-        if (string.IsNullOrEmpty(bundleName))
-            return false;
-        var seg = bundleName;
-        var slash = seg.LastIndexOf('/');
-        if (slash >= 0)
-            seg = seg.Substring(slash + 1);
-        return string.Compare(seg, "custom_recipes", StringComparison.OrdinalIgnoreCase) == 0
-            || string.Compare(seg, "custom_content", StringComparison.OrdinalIgnoreCase) == 0;
     }
 
     /// <summary>网格半宽变更应用（场景 GridManager 为唯一权威存储，LevelInfoSO 禁改）。
@@ -1282,14 +1378,155 @@ public static class LayoutEditorLevelAdminApi
         var so = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(dto.assetPath);
         if (so == null)
             return "未找到 LevelInfoSO。";
+        var pathError = LayoutEditorLevelModeStore.ValidateLevelPath(dto.assetPath, so);
+        if (pathError != null) return pathError;
+        // Never let the legacy timing/score endpoint edit a shared template player config.
+        var configs = new[] { so.config_1p, so.config_2p, so.config_3p, so.config_4p };
+        var requests = new[] { dto.config_1p, dto.config_2p, dto.config_3p, dto.config_4p };
+        var scripted = new ScriptableObject[4][];
+        var root = DirectoryName(dto.assetPath) + "/";
+        var seen = new HashSet<LevelConfigSetupPerPlayerCountSO>();
+        foreach (var config in configs)
+            if (config != null && !seen.Add(config)) return "多个人数共享配置，拒绝修改；请先建立本关独立配置。";
+        for (int p = 0; p < configs.Length; p++)
+        {
+            if (configs[p] == null)
+            {
+                if (requests[p] != null) return "缺少 " + (p + 1) + "P 人数配置。";
+                continue;
+            }
+            if (requests[p] == null) continue;
+            if (requests[p].scriptedRecipes != null)
+            {
+                if (so.levelType != LevelInfoSO.LevelType.Campaign)
+                    return "仅 Campaign 可修改 scriptedRecipes；其他模式请省略或传 null。";
+                var recipeError = LayoutEditorOrderSequencePolicy.Resolve(requests[p].scriptedRecipes, out scripted[p]);
+                if (recipeError != null) return (p + 1) + "P scriptedRecipes：" + recipeError;
+            }
+            if (!AssetDatabase.GetAssetPath(configs[p]).StartsWith(root, StringComparison.Ordinal))
+                return "人数配置缺失或共享，请先保存原生模式配置以建立本关专属资产。";
+            if (so.levelType == LevelInfoSO.LevelType.Horde && configs[p].hordeLevelConfig != null
+                && requests[p].targetRepairCostMax != configs[p].hordeLevelConfig.targetRepairCostMax)
+                return "Horde 修复费用请通过模式配置 API 保存，人数配置 API 仅修改时长和分数。";
+        }
 
-        ApplyConfig(dto.config_1p, so.config_1p, "1P");
-        ApplyConfig(dto.config_2p, so.config_2p, "2P");
-        ApplyConfig(dto.config_3p, so.config_3p, "3P");
-        ApplyConfig(dto.config_4p, so.config_4p, "4P");
+        // All four players and the effective final sequence state pass before any Undo/dirty/write.
+        OrderSequenceConfigDto webSequence;
+        try { webSequence = LoadLevelOrderSequence(dto.assetPath); }
+        catch (Exception ex) { return "订单顺序配置读取失败：" + ex.Message; }
+        var sequenceError = LayoutEditorOrderSequencePolicy.Validate(so, webSequence, scripted);
+        if (sequenceError != null) return sequenceError;
 
-        AssetDatabase.SaveAssets();
-        ReloadPseudo();
+        LayoutEditorConfigTransaction transaction;
+        try { transaction = new LayoutEditorConfigTransaction(so); }
+        catch (Exception ex) { return "配置备份失败，未开始修改：" + ex.Message; }
+        using (transaction)
+        {
+            try
+            {
+                ApplyConfig(dto.config_1p, so.config_1p, "1P");
+                ApplyConfig(dto.config_2p, so.config_2p, "2P");
+                ApplyConfig(dto.config_3p, so.config_3p, "3P");
+                ApplyConfig(dto.config_4p, so.config_4p, "4P");
+
+                var changedSequences = false;
+                for (int p = 0; p < configs.Length; p++)
+                {
+                    if (scripted[p] == null) continue;
+                    configs[p].scriptedRecipes = scripted[p];
+                    EditorUtility.SetDirty(configs[p]);
+                    changedSequences = true;
+                }
+                if (changedSequences) LayoutEditorLevelModeStore.SyncRecipeData(so);
+
+                AssetDatabase.SaveAssets();
+                transaction.Commit();
+            }
+            catch (Exception ex)
+            {
+                var rollbackError = transaction.Rollback();
+                return "配置保存失败：" + ex.Message + (rollbackError == null
+                    ? "；已恢复人数配置、LevelInfo、派生文件与场景消费者。"
+                    : "；恢复未完成，请重新加载核实：" + rollbackError);
+            }
+        }
+        try { ReloadPseudo(); }
+        catch (Exception ex) { return "配置已保存，但场景 reload 失败，请读回核实：" + ex.Message; }
+        return null;
+    }
+
+    public static LevelModeConfigDto GetLevelModeConfig(string assetPath)
+    {
+        if (string.IsNullOrEmpty(assetPath)) return null;
+        var info = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(assetPath);
+        if (info == null) return null;
+        if (LayoutEditorLevelModeStore.ValidateLevelPath(assetPath, info) != null) return null;
+        var dto = LayoutEditorLevelModeStore.Load(assetPath, info);
+        dto.enemies = ScanHordeEnemies();
+        return dto;
+    }
+
+    public static string ChangeLevelMode(LevelModeChangeDto dto)
+    {
+        return LayoutEditorLevelModeChange.ChangeLevelMode(dto);
+    }
+
+    private static IngredientEntryDto[] ScanHordeEnemies()
+    {
+        var entries = new List<IngredientEntryDto>();
+        foreach (var asset in ScanAssetsByScript(LayoutEditorLevelModeStore.HordeEnemyCatalogRoot, PseudoPrefabScriptGuid))
+        {
+            if (!LayoutEditorLevelModeStore.IsHordeEnemyPath(asset.assetPath)) continue;
+            var so = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(asset.assetPath);
+            if (so == null) continue;
+            string nameZh;
+            string nameEn;
+            var id = Path.GetFileNameWithoutExtension(asset.assetPath);
+            LayoutEditorManualLookup.TryGet(id, out nameZh, out nameEn);
+            if (string.IsNullOrEmpty(nameZh) || nameZh == id)
+            {
+                switch (id)
+                {
+                    case "horde_biscuit_a": nameZh = "饼干敌人 A"; break;
+                    case "horde_candy_b": nameZh = "糖果敌人 B"; break;
+                    case "horde_puddin_c": nameZh = "布丁敌人 C"; break;
+                    case "unbread_a": nameZh = "未眠面包 A"; break;
+                    case "unbread_b": nameZh = "未眠面包 B"; break;
+                    case "unbread_c": nameZh = "未眠面包 C"; break;
+                }
+            }
+            entries.Add(new IngredientEntryDto
+            {
+                guid = AssetDatabase.AssetPathToGUID(asset.assetPath),
+                id = id,
+                nameZh = string.IsNullOrEmpty(nameZh) ? id : nameZh,
+                nameEn = nameEn,
+                assetPath = asset.assetPath,
+                group = "horde"
+            });
+        }
+        return entries.ToArray();
+    }
+
+    public static string UpdateLevelModeConfig(string assetPath, LevelModeConfigDto dto)
+    {
+        if (string.IsNullOrEmpty(assetPath) || dto == null) return "缺少模式配置。";
+        var info = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(assetPath);
+        if (info == null) return "未找到 LevelInfoSO。";
+        var error = LayoutEditorLevelModeStore.Save(assetPath, info, dto);
+        if (error != null) return error;
+        var active = EditorSceneManager.GetActiveScene();
+        var activeInfo = active.IsValid() ? LayoutEditorLevelInfoResolver.ResolveForScene(active.path) : null;
+        if (activeInfo == info)
+        {
+            EditorApplication.delayCall += delegate
+            {
+                var scene = EditorSceneManager.GetActiveScene();
+                if (!EditorApplication.isPlayingOrWillChangePlaymode && scene.IsValid()
+                    && LayoutEditorLevelInfoResolver.ResolveForScene(scene.path) == info)
+                    ReloadPseudo();
+            };
+        }
         return null;
     }
 
@@ -1378,6 +1615,7 @@ public static class LayoutEditorLevelAdminApi
     {
         if (info == null)
             return;
+        LayoutEditorNativeDependencies.Clean(info);
         var k = LoadAudioKnowledge();
         var always = new HashSet<string>(k.alwaysLoadedBundles ?? new string[0], StringComparer.Ordinal);
 
@@ -1388,18 +1626,13 @@ public static class LayoutEditorLevelAdminApi
         // 旧关卡的 LevelInfoSO 可能缺少音频字段，全部做空值防御。
         if (info.inLevelMusicSO != null && !string.IsNullOrEmpty(info.inLevelMusicSO.bundleName))
             referenced.Add(info.inLevelMusicSO.bundleName);
-        // commonW5 本地直引 BGM（OC1/AYCE）：bundleName 为空，但仍需注册 commonW5 依赖
-        // （导出 zip 携带 / dependencies 历史一致；真机由 Loader 常驻加载）。
-        if (info.inLevelMusicSO != null &&
-            LayoutEditorCustomIngredients.IsCommonW5Asset(AssetDatabase.GetAssetPath(info.inLevelMusicSO)))
-            referenced.Add(LayoutEditorCustomIngredients.CommonW5BundleName);
         if (info.onDeathEffectSO != null && !string.IsNullOrEmpty(info.onDeathEffectSO.bundleName))
             referenced.Add(info.onDeathEffectSO.bundleName);
         if (info.audioDirectorySOs != null)
             foreach (var d in info.audioDirectorySOs)
                 if (d != null && !string.IsNullOrEmpty(d.bundleName))
                     referenced.Add(d.bundleName);
-        referenced.RemoveWhere(b => always.Contains(b) || string.IsNullOrEmpty(b));
+        referenced.RemoveWhere(b => always.Contains(b) || !LayoutEditorNativeDependencies.IsNativeBundle(b));
         if (referenced.Count == 0)
             return;
 
@@ -1423,7 +1656,7 @@ public static class LayoutEditorLevelAdminApi
         if (changed)
         {
             Undo.RecordObject(info, "Auto-merge audio dependencies");
-            info.dependencies = deps.ToArray();
+            info.dependencies = LayoutEditorNativeDependencies.Filter(deps);
             EditorUtility.SetDirty(info);
         }
     }
@@ -2344,6 +2577,7 @@ public static class LayoutEditorLevelAdminApi
     private static PerPlayerConfigDto ConfigToDto(LevelConfigSetupPerPlayerCountSO c)
     {
         var d = new PerPlayerConfigDto { exists = c != null };
+        d.scriptedRecipes = LayoutEditorOrderSequencePolicy.Read(c, out d.scriptedRecipeErrors);
         if (c == null)
             return d;
         d.orderLifeTime = c.orderLifeTime;
@@ -2355,6 +2589,7 @@ public static class LayoutEditorLevelAdminApi
         d.twoStarScore = c.m_TwoStarScore;
         d.threeStarScore = c.m_ThreeStarScore;
         d.fourStarScore = c.m_FourStarScore;
+        d.targetRepairCostMax = c.hordeLevelConfig != null ? c.hordeLevelConfig.targetRepairCostMax : 0;
         return d;
     }
 
@@ -2512,29 +2747,6 @@ public static class LayoutEditorLevelAdminApi
             return "";
         var path = AssetDatabase.GetAssetPath(obj);
         return string.IsNullOrEmpty(path) ? "" : AssetDatabase.AssetPathToGUID(path);
-    }
-
-    /// <summary>新建关卡时从 levelinfo 模板拷贝默认音频配置（BGM / 环境音 / AudioDirectory / 死亡特效）。
-    /// 模板缺失或字段为空时退化为空数组，保证新资产音频字段不为 null。</summary>
-    private static void ApplyTemplateAudioDefaults(LevelInfoSO info)
-    {
-        var tpl = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(TemplateLevelInfo);
-        if (tpl != null)
-        {
-            info.inLevelMusicSO = tpl.inLevelMusicSO;
-            info.inLevelAmbiences = tpl.inLevelAmbiences != null
-                ? (LevelInfoSO.GameLoopingAudioTag[])tpl.inLevelAmbiences.Clone()
-                : new LevelInfoSO.GameLoopingAudioTag[0];
-            info.audioDirectorySOs = tpl.audioDirectorySOs != null
-                ? (PseudoPrefabSO[])tpl.audioDirectorySOs.Clone()
-                : new PseudoPrefabSO[0];
-            info.onDeathEffectSO = tpl.onDeathEffectSO;
-        }
-        else
-        {
-            info.inLevelAmbiences = new LevelInfoSO.GameLoopingAudioTag[0];
-            info.audioDirectorySOs = new PseudoPrefabSO[0];
-        }
     }
 
     private static Dictionary<int, string> BuildAmbienceValueMap()
@@ -3104,36 +3316,44 @@ public static class LayoutEditorLevelAdminApi
         var err = ValidateLevelInfoPath(levelInfoAssetPath);
         if (err != null)
             return err;
-        result.json = ReadLevelDataText(levelInfoAssetPath, OrderSeqDirName, OrderSeqFileName, out result.exists);
+        // Unlike optional presentation sidecars, unreadable sequence data must not mean "missing".
+        var dir = LevelDataSubDir(levelInfoAssetPath, OrderSeqDirName);
+        if (string.IsNullOrEmpty(dir)) return "无法定位订单顺序配置目录。";
+        var path = Path.Combine(AbsPath(dir), OrderSeqFileName);
+        result.exists = File.Exists(path);
+        if (!result.exists) return null;
+        try { result.json = File.ReadAllText(path, System.Text.Encoding.UTF8); }
+        catch (Exception ex) { return "订单顺序配置读取失败：" + ex.Message; }
         return null;
     }
 
-    /** 解析订单顺序配置（文件缺失/损坏返回 null）。 */
+    /** 文件缺失返回 null；存在但损坏/启用态引用失效则抛错，写回和导出必须拒绝。 */
     public static OrderSequenceConfigDto LoadLevelOrderSequence(string levelInfoAssetPath)
     {
         OrderSequenceResultDto result;
-        ReadLevelOrderSequence(levelInfoAssetPath, out result);
-        if (!result.exists || string.IsNullOrEmpty(result.json))
+        var readError = ReadLevelOrderSequence(levelInfoAssetPath, out result);
+        if (readError != null) throw new InvalidDataException(readError);
+        if (!result.exists)
             return null;
-        try
-        {
-            return JsonUtility.FromJson<OrderSequenceConfigDto>(result.json);
-        }
-        catch (Exception e)
-        {
-            LayoutEditorLog.LogWarning("[OrderSeq] order_seq.json 解析失败（忽略配置）: " + e.Message);
-            return null;
-        }
+        if (string.IsNullOrEmpty(result.json) || !result.json.TrimStart().StartsWith("{", StringComparison.Ordinal))
+            throw new InvalidDataException("order_seq.json 必须是 JSON 对象。");
+        var config = JsonUtility.FromJson<OrderSequenceConfigDto>(result.json);
+        if (config == null) throw new InvalidDataException("order_seq.json 配置为空。");
+        var error = ValidateOrderSequenceConfig(config);
+        if (error != null) throw new InvalidDataException(error);
+        return config;
     }
 
-    /** 保存订单顺序配置：结构校验（JsonUtility 解析 + 组/菜谱 guid 合法性），
-     *  通过才落盘。guid 必须能解析为菜谱 SO；不在本关 recipes 集合的仅告警
-     *  （菜谱集合后续可独立变更，烘焙/运行时按 uID 兜底跳过）。 */
+    /** 先校验结构与双向互斥再落盘。enabled=true 与任一人数非空原生序列互斥；
+     * disabled 草稿可保存且不清除原生序列；显式 clear 只删除 Web 配置。 */
     public static string SaveLevelOrderSequence(string levelInfoAssetPath, string json)
     {
+        var pathError = ValidateLevelInfoPath(levelInfoAssetPath);
+        if (pathError != null) return pathError;
         var trimmed = json == null ? "" : json.Trim();
         if (trimmed.Length > 0 && trimmed[0] != '{')
             return "订单顺序配置必须是 JSON 对象。";
+        if (trimmed.Length == 0) return "订单顺序配置不能为空；删除请使用 order-sequence-clear。";
         if (trimmed.Length > 0)
         {
             OrderSequenceConfigDto cfg;
@@ -3148,6 +3368,14 @@ public static class LayoutEditorLevelAdminApi
             var err = ValidateOrderSequenceConfig(cfg);
             if (err != null)
                 return err;
+            var info = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(levelInfoAssetPath);
+            if (info == null) return "未找到 LevelInfoSO。";
+            // Disabling Web must remain possible even if an existing native reference is broken.
+            if (cfg != null && cfg.enabled)
+            {
+                err = LayoutEditorOrderSequencePolicy.Validate(info, cfg, null);
+                if (err != null) return err;
+            }
         }
         return WriteLevelDataText(levelInfoAssetPath, OrderSeqDirName, OrderSeqFileName, trimmed, OrderSeqMaxBytes);
     }
@@ -3506,13 +3734,6 @@ public static class LayoutEditorLevelAdminApi
         {
             AssetDatabase.CreateFolder(setDir, CustomRecipesDir);
         }
-        var importer = AssetImporter.GetAtPath(recipesDir);
-        if (importer != null && string.IsNullOrEmpty(importer.assetBundleName))
-        {
-            importer.SetAssetBundleNameAndVariant(setName + "/custom_recipes", "");
-            importer.SaveAndReimport();
-        }
-
         var config = AssetDatabase.LoadAssetAtPath<CustomRecipeConfigSO>(configPath);
         if (config == null)
         {
@@ -4960,6 +5181,8 @@ public static class LayoutEditorLevelAdminApi
         var so = AssetDatabase.LoadAssetAtPath<CustomRecipeSO>(dto.assetPath);
         if (so == null)
             return "未找到菜谱资源。";
+        if (!LayoutEditorOptionalRecipe.CanEdit(so))
+            return "此类型暂不支持 Web 编辑：" + so.GetType().Name;
 
         // 组成项预校验：全部解析成功才进入改动（Undo.RecordObject 之前，
         // 报错路径零副作用、无半保存状态）。
@@ -5927,14 +6150,13 @@ public static class LayoutEditorLevelAdminApi
             {
                 var path = AssetDatabase.GUIDToAssetPath(guid);
                 var info = AssetDatabase.LoadAssetAtPath<LevelInfoSO>(path);
-                if (info == null || info.recipes == null)
+                if (info == null)
                     continue;
 
-                foreach (var r in info.recipes)
+                var usedPaths = new HashSet<string>(StringComparer.Ordinal);
+                CollectUsagePaths(CollectUsageRoots(info), usedPaths);
+                foreach (var rp in usedPaths)
                 {
-                    if (r == null) continue;
-                    var rp = AssetDatabase.GetAssetPath(r);
-                    if (rp == null) continue;
                     if (rp.StartsWith(categoryDir + "/", StringComparison.Ordinal))
                     {
                         usingLevels.Add(info.levelName ?? Path.GetFileName(DirectoryName(path)));

@@ -1,8 +1,42 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 0,
   "itemCount": 200,
   "items": [
+    {
+      "id": "Service_Window",
+      "guid": "23525467a89357149ac283bdbeb11d1e",
+      "assetPath": "Assets/common04/game_environment/horde/prefabs/Service_Window.prefab",
+      "category": "horde",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "customStubKind": "ServingStation",
+      "nameZh": "Horde 服务窗口",
+      "nameEn": "Horde Service Window",
+      "icon": false
+    },
+    {
+      "id": "gate",
+      "guid": "9082ea11251999449830958b76c907cd",
+      "assetPath": "Assets/common04/game_environment/horde/prefabs/gate.prefab",
+      "category": "horde",
+      "theme": null,
+      "defaultParent": "Design/Counters",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 1
+      },
+      "layoutTier": "core",
+      "customStubKind": "Lockable",
+      "nameZh": "Horde 铁门",
+      "nameEn": "Horde Lockable Gate",
+      "icon": false
+    },
     {
       "id": "1_2_Float_Eggplant_16b70cc5_722821b3",
       "guid": "722821b327972a8cd61200e88891df78",
@@ -4029,45 +4063,6 @@
       "nameEn": "Citywall wallpaper 1",
       "typeKind": "building",
       "usage": "enclosure",
-      "icon": false
-    },
-    {
-      "id": "Citywall_wallpaper_corner_in_01",
-      "guid": "ab4a6db3087a62e44966390c1f442745",
-      "assetPath": "Assets/common02/prefabs/art/dlc02_beach/Citywall_wallpaper_corner_in_01.prefab",
-      "category": "art",
-      "theme": "dlc02_beach",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 2
-      },
-      "height": 2,
-      "baseY": -1,
-      "layoutTier": "decor",
-      "nameZh": "城市墙纸内角墙",
-      "nameEn": "Citywall wallpaper corner in 1",
-      "typeKind": "building",
-      "usage": "enclosure",
-      "icon": false
-    },
-    {
-      "id": "close water edge_abb2a10f",
-      "guid": "abb2a10f28d18d4927a195f03b82f0a9",
-      "assetPath": "Assets/commonW6/prefabs/oc2dlc/art/dynamic/close water edge_abb2a10f.prefab",
-      "category": "art",
-      "theme": "dynamic",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "layoutTier": "decor",
-      "nameZh": "close water edge_abb2a10f",
-      "nameEn": "close water edge_abb2a10f",
-      "typeKind": "water",
-      "usage": "waterscape",
       "icon": false
     }
   ]

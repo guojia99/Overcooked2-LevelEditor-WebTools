@@ -36,6 +36,8 @@ import type {
   WriteBackHistoryItem,
 } from "./types";
 import { closeModal, openModal } from "./modals";
+import { mountLevelModeEditor } from "./levelModeEditor";
+import { mountNativeScriptedRecipes } from "./nativeScriptedRecipes";
 import { openDepsCheckModal } from "./editor/ui/depsCheck";
 import { showBusy, hideBusy, setBusyMessage, setBusyStages, setBusyResult } from "./busy";
 import { suspendBridgeWatch, resumeBridgeWatch } from "./editor/sceneIO";
@@ -273,7 +275,7 @@ async function renderSetList(app: HTMLElement): Promise<void> {
         "",
         `<span id="export-multi-count">0</span>)`
       )}
-      ${mBtnHtml("导出依赖包", "default", { id: "export-deps", title: "单独导出 OC2DIYLevelRuntimeWLoader 依赖包（Loader.dll + 统一运行时 + commonW1/W2）——装一次即可长期复用，只要版本不变" })}
+      ${mBtnHtml("导出依赖包", "default", { id: "export-deps", title: "单独导出 OC2DIYLevelRuntimeWLoader 依赖包" })}
     </div>
     <div class="m-section-title">关卡集列表</div>
     <div class="m-grid">${cards || '<p class="muted">暂无关卡集</p>'}</div>
@@ -424,8 +426,13 @@ function estimateExportDuration(levelCount: number, withDeps = false): string {
   return `约 ${minutes} 分钟`;
 }
 
+let activeExportId = "";
+
 /** idle 可能来自域重载；只接受当前任务的有效快照，恢复期间不清除已知行。 */
 function updateExportStages(st: SetExportStatus, expectedKey: string, mode: NonNullable<SetExportStatus["mode"]>): boolean {
+  if (activeExportId && st.exportId && st.exportId !== activeExportId)
+    throw new Error("导出任务已被其他任务替换，请检查当前任务状态。");
+  if (activeExportId && !st.exportId) return false;
   if (st.status === "idle" || st.setName !== expectedKey || (st.mode && st.mode !== mode)) {
     setBusyMessage("等待当前导出状态恢复…", "Unity 可能正在域重载；保留最近一次阶段进度，尚未确认完成。");
     return false;
@@ -562,7 +569,7 @@ function confirmExportSet(app: HTMLElement, s: LevelSetInfo): void {
           version: newVersion,
         });
       }
-      await api.startSetExport([s.setName], mode, undefined, selectedLevels);
+      activeExportId = await api.startSetExport([s.setName], mode, undefined, selectedLevels);
       closeModal();
 
       const exportCount = boxes.length > 0 ? checkedScenes.length : s.levelCount;
@@ -722,7 +729,7 @@ function confirmExportMultiSet(app: HTMLElement, sets: LevelSetInfo[]): void {
           });
         }
       }
-      await api.startSetExport(sets.map((s) => s.setName), mode);
+      activeExportId = await api.startSetExport(sets.map((s) => s.setName), mode);
       closeModal();
 
       await awaitExportAndDownload(joinedKey, startAt, totalLevels, withDeps);
@@ -794,11 +801,10 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
   const anchorSet = sets[0].setName;
   openModal(
     "导出依赖包 · OC2DIYLevelRuntimeWLoader",
-    `<p>将<b>重新打包</b>依赖包（<code>OC2DIYLevelRuntimeWLoader/</code>），<b>不含任何关卡</b>。导出前会<b>删除 commonW1/commonW2 旧构建产物并重新打包</b>（杜绝遗留）；两个 common 包<b>无条件全部携带</b>。解压到游戏 <code>BepInEx/plugins/</code> 目录即安装——<b>只要版本号不变，装一次即可长期复用</b>，之后更新关卡只需在关卡集上导出（可不带依赖）。</p>
-     <div class="m-section-title">打包清单</div>
+    `<div class="m-section-title">打包清单</div>
      <div class="deps-manifest" id="exp-deps-manifest"><p class="modal-hint">正在获取打包清单…</p></div>
      <label class="m-field">打包版本 version<input type="text" id="exp-deps-version" autocomplete="off" placeholder="与运行时 SSOT 一致（如 v3.9.1）" value=""></label>
-     <p class="modal-hint" id="exp-deps-version-hint">关卡 requires.txt 写入运行时 SSOT 版本；Loader.PluginVersion 须与之完全一致。建议打包版本与 SSOT 相同（zip 命名用）。</p>
+      <p class="modal-hint" id="exp-deps-version-hint">打包版本用于 zip 文件名，不影响 Loader 与关卡的版本门控。</p>
      <p class="modal-hint" id="exp-deps-zipname"></p>
      <div class="m-section-title">CustomStub 统一运行时</div>
      <p class="modal-hint" id="exp-stub-status">正在查询状态…</p>
@@ -812,7 +818,6 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
   const manifestEl = document.getElementById("exp-deps-manifest");
   const versionInput = document.getElementById("exp-deps-version") as HTMLInputElement | null;
   const zipnameEl = document.getElementById("exp-deps-zipname");
-  const versionHintEl = document.getElementById("exp-deps-version-hint");
 
   // 状态仅展示：DLL 非 fresh 时后端导出闸口会自动编译并续跑（无需手动点「编译」）。
   wireExportStubTools(anchorSet);
@@ -825,7 +830,7 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
     if (zipnameEl)
       zipnameEl.textContent = norm
         ? `zip 文件名：OC2DIYLevelRuntimeWLoader_v${norm}_${stamp}.zip`
-        : "请输入打包版本（建议与运行时 SSOT 一致）";
+        : "请输入依赖包打包版本";
   };
   versionInput?.addEventListener("input", updateZipPreview);
   updateZipPreview();
@@ -835,19 +840,10 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
     if (!manifestEl) return;
     try {
       const m = await api.fetchDepsExportManifest();
-      const alignWarn =
-        m.versionsAligned === false
-          ? `<p class="modal-hint warn">Loader.dll（v${esc(m.loaderVersion || "?")}）与运行时 SSOT（v${esc(m.runtimeVersion || "?")}）不一致：请执行 <code>Loader~/build.sh</code>；导出依赖包时会自动同步 bin/Release → public 并校验。</p>`
-          : "";
-      manifestEl.innerHTML = alignWarn + renderDepsManifestRows(m.entries);
+      manifestEl.innerHTML = renderDepsManifestRows(m.entries);
       if (versionInput) {
         const prefill = m.lastDepsVersion || m.runtimeVersion;
         if (prefill) versionInput.value = `v${prefill}`;
-      }
-      if (versionHintEl && m.runtimeVersion) {
-        const loader = m.loaderVersion ? `v${m.loaderVersion}` : "未知";
-        versionHintEl.textContent =
-          `requires.txt = v${m.runtimeVersion}；当前 Loader ${loader}。打包版本建议与 SSOT 相同（装包后 Loader 版本须 ≥ requires，且须能加载 stub 清单）。`;
       }
       updateZipPreview();
     } catch (e) {
@@ -861,7 +857,7 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
     if (okBtn) okBtn.disabled = true;
     const norm = normalizeDepsVersionInput(versionInput?.value ?? "");
     if (!norm) {
-      setStatus("请输入依赖包打包版本（建议与运行时 SSOT 一致）。", false);
+      setStatus("请输入依赖包打包版本。", false);
       if (okBtn) okBtn.disabled = false;
       return;
     }
@@ -870,7 +866,7 @@ function confirmExportDeps(sets: LevelSetInfo[]): void {
     showBusy("正在导出依赖包…");
     try {
       // DLL 新鲜度交给后端导出闸口：非 fresh 自动编译并续跑（无需手动点「编译」）。
-      await api.startSetExport([anchorSet], "deps", norm);
+      activeExportId = await api.startSetExport([anchorSet], "deps", norm);
       closeModal();
       const deadline = Date.now() + 15 * 60 * 1000;
       const queueWait = { phase: "", since: Date.now() };
@@ -1710,8 +1706,11 @@ function openCreateLevelModal(app: HTMLElement, setName: string): void {
     <label class="m-field">关卡标识（仅小写字母/数字/下划线，用于目录与场景名，不再自动加 s_ 前缀）<input type="text" id="lv-id" placeholder="level_1"></label>
     <label class="m-field">英文名 levelName<input type="text" id="lv-en" placeholder="Level 1"></label>
     <label class="m-field">中文名 levelNameZH<input type="text" id="lv-zh" placeholder="第一关"></label>
+    <label class="m-field">关卡模式
+      <select id="lv-mode"><option value="Campaign">普通</option><option value="Dynamic">原生 Dynamic</option><option value="Horde">敌群 Horde</option></select>
+    </label>
     <label class="m-field">分组（可选，展示用，不改关卡顺序）<input type="text" id="lv-group" list="lv-group-list" placeholder="留空 = 未分组"><datalist id="lv-group-list"></datalist></label>
-    <p class="modal-hint">将自动生成 4 份分数配置（config_1p~4p，复制模板默认值）、LevelInfoSO，并复制模板场景到 scenes/&lt;标识&gt;.unity。</p>
+    <p class="modal-hint">按所选模式复制模板并创建对应配置。Web 分 P 是布局编辑功能，与原生 Dynamic 阶段菜谱相互独立。</p>
     `,
     `${mCancelBtnHtml()}${mPrimaryBtnHtml("创建")}`,
     { closeOnBackdrop: false }
@@ -1739,12 +1738,14 @@ function openCreateLevelModal(app: HTMLElement, setName: string): void {
       if (!levelId) return setStatus("请填写关卡标识", false);
       if (!IDENT_RE.test(levelId)) return setStatus("关卡标识仅允许小写字母/数字/下划线", false);
       const group = (document.getElementById("lv-group") as HTMLInputElement).value.trim();
+      const gameMode = (document.getElementById("lv-mode") as HTMLSelectElement).value as "Campaign" | "Dynamic" | "Horde";
       showBusy("创建关卡（生成配置、复制场景）…");
       await api.createLevel({
         setName,
         levelId,
         levelName: (document.getElementById("lv-en") as HTMLInputElement).value.trim(),
         levelNameZH: (document.getElementById("lv-zh") as HTMLInputElement).value.trim(),
+        gameMode,
       });
       if (group) {
         try {
@@ -1994,6 +1995,7 @@ async function renderLevelDetail(app: HTMLElement, setName: string, assetPath: s
       ${mBtnHtml("打开关卡编辑器", "default", { id: "btn-layout" })}
       ${mBtnHtml("✏️ 重命名", "default", { id: "btn-rename" })}
       ${mBtnHtml("📊 关卡配置", "default", { id: "btn-level-config" })}
+      ${mBtnHtml("关卡模式", "default", { id: "btn-level-mode" })}
       ${mBtnHtml("📦 依赖管理", "default", { id: "btn-deps" })}
       ${mBtnHtml("📋 汇总", "default", { id: "btn-summary" })}
       ${mBtnHtml("🧰 工具与历史", "default", { id: "btn-tools-history", title: "修复损坏 / 依赖检查 / 测试布局 / 同步布局 + 写回历史对比" })}
@@ -2086,6 +2088,11 @@ function wireDetailActions(app: HTMLElement, setName: string, assetPath: string,
   document.getElementById("btn-deps")?.addEventListener("click", () => goDependenciesPage(setName, assetPath));
   document.getElementById("btn-summary")?.addEventListener("click", () => void renderLevelSummary(app, setName, assetPath));
   document.getElementById("btn-tools-history")?.addEventListener("click", () => openToolsHistoryModal(detail));
+  document.getElementById("btn-level-mode")?.addEventListener("click", () =>
+    void openConfigTabsModal(detail, setName, () => {
+      void renderLevelDetail(app, setName, assetPath);
+    }, undefined, "mode")
+  );
   document.getElementById("btn-level-config")?.addEventListener("click", () =>
     void (async () => {
       let sceneConfig: SceneConfigOptions | undefined;
@@ -3054,6 +3061,8 @@ export interface SceneConfigOptions {
   onChefHeadLightRangeChange?: (range: number) => void;
   /** 关卡管理页：仅展示场景内当前值，须在布局编辑器中修改并写回。 */
   ceilingReadOnly?: boolean;
+  isLayoutDirty?: () => boolean;
+  onNativeModeChanged?: () => Promise<void>;
   partLevel?: {
     canEdit: boolean;
     active: boolean;
@@ -3189,8 +3198,19 @@ export async function openConfigTabsModal(
   detail: LevelDetail,
   setName: string,
   onSaved: () => void,
-  sceneConfig?: SceneConfigOptions
+  sceneConfig?: SceneConfigOptions,
+  initialTab: "score" | "mode" = "score"
 ): Promise<void> {
+  let scoreSaving = false;
+  const hasScriptedDraft = (): boolean => document.getElementById("cfg-scripted-pane")?.dataset.dirty === "1";
+  const canCloseConfig = (): boolean => {
+    if (scoreSaving || document.getElementById("cfg-scripted-pane")?.dataset.saving === "1") {
+      setStatus("正在保存配置，请等待读回完成后关闭。", false); return false;
+    }
+    if (!hasScriptedDraft()) return true;
+    setStatus("原生序列有未保存草稿；请先保存，或在原生序列页显式放弃修改后关闭。", false);
+    return false;
+  };
   const starHead = STAR_FIELDS.map(([, label]) => `<th>${label}</th>`).join("");
   const matrixRows = PLAYER_TABS.map((t, ti) => {
     const cfg = detail.configs[ti] ?? ({ exists: false } as PerPlayerConfig);
@@ -3229,8 +3249,10 @@ export async function openConfigTabsModal(
 
   openModal(
     `关卡配置 · ${detail.levelName || detail.levelNameZH}`,
-    `<div class="cfg-ltabs">
+     `<div class="cfg-ltabs">
         <button type="button" class="cfg-ltab-btn active" data-ltab="score">📊 分数</button>
+        <button type="button" class="cfg-ltab-btn" data-ltab="mode">模式</button>
+        <button type="button" class="cfg-ltab-btn" data-ltab="scripted">原生序列</button>
         ${envPane ? `<button type="button" class="cfg-ltab-btn" data-ltab="env">🌤 环境</button>` : ""}
         ${partPane ? `<button type="button" class="cfg-ltab-btn" data-ltab="part">🔀 分 P</button>` : ""}
         <button type="button" class="cfg-ltab-btn" data-ltab="audio">🔊 音频</button>
@@ -3248,6 +3270,7 @@ export async function openConfigTabsModal(
          <label class="m-field">最多同时订单 maxOrderCount<input type="number" id="cfg-maxOrderCount" min="1" max="10" step="1" value="${detail.maxOrderCount ?? 5}"></label>
        </div>
        <p class="modal-hint">核心参数 · 工作台网格（CampaignGameEnvironment/GridManager）</p>
+       <label class="m-field"><span><input type="checkbox" id="cfg-enableRespawnBounds" ${detail.enableRespawnBounds ? "checked" : ""}>启用重生边界 enableRespawnBounds</span></label>
        <div class="cfg-order-count">
          <label class="m-field">网格半宽 X gridHalfSizeX<input type="number" id="cfg-gridHalfX" min="0" max="50" step="1" value="${detail.gridHalfSizeX ?? 0}"></label>
          <label class="m-field">网格半宽 Y gridHalfSizeY<input type="number" id="cfg-gridHalfY" min="0" max="50" step="1" value="${detail.gridHalfSizeY ?? 1}"></label>
@@ -3266,13 +3289,16 @@ export async function openConfigTabsModal(
          <tbody>${rhythmRows}</tbody>
        </table>
      </div>
-     ${envPane}
+       <div data-lpane="mode" style="display:none"><div id="cfg-mode-pane"></div></div>
+       <div data-lpane="scripted" style="display:none" id="cfg-scripted-pane"></div>
+      ${envPane}
      ${partPane}
      ${audioPane}
      <div data-lpane="shot" style="display:none">
        ${screenshotPaneHtml(detail)}
      </div>`,
-    `${mCancelBtnHtml()}${mPrimaryBtnHtml("保存全部")}`
+    `${mCancelBtnHtml()}${mPrimaryBtnHtml("保存分数与基础配置")}`,
+    { beforeClose: canCloseConfig }
   );
   document.querySelector(".modal-panel")?.classList.add("wide");
 
@@ -3281,12 +3307,12 @@ export async function openConfigTabsModal(
     const tab = document.querySelector<HTMLButtonElement>(".cfg-ltab-btn.active")?.dataset.ltab ?? "score";
     const ok = document.querySelector<HTMLButtonElement>("[data-ok]");
     if (!ok) return;
-    if (tab === "shot") {
+    if (tab === "shot" || tab === "mode" || tab === "scripted") {
       ok.style.display = "none";
       return;
     }
     ok.style.display = "";
-    ok.textContent = tab === "audio" ? "保存音频" : "保存全部";
+    ok.textContent = tab === "audio" ? "保存音频" : "保存分数与基础配置";
   };
 
   // 顶层 tab：分数/环境/分P →「保存全部」；音频 →「保存音频」；截图 → 无底部保存
@@ -3301,6 +3327,24 @@ export async function openConfigTabsModal(
     })
   );
   syncCfgSaveBtn();
+
+  const scriptedPane = document.getElementById("cfg-scripted-pane");
+  if (scriptedPane) void mountNativeScriptedRecipes(scriptedPane, detail, setName);
+
+  const modePane = document.getElementById("cfg-mode-pane");
+  if (modePane) {
+    void mountLevelModeEditor(modePane, setName, detail.levelInfoAssetPath, detail, async () => {
+      if (!canCloseConfig()) return;
+      closeModal();
+      if (sceneConfig?.onNativeModeChanged) await sceneConfig.onNativeModeChanged();
+      onSaved();
+    }, { isLayoutDirty: scriptedPane
+      ? () => scoreSaving || !!sceneConfig?.isLayoutDirty?.() || scriptedPane.dataset.dirty === "1" || scriptedPane.dataset.saving === "1"
+      : sceneConfig?.isLayoutDirty });
+  }
+  if (initialTab === "mode") {
+    document.querySelector<HTMLButtonElement>('.cfg-ltab-btn[data-ltab="mode"]')?.click();
+  }
 
   const loadEmbeddedAudio = async (): Promise<void> => {
     const pane = document.getElementById("cfg-audio-pane");
@@ -3490,9 +3534,11 @@ export async function openConfigTabsModal(
     }
   });
 
-  document.querySelector("[data-cancel]")?.addEventListener("click", closeModal);
+  document.querySelector("[data-cancel]")?.addEventListener("click", () => { if (canCloseConfig()) closeModal(); });
   document.querySelector("[data-ok]")?.addEventListener("click", async () => {
     const activeTab = document.querySelector<HTMLButtonElement>(".cfg-ltab-btn.active")?.dataset.ltab;
+    if (activeTab === "mode" || activeTab === "scripted") return;
+    if (scoreSaving) return;
     if (activeTab === "audio") {
       if (!audioSave) {
         setStatus("音频尚未加载完成，请稍候", false);
@@ -3501,6 +3547,11 @@ export async function openConfigTabsModal(
       await audioSave(false);
       return;
     }
+    if (!canCloseConfig()) return;
+    let configConfirmed = false;
+    let infoStarted = false;
+    scoreSaving = true;
+    if (scriptedPane) scriptedPane.dataset.parentSaving = "1";
     try {
       const build = (t: string): PerPlayerConfig => {
         const getNum = (key: string) =>
@@ -3519,6 +3570,7 @@ export async function openConfigTabsModal(
           twoStarScore: round5(getNum("twoStarScore")),
           threeStarScore: round5(getNum("threeStarScore")),
           fourStarScore: round5(getNum("fourStarScore")),
+          targetRepairCostMax: detail.configs[PLAYER_TABS.indexOf(t as typeof PLAYER_TABS[number])]?.targetRepairCostMax,
         };
       };
       showBusy("保存关卡配置…");
@@ -3527,6 +3579,36 @@ export async function openConfigTabsModal(
       const gridHalfSizeX = Number((document.getElementById("cfg-gridHalfX") as HTMLInputElement).value || 0);
       const gridHalfSizeY = Number((document.getElementById("cfg-gridHalfY") as HTMLInputElement).value || 1);
       const gridHalfSizeZ = Number((document.getElementById("cfg-gridHalfZ") as HTMLInputElement).value || 0);
+      // /config runs all sequence validation before /info can persist unrelated fields.
+      // These endpoints remain separate commits: report/read back partial success explicitly.
+      const configs: api.LevelConfigUpdateBody = {
+        assetPath: detail.levelInfoAssetPath,
+        config_1p: build("1p"), config_2p: build("2p"), config_3p: build("3p"), config_4p: build("4p"),
+      };
+      await api.updateLevelConfig(configs);
+      configConfirmed = true;
+      const current = await api.fetchLevelDetail(detail.levelInfoAssetPath);
+      infoStarted = true;
+      await api.updateLevelInfo({
+        assetPath: detail.levelInfoAssetPath,
+        levelName: current.levelName,
+        levelNameZH: current.levelNameZH,
+        debugRecipeCount: current.debugRecipeCount,
+        disableDynamicParenting: current.disableDynamicParenting,
+        updateEnableRespawnBounds: true,
+        enableRespawnBounds: (document.getElementById("cfg-enableRespawnBounds") as HTMLInputElement).checked,
+        minOrderCount, maxOrderCount, gridHalfSizeX, gridHalfSizeY, gridHalfSizeZ,
+        dependencies: current.dependencies,
+      });
+      const saved = await api.fetchLevelDetail(detail.levelInfoAssetPath);
+      for (const [p, key] of (["config_1p", "config_2p", "config_3p", "config_4p"] as const).entries()) {
+        const expected = configs[key]!;
+        const actual = saved.configs[p];
+        for (const field of [...STAR_FIELDS.map(([field]) => field), ...RHYTHM_FIELDS.map(([field]) => field)]) {
+          if (!actual || !Number.isFinite(Number(actual[field])) || Math.abs(Number(actual[field]) - Number(expected[field])) > 0.0001) throw new Error(`${p + 1}P ${field} 读回不一致。`);
+        }
+      }
+      if (saved.minOrderCount !== minOrderCount || saved.maxOrderCount !== Math.max(minOrderCount, maxOrderCount)) throw new Error("订单数量读回不一致。");
       const ceilingInput = document.getElementById("cfg-ceilingHeight") as HTMLInputElement | null;
       if (ceilingInput && sceneConfig) {
         const ceilingHeight = Math.max(0, Math.min(10, Number(ceilingInput.value || 2)));
@@ -3541,32 +3623,23 @@ export async function openConfigTabsModal(
         const r = Math.max(0.01, Math.min(100, Number(headLightRangeInput.value || 10)));
         sceneConfig.onChefHeadLightRangeChange?.(r);
       }
-      await api.updateLevelInfo({
-        assetPath: detail.levelInfoAssetPath,
-        levelName: detail.levelName,
-        levelNameZH: detail.levelNameZH,
-        debugRecipeCount: detail.debugRecipeCount,
-        disableDynamicParenting: detail.disableDynamicParenting,
-        minOrderCount,
-        maxOrderCount,
-        gridHalfSizeX,
-        gridHalfSizeY,
-        gridHalfSizeZ,
-        dependencies: detail.dependencies,
-      });
-      await api.updateLevelConfig({
-        assetPath: detail.levelInfoAssetPath,
-        config_1p: build("1p"),
-        config_2p: build("2p"),
-        config_3p: build("3p"),
-        config_4p: build("4p"),
-      });
+      scoreSaving = false;
       closeModal();
-      setStatus("关卡配置已保存（已 reload）");
+      setStatus("分数与基础配置已分步保存并读回确认");
       onSaved();
     } catch (e) {
-      setStatus((e as Error).message, false);
+      const stage = configConfirmed
+        ? "人数配置已保存；基础配置" + (infoStarted ? "可能已写入" : "尚未提交")
+        : "人数配置未得到成功确认；基础配置尚未提交";
+      try {
+        const actual = await api.fetchLevelDetail(detail.levelInfoAssetPath);
+        setStatus(`${stage}。${(e as Error).message} 当前读回：1P 时长 ${actual.configs[0]?.roundTime}，订单 ${actual.minOrderCount}-${actual.maxOrderCount}，重生边界 ${actual.enableRespawnBounds}。表单保留，请核实后重试。`, false);
+      } catch (readError) {
+        setStatus(`${stage}。${(e as Error).message}；详情读回也失败：${(readError as Error).message}。请先重新加载核实，勿假定全部回滚。`, false);
+      }
     } finally {
+      scoreSaving = false;
+      if (scriptedPane) scriptedPane.dataset.parentSaving = "0";
       hideBusy();
     }
   });
@@ -3697,7 +3770,7 @@ async function wireAudioEditor(
     ]);
   } catch (e) {
     showError(e);
-    return;
+    throw e;
   }
 
   const sfxById = new Map<string, AudioExportSfxDir>();

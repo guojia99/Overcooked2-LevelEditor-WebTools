@@ -1,8 +1,52 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 18,
-  "itemCount": 106,
+  "itemCount": 108,
   "items": [
+    {
+      "id": "Pizza_Olives",
+      "guid": "d6d25d86f88ed8bf49573ac1e7052ba1",
+      "assetPath": "Assets/commonW1/prefabs/dlc05/decor/recipes/Pizza_Olives.prefab",
+      "category": "decor/recipes",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "height": 0.137,
+      "baseY": -0.007,
+      "layoutTier": "decor",
+      "recipeDecor": true,
+      "recipeGuid": "fbd107281a4092b4f9f24f7bce2f75de",
+      "nameZh": "橄榄披萨",
+      "nameEn": "Olive Pizza",
+      "typeKind": "food_model",
+      "usage": "dressing",
+      "icon": true
+    },
+    {
+      "id": "Pizza_Peperoni_80_SO",
+      "guid": "7b0cda279f35190738f1ada6b90eb5d0",
+      "assetPath": "Assets/commonW1/prefabs/core/decor/recipes/Pizza_Peperoni_80_SO.prefab",
+      "category": "decor/recipes",
+      "theme": null,
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1
+      },
+      "height": 0.137,
+      "baseY": -0.007,
+      "layoutTier": "decor",
+      "recipeDecor": true,
+      "recipeGuid": "fbd107281a4092b4f9f24f7bce2f75de",
+      "nameZh": "辣香肠披萨（80 分）",
+      "nameEn": "Pepperoni Pizza 80",
+      "typeKind": "food_model",
+      "usage": "dressing",
+      "icon": true
+    },
     {
       "id": "Pizza_Peperoni_SO",
       "guid": "f4f569866ce51cee0a7cc8a7e5e9a6ca",

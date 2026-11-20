@@ -27,15 +27,8 @@ function syncDepsPath(path: string): void {
   if (location.pathname !== path) history.pushState(null, "", path);
 }
 
-/** 关卡集数据 bundle（末段 custom_recipes / custom_content）由系统在写回 / 菜谱保存时
- *  自动登记（EnsureWebDependencies），手动依赖编辑不允许添加；
- *  唯一例外：本集自身的两条规范名（系统写入的既有序目，保留展示、原样维护）。 */
-function isForbiddenManualBundle(name: string, setName: string): boolean {
-  const n = name.trim();
-  if (!n) return false;
-  const seg = n.substring(n.lastIndexOf("/") + 1).toLowerCase();
-  if (seg !== "custom_recipes" && seg !== "custom_content") return false;
-  return n !== `${setName}/custom_recipes` && n !== `${setName}/custom_content`;
+function isForbiddenManualBundle(name: string): boolean {
+  return !/^bundle[0-9]+$/.test(name);
 }
 
 /** 由 LevelInfo 资产路径推导 levelId（其所在数据目录名）。 */
@@ -254,7 +247,7 @@ async function renderDepsDetail(app: HTMLElement, setName: string, assetPath: st
     </div>
     <div class="m-block">
       <h3>依赖 bundles 列表</h3>
-      <label class="m-field">每行一个 bundle 名（如 bundle47 / bundle11 / commonW3；custom_recipes / custom_content 属关卡集数据，由系统自动管理、不能手动添加）
+      <label class="m-field">每行一个原生 bundle 名（如 bundle47 / bundle11，仅允许 ^bundle[0-9]+$；commonW、custom_recipes、custom_content 不属于此字段）
         <textarea id="dep-textarea" rows="12">${esc(depsText)}</textarea>
       </label>
       <div class="m-actions-row">
@@ -292,10 +285,10 @@ async function renderDepsDetail(app: HTMLElement, setName: string, assetPath: st
         .map((s) => s.trim())
         .filter(Boolean);
 
-      const forbidden = deps.filter((d) => isForbiddenManualBundle(d, setName));
+      const forbidden = deps.filter(isForbiddenManualBundle);
       if (forbidden.length) {
         setStatus(
-          `保存被阻止：以下条目属关卡集数据（custom_recipes / custom_content），由系统自动管理、不能手动添加：${forbidden.join("、")}`,
+          `保存被阻止：dependencies 仅允许原生 bundle（^bundle[0-9]+$）：${forbidden.join("、")}`,
           false
         );
         return;

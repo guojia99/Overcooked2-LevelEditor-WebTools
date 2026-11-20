@@ -60,7 +60,7 @@ export function buildLayoutDom(): void {
       <button id="btn-recipes" type="button" title="查看所有可用菜谱">📖 菜谱</button>
       <button id="btn-utensils" type="button" title="查看所有锅具参数，一键同步给相同锅具">🍳 锅具管理</button>
       <button id="btn-counters" type="button" title="按桌台类型统一皮肤（如木纹·中秋），也可单独修改">🪵 桌台管理</button>
-      <button id="btn-level-config" type="button" title="分数、环境（天花板/分 P）、音频与关卡截图">📊 关卡配置</button>
+      <button id="btn-level-config" type="button" title="关卡模式、分数、环境、分 P、音频与截图">📊 关卡配置</button>
       <button id="btn-camera-light" type="button" title="修改游戏相机背景色、FOV 与出发点位置">🎥 相机</button>
       <button id="btn-tools-history" type="button" title="关卡工具、工作量推测与最近 15 次写回历史">🧰 工具与历史</button>
       <button id="btn-web-assets-export" type="button" title="导出音频 / 桌台图标与 3D / 装饰双视图与高清详情 / 菜谱与食材原图到 exports/（Web 前端经后端接口读取）">🌐 导出web预览资源依赖</button>

@@ -25,7 +25,7 @@ METHODS = [
     "SnapshotStagesLocked", "SealStageLocked", "SetStageProgress",
     "RecordExportError", "CompleteStagesLocked", "TryGateRuntimeReady",
     "RestorePendingStages", "ClearPendingExport", "ResumePendingExport",
-    "ScheduleResumeRetry", "ResumeRetryTick",
+    "ScheduleResumeRetry", "ResumeRetryTick", "SuspendForCompile", "PersistSession", "RestoreSession", "RecoverInterruptedExport",
 ]
 FIELDS = [
     "LevelSetsRoot", "_phaseTimer", "StagePhases", "_stages", "_lock",
@@ -33,7 +33,7 @@ FIELDS = [
     "_zipFileName", "_zipAbsPath", "_fileCount", "_usesCustomStub", "_mode",
     "_depsVersion", "_selectedLevels", "_setInfoMutatedAssetPath",
     "_setInfoMutatedSetName", "_setInfoSavedLevelInfos", "PendingKey",
-    "PendingAtKey", "PendingStagesKey", "_resumeNextCheck", "_deferredCompile",
+    "PendingAtKey", "PendingStagesKey", "_resumeNextCheck", "_deferredCompile", "_exportId", "SessionKey", "_resumePrevActive",
 ]
 
 
@@ -75,6 +75,9 @@ def fastpath_contract(source, server, methods):
     constructor = extract(source, r"    static LayoutEditorSetExporter\(\)")
     if "RestorePendingStages();" not in constructor or "delayCall += ResumePendingExport;" not in constructor:
         raise AssertionError("Domain reload no longer restores stages and schedules resume")
+    for name in ("TryGateRuntimeReady", "ResumePendingExport"):
+        if not re.search(r"catch \(System\.Threading\.ThreadAbortException\)\s*\{ throw; \}\s*catch \(Exception", methods[name]):
+            raise AssertionError(name + " must preserve pending state during domain unload")
     print("PASS: source contracts: managed-only GetStatus closure, listener fastpath, reload wiring", flush=True)
 
 
@@ -95,6 +98,7 @@ static class Debug
 {
     public static void Log(string value) { ApiGuard.Touch(); }
     public static void LogWarning(string value) { ApiGuard.Touch(); }
+    public static void LogException(Exception value) { ApiGuard.Touch(); }
 }
 static class SessionState
 {
@@ -140,18 +144,25 @@ static class LayoutEditorWebAssetExporter
     { ApiGuard.Touch(); return new SetExportStatusDto { status = "idle" }; }
 }
 class LevelInfoSO { }
+static class EditorSceneManager
+{
+    public static Scene GetActiveScene() { return new Scene(); }
+}
+class Scene { public string path = "fixture-scene"; }
 
 class ExportStages
 {
     public static Func<string> RuntimeReadyGate;
     static int checks, failures, groups;
     static void RecoverSetInfoBackups() { ApiGuard.Touch(); }
+    static void RecoverSetInfoBackups(bool interrupted) { ApiGuard.Touch(); }
     static string StubVersionValue() { return "1.0.0"; }
     static string NormalizeDepsVersion(string value) { return value ?? "1.0.0"; }
     static string NormalizeSelectedLevels(List<string> sets, string mode,
         List<string> selected, out List<string> result)
     { result = selected == null ? null : new List<string>(selected); return null; }
     static void RunExport() { throw new Exception("Build callback must never run in stage harness"); }
+    static void FinishExportSession() { CompleteStagesLocked(); PersistSession(); }
     static void Check(bool condition, string label)
     {
         checks++;
@@ -359,8 +370,7 @@ class ExportStages
             && Stage(resumed, "starting").elapsedMs == starting, "resume retains compile gap, active time and previous phases");
         Check(_selectedLevels != null && _selectedLevels.Count == 1 && _selectedLevels[0] == "s_selected"
             && _depsVersion == "1.0.0", "resume hands selection and normalized version to StartExport");
-        Check(SessionState.GetString(PendingKey, "x") == "" && SessionState.GetString(PendingAtKey, "x") == ""
-            && SessionState.GetString(PendingStagesKey, "x") == "", "resume clears all persisted keys");
+        Check(SessionState.GetString(PendingKey, "") != "", "resume retains pending until callback gate acknowledges readiness");
         SetPhase("starting", "again"); Thread.Sleep(25); SetPhase("prepare", "prepare");
         Check(FindStageLocked("starting").elapsedMs > starting, "revisited starting phase adds elapsed rather than replacing it");
         SetPhase("restore", "restore"); lock (_lock) { CompleteStagesLocked(); }
@@ -406,6 +416,24 @@ class ExportStages
         Test("failed stage, independent restore and terminal error", ErrorAndRestore);
         Test("successful completion skips unexecuted compile", Success);
         Test("SessionState snapshot, reload gaps and real resume accumulation", PersistenceAndResume);
+        Test("accepted and interrupted sessions retain identity and explicit error", delegate {
+            Fresh("levels");
+            string identity = GetStatus().exportId;
+            Check(!string.IsNullOrEmpty(identity), "accepted task has identity");
+            ReloadMemory(); RestoreSession();
+            Check(GetStatus().exportId == identity && GetStatus().status == "running", "accepted snapshot restored before recovery");
+            RecoverInterruptedExport();
+            Check(GetStatus().status == "error" && GetStatus().exportId == identity, "reload interruption is not idle");
+            Fresh("levels");
+            RuntimeReadyGate = delegate {
+                Check(SessionState.GetString(PendingKey, "") != "", "pending exists before compilation trigger");
+                return "compiling";
+            };
+            TryGateRuntimeReady();
+            identity = GetStatus().exportId;
+            ReloadMemory(); RestoreSession(); RestorePendingStages();
+            Check(GetStatus().exportId == identity && _deferredCompile, "compile reload retains identity");
+        });
         Console.WriteLine((failures == 0 ? "PASS: " : "FAILED: ") + checks + " stage checks in "
             + groups + " groups, " + failures + " failures (production methods/DTOs, net8.0, C# 4).");
         Console.WriteLine("Scope: API/JSON doubles; no Unity domain reload, scene restoration or bundle build executed.");
@@ -428,6 +456,7 @@ def main():
             raise AssertionError("Expected one production field: " + name)
         members.append(matches[0].group())
     members.append(extract(source, r"    private class PendingStagesSnapshot\b"))
+    members.append(extract(source, r"    private class ExportSession\b"))
     members.extend(methods.values())
     members.append(extract(source, r"    private static string StartExport\(List<string> setNames, string mode, string depsVersion,\s*List<string> selectedLevels, List<SetExportStageDto> resumedStages\)"))
     dtos = "\n".join(extract(models, r"public class " + name + r"\b")

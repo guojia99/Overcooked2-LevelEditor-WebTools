@@ -36,6 +36,8 @@ public static class LayoutEditorHudOrderLimits
         var stub = Object.FindObjectOfType<PseudoPrefabManagerStub>();
         if (stub == null || stub.levelInfo == null)
             return "[HudOrderLimits] 场景缺少 PseudoPrefabManagerStub/levelInfo，跳过订单上限烘焙";
+        if (stub.levelInfo.levelType == LevelInfoSO.LevelType.Horde)
+            return null;
 
         var n = Mathf.Clamp(stub.levelInfo.maxOrderCount, 1, 10);
         var distance = n > 5 ? 0f : 5f;

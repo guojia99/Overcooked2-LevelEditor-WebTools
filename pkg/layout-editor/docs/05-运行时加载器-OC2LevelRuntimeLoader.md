@@ -1,9 +1,31 @@
 ﻿# 05 · 运行时加载器 OC2LevelRuntimeLoader
 
-> 目录：`Assets/WebCustomStubRuntime/Loader~/`（生产源码 `Loader.cs`，发布号 `4.0.0`；本次未改发布号，`~` 后缀 Unity 忽略，dotnet 单独编译）
+> 目录：`Assets/WebCustomStubRuntime/Loader~/`（生产源码 `Loader.cs`，当前发布号 `4.1.0`；后续修复并入该版本并记录内部修订号，`~` 后缀 Unity 忽略，dotnet 单独编译）
 > 一句话定位：「Overcooked2 关卡代码分发」体系的**游戏侧运行时注入端**：加载依赖包中的统一运行时与模块 DLL，汇总关卡清单，在场景加载前提供程序集和资源。
 > **当前支持边界**：新版 Loader 支持所有带有效 `stub_levels.txt` 的旧集，至少覆盖 3.10.x；无清单不支持。该方向不表示新导出兼容旧 3.10 Runtime。空清单文件也会激活依赖加载；无任何获准清单集才整体休眠，逐场景玩法仍按清单闸门执行。详见 §3.1。
 > 返回 [00-架构总览.md](00-架构总览.md)
+
+### 杯盘分步组装修复（2026-11-18）
+
+`PlatePartialOrderFallback` 仅对普通 Composite 组装配方做直接组成的真子集判断。
+Cooked/Mixed 根节点不能拆成食材数组匹配汤、面糊等配方；它们作为组装配方中的
+单个组成时仍按完整步骤、状态和数量匹配，保留茶饮、沙拉和熟食组合的合法分步组装。
+判定递归核对原始节点，拒绝 Raw/Unmixed 在化简中丢失处理语义的路径。
+Harmony 后缀额外读取来源物体的原始 `IOrderDefinition`，避免模拟转移已化简的数据掩盖该问题。
+
+该回落只在盘子所属场景路径为 `Assets/LevelSets/<set>/scenes/<level>.unity` 时启用，
+不依赖 stub 特征清单：只有菜谱、没有其他 stub 的 web 关卡也保留分步组装。
+官方场景、菜单和无路径对象不启用回落；原方法成功和转移层提前拒绝均保持原结果。
+
+行为回归：`python3 -B layout-editor/scripts/check-plate-partial-order.py`，执行生产回落和
+Harmony 后缀的 C#4/net8 API doubles，覆盖处理节点、重复数量、合法组装和场景切换。
+此测试不替代 Unity 原生转移、联机和显示回归。
+加 `--compile-runtime` 可用现有 offline-check 宿主引用独立编译全部运行时源码
+（C#4/net35）；测试及编译产物均在临时目录，不更新 staging DLL。
+发布版本号不变。部署仍需 Unity 重编译、staging 并重新导出依赖包中的
+`webcustomstub_runtime`；未修改菜谱或场景数据的现有关卡无需因本修复重写回。
+Play/真机需复测 1/2/3 份番茄在零进度、半熟、熟、糊状态下装盘，以及茶饮/沙拉分步加料、
+熟食作单项组装、主客机双向操作和切回官方关卡。离线编译产物不得覆盖现有 staging DLL。
 
 ---
 
@@ -23,7 +45,7 @@ Assets/WebCustomStubRuntime/
 
 要点：
 - Loader.dll 自身不嵌入资源；commonW 和 hash 等依赖 bundle 随依赖包分发，由 Loader 加载，基础 common/common01–04 由预装前置提供。
-- `Loader~/build.sh` 构建 Release 后同步 Loader.dll / version.txt 到 `layout-editor/web/public/` 和 `web/dist/`；all/deps 导出还会校验构建产物与发布版本。该同步已完成，发布号仍为 `4.0.0`；它不构建 Runtime Unity bundle，发布号相同也不表示 Runtime 字节已更新。
+- `Loader~/build.sh` 构建 Release 后同步 Loader.dll / version.txt 到 `layout-editor/web/public/` 和 `web/dist/`；all/deps 导出还会校验构建产物。Loader 当前固定发布号 `4.1.0`，与 Runtime `4.0.0` 不要求相等，只要求 Loader 不低于关卡 `requires.txt`；该同步不构建 Runtime Unity bundle，发布号相同也不表示 Runtime 字节已更新。
 
 ## 2. 项目定位：解决什么问题
 
@@ -38,7 +60,7 @@ Assets/WebCustomStubRuntime/
 
 | 项 | 内容 |
 |---|---|
-| 命名空间/类 | `OC2LevelRuntimeLoader.LevelRuntimeLoader : BaseUnityPlugin`，PluginGuid=`oc2.oc2diylevelruntimewloader`，PluginVersion=`4.0.0`（本次未改） |
+| 命名空间/类 | `OC2LevelRuntimeLoader.LevelRuntimeLoader : BaseUnityPlugin`，PluginGuid=`oc2.oc2diylevelruntimewloader`，PluginVersion=`4.1.0` |
 
 **类内状态**：`_log`（BepInEx 日志）、`PendingRaw`（Load 失败暂存字节，供 AssemblyResolve 兜底）、`LoadedNames`（程序集名去重）、`LoadedBundles`（bundle 路径去重，忽略大小写）、`_startupScanDone`/`_filesystemScanDone`/`_resolveHooked`（幂等闸门）、**`_depLoadState`/`_queueRunning`/`_pendingOps`/`_instance`**（v3.5.2 异步加载队列状态机，替代旧布尔位 `_depsLoaded`）、**`WebManifest`**（web stub 关卡清单，`public static string[]`，stub 侧 EntryPoint 反射读取）、`ReportedResolveMisses`（解析失败只报一次防刷屏）。
 

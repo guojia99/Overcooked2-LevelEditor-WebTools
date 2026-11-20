@@ -63,7 +63,7 @@ OpenCode 配置示例：
 7. 只有确认差异正确后，才调用 `oc2_commit_scene_draft` 并传 `confirm: true`。
 8. 导出时调用 `oc2_start_export`，再每 2 秒调用 `oc2_get_export_status`。
 
-所有工具的机器可读定义在 `../mcp/tool-manifest.json`。
+所有工具的机器可读清单位于 [`../../mcp/tool-manifest.json`](../../mcp/tool-manifest.json)。原生模式、重生边界及指定人数原生序列保存同时支持 stdio 与 Unity HTTP MCP，写后独立读回且不自动重试，详见[原生模式接口](10-原生模式接口.md)。在线注册须在 Unity 重编译后核对。
 
 ## 文档索引
 
@@ -76,3 +76,5 @@ OpenCode 配置示例：
 - [异步任务与导出](07-异步任务与导出.md)
 - [错误与重试](08-错误与重试.md)
 - [安全与确认](09-安全与确认.md)
+- [原生模式接口：Horde / Dynamic、创建与切换](10-原生模式接口.md)
+- [Horde 与 Dynamic 原生模式指南](../14-Horde与Dynamic原生模式指南.md)

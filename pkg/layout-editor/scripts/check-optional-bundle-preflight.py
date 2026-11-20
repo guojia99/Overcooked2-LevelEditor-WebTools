@@ -6,7 +6,10 @@ Requires dotnet SDK 8. Uses net8.0 / C# 4, no Unity or NuGet packages.
 The helper and CustomContentConfigSO compile unchanged. Exporter collection/build
 methods, CustomIngredients.EnsureWebDependencies and PseudoReload's custom bundle
 dependency repair compile as extracted methods; unrelated ingredient classifiers
-and CommonW6 sync are doubles. Export ordering/persistence are source contracts,
+and CommonW6 sync are doubles. Ownership normalization is an explicit boundary
+double: legacy preflight fixtures retain their labels to test rejection/cleanup.
+The real normalizer is exercised by check-set-bundle-ownership.py.
+Export ordering/persistence are source contracts,
 not an execution of the entire exporter or Unity serialization. Memory object
 dependencies and serialized properties are modeled independently of disk YAML.
 Native objects remain in dependency/path checks but fail if serialized by the
@@ -59,7 +62,10 @@ using LevelEditorStub;
 
 namespace UnityEngine
 {
-    public class Object { }
+    public class Object {
+        public static T Instantiate<T>(T value) where T : Object { return (T)value.MemberwiseClone(); }
+        public static void DestroyImmediate(Object value) { }
+    }
     public class ScriptableObject : Object { }
     public class MonoBehaviour : Object { }
     public class GameObject : Object { }
@@ -201,9 +207,19 @@ namespace UnityEditor
             }
             return new List<string>(seen).ToArray();
         }
+        public static string[] GetDependencies(string[] paths, bool recursive)
+        {
+            var result = new HashSet<string>();
+            foreach (var path in paths) foreach (var dependency in GetDependencies(path, recursive)) result.Add(dependency);
+            return new List<string>(result).ToArray();
+        }
+        public static string GetImplicitAssetBundleName(string path)
+        { var importer = AssetImporter.GetAtPath(path); return importer == null ? "" : importer.assetBundleName; }
         public static string[] GetAssetBundleDependencies(string name, bool recursive)
         {
-            if (recursive || (!Bundles.ContainsKey(name) && !Removed.Contains(name)))
+            var parts = name.Split('/');
+            bool info = parts.Length == 2 && parts[1] == "info_" + parts[0];
+            if (recursive || (!Bundles.ContainsKey(name) && !Removed.Contains(name) && !info))
                 throw new Exception("Unexpected ownership query: " + name);
             return new string[0]; // Build tests use independent leaf bundles.
         }
@@ -283,7 +299,7 @@ namespace UnityEditor
     }
     public class AssetImporter
     {
-        public string assetBundleName;
+        public string assetBundleName, assetBundleVariant;
         public static readonly Dictionary<string, AssetImporter> Items = new Dictionary<string, AssetImporter>();
         public static AssetImporter GetAtPath(string path)
         { AssetImporter value; return Items.TryGetValue(path, out value) ? value : null; }
@@ -325,6 +341,16 @@ static class LayoutEditorSaladSauceFactory
 }
 static class LayoutEditorPancakeFill
 { public static bool HasPlainPancake(LevelInfoSO info) { return false; } }
+static class LayoutEditorSetBundleOwnership
+{
+    public static readonly List<string> Calls = new List<string>();
+    public static void Normalize(string set) { Calls.Add(set); }
+}
+static class LayoutEditorLevelModeStore
+{
+    public static ScriptableObject[] CollectAllRecipes(LevelInfoSO info) { return info.recipes ?? new ScriptableObject[0]; }
+    public static PseudoPrefabSO[] CollectHordeEnemies(LevelInfoSO info) { return new PseudoPrefabSO[0]; }
+}
 static class LayoutEditorRecipeKnowledge
 {
     public static bool TryGetOriginal(string id, out string step, out string[] ingredients)
@@ -345,8 +371,15 @@ static class ExporterContracts
         _emptyOptionalBundles = empty;
         var scenes = new List<KeyValuePair<string, List<string>>>();
         foreach (var set in sets)
-            scenes.Add(new KeyValuePair<string, List<string>>(set,
-                new List<string> { "Assets/LevelSets/" + set + "/scenes/s_selected.unity" }));
+        {
+            var paths = new List<string>();
+            foreach (var guid in AssetDatabase.FindAssets("t:Scene", new[] { "Assets/LevelSets/" + set }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                if (!partial || Path.GetFileName(path) == "s_selected.unity") paths.Add(path);
+            }
+            scenes.Add(new KeyValuePair<string, List<string>>(set, paths));
+        }
         return CollectLevelBundleNames(scenes, partial);
     }
     public static void Build(List<string> names) { BuildListedBundles(names, true); }
@@ -408,10 +441,17 @@ class OptionalBundleContracts
     {
         var path = Folder(set, "scenes") + "/" + name + ".unity";
         Register(path, new UnityEngine.Object(), "t:Scene");
+        AssetImporter.Items[path] = new AssetImporter { assetBundleName = set + "/" + name };
         return path;
     }
     static HashSet<string> Run(params string[] sets)
-    { return LayoutEditorOptionalBundlePreflight.Run(new List<string>(sets)); }
+    {
+        LayoutEditorSetBundleOwnership.Calls.Clear();
+        var result = LayoutEditorOptionalBundlePreflight.Run(new List<string>(sets));
+        Check(string.Join(",", LayoutEditorSetBundleOwnership.Calls.ToArray()) == string.Join(",", sets),
+            "preflight invokes ownership boundary once per requested set in order");
+        return result;
+    }
     static void NoWrites(string label)
     {
         Check(AssetDatabase.Undone.Count == 0 && AssetDatabase.Dirty.Count == 0
@@ -467,7 +507,7 @@ class OptionalBundleContracts
             Set("alpha"); Product("alpha/custom_content"); Product("alpha/custom_recipes");
             var info = Info("alpha", "commonW1");
             IngredientContracts.EnsureWebDependencies("alpha", info, false);
-            Check(string.Join(",", info.dependencies) == "commonW1", "old products not added by ingredients");
+            Check(info.dependencies.Length == 0, "old products and shared declarations excluded by native-only collector");
             AssetDatabase.Dirty.Clear(); AssetDatabase.DirtyAssets.Clear(); // Authoring saved before export.
             Check(Run("alpha").Count == 2, "disk products do not prevent exclusion");
             Check(File.ReadAllText("Assets/StreamingAssets/Windows/alpha/custom_recipes") == "STALE PRODUCT", "old cache preserved");
@@ -528,12 +568,13 @@ class OptionalBundleContracts
                 AssetDatabase.Bundles[name] = new[] { path };
                 var info = Info("alpha");
                 IngredientContracts.EnsureWebDependencies("alpha", info, true);
-                Check(Array.IndexOf(info.dependencies, name) >= 0, "new optional dependency registered before build");
+                Check(info.dependencies.Length == 0, "dedicated delivery bundle never becomes a native load declaration");
                 Check(!File.Exists("Assets/StreamingAssets/Windows/" + name), "no old product supplied");
                 AssetDatabase.Dirty.Clear(); AssetDatabase.DirtyAssets.Clear(); // Authoring saved before export.
                 var empty = Run("alpha");
                 Check(!empty.Contains(name), "valid new content cannot be omitted");
-                Check(ExporterContracts.Collect(empty, false, "alpha").Contains(name), "export collection retains new optional bundle");
+                var names = ExporterContracts.Collect(empty, false, "alpha");
+                Check(names.Count == 1 && names[0] == "alpha/info_alpha", "native export roots use the info carrier");
             });
             Case("folder-only registration cannot hide untagged payload: " + kind, delegate {
                 Set("alpha"); var folder = Folder("alpha", kind);
@@ -894,7 +935,7 @@ class OptionalBundleContracts
                 var empty = Run("alpha");
                 Check(empty.Contains(name) && string.Join(",", info.dependencies) == "keep", "only stale dedicated dependency removed");
                 var collected = ExporterContracts.Collect(empty, false, "alpha");
-                Check(collected.Count == 1 && collected[0] == "alpha/info_alpha", "export retains info carrier and omits dedicated bundle");
+                Check(collected.Count == 2 && collected.Contains("alpha/info_alpha") && collected.Contains("alpha/s_selected"), "export retains info and scene carriers and omits dedicated bundle");
                 Check(AssetDatabase.DependencyQueries.Contains(scene) && EditorUtility.Collected.Contains((UnityEngine.Object)AssetDatabase.Loaded[paths[0]]),
                     "real disk and memory path checks both exercised");
                 Check(AssetDatabase.Saves == 0 && AssetDatabase.Dirty.Count == 1, "preflight stages cleanup without saving");
@@ -927,7 +968,7 @@ class OptionalBundleContracts
                     Set("alpha"); var info = Info("alpha", "keep"); InfoOwnedSource("alpha", kind, info);
                     Product("alpha/" + kind);
                     IngredientContracts.EnsureWebDependencies("alpha", info, replace);
-                    Check(string.Join(",", info.dependencies) == (replace ? "" : "keep"),
+                    Check(info.dependencies.Length == 0,
                         "source plus old dedicated product cannot register info-carried content separately");
                     Check(AssetDatabase.Saves == 0, "daily registration never forces global save");
                 });
@@ -950,9 +991,11 @@ class OptionalBundleContracts
             Check(Run("alpha").Contains("alpha/custom_recipes") && string.Join(",", info.dependencies) == "keep", "preflight removes obsolete dedicated dependency");
             var before = info.dependencies; var undos = AssetDatabase.Undone.Count; var dirties = AssetDatabase.Dirty.Count;
             ReloadContracts.Restore(info);
-            Check(LayoutEditorCommonW6Dependencies.Syncs == 1 && object.ReferenceEquals(before, info.dependencies), "actual restore method does not revive old dedicated bundle");
-            Check(AssetDatabase.Undone.Count == undos && AssetDatabase.Dirty.Count == dirties && AssetDatabase.Saves == 0,
-                "restore has no dependency writes or saves for info-carried source");
+            Check(LayoutEditorCommonW6Dependencies.Syncs == 1 && info.dependencies.Length == 0, "restore cleans nonnative declarations without reviving dedicated bundle");
+            Check(AssetDatabase.Undone.Count == undos && AssetDatabase.Dirty.Count == dirties + 1 && AssetDatabase.Saves == 1,
+                "restore persists native-only cleanup once");
+            before = info.dependencies; ReloadContracts.Restore(info);
+            Check(object.ReferenceEquals(before, info.dependencies) && AssetDatabase.Saves == 1, "clean restore is idempotent");
         });
     }
     static void IntegrationChecks()
@@ -979,8 +1022,8 @@ class OptionalBundleContracts
                     var empty = Run("alpha");
                     Check(!empty.Contains("alpha/required") && info.dependencies.Length == 2, "folder-only required bundle is not zero registered paths");
                     var names = ExporterContracts.Collect(empty, partial, "alpha");
-                    Check(names.Count == 1 && names[0] == "alpha/required", "collector preserves ordinary missing-source requirement");
-                    Reject(delegate { ExporterContracts.Build(names); }, foldersOnly ? "只有文件夹" : "无资产");
+                    Check(names.Count == 1 && names[0] == "alpha/info_alpha", "native collector uses info delivery root");
+                    Reject(delegate { ExporterContracts.Build(new List<string> { "alpha/required" }); }, foldersOnly ? "只有文件夹" : "无资产");
                     Check(BuildPipeline.Calls == 0, "ordinary missing source rejects before build despite stale disk");
                 });
         Case("partial bundle collection excludes empties, retains selected scene/info", delegate {
@@ -998,20 +1041,24 @@ class OptionalBundleContracts
             Check(names.Count == 2 && names.Contains("alpha/s_selected") && names.Contains("alpha/info_alpha"), "partial delivery exact");
             Check(ExporterContracts.Collect(empty, false, "alpha").Contains("alpha/s_unselected"), "full collection retains unselected scene");
         });
-        Case("CustomIngredients append/replace uses fresh source, not old products", delegate {
+        Case("CustomIngredients append/replace excludes custom delivery names and retains native references", delegate {
             Set("alpha"); var info = Info("alpha", "keep");
             Product("alpha/custom_recipes");
             IngredientContracts.EnsureWebDependencies("alpha", info, true);
             Check(info.dependencies.Length == 0, "replace does not revive stale disk or retain unrelated old declarations");
             Write(Folder("alpha", "custom_recipes") + "/New.asset", "new recipe");
             Write(Folder("alpha", "custom_content") + "/New.prefab", "new prefab");
+            Product("bundle18");
+            var native = new PseudoPrefabSO { bundleName = "bundle18" };
+            Register("Assets/shared/Native.asset", native, null);
+            info.allIngredients = new[] { native };
             info.dependencies = new[] { "keep" };
             IngredientContracts.EnsureWebDependencies("alpha", info, false);
-            Check(string.Join(",", info.dependencies) == "keep,alpha/custom_recipes,alpha/custom_content,common04", "fresh sources registered without products");
+            Check(string.Join(",", info.dependencies) == "bundle18", "append filters legacy names and collects existing native references");
             IngredientContracts.EnsureWebDependencies("alpha", info, false);
-            Check(info.dependencies.Length == 4, "optional registration idempotent");
+            Check(info.dependencies.Length == 1, "native registration idempotent");
             IngredientContracts.EnsureWebDependencies("alpha", info, true);
-            Check(string.Join(",", info.dependencies) == "alpha/custom_recipes,alpha/custom_content,common04", "replace registers current sources");
+            Check(string.Join(",", info.dependencies) == "bundle18", "replace retains current native references only");
         });
         foreach (var mode in new[] { "missing", "directory", "config" })
             Case("scene restore never revives old optional bundle: " + mode, delegate {
@@ -1025,25 +1072,25 @@ class OptionalBundleContracts
                 var dirtyCalls = AssetDatabase.Dirty.Count; var removals = AssetDatabase.Removed.Count;
                 ReloadContracts.Restore(info);
                 Check(LayoutEditorCommonW6Dependencies.Syncs == 1, "actual restore method executed with CommonW6 sync double");
-                Check(object.ReferenceEquals(before, info.dependencies) && string.Join(",", info.dependencies) == "keep",
+                Check(info.dependencies.Length == 0,
                     "restore cannot re-add stale optional dependency");
-                Check(AssetDatabase.Undone.Count == undos && AssetDatabase.Dirty.Count == dirtyCalls
-                    && AssetDatabase.Removed.Count == removals && AssetDatabase.Saves == 0 && AssetDatabase.DirtyAssets.Contains(info),
-                    "restore neither writes nor saves preflight cleanup when source is empty");
+                Check(AssetDatabase.Undone.Count == undos && AssetDatabase.Dirty.Count == dirtyCalls + 1
+                    && AssetDatabase.Removed.Count == removals && AssetDatabase.Saves == 1,
+                    "restore persists native-only cleanup without registry mutation");
+                before = info.dependencies; ReloadContracts.Restore(info);
+                Check(object.ReferenceEquals(before, info.dependencies) && AssetDatabase.Saves == 1, "repeat restore neither writes nor saves");
             });
         foreach (var product in new[] { false, true })
-            Case("scene restore source/product gate and duplicate protection: product=" + product, delegate {
+            Case("scene restore filters legacy names regardless of optional product: product=" + product, delegate {
                 var info = Info("alpha", "keep");
                 Write(Folder("alpha", "custom_recipes") + "/New.asset", "payload");
                 if (product) Product("alpha/custom_recipes");
                 ReloadContracts.Restore(info);
-                Check(string.Join(",", info.dependencies) == (product ? "keep,alpha/custom_recipes" : "keep"),
-                    "restore requires real source and existing product");
-                Check(AssetDatabase.Saves == (product ? 1 : 0)
-                    && AssetDatabase.Undone.Count == (product ? 1 : 0) && AssetDatabase.Dirty.Count == (product ? 1 : 0),
-                    "only actual restore insertion retains its existing persistence behavior");
+                Check(info.dependencies.Length == 0, "source and old product never become native load declarations");
+                Check(AssetDatabase.Saves == 1 && AssetDatabase.Undone.Count == 0 && AssetDatabase.Dirty.Count == 1,
+                    "restore persists only native dependency cleanup");
                 ReloadContracts.Restore(info);
-                Check(info.dependencies.Length == (product ? 2 : 1) && AssetDatabase.Saves == (product ? 1 : 0),
+                Check(info.dependencies.Length == 0 && AssetDatabase.Saves == 1,
                     "restore never duplicates dependency or saves twice");
             });
     }
@@ -1106,7 +1153,7 @@ class OptionalBundleContracts
             AssetImporter.Items[scene] = new AssetImporter { assetBundleName = "alpha/s_selected" };
             var empty = Run("alpha"); var names = ExporterContracts.Collect(empty, true, "alpha");
             Check(names.Contains("alpha/s_selected"), "explicit scene importer delivery root survives collector");
-            Reject(delegate { ExporterContracts.Build(names); }, "无资产");
+            Reject(delegate { ExporterContracts.Build(new List<string> { "alpha/s_selected" }); }, "无资产");
             Check(BuildPipeline.Calls == 0, "selected scene without source cannot silently ship old product");
         });
         foreach (var reverse in new[] { false, true })
@@ -1132,7 +1179,7 @@ class OptionalBundleContracts
         EmptyChecks(); SourceChecks(); ReferenceChecks(); MemoryChecks(); NativeAndYamlChecks(); InfoOwnershipChecks(); IntegrationChecks(); GhostRegistrationChecks();
         Directory.SetCurrentDirectory(root);
         Console.WriteLine("RESULT: " + cases + " scenarios, " + checks + " assertions reached, " + failures + " failures.");
-        Console.WriteLine("Scope: full unchanged production helper + extracted integration methods, net8/C#4, Unity API doubles; no live Unity import/build.");
+        Console.WriteLine("Scope: unchanged production preflight + extracted integration/native dependency methods, net8/C#4, Unity API doubles; ownership normalization boundary doubled; no live Unity import/build.");
         Console.WriteLine("Memory/disk channels verified; dirty state alone permits cleanup and repeated preflight without saving.");
         return failures == 0 ? 0 : 1;
     }
@@ -1168,7 +1215,7 @@ def main():
                                      "CollectBuildOwnership", "BuildListedBundles")]
     ingredient_methods = [extract(ingredients, r"    public static void EnsureWebDependencies\(string levelSet, LevelInfoSO info, bool replaceExisting\)")]
     ingredient_methods += [extract(ingredients, r"    private static [^\n]+\b" + name + r"\(")
-                           for name in ("AddDependency", "ReadBundleNameField")]
+                           for name in ("EnsureWebDependenciesCore", "DependencyRecipes", "AddDependency", "ReadBundleNameField")]
     constants = re.findall(r'    public const string (?:CustomContentDirName|Common\w+BundleName) = "[^"]+";', ingredients)
     if len(constants) != 9:
         raise AssertionError("Expected nine production ingredient bundle/directory constants")
@@ -1187,7 +1234,9 @@ def main():
         (directory / "Config.cs").write_text(
             (EDITOR / "CustomContentConfigSO.cs").read_text(encoding="utf-8"), encoding="utf-8")
         (directory / "Program.cs").write_text(
-            DOUBLES + EXPORTER + "\n".join(exporter_methods) + "\n}\n"
+            DOUBLES + extract((EDITOR / "LayoutEditorNativeDependencies.cs").read_text(encoding="utf-8"),
+                              r"public static class LayoutEditorNativeDependencies\b")
+            + EXPORTER + "\n".join(exporter_methods) + "\n}\n"
             + INGREDIENTS + "\n".join(constants + ingredient_methods) + "\n}\n"
             + RELOAD + reload_method + "\n}\n" + TESTS,
             encoding="utf-8")

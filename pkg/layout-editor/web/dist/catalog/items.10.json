@@ -1,8 +1,50 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 10,
   "itemCount": 200,
   "items": [
+    {
+      "id": "p_dlc09_balloon_03",
+      "guid": "fb472618cf41e7ef4307fb2905af90de",
+      "assetPath": "Assets/common03/prefabs/art/dlc09_festivemashup/dlc09_circus/p_dlc09_balloon_03.prefab",
+      "category": "art",
+      "theme": "dlc09_festivemashup",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 6.101937770843506
+      },
+      "height": 6.102,
+      "baseY": -0.174,
+      "layoutTier": "decor",
+      "nameZh": "DLC9 气球 3",
+      "nameEn": "dlc09 balloon 3",
+      "typeKind": "building",
+      "usage": "dressing",
+      "icon": false
+    },
+    {
+      "id": "p_dlc09_balloon_butterfly_01",
+      "guid": "4355beace0da55845610dab2187cc45f",
+      "assetPath": "Assets/common03/prefabs/art/dlc09_festivemashup/dlc09_circus/p_dlc09_balloon_butterfly_01.prefab",
+      "category": "art",
+      "theme": "dlc09_festivemashup",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 1.2024319171905518
+      },
+      "height": 1.202,
+      "baseY": -0.601,
+      "layoutTier": "decor",
+      "nameZh": "DLC09 气球蝴蝶 1",
+      "nameEn": "dlc09 balloon butterfly 1",
+      "typeKind": "building",
+      "usage": "dressing",
+      "icon": false
+    },
     {
       "id": "p_dlc09_balloon_butterfly_02",
       "guid": "83e7ef9d9e18e58c698cf3ff77eba55b",
@@ -4121,48 +4163,6 @@
       "layoutTier": "decor",
       "nameZh": "DLC9 绳彩旗 10",
       "nameEn": "dlc09 rope bunting 10",
-      "typeKind": "other",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "p_dlc09_rope_bunting_11",
-      "guid": "c0bceee92afba2f6a49cbf698a145977",
-      "assetPath": "Assets/common03/prefabs/art/dlc09_festivemashup/dlc09_circus/p_dlc09_rope_bunting_11.prefab",
-      "category": "art",
-      "theme": "dlc09_festivemashup",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 5,
-        "sizeY": 3.301434278488159
-      },
-      "height": 3.301,
-      "baseY": -1.905,
-      "layoutTier": "decor",
-      "nameZh": "DLC9 绳彩旗 11",
-      "nameEn": "dlc09 rope bunting 11",
-      "typeKind": "other",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "p_dlc09_rope_bunting_12",
-      "guid": "b9c64535ada7cb28f2e26c169e7e09e1",
-      "assetPath": "Assets/common03/prefabs/art/dlc09_festivemashup/dlc09_circus/p_dlc09_rope_bunting_12.prefab",
-      "category": "art",
-      "theme": "dlc09_festivemashup",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 10,
-        "sizeY": 6.905767440795898
-      },
-      "height": 6.906,
-      "baseY": -4.088,
-      "layoutTier": "decor",
-      "nameZh": "DLC9 绳彩旗 12",
-      "nameEn": "dlc09 rope bunting 12",
       "typeKind": "other",
       "usage": "dressing",
       "icon": false

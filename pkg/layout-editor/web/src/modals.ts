@@ -118,6 +118,8 @@ export interface ModalOptions {
   /** 关闭点背景遮罩关闭弹窗（默认允许）。设为 false 时只能通过按钮关闭，
    *  避免误触遮罩导致已填写内容丢失。 */
   closeOnBackdrop?: boolean;
+  /** Domain draft guard, used by every close path (buttons, Escape, backdrop and close-all). */
+  beforeClose?: () => boolean;
   /** Optional class added to the dialog panel for domain-specific layouts. */
   panelClass?: string;
   /** 弹窗身份标识（写入 backdrop 的 data-modal-id）。同 id 重开 = 替换当前顶层
@@ -132,6 +134,7 @@ export interface ModalOptions {
  * 「绑定顶层」的查询模式不受影响；「root 空 ⇔ 全部已关」不变量保持（音频弹窗的
  * MutationObserver 依赖此语义）。 */
 const modalStack: HTMLElement[] = [];
+const modalCloseGuards = new WeakMap<HTMLElement, () => boolean>();
 
 export function openModal(
   title: string,
@@ -142,6 +145,7 @@ export function openModal(
   const root = ensureModalRoot();
   const current = root.querySelector<HTMLElement>("[data-modal-backdrop]");
   if (current) {
+    if (opts?.id && current.dataset.modalId === opts.id && modalCloseGuards.get(current)?.() === false) return root;
     current.remove();
     if (!opts?.id || current.dataset.modalId !== opts.id) {
       modalStack.push(current);
@@ -161,6 +165,7 @@ export function openModal(
   `
   );
   const backdrop = root.querySelector<HTMLElement>("[data-modal-backdrop]");
+  if (backdrop && opts?.beforeClose) modalCloseGuards.set(backdrop, opts.beforeClose);
   const panel = root.querySelector<HTMLElement>(".modal-panel");
   if (backdrop && panel) setupModalPanelDrag(panel, backdrop);
   if (opts?.closeOnBackdrop !== false) {
@@ -175,7 +180,9 @@ export function openModal(
  * 均为逐层退栈：先关子弹窗、父弹窗回来，再按一次才关父弹窗。 */
 export function closeModal() {
   const root = document.getElementById("modal-root");
-  root?.querySelector("[data-modal-backdrop]")?.remove();
+  const current = root?.querySelector<HTMLElement>("[data-modal-backdrop]");
+  if (current && modalCloseGuards.get(current)?.() === false) return;
+  current?.remove();
   const parent = modalStack.pop();
   if (parent && root) root.appendChild(parent);
 }
@@ -183,8 +190,10 @@ export function closeModal() {
 /** 关闭全部弹窗（含栈中被压住的父弹窗）。用于「执行动作后不应残留任何弹窗」
  * 或全局接管（桥看门狗）的场景。 */
 export function closeAllModals() {
-  modalStack.length = 0;
   const root = document.getElementById("modal-root");
+  const current = root?.querySelector<HTMLElement>("[data-modal-backdrop]");
+  if ([...modalStack, ...(current ? [current] : [])].some(modal => modalCloseGuards.get(modal)?.() === false)) return;
+  modalStack.length = 0;
   if (root) root.innerHTML = "";
 }
 

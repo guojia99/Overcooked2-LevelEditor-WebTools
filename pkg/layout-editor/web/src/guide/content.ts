@@ -1024,16 +1024,16 @@ export const GUIDE_TREE: GuideNode[] = [
       feat(
         "set-export-deps",
         "导出依赖包",
-        "单独导出 OC2DIYLevelRuntimeWLoader 依赖包，装一次可长期复用。",
+          "单独导出 OC2DIYLevelRuntimeWLoader 依赖包。",
         "关卡集列表顶部「导出依赖包」。",
         [
           "弹窗展示<b>实时打包清单</b>（Loader.dll / 统一运行时 / commonW1/W2 / 说明文件等逐条状态与大小，缺失项有告警）",
-          "<b>打包版本</b>默认与运行时 SSOT（= 关卡 <code>requires.txt</code>）一致，并预填上次导出值；<code>Loader.dll</code> 的 PluginVersion 必须与 SSOT 完全一致，否则真机会跳过 stub 清单（锅具时间等失效）",
-          "导出前自动删除 commonW1/W2 旧构建产物并重新打包（杜绝遗留）；两个 common 包无条件全部携带",
+          "<b>打包版本</b>用于依赖 zip 命名，并预填上次导出值；Loader 发布版本不低于关卡 <code>requires.txt</code> 时即可通过版本门控",
+          "依赖清单按实际使用的资源依赖生成，不含关卡场景；基础包由上游前置提供，不重复分发",
           "zip 内附 <code>package_version.txt</code>：打包版本/时间/环境 + 全部文件 MD5，排查问题时核对玩家已装文件",
           "弹窗内可「编译 Runtime DLL」；DLL 未就绪时导出按钮禁用（硬门控）",
         ],
-        "zip 命名 OC2DIYLevelRuntimeWLoader_v<打包版本>_<日期>.zip，玩家解压到 BepInEx/plugins/。日常只更新关卡时在关卡集上导出（可不带依赖）即可。"
+        "zip 命名 OC2DIYLevelRuntimeWLoader_v<打包版本>_<日期>.zip，玩家解压到 BepInEx/plugins/。"
       ),
       feat(
         "set-export",

@@ -7,7 +7,7 @@ public static class ChefHeadLightBakeryTests
 {
     private const string Story42 =
         "Assets/LevelSets/oc1_story/scenes/s_oc1_story_4_2.unity";
-    private const string Template = "Assets/Template/s_template.unity";
+    private const string Template = "Assets/Template/campaign/s_template.unity";
 
     [MenuItem("Layout Editor/测试 (Tests)/运行厨师头灯烘焙器测试 (Run ChefHeadLightBakery Tests)", false, 601)]
     public static void RunAll()

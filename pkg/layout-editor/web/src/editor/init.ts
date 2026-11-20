@@ -646,6 +646,8 @@ export async function init() {
   document.getElementById("btn-level-config")!.addEventListener("click", () =>
     void withLevelDetail((detail) =>
       openConfigTabsModal(detail, S.currentLevelSet, () => {}, {
+        isLayoutDirty: () => S.dirty,
+        onNativeModeChanged: () => loadScene(S.scenePath ?? ""),
         ceilingHeight: S.ceilingHeight,
         hasCeilingHeight: S.hasCeilingHeight,
         chefHeadLightsEnabled: S.chefHeadLightsEnabled,

@@ -1258,6 +1258,7 @@ namespace CustomStub
         private static System.Type s_plateGetContentsType;
         private static System.Reflection.MethodInfo s_plateGetComposition;
         private static System.Reflection.FieldInfo s_plateStepField;
+        private static System.Type s_plateSourceDefinitionType;
 
         /// <summary>IIngredientContents.GetContents() 反射取数，失败 -1。</summary>
         private static int SnapshotContentsCount(object adapter)
@@ -1294,9 +1295,9 @@ namespace CustomStub
         }
 
         /// <summary>Plate.CanPlaceOnPlate 后缀：原判 false 且内容数变化（=已转移、
-        /// 仅配方匹配失败）时，用 PlatePartialOrderFallback 复刻补丁回落逻辑。</summary>
+        /// 仅配方匹配失败）时，仅在 web 关卡尝试保留处理语义的分步组装。</summary>
         private static void CanPlaceOnPlateFallbackPostfix(object __instance,
-            object _ingredientContentsAdapter, int __state, ref bool __result)
+            GameObject _gameObject, object _ingredientContentsAdapter, int __state, ref bool __result)
         {
             if (__result || __state < 0)
                 return;
@@ -1306,8 +1307,21 @@ namespace CustomStub
                 if (now < 0 || now == __state)
                     return;    // 早退路径（未发生转移）——保持原版拒绝
                 var comp = __instance as Component;
-                if (comp == null)
+                if (comp == null || !PlatePartialOrderFallback.IsWebLevelPath(comp.gameObject.scene.path))
                     return;
+                if (_gameObject == null) return;
+                if (s_plateSourceDefinitionType == null)
+                    s_plateSourceDefinitionType = GameApi.Find("IOrderDefinition");
+                if (s_plateSourceDefinitionType == null) return;
+                // The adapter was simplified by the dry run; the source is unchanged.
+                object sourceNode = null;
+                foreach (var source in _gameObject.GetComponents<Component>())
+                {
+                    if (source == null || !s_plateSourceDefinitionType.IsInstanceOfType(source)) continue;
+                    sourceNode = s_plateSourceDefinitionType.GetMethod("GetOrderComposition").Invoke(source, null);
+                    break;
+                }
+                if (sourceNode == null) return;
                 if (s_plateGetComposition == null)
                     s_plateGetComposition = comp.GetType().GetMethod("GetOrderComposition",
                         System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
@@ -1322,7 +1336,7 @@ namespace CustomStub
                 var contents = s_plateGetContents.Invoke(_ingredientContentsAdapter, null);
                 var composition = s_plateGetComposition.Invoke(comp, new object[] { contents });
                 var step = s_plateStepField.GetValue(comp);
-                if (PlatePartialOrderFallback.CanStillFormOrder(composition, step))
+                if (PlatePartialOrderFallback.CanStillFormOrder(composition, step, sourceNode))
                 {
                     __result = true;
                     StubLog.Dbg("[CustomStub.Harmony] 半成品组合按回落判定放行入杯/盘");

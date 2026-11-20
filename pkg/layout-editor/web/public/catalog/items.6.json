@@ -1,8 +1,48 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 6,
   "itemCount": 200,
   "items": [
+    {
+      "id": "p_dlc07_arch_middle_04",
+      "guid": "c207d07c723099599110d6b6cae5e7b2",
+      "assetPath": "Assets/commonW2/prefabs/dlc07/art/dlc07_horde/p_dlc07_arch_middle_04.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
+      },
+      "height": 5.102,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门中段 4",
+      "nameEn": "dlc07 arch middle 4",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
+    {
+      "id": "p_dlc07_arch_middle_05",
+      "guid": "1c156aa612e03bc45b3c2d1126e38d43",
+      "assetPath": "Assets/common03/prefabs/art/dlc07_horde/keep/p_dlc07_arch_middle_05.prefab",
+      "category": "art",
+      "theme": "dlc07_horde",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 4,
+        "cellsZ": 1,
+        "sizeY": 5.1021223068237305
+      },
+      "height": 5.102,
+      "layoutTier": "decor",
+      "nameZh": "DLC7 拱门中段 5",
+      "nameEn": "dlc07 arch middle 5",
+      "typeKind": "building",
+      "usage": "enclosure",
+      "icon": false
+    },
     {
       "id": "p_dlc07_arch_middle_05",
       "guid": "476956fdd2f82b2e864b05885063b446",
@@ -4018,46 +4058,6 @@
       "layoutTier": "decor",
       "nameZh": "DLC07 庭院石块 3 a 1",
       "nameEn": "dlc07 courtyard stone block 3 a 1",
-      "typeKind": "rock",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_block_03_a 1",
-      "guid": "2b4b44a9d24b31ded56689bc3f62e7fa",
-      "assetPath": "Assets/commonW1/prefabs/dlc07/art/courtyard/p_dlc07_courtyard_stone_block_03_a 1.prefab",
-      "category": "art",
-      "theme": "courtyard",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.8938923478126526
-      },
-      "height": 0.894,
-      "layoutTier": "decor",
-      "nameZh": "DLC07 庭院石块 3 a 1",
-      "nameEn": "dlc07 courtyard stone block 3 a 1",
-      "typeKind": "rock",
-      "usage": "dressing",
-      "icon": false
-    },
-    {
-      "id": "p_dlc07_courtyard_stone_block_03_d 1",
-      "guid": "f4b0c74682b431cadcc7369def0909dd",
-      "assetPath": "Assets/commonW1/prefabs/dlc07/art/courtyard/p_dlc07_courtyard_stone_block_03_d 1.prefab",
-      "category": "art",
-      "theme": "courtyard",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1,
-        "sizeY": 0.8938923478126526
-      },
-      "height": 0.894,
-      "layoutTier": "decor",
-      "nameZh": "DLC07 庭院石块 3 d 1",
-      "nameEn": "dlc07 courtyard stone block 3 d 1",
       "typeKind": "rock",
       "usage": "dressing",
       "icon": false

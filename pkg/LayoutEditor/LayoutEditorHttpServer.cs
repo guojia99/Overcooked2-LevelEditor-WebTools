@@ -20,6 +20,8 @@ public class LayoutEditorHttpServer
     private HttpListener _listener;
     private Thread _listenerThread;
     private volatile bool _running;
+    private static int _activeDownloads;
+    private static int _activeMcpReads;
     private readonly Queue<Action> _mainThreadQueue = new Queue<Action>();
     private readonly object _queueLock = new object();
 
@@ -174,6 +176,51 @@ public class LayoutEditorHttpServer
             {
                 var context = _listener.GetContext();
                 var captured = context;
+                if (captured.Request.Url.AbsolutePath == "/api/mcp" && captured.Request.HttpMethod == "POST")
+                {
+                    if (Interlocked.Increment(ref _activeMcpReads) > 8)
+                    {
+                        Interlocked.Decrement(ref _activeMcpReads);
+                        WriteListenerJson(captured.Response, 503, "{\"error\":\"MCP busy\"}");
+                        continue;
+                    }
+                    ThreadPool.QueueUserWorkItem(delegate {
+                        try
+                        {
+                            var body = ReadBody(captured.Request, 8 * 1024 * 1024);
+                            try
+                            {
+                                var envelope = McpObjectProperties(body);
+                                string method;
+                                string rawParams;
+                                if (envelope.TryGetValue("method", out method) && method == "\"tools/call\""
+                                    && envelope.TryGetValue("params", out rawParams))
+                                {
+                                    var parameters = McpObjectProperties(rawParams);
+                                    string name;
+                                    if (parameters.TryGetValue("name", out name) && name == "\"oc2_get_export_status\"")
+                                    {
+                                        var data = LayoutEditorJson.ToJson(LayoutEditorSetExporter.GetStatus());
+                                        WriteListenerJson(captured.Response, 200, McpResult(ExtractJsonProperty(body, "id"),
+                                            "{\"content\":[{\"type\":\"text\",\"text\":\"" + EscapeJson(data)
+                                            + "\"}],\"structuredContent\":" + data + "}"));
+                                        return;
+                                    }
+                                }
+                            }
+                            catch (ThreadAbortException) { throw; }
+                            catch (Exception)
+                            {
+                                // The normal RPC handler owns parse/invalid-request responses.
+                            }
+                            EnqueueMain(delegate { HandleRequest(captured, body); });
+                        }
+                        catch (ThreadAbortException) { throw; }
+                        catch (Exception ex) { WriteListenerJson(captured.Response, 400, "{\"error\":" + JsonString(ex.Message) + "}"); }
+                        finally { Interlocked.Decrement(ref _activeMcpReads); }
+                    });
+                    continue;
+                }
                 // 导出状态/下载走监听线程 fast-path：BuildPipeline 阻塞主线程泵期间，
                 // 这些请求若排队将永远得不到响应（前端轮询会超时）。
                 if (TryServeExportFastPath(captured))
@@ -186,6 +233,11 @@ public class LayoutEditorHttpServer
             {
                 if (!_running)
                     break;
+            }
+            catch (ThreadAbortException)
+            {
+                // Domain unload owns this abort. Do not ResetAbort.
+                return;
             }
             catch (ObjectDisposedException)
             {
@@ -264,10 +316,22 @@ public class LayoutEditorHttpServer
                 }
                 else
                 {
-                    WriteListenerFile(response, zipPath, Path.GetFileName(zipPath));
+                    if (Interlocked.Increment(ref _activeDownloads) > 2)
+                    {
+                        Interlocked.Decrement(ref _activeDownloads);
+                        WriteListenerJson(response, 503, "{\"error\":\"下载繁忙，请稍后重试下载。\"}");
+                    }
+                    else
+                    {
+                        ThreadPool.QueueUserWorkItem(delegate {
+                            try { WriteListenerFile(response, zipPath, Path.GetFileName(zipPath)); }
+                            finally { Interlocked.Decrement(ref _activeDownloads); }
+                        });
+                    }
                 }
             }
         }
+        catch (ThreadAbortException) { throw; }
         catch (Exception ex)
         {
             Debug.LogWarning("[LayoutEditor] export fast-path: " + ex.Message);
@@ -290,6 +354,7 @@ public class LayoutEditorHttpServer
             response.OutputStream.Write(bytes, 0, bytes.Length);
             response.OutputStream.Close();
         }
+        catch (ThreadAbortException) { throw; }
         catch (Exception ex)
         {
             Debug.LogWarning("[LayoutEditor] listener write skipped: " + ex.Message);
@@ -298,21 +363,29 @@ public class LayoutEditorHttpServer
 
     private static void WriteListenerFile(HttpListenerResponse response, string absPath, string downloadName)
     {
+        var timeout = new Timer(delegate { try { response.Close(); } catch (Exception) { } }, null, 300000, Timeout.Infinite);
         try
         {
-            var bytes = File.ReadAllBytes(absPath);
             response.StatusCode = 200;
             response.ContentType = "application/zip";
             response.AddHeader("Content-Disposition",
                 "attachment; filename=\"" + (downloadName ?? "export.zip") + "\"");
-            response.ContentLength64 = bytes.Length;
-            response.OutputStream.Write(bytes, 0, bytes.Length);
-            response.OutputStream.Close();
+            using (var file = File.OpenRead(absPath))
+            {
+                response.ContentLength64 = file.Length;
+                if (response.OutputStream.CanTimeout) response.OutputStream.WriteTimeout = 30000;
+                var buffer = new byte[65536];
+                int count;
+                while ((count = file.Read(buffer, 0, buffer.Length)) > 0)
+                    response.OutputStream.Write(buffer, 0, count);
+            }
         }
+        catch (ThreadAbortException) { throw; }
         catch (Exception ex)
         {
             Debug.LogWarning("[LayoutEditor] listener file write failed: " + ex.Message);
         }
+        finally { timeout.Dispose(); try { response.Close(); } catch (Exception) { } }
     }
 
     /// <summary>Web 前端导出产物（exports/）与导出状态在监听线程直接读文件并响应。
@@ -363,6 +436,7 @@ public class LayoutEditorHttpServer
 
             var response = context.Response;
             response.Headers.Add("Access-Control-Allow-Origin", "*");
+            response.Headers.Add("Cache-Control", "no-store");
             if (!File.Exists(abs))
             {
                 response.StatusCode = 404;
@@ -403,7 +477,7 @@ public class LayoutEditorHttpServer
         }
     }
 
-    private void HandleRequest(HttpListenerContext context)
+    private void HandleRequest(HttpListenerContext context, string mcpBody = null)
     {
         _responseSent = false;
         var request = context.Request;
@@ -435,7 +509,7 @@ public class LayoutEditorHttpServer
 
             if (path == "/api/mcp" && request.HttpMethod == "POST")
             {
-                var rpcJson = HandleMcpRpc(ReadBody(request));
+                var rpcJson = HandleMcpRpc(mcpBody ?? ReadBody(request, 8 * 1024 * 1024));
                 WriteJson(response, 200, rpcJson);
                 return;
             }
@@ -925,7 +999,8 @@ public class LayoutEditorHttpServer
                     dto != null ? dto.mode : "all",
                     dto != null ? dto.depsVersion : null,
                     dto != null ? dto.selectedLevels : null);
-                WriteAdminResult(response, err);
+                if (!string.IsNullOrEmpty(err)) WriteAdminResult(response, err);
+                else WriteJson(response, 200, "{\"ok\":true,\"exportId\":\"" + LayoutEditorSetExporter.GetStatus().exportId + "\"}");
                 return;
             }
 
@@ -1034,6 +1109,34 @@ public class LayoutEditorHttpServer
                 if (!string.IsNullOrEmpty(err)) LayoutEditorWriteBackHistory.Abort();
                 else LayoutEditorWriteBackHistory.CommitNow();
                 WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/level/mode-config" && request.HttpMethod == "GET")
+            {
+                var assetPath = request.QueryString["assetPath"];
+                WriteJson(response, 200, LayoutEditorJson.ToJson(
+                    LayoutEditorLevelAdminApi.GetLevelModeConfig(assetPath)));
+                return;
+            }
+
+            if (path == "/api/level/mode-config" && request.HttpMethod == "POST")
+            {
+                var body = ReadBody(request, LayoutEditorLevelModeStore.MaxJsonBytes);
+                var dto = LayoutEditorLevelModeStore.ParseJson(body);
+                var assetPath = dto != null ? dto.assetPath : null;
+                LayoutEditorWriteBackHistory.BeginForInfo("level-mode-config", assetPath);
+                var err = LayoutEditorLevelAdminApi.UpdateLevelModeConfig(assetPath, dto);
+                if (!string.IsNullOrEmpty(err)) LayoutEditorWriteBackHistory.Abort();
+                else LayoutEditorWriteBackHistory.CommitNow();
+                WriteAdminResult(response, err);
+                return;
+            }
+
+            if (path == "/api/level/mode" && request.HttpMethod == "POST")
+            {
+                var dto = JsonUtility.FromJson<LevelModeChangeDto>(ReadBody(request, 16384));
+                WriteAdminResult(response, LayoutEditorLevelAdminApi.ChangeLevelMode(dto));
                 return;
             }
 
@@ -2227,6 +2330,60 @@ public class LayoutEditorHttpServer
         McpRpcRequestDto request;
         try
         {
+            if (body != null && Encoding.UTF8.GetByteCount(body) > 8 * 1024 * 1024)
+                throw new InvalidDataException("MCP 请求体超过 8 MiB 上限。");
+            // Validate raw arguments before JsonUtility can coerce or discard fields.
+            var envelope = McpObjectProperties(body ?? "{}");
+            string parameters;
+            var rpcParams = envelope.TryGetValue("params", out parameters) && parameters.StartsWith("{")
+                ? McpObjectProperties(parameters) : new Dictionary<string, string>();
+            string rawName;
+            var toolName = rpcParams.TryGetValue("name", out rawName)
+                ? JsonUtility.FromJson<McpRpcParamsDto>("{\"name\":" + rawName + "}").name : null;
+            string rawMethod;
+            if (envelope.TryGetValue("method", out rawMethod) && rawMethod == "\"tools/call\""
+                && (toolName == "oc2_save_level_respawn_bounds" || toolName == "oc2_save_native_scripted_recipes"))
+            {
+                try
+                {
+                    var data = HandleMcpSettingsTool(toolName, rpcParams.ContainsKey("arguments") ? rpcParams["arguments"] : "{}");
+                    return McpResult(id, "{\"content\":[{\"type\":\"text\",\"text\":" + JsonString(data) + "}],\"structuredContent\":" + data + "}");
+                }
+                catch (McpModeToolException ex) { return McpModeErrorResult(id, toolName, ex.Code, ex.WriteOutcome, ex.Message); }
+                catch (Exception ex) { return McpModeErrorResult(id, toolName, "INVALID_ARGUMENT", "not_started", ex.Message); }
+            }
+            if (toolName == "oc2_save_level_mode_config" || toolName == "oc2_get_level_mode_config"
+                || toolName == "oc2_change_level_mode" || toolName == "oc2_create_level")
+            {
+                try
+                {
+                    var properties = McpObjectProperties(rpcParams["arguments"]);
+                    var allowed = toolName == "oc2_save_level_mode_config" ? new[] { "config", "confirm" }
+                        : toolName == "oc2_create_level" ? new[] { "setName", "levelId", "levelName", "levelNameZH", "gameMode", "confirm" }
+                        : toolName == "oc2_change_level_mode" ? new[] { "assetPath", "gameMode", "convertHordeObjects", "confirm" } : new[] { "assetPath" };
+                    foreach (var property in properties)
+                    {
+                        if (Array.IndexOf(allowed, property.Key) < 0) throw new ArgumentException("未知参数：" + property.Key);
+                        if (property.Key == "config") continue;
+                        if (property.Key == "confirm" ? property.Value != "true"
+                            : property.Key == "convertHordeObjects" ? property.Value != "true" && property.Value != "false"
+                            : !property.Value.StartsWith("\"") || !property.Value.EndsWith("\""))
+                            throw new ArgumentException("参数类型无效：" + property.Key);
+                    }
+                    string config;
+                    if (properties.TryGetValue("config", out config))
+                    {
+                        if (Encoding.UTF8.GetByteCount(config) > LayoutEditorLevelModeStore.MaxJsonBytes)
+                            throw new InvalidDataException("模式 JSON 超过 2 MiB 上限。");
+                        ValidateMcpModeJson(config, typeof(LevelModeConfigDto));
+                        LayoutEditorLevelModeStore.ParseJson(config);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return McpModeErrorResult(id, toolName, "INVALID_ARGUMENT", "not_started", ex.Message);
+                }
+            }
             request = JsonUtility.FromJson<McpRpcRequestDto>(body ?? "{}");
         }
         catch
@@ -2257,6 +2414,10 @@ public class LayoutEditorHttpServer
             return McpResult(id, "{\"content\":[{\"type\":\"text\",\"text\":\"" +
                 EscapeJson(data) + "\"}],\"structuredContent\":" + data + "}");
         }
+        catch (McpModeToolException ex)
+        {
+            return McpModeErrorResult(id, request.@params.name, ex.Code, ex.WriteOutcome, ex.Message);
+        }
         catch (Exception ex)
         {
             return McpResult(id, "{\"isError\":true,\"content\":[{\"type\":\"text\",\"text\":\"" +
@@ -2277,6 +2438,9 @@ public class LayoutEditorHttpServer
             return LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.ScanLevels(args.setName));
         if (name == "oc2_get_level_detail")
             return LayoutEditorJson.ToJson(LayoutEditorLevelAdminApi.GetLevel(args.assetPath));
+        if (name == "oc2_get_level_mode_config" || name == "oc2_save_level_mode_config"
+            || name == "oc2_change_level_mode" || name == "oc2_create_level")
+            return HandleMcpModeTool(name, args);
         if (name == "oc2_get_scene_layout")
         {
             OpenSceneIfNeeded(args.assetPath);
@@ -2345,11 +2509,426 @@ public class LayoutEditorHttpServer
                 args.depsVersion, args.selectedLevels);
             if (!string.IsNullOrEmpty(error))
                 throw new InvalidOperationException(error);
-            return "{\"accepted\":true,\"pollAfterMs\":2000,\"deadlineMs\":1800000}";
+            return "{\"accepted\":true,\"exportId\":\"" + LayoutEditorSetExporter.GetStatus().exportId + "\",\"pollAfterMs\":2000,\"deadlineMs\":1800000}";
         }
         if (name == "oc2_get_export_status")
             return LayoutEditorJson.ToJson(LayoutEditorSetExporter.GetStatus());
         throw new InvalidOperationException("未知工具 " + name);
+    }
+
+    private sealed class McpModeToolException : Exception
+    {
+        public readonly string Code;
+        public readonly string WriteOutcome;
+        public McpModeToolException(string code, string outcome, string message) : base(message)
+        {
+            Code = code;
+            WriteOutcome = outcome;
+        }
+    }
+
+    private static string McpModeErrorResult(string id, string name, string code, string outcome, string message)
+    {
+        var sideEffect = name == "oc2_get_level_mode_config" ? "read"
+            : name == "oc2_save_level_mode_config" || name == "oc2_save_level_respawn_bounds"
+                || name == "oc2_save_native_scripted_recipes" ? "write_asset" : "write_scene";
+        var data = "{\"ok\":false,\"error\":{\"code\":" + JsonString(code) + ",\"message\":" + JsonString(message)
+            + ",\"retryable\":false},\"data\":{\"writeOutcome\":" + JsonString(outcome)
+            + "},\"operation\":{\"name\":" + JsonString(name) + ",\"kind\":" + JsonString(sideEffect)
+            + ",\"sideEffect\":" + JsonString(sideEffect) + "}}";
+        return McpResult(id, "{\"isError\":true,\"content\":[{\"type\":\"text\",\"text\":" + JsonString(data)
+            + "}],\"structuredContent\":" + data + "}");
+    }
+
+    private static void RequireMcpModePath(string path)
+    {
+        if (path == null || path.Length > 1024 || !System.Text.RegularExpressions.Regex.IsMatch(path,
+            @"\AAssets/LevelSets/[^/\\]+/data/[^/\\]+/[^/\\]+\.asset\z"))
+            throw new ArgumentException("assetPath 必须为后端返回的本关 LevelInfoSO 路径。");
+    }
+
+    [Serializable]
+    private sealed class McpSettingsArguments
+    {
+        public string assetPath;
+        public bool enableRespawnBounds;
+        public string[] scriptedRecipes;
+    }
+
+    private static LevelDetailDto ReadMcpLevelDetail(string path)
+    {
+        var detail = LayoutEditorLevelAdminApi.GetLevel(path);
+        if (detail == null || detail.levelInfoAssetPath != path || (detail.gameMode != "Campaign"
+            && detail.gameMode != "Dynamic" && detail.gameMode != "Horde"))
+            throw new InvalidDataException("详情读取路径或模式无效。");
+        return detail;
+    }
+
+    private static string HandleMcpSettingsTool(string name, string json)
+    {
+        var respawn = name == "oc2_save_level_respawn_bounds";
+        var properties = McpObjectProperties(json);
+        var allowed = respawn ? new[] { "assetPath", "enableRespawnBounds", "confirm" }
+            : new[] { "assetPath", "playerCount", "scriptedRecipes", "confirm" };
+        foreach (var key in properties.Keys)
+            if (Array.IndexOf(allowed, key) < 0) throw new ArgumentException("未知参数：" + key);
+        foreach (var key in allowed)
+            if (!properties.ContainsKey(key)) throw new ArgumentException("缺少参数：" + key);
+        if (properties["confirm"] != "true") throw new ArgumentException("保存必须传 confirm=true。");
+        if (!properties["assetPath"].StartsWith("\"") || !properties["assetPath"].EndsWith("\""))
+            throw new ArgumentException("assetPath 必须为字符串。");
+        var player = 0;
+        if (respawn)
+        {
+            if (properties["enableRespawnBounds"] != "true" && properties["enableRespawnBounds"] != "false")
+                throw new ArgumentException("enableRespawnBounds 必须为布尔值。");
+        }
+        else
+        {
+            double count;
+            if (!double.TryParse(properties["playerCount"], System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out count) || double.IsNaN(count)
+                || count < 1 || count > 4 || count != Math.Truncate(count))
+                throw new ArgumentException("playerCount 必须为 1 到 4 的整数。");
+            player = (int)count;
+            if (!System.Text.RegularExpressions.Regex.IsMatch(properties["scriptedRecipes"],
+                "\\A\\[\\s*(?:\"[0-9a-fA-F]{32}\"\\s*(?:,\\s*\"[0-9a-fA-F]{32}\"\\s*)*)?\\]\\z"))
+                throw new ArgumentException("scriptedRecipes 必须为 GUID 数组；[] 清空，缺省/null 不可保存。");
+        }
+        var args = JsonUtility.FromJson<McpSettingsArguments>(json);
+        RequireMcpModePath(args.assetPath);
+        LevelInfoUpdateDto info = null;
+        LevelConfigUpdateDto config = null;
+        try
+        {
+            var detail = ReadMcpLevelDetail(args.assetPath);
+            if (respawn)
+            {
+                // Copy the complete legacy scalar payload; /info is not a PATCH endpoint.
+                info = JsonUtility.FromJson<LevelInfoUpdateDto>(JsonUtility.ToJson(detail));
+                info.assetPath = args.assetPath;
+                info.updateEnableRespawnBounds = true;
+                info.enableRespawnBounds = args.enableRespawnBounds;
+            }
+            else
+            {
+                if (detail.gameMode != "Campaign") throw new ArgumentException("仅 Campaign 可修改 scriptedRecipes（包括清空）。");
+                if (detail.configs == null || detail.configs.Length < player || detail.configs[player - 1] == null
+                    || !detail.configs[player - 1].exists) throw new ArgumentException("缺少指定人数配置。");
+                var selected = detail.configs[player - 1];
+                selected.scriptedRecipes = args.scriptedRecipes;
+                selected.scriptedRecipeErrors = null;
+                config = new LevelConfigUpdateDto { assetPath = args.assetPath };
+                typeof(LevelConfigUpdateDto).GetField("config_" + player + "p").SetValue(config, selected);
+            }
+        }
+        catch (ArgumentException ex) { throw new McpModeToolException("INVALID_ARGUMENT", "not_started", ex.Message); }
+        catch (Exception ex) { throw new McpModeToolException("BRIDGE_ERROR", "not_started", "保存前详情读取失败。" + ex.Message); }
+
+        // One save only. Aborting history does not roll back an already saved asset.
+        try
+        {
+            LayoutEditorWriteBackHistory.BeginForInfo(respawn ? "level-info" : "level-config", args.assetPath);
+            var error = respawn ? LayoutEditorLevelAdminApi.UpdateLevelInfo(info) : LayoutEditorLevelAdminApi.UpdateLevelConfig(config);
+            if (!string.IsNullOrEmpty(error)) throw new InvalidOperationException(error);
+            LayoutEditorWriteBackHistory.CommitNow();
+        }
+        catch (Exception ex)
+        {
+            LayoutEditorWriteBackHistory.Abort();
+            throw new McpModeToolException("WRITE_UNCONFIRMED", "unknown", "写结果未确认；先读取详情，禁止自动重试。" + ex.Message);
+        }
+        try
+        {
+            var readback = ReadMcpLevelDetail(args.assetPath);
+            if (respawn)
+            {
+                if (readback.enableRespawnBounds != args.enableRespawnBounds) throw new InvalidDataException("重生边界读回不一致。");
+            }
+            else
+            {
+                if (readback.gameMode != "Campaign" || readback.configs == null || readback.configs.Length < player)
+                    throw new InvalidDataException("原生序列人数或模式读回不一致。");
+                var selected = readback.configs[player - 1];
+                if (selected == null || !selected.exists || selected.scriptedRecipes == null
+                    || selected.scriptedRecipes.Length != args.scriptedRecipes.Length
+                    || selected.scriptedRecipeErrors == null || selected.scriptedRecipeErrors.Length != 0)
+                    throw new InvalidDataException("原生序列长度或引用诊断读回不一致。");
+                for (int i = 0; i < args.scriptedRecipes.Length; i++)
+                    if (!string.Equals(selected.scriptedRecipes[i], args.scriptedRecipes[i], StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidDataException("原生序列顺序或重复读回不一致。");
+            }
+            return "{\"saved\":{\"ok\":true},\"readback\":" + LayoutEditorJson.ToJson(readback) + ",\"verified\":true}";
+        }
+        catch (Exception ex)
+        {
+            throw new McpModeToolException("READBACK_FAILED", "acknowledged", "保存已确认但读回失败；只读取详情核对，禁止再次写入。" + ex.Message);
+        }
+    }
+
+    private static LevelModeConfigDto ReadMcpModeConfig(string path)
+    {
+        var config = LayoutEditorLevelAdminApi.GetLevelModeConfig(path);
+        if (config == null || config.assetPath != path || (config.gameMode != "Campaign"
+            && config.gameMode != "Dynamic" && config.gameMode != "Horde"))
+            throw new InvalidDataException("模式读取未返回匹配的 LevelModeConfigDto。");
+        if (config.gameMode != "Campaign")
+        {
+            var error = LayoutEditorLevelModeStore.Validate(
+                JsonUtility.FromJson<LevelModeConfigDto>(WritableMcpModeJson(config)));
+            if (error != null) throw new InvalidDataException(error);
+        }
+        return config;
+    }
+
+    private static string WritableMcpModeJson(LevelModeConfigDto config)
+    {
+        var copy = JsonUtility.FromJson<LevelModeConfigDto>(JsonUtility.ToJson(config));
+        copy.enemies = null;
+        if (copy.gameMode == "Dynamic") copy.hordeConfigs = null;
+        if (copy.gameMode == "Horde") copy.phases = null;
+        return JsonUtility.ToJson(copy);
+    }
+
+    private static string HandleMcpModeTool(string name, McpArgumentsDto args)
+    {
+        var read = name == "oc2_get_level_mode_config";
+        var save = name == "oc2_save_level_mode_config";
+        var create = name == "oc2_create_level";
+        var path = save && args.config != null ? args.config.assetPath : args.assetPath;
+        var mode = save && args.config != null ? args.config.gameMode : args.gameMode;
+        string expected = null;
+        try
+        {
+            if (!read && !args.confirm) throw new ArgumentException("模式写操作必须传 confirm=true。");
+            if (!create) RequireMcpModePath(path);
+            if (read)
+            {
+                try { return LayoutEditorJson.ToJson(ReadMcpModeConfig(path)); }
+                catch (Exception ex) { throw new McpModeToolException("BRIDGE_ERROR", "not_started", ex.Message); }
+            }
+            if (create && mode == null) mode = "Campaign";
+            if (mode != "Campaign" && mode != "Dynamic" && mode != "Horde")
+                throw new ArgumentException("gameMode 必须为 Campaign/Dynamic/Horde。");
+            if (create && (args.setName == null || args.levelId == null
+                || !System.Text.RegularExpressions.Regex.IsMatch(args.setName, @"\A[a-z0-9_]+\z")
+                || !System.Text.RegularExpressions.Regex.IsMatch(args.levelId, @"\A[a-z0-9_]+\z")))
+                throw new ArgumentException("setName/levelId 只允许小写字母、数字和下划线。");
+            if (save)
+            {
+                if (args.config == null || mode == "Campaign")
+                    throw new ArgumentException("config 必须为完整 Dynamic/Horde LevelModeConfigDto。");
+                args.config.enemies = null;
+                var error = LayoutEditorLevelModeStore.Validate(args.config);
+                if (error != null) throw new ArgumentException(error);
+                args.config = LayoutEditorLevelModeStore.ParseJson(WritableMcpModeJson(args.config));
+                expected = WritableMcpModeJson(args.config);
+            }
+        }
+        catch (McpModeToolException) { throw; }
+        catch (Exception ex)
+        {
+            throw new McpModeToolException("INVALID_ARGUMENT", "not_started", ex.Message);
+        }
+
+        // No retries: an exception may follow a successful Unity save.
+        try
+        {
+            string error;
+            if (save)
+            {
+                try
+                {
+                    LayoutEditorWriteBackHistory.BeginForInfo("level-mode-config", path);
+                    error = LayoutEditorLevelAdminApi.UpdateLevelModeConfig(path, args.config);
+                    if (!string.IsNullOrEmpty(error)) throw new InvalidOperationException(error);
+                    LayoutEditorWriteBackHistory.CommitNow();
+                }
+                catch
+                {
+                    LayoutEditorWriteBackHistory.Abort();
+                    throw;
+                }
+            }
+            else
+            {
+                error = create ? LayoutEditorLevelAdminApi.CreateLevel(new LevelCreateDto {
+                    setName = args.setName, levelId = args.levelId, levelName = args.levelName,
+                    levelNameZH = args.levelNameZH, gameMode = mode })
+                    : LayoutEditorLevelAdminApi.ChangeLevelMode(new LevelModeChangeDto {
+                        assetPath = path, gameMode = mode, convertHordeObjects = args.convertHordeObjects });
+                if (!string.IsNullOrEmpty(error)) throw new InvalidOperationException(error);
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new McpModeToolException("WRITE_UNCONFIRMED", "unknown",
+                "写操作失败或结果未确认；先读取模式/详情（创建先查列表），不要自动重试。" + ex.Message);
+        }
+
+        try
+        {
+            if (create)
+            {
+                var levels = LayoutEditorLevelAdminApi.ScanLevels(args.setName);
+                LevelSummaryDto found = null;
+                if (levels != null && levels.levels != null)
+                    foreach (var level in levels.levels)
+                        if (level != null && level.sceneName == args.levelId)
+                        {
+                            if (found != null) throw new InvalidDataException("创建后列表存在多个匹配关卡。");
+                            found = level;
+                        }
+                if (found == null) throw new InvalidDataException("创建后未能从列表唯一解析新关卡。");
+                path = found.assetPath;
+                RequireMcpModePath(path);
+            }
+            var readback = ReadMcpModeConfig(path);
+            if (readback.gameMode != mode) throw new InvalidDataException("模式读回与写入目标不一致。");
+            if (save)
+            {
+                var actual = JsonUtility.FromJson<LevelModeConfigDto>(WritableMcpModeJson(readback));
+                foreach (var field in new[] { "targetRepairSpeed", "targetRepairThreshold" })
+                {
+                    var info = typeof(LevelModeConfigDto).GetField(field);
+                    var wanted = (float)info.GetValue(args.config);
+                    var value = (float)info.GetValue(actual);
+                    if (float.IsNaN(value) || float.IsInfinity(value)
+                        || Math.Abs((double)value - wanted) > Math.Max((double)float.Epsilon, Math.Abs((double)wanted) * 1e-6))
+                        throw new InvalidDataException(field + " 读回不一致。");
+                    info.SetValue(actual, wanted);
+                }
+                if (WritableMcpModeJson(actual) != expected)
+                    throw new InvalidDataException("模式配置可写字段读回与写入不一致。");
+                return "{\"saved\":{\"ok\":true},\"readback\":" + LayoutEditorJson.ToJson(readback) + ",\"verified\":true}";
+            }
+            var detail = LayoutEditorLevelAdminApi.GetLevel(path);
+            if (detail == null || detail.levelInfoAssetPath != path || detail.gameMode != mode)
+                throw new InvalidDataException("详情读回路径或原生模式不一致。");
+            return "{\"saved\":{\"ok\":true},\"readback\":" + LayoutEditorJson.ToJson(readback)
+                + ",\"detail\":" + LayoutEditorJson.ToJson(detail) + ",\"verified\":true}";
+        }
+        catch (Exception ex)
+        {
+            throw new McpModeToolException("READBACK_FAILED", "acknowledged",
+                "写入已获确认，但读回验证失败；先读取模式/详情（创建先查列表），不要再次写入。" + ex.Message);
+        }
+    }
+
+    // Read raw member values without deserializing nested DTOs (notably large documents/configs).
+    private static Dictionary<string, string> McpObjectProperties(string json)
+    {
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        var i = 0;
+        while (i < json.Length && char.IsWhiteSpace(json[i])) i++;
+        if (i == json.Length || json[i++] != '{') throw new InvalidDataException("需要 JSON object。");
+        while (true)
+        {
+            while (i < json.Length && char.IsWhiteSpace(json[i])) i++;
+            if (i < json.Length && json[i] == '}') break;
+            if (i == json.Length || json[i++] != '"') throw new InvalidDataException("无效 JSON 字段。");
+            var start = i;
+            while (i < json.Length && json[i] != '"')
+            {
+                // Contract field names are ASCII; escaped aliases must not bypass duplicate/unknown checks.
+                if (json[i] == '\\' || char.IsControl(json[i])) throw new InvalidDataException("JSON 字段名不能转义。");
+                i++;
+            }
+            if (i == json.Length) throw new InvalidDataException("未闭合 JSON 字段。");
+            var key = json.Substring(start, i++ - start);
+            while (i < json.Length && char.IsWhiteSpace(json[i])) i++;
+            if (i == json.Length || json[i++] != ':') throw new InvalidDataException("JSON 缺少冒号。");
+            start = i;
+            var depth = 0;
+            var quoted = false;
+            for (; i < json.Length; i++)
+            {
+                var c = json[i];
+                if (quoted && c == '\\') { i++; continue; }
+                if (c == '"') { quoted = !quoted; continue; }
+                if (quoted) continue;
+                if (c == '{' || c == '[') depth++;
+                if (c == '}' || c == ']') { if (depth == 0) break; depth--; }
+                if (c == ',' && depth == 0) break;
+            }
+            if (i == json.Length || quoted || depth != 0 || result.ContainsKey(key))
+                throw new InvalidDataException("无效或重复 JSON 字段。");
+            result.Add(key, json.Substring(start, i - start).Trim());
+            if (json[i] == '}') break;
+            i++;
+        }
+        i++;
+        while (i < json.Length && char.IsWhiteSpace(json[i])) i++;
+        if (i != json.Length) throw new InvalidDataException("JSON object 后有多余内容。");
+        return result;
+    }
+
+    private static void ValidateMcpModeJson(string json, Type type)
+    {
+        var properties = McpObjectProperties(json);
+        foreach (var key in properties.Keys)
+            if (type.GetField(key) == null) throw new ArgumentException("config 包含未知字段：" + key);
+        foreach (var field in type.GetFields())
+        {
+            if (field.Name == "enemies") continue;
+            string value;
+            if (!properties.TryGetValue(field.Name, out value))
+            {
+                if (field.Name == "phases" || field.Name == "hordeConfigs") continue;
+                throw new ArgumentException("config 缺少字段：" + field.Name);
+            }
+            if (field.FieldType == typeof(string))
+            {
+                if (!value.StartsWith("\"") || !value.EndsWith("\"")) throw new ArgumentException(field.Name + " 必须为字符串。");
+            }
+            else if (field.FieldType.IsArray)
+            {
+                if ((field.Name == "phases" || field.Name == "hordeConfigs") && value == "null") continue;
+                if (!value.StartsWith("[") || !value.EndsWith("]")) throw new ArgumentException(field.Name + " 必须为数组。");
+                // Wrap array entries as object values so the same nesting/string scanner is reused.
+                var contents = value.Substring(1, value.Length - 2);
+                var index = 0;
+                var wrapped = new StringBuilder("{");
+                var depth = 0;
+                var quoted = false;
+                wrapped.Append("\"0\":");
+                for (int i = 0; i < contents.Length; i++)
+                {
+                    var c = contents[i];
+                    wrapped.Append(c);
+                    if (quoted && c == '\\' && i + 1 < contents.Length) { wrapped.Append(contents[++i]); continue; }
+                    if (c == '"') quoted = !quoted;
+                    if (quoted) continue;
+                    if (c == '{' || c == '[') depth++;
+                    if (c == '}' || c == ']') depth--;
+                    if (c == ',' && depth == 0) wrapped.Append("\"").Append(++index).Append("\":");
+                }
+                wrapped.Append('}');
+                if (contents.Trim().Length == 0) continue;
+                foreach (var entry in McpObjectProperties(wrapped.ToString()).Values)
+                {
+                    var element = field.FieldType.GetElementType();
+                    if (element == typeof(string))
+                    {
+                        if (!System.Text.RegularExpressions.Regex.IsMatch(entry, "\\A\"[0-9a-fA-F]{32}\"\\z"))
+                            throw new ArgumentException(field.Name + " 必须为 GUID 数组。");
+                    }
+                    else if (element == typeof(int)) ValidateMcpModeNumber(entry, true);
+                    else ValidateMcpModeJson(entry, element);
+                }
+            }
+            else ValidateMcpModeNumber(value, field.FieldType == typeof(int));
+        }
+    }
+
+    private static void ValidateMcpModeNumber(string value, bool integer)
+    {
+        double number;
+        if (!double.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out number)
+            || double.IsNaN(number) || double.IsInfinity(number) || number < 0 || number > 1000000
+            || (integer && (number != Math.Truncate(number)
+                || number < int.MinValue || number > int.MaxValue)))
+            throw new ArgumentException("config 数字类型无效。");
     }
 
     private static string McpResult(string id, string result)
@@ -3085,6 +3664,24 @@ public class LayoutEditorHttpServer
 
         using (var reader = new StreamReader(request.InputStream, new UTF8Encoding(false)))
             return reader.ReadToEnd();
+    }
+
+    private static string ReadBody(HttpListenerRequest request, int maximumBytes)
+    {
+        if (request.ContentLength64 > maximumBytes)
+            throw new InvalidDataException("请求体超过大小上限。");
+        using (var stream = new MemoryStream())
+        {
+            var buffer = new byte[8192];
+            int count;
+            while ((count = request.InputStream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                if (stream.Length + count > maximumBytes)
+                    throw new InvalidDataException("请求体超过大小上限。");
+                stream.Write(buffer, 0, count);
+            }
+            return new UTF8Encoding(false, true).GetString(stream.ToArray());
+        }
     }
 
     private static void WriteJson(HttpListenerResponse response, int status, string json)

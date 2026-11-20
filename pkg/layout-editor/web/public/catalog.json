@@ -1,8 +1,8 @@
 {
   "generatedAt": "2026-11-10T14:59:19.416Z",
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "gridCellSize": 1.2,
-  "itemCount": 3706,
+  "itemCount": 3708,
   "itemChunks": [
     "catalog/items.0.json",
     "catalog/items.1.json",
@@ -108,6 +108,13 @@
       "labelEn": "Doors & automatic doors",
       "layoutTier": "core",
       "itemCount": 1
+    },
+    {
+      "key": "horde",
+      "labelZh": "核心 · 敌群",
+      "labelEn": "Horde",
+      "layoutTier": "core",
+      "itemCount": 2
     },
     {
       "key": "surface",

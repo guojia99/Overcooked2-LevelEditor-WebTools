@@ -1,3 +1,4 @@
+import { nativeHordeStubKind, normalizeHordeStub, normalizeUnlockCost } from "./hordeStub";
 import {
   S,
   EditorItem
@@ -328,6 +329,8 @@ function specialDispenserType(item: EditorItem): "condiment" | "drink" | "" {
 }
 
 export function stubKindOf(item: EditorItem): string {
+  const nativeKind = nativeHordeStubKind(item);
+  if (nativeKind) return nativeKind;
   if (item.stubKind) {
     // 喷雾喷罐被（历史/误配）标成锅具时，绝不按 CookingUtensil 处理（宿主 Setup NRE）
     if (item.stubKind === "CookingUtensil" && isIngredientSprayId(prefabIdFromPath(item.prefabAssetPath)))
@@ -1246,6 +1249,13 @@ export function stubControlsHtml(item: EditorItem): string {
     }
     case "ServingStation": {
       const myNum = S.paramLabels.get(item.instanceId) ?? "?";
+      const offsets = nativeHordeStubKind(item) === "ServingStation"
+        ? (["orderUIOffset", "healthUIOffset"] as const).map((field) =>
+          `<div class="ctx-stub-row">${field === "orderUIOffset" ? "订单" : "血条"}偏移（米）</div>` +
+          (["x", "y", "z"] as const).map((axis) =>
+            `<label class="ctx-stub-row">${axis.toUpperCase()} <input type="number" id="ctx-ss-${field}-${axis}" class="ctx-input" step="0.1" value="${item.servingStation?.[field]?.[axis] ?? 0}"/></label>`
+          ).join("")
+        ).join("") : "";
       const labels = computeReturnLabels();
       const plateId = servingPlateReturn(item);
       const glassId = servingGlassReturn(item);
@@ -1298,8 +1308,12 @@ export function stubControlsHtml(item: EditorItem): string {
         <label class="ctx-stub-row">脏马克杯台 <select id="ctx-ss-mug" class="ctx-input">${mugOpts}</select></label>
         <label class="ctx-stub-row">茶杯回收台 <select id="ctx-ss-teacup" class="ctx-input">${teacupOpts}</select></label>
         <label class="ctx-stub-row">餐盘回收台 <select id="ctx-ss-tray" class="ctx-input">${trayOpts}</select></label>
+        ${offsets}
         <div class="ctx-stub-row" style="font-size:11px;color:#8a909a">脏盘台与餐盘回收台互斥（同族容器，绑一个会自动替换另一个）；马克杯台与茶杯回收台互斥（共用杯具回流槽）；普通菜与套餐混搭请用两套上菜台。脏杯回收台可与之并存，一个回收台可被多个上菜台共用</div></div>`;
     }
+    case "Lockable":
+      return `<div class="ctx-stub"><div class="ctx-stub-title">Horde 铁门</div>
+        <label class="ctx-stub-row">解锁费用 <input type="number" id="ctx-lockable-cost" class="ctx-input" min="0" max="2147483647" step="1" value="${normalizeUnlockCost(item.lockable?.unlockCost)}"/></label></div>`;
     case "PlateReturn":
     case "GlassReturn": {
       const labels = computeReturnLabels();
@@ -2127,6 +2141,24 @@ export function wireStubControls(item: EditorItem) {
         draw();
         setStatus("已更新脏盘台绑定（写回后生效）");
       });
+      if (nativeHordeStubKind(item) === "ServingStation") {
+        for (const field of ["orderUIOffset", "healthUIOffset"] as const) {
+          for (const axis of ["x", "y", "z"] as const) {
+            num(`ctx-ss-${field}-${axis}`)?.addEventListener("change", (e) => {
+              const input = e.target as HTMLInputElement;
+              const value = input.valueAsNumber;
+              if (!Number.isFinite(value)) {
+                input.value = String(item.servingStation?.[field]?.[axis] ?? 0);
+                return;
+              }
+              pushHistory();
+              normalizeHordeStub(item);
+              item.servingStation![field]![axis] = value;
+              setStatus("已更新服务窗口 UI 偏移（写回后生效）");
+            });
+          }
+        }
+      }
       num("ctx-ss-glass")?.addEventListener("change", (e) => {
         const id = (e.target as HTMLSelectElement).value;
         pushHistory();
@@ -2166,6 +2198,21 @@ export function wireStubControls(item: EditorItem) {
         item.plateReturn.returnClean = (e.target as HTMLInputElement).checked;
         draw();
         setStatus(`已${item.plateReturn.returnClean ? "开启" : "关闭"}直接返回干净${isTeacupReturnItem(item) ? "茶杯" : isGlassReturnItem(item) ? "杯子" : "盘子"}（写回后生效）`);
+      });
+      break;
+    }
+    case "Lockable": {
+      num("ctx-lockable-cost")?.addEventListener("change", (e) => {
+        const input = e.target as HTMLInputElement;
+        if (Number.isNaN(input.valueAsNumber)) {
+          input.value = String(normalizeUnlockCost(item.lockable?.unlockCost));
+          return;
+        }
+        pushHistory();
+        item.stubKind = "Lockable";
+        item.lockable = { ...item.lockable, unlockCost: normalizeUnlockCost(input.valueAsNumber) };
+        input.value = String(item.lockable.unlockCost);
+        setStatus("已更新铁门解锁费用（写回后生效）");
       });
       break;
     }

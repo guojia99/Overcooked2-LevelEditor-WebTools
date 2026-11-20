@@ -47,7 +47,8 @@ public static class LayoutEditorRoastTrayFill
         bool sceneDirty = false;
         foreach (var stub in Object.FindObjectsOfType<PseudoPrefabStub>())
         {
-            if (stub == null || stub.gameObject == null || !IsRoastTray(stub))
+            if (stub == null || stub.gameObject == null || !IsRoastTray(stub)
+                || !LayoutEditorLevelModeStore.OwnsRecipeConsumer(info, stub))
                 continue;
             var go = stub.gameObject;
             var derived = go.GetComponent<PseudoPrefabCookingUtensilStub>();
@@ -89,7 +90,9 @@ public static class LayoutEditorRoastTrayFill
         if (info == null)
             return;
         var required = CollectRoastTrayIngredients(info);
-        ApplyTrayIngredients(required, IsRoastTray);
+        ApplyTrayIngredients(required, delegate(PseudoPrefabStub stub) {
+            return IsRoastTray(stub) && LayoutEditorLevelModeStore.OwnsRecipeConsumer(info, stub);
+        });
     }
 
     private static void ApplyTrayIngredients(
@@ -213,10 +216,10 @@ public static class LayoutEditorRoastTrayFill
     public static List<PseudoPrefabSO> CollectRoastTrayIngredients(LevelInfoSO info)
     {
         var result = new List<PseudoPrefabSO>();
-        if (info == null || info.recipes == null)
+        if (info == null)
             return result;
         var seen = new HashSet<Object>();
-        foreach (var r in info.recipes)
+        foreach (var r in LayoutEditorLevelModeStore.CollectAllRecipes(info))
         {
             if (r == null)
                 continue;

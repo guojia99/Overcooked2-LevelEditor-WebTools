@@ -139,10 +139,7 @@ public static class LayoutEditorCustomContentApi
                 warnings.Add("PseudoPrefabSO 缺失");
             if (!string.IsNullOrEmpty(e.iconPath) && !File.Exists(AbsPath(e.iconPath)))
                 warnings.Add("图标文件缺失");
-            // 注意：custom_content bundle 在创作期允许不存在——编辑/写回/Play 走
-            // AssetDatabase 直读；导出时 BuildAssetBundles 才产出该 bundle（依赖登记
-            // 亦先于 bundle 存在，见 LayoutEditorCustomIngredients.EnsureWebDependencies）。
-            // 因此「bundle 尚未构建」不作为条目告警，避免创作阶段误导。
+            // Local assets inherit info; creation/preview does not require a built bundle.
             var itemDto = new CustomContentItemDto
             {
                 id = e.id,
@@ -155,7 +152,7 @@ public static class LayoutEditorCustomContentApi
                 nodePath = e.nodePath,
                 iconUrl = string.IsNullOrEmpty(e.iconPath) ? "" : "/api/custom-content/icon?assetPath=" + Uri.EscapeDataString(e.prefabPath),
                 updatedAt = e.updatedAt,
-                bundleName = setName + "/" + ContentDir,
+                bundleName = setName + "/info_" + setName,
                 warnings = warnings.ToArray()
             };
             FillItemSettings(itemDto, e);
@@ -735,7 +732,6 @@ public static class LayoutEditorCustomContentApi
     private static void PersistLookupAssets(CustomContentConfigSO.Entry entry, CustomContentLookupPlan plan, string setName)
     {
         if (plan == null) return;
-        var bundle = setName + "/" + ContentDir;
         if (plan.writeTray)
         {
             for (int i = 0; i < plan.trayLists.Length; i++)
@@ -763,7 +759,7 @@ public static class LayoutEditorCustomContentApi
                 list.models = models;
                 list.modelSOs = modelSOs;
                 EditorUtility.SetDirty(list);
-                SetBundle(AssetDatabase.GetAssetPath(list), bundle);
+                InheritInfoBundle(AssetDatabase.GetAssetPath(list));
             }
         }
         if (!plan.writePrep) return;
@@ -801,7 +797,7 @@ public static class LayoutEditorCustomContentApi
         plan.prepLookup.GetType().GetField("m_lookupArray", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(plan.prepLookup, plan.prepRows);
         EditorUtility.SetDirty(plan.prepLookup);
         AssetDatabase.SaveAssets();
-        SetBundle(lookupPath, bundle);
+        InheritInfoBundle(lookupPath);
 
         var cosmeticPath = CosmeticsAssetPath(entry);
         var cosmeticInstance = PrefabUtility.InstantiatePrefab(plan.cosmeticsPrefab) as GameObject;
@@ -817,7 +813,7 @@ public static class LayoutEditorCustomContentApi
             }
             finally { UnityEngine.Object.DestroyImmediate(cosmeticInstance); }
         }
-        SetBundle(cosmeticPath, bundle);
+        InheritInfoBundle(cosmeticPath);
     }
 
     private static OrderDefinitionNode PersistNode(OrderDefinitionNode node, OrderToPrefabLookup owner, string name,
@@ -973,7 +969,7 @@ public static class LayoutEditorCustomContentApi
     {
         EnsureConfig(setName);
         var root = Root(setName);
-        SetBundle(root, setName + "/" + ContentDir);
+        InheritInfoBundle(root);
         if (!AssetDatabase.IsValidFolder(root))
             return "无法创建自定义内容目录：" + root;
         EnsureFolder(root, dto.kind);
@@ -1089,12 +1085,12 @@ public static class LayoutEditorCustomContentApi
         EditorUtility.SetDirty(config);
         AssetDatabase.SaveAssets();
 
-        SetBundle(prefabPath, setName + "/" + ContentDir);
+        InheritInfoBundle(prefabPath);
         if (!string.IsNullOrEmpty(workableNextPrefabPath))
-            SetBundle(workableNextPrefabPath, setName + "/" + ContentDir);
+            InheritInfoBundle(workableNextPrefabPath);
         if (!string.IsNullOrEmpty(nodePath))
-            SetBundle(nodePath, setName + "/" + ContentDir);
-        SetBundle(soPath, setName + "/" + ContentDir);
+            InheritInfoBundle(nodePath);
+        InheritInfoBundle(soPath);
         if (!string.IsNullOrEmpty(dto.iconBase64))
         {
             var iconErr = SaveIcon(setName, entry, dto);
@@ -1265,7 +1261,7 @@ public static class LayoutEditorCustomContentApi
             {
                 if (!AssetDatabase.CopyAsset(NodeIngredient, healNodePath))
                     return "补建 OrderNode 失败：" + healNodePath;
-                SetBundle(healNodePath, setName + "/" + ContentDir);
+                InheritInfoBundle(healNodePath);
             }
             entry.nodePath = healNodePath;
             healedNode = true;
@@ -2314,7 +2310,7 @@ public static class LayoutEditorCustomContentApi
                 imp.SaveAndReimport();
             }
             entry.iconPath = png;
-            SetBundle(png, setName + "/" + ContentDir);
+            InheritInfoBundle(png);
             var node = AssetDatabase.LoadAssetAtPath<IngredientOrderNode>(entry.nodePath);
             if (node != null)
             {
@@ -2360,7 +2356,7 @@ public static class LayoutEditorCustomContentApi
                 if (string.IsNullOrEmpty(name)) continue;
                 var path = modelsDir + "/" + name;
                 File.WriteAllBytes(AbsPath(path), Convert.FromBase64String(f.base64));
-                SetBundle(path, setName + "/" + ContentDir);
+                InheritInfoBundle(path);
                 if (mainModel == null && (name.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase)
                     || name.EndsWith(".obj", StringComparison.OrdinalIgnoreCase)))
                     mainModel = path;
@@ -2373,7 +2369,7 @@ public static class LayoutEditorCustomContentApi
                     if (f.EndsWith(".meta", StringComparison.OrdinalIgnoreCase))
                         continue;
                     var n = Path.GetFileName(f);
-                    SetBundle(modelsDir + "/" + n, setName + "/" + ContentDir);
+                    InheritInfoBundle(modelsDir + "/" + n);
                 }
             }
             if (string.IsNullOrEmpty(mainModel))
@@ -2383,7 +2379,7 @@ public static class LayoutEditorCustomContentApi
                 return "模型导入失败（Unity 无法加载，请检查 FBX/OBJ 是否损坏）：" + mainModel;
             var modelPrefabPath = modelsDir + "/" + id + "_Model.prefab";
             EnsureModelPrefab(modelPrefabPath, imported, id);
-            SetBundle(modelPrefabPath, setName + "/" + ContentDir);
+            InheritInfoBundle(modelPrefabPath);
             return AttachModelToPrefab(entry, dto, modelPrefabPath);
         }
         catch (Exception ex)
@@ -2601,13 +2597,16 @@ public static class LayoutEditorCustomContentApi
         return AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(dir + "/" + id + "_SO.asset");
     }
 
-    private static void SetBundle(string assetPath, string bundleName)
+    private static void InheritInfoBundle(string assetPath)
     {
+        // Local content inherits the set's info bundle, including copied template labels.
+        if (!assetPath.StartsWith(LevelSetsRoot + "/", StringComparison.Ordinal))
+            throw new InvalidOperationException("Custom content bundle ownership must stay inside LevelSets: " + assetPath);
         var imp = AssetImporter.GetAtPath(assetPath);
         if (imp == null) return;
-        if (imp.assetBundleName != bundleName)
+        if (!string.IsNullOrEmpty(imp.assetBundleName) || !string.IsNullOrEmpty(imp.assetBundleVariant))
         {
-            imp.assetBundleName = bundleName;
+            imp.SetAssetBundleNameAndVariant("", "");
             imp.SaveAndReimport();
         }
     }

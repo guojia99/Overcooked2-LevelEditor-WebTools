@@ -1,4 +1,5 @@
 ﻿// Run with node layout-editor/scripts/build-catalog.mjs.
+// Use --horde-only [--dry-run] to patch existing catalogs without rebuilding other data.
 /**
  * Scans common01/common02 assets and 使用手册.md for Chinese names.
  * Outputs (layout-editor/web/public/, synced to web/dist/):
@@ -30,6 +31,12 @@ const DICTIONARY_PATH = path.join(__dirname, "data", "names-dictionary.json");
 const COMMONW6_NAMES_PATH = path.join(__dirname, "data", "commonw6-names.json");
 const OUT_DIR = path.join(repoRoot, "layout-editor/web/public");
 const DIST_DIR = path.join(repoRoot, "layout-editor/web/dist");
+const DRY_RUN = process.argv.includes("--dry-run");
+const HORDE_PREFABS = {
+  Service_Window: { nameZh: "Horde 服务窗口", kind: "ServingStation", category: "horde" },
+  gate: { nameZh: "Horde 铁门", kind: "Lockable", category: "horde" },
+};
+const HORDE_PREFAB_ROOT = "Assets/common04/game_environment/horde/prefabs";
 
 /** Bumped when output schema / shared data files change; the Unity bridge reports
  *  its own version via /api/health so the web UI can warn about outdated bridges.
@@ -39,7 +46,7 @@ const DIST_DIR = path.join(repoRoot, "layout-editor/web/dist");
  * item.ratHeist，写回会静默丢参数，靠版本告警拦旧桥。
  * v8（2026-10-08）：燃烧弹射器波次（item.burner.waves）——旧桥不认识 waves 字段，
  * 写回会静默丢落点/时序，靠版本告警拦旧桥。 */
-const SCHEMA_VERSION = 11;
+const SCHEMA_VERSION = 12;
 
 /**
  * CustomStub 依赖道具（needsStub=true）：游戏侧需要关卡集携带 Stub_<set> runtime
@@ -103,6 +110,8 @@ const SCRIPT_GUID = {
 
 const FOOTPRINT_OVERRIDES = {
   ServingStation: { cellsX: 2, cellsZ: 1 },
+  Service_Window: { cellsX: 2, cellsZ: 1 },
+  gate: { cellsX: 2, cellsZ: 1 },
   // 所有水槽 2×1（含马克杯水槽 / 洗杯槽 / 各 DLC 水槽）
   Sink: { cellsX: 2, cellsZ: 1 },
   SinkGlass: { cellsX: 2, cellsZ: 1 },
@@ -315,6 +324,7 @@ function heightFieldsFor(id, decorMeasured) {
 }
 
 const DEFAULT_PARENT = {
+  horde: "Design/Counters",
   "hotpot/web": "Design/Counters",
   counters: "Design/Counters",
   utensils: "Design/Utensils",
@@ -337,6 +347,7 @@ const CORE_PALETTE = [
   { key: "mechanisms/joystick", labelZh: "核心 · 摇杆", labelEn: "Joystick & marker light" },
   { key: "mechanisms", labelZh: "核心 · 机关", labelEn: "Mechanisms" },
   { key: "mechanisms/doors", labelZh: "核心 · 门 / 自动门", labelEn: "Doors & automatic doors" },
+  { key: "horde", labelZh: "核心 · 敌群", labelEn: "Horde" },
   { key: "surface", labelZh: "核心 · 空气墙/斜坡", labelEn: "Air walls & slopes" },
   { key: "Player", labelZh: "核心 · 厨师出生点", labelEn: "Chef spawns" },
 ];
@@ -897,6 +908,10 @@ function parseManualTable(md) {
 }
 
 function categorize(assetPath) {
+  const hordeId = path.basename(assetPath, ".prefab");
+  if (assetPath === `${HORDE_PREFAB_ROOT}/${hordeId}.prefab` && HORDE_PREFABS[hordeId]) {
+    return { category: HORDE_PREFABS[hordeId].category, theme: null };
+  }
   // 归一化：通用内容源库（common03）与旧关卡集 custom_web / custom_ingredients 副本 → 只保留分类段。
   // common03 按 prefabs/{dlcXX|core}/{category}/ 组织，需先跳过 dlc 段。
   let rel = assetPath.replace(/^Assets\/common0[12]\/prefabs\/?/, "");
@@ -1127,15 +1142,16 @@ function commonW6BaseId(id) {
   return b.replace(/\s*\(\d+\)$/, "").trim().toLowerCase();
 }
 
-function walkPrefabs(dir, baseAssetsPath, out, measuredFootprints) {
+function walkPrefabs(dir, baseAssetsPath, out, measuredFootprints, onlyIds) {
   const baseAbs = path.resolve(repoRoot, baseAssetsPath);
   if (!fs.existsSync(dir)) return;
   for (const name of fs.readdirSync(dir)) {
     const full = path.join(dir, name);
     const stat = fs.statSync(full);
     if (stat.isDirectory()) {
-      walkPrefabs(full, baseAssetsPath, out, measuredFootprints);
+      if (!onlyIds) walkPrefabs(full, baseAssetsPath, out, measuredFootprints);
     } else if (name.endsWith(".prefab")) {
+      if (onlyIds && !onlyIds.has(name.replace(/\.prefab$/, ""))) continue;
       const assetPath = path
         .join(baseAssetsPath, path.relative(baseAbs, path.resolve(full)))
         .replace(/\\/g, "/");
@@ -1148,7 +1164,7 @@ function walkPrefabs(dir, baseAssetsPath, out, measuredFootprints) {
         category === "art" || category === "other" || category === "decor/food" || category === "decor/recipes";
       const measured = isDecorCategory ? measuredFootprints.get(id) : undefined;
       const fp =
-        FOOTPRINT_OVERRIDES[id] ||
+        (HORDE_PREFABS[id] && baseAssetsPath !== HORDE_PREFAB_ROOT ? undefined : FOOTPRINT_OVERRIDES[id]) ||
         measured ||
         { cellsX: 1, cellsZ: 1 };
       out.push({
@@ -1162,8 +1178,9 @@ function walkPrefabs(dir, baseAssetsPath, out, measuredFootprints) {
         // Intrinsic model height (measured bounds size Y) for the height-range
         // palette filter AND the 3D view's box extrusion; baseY is the bottom
         // face offset from the pivot (centre-pivoted pots are negative).
-        ...heightFieldsFor(id, measured),
+        ...(baseAssetsPath === HORDE_PREFAB_ROOT ? {} : heightFieldsFor(id, measured)),
         ...layoutMetaFor(id, category),
+        ...(baseAssetsPath === HORDE_PREFAB_ROOT ? { customStubKind: HORDE_PREFABS[id].kind } : {}),
         // CustomStub 依赖标签（web 打标 + 真机按需载入依据）
         ...(needsStubFor(id, assetPath) ? { needsStub: true } : {}),
         ...(category === "decor/food"
@@ -2603,6 +2620,10 @@ function stampIcons(list, sub) {
 }
 
 function writeCatalogFile(fileName, payload) {
+  if (DRY_RUN) {
+    console.log(`Dry run: ${fileName} (${payload.itemCount ?? "?"} entries)`);
+    return;
+  }
   const outPath = path.join(OUT_DIR, fileName);
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, JSON.stringify(payload, null, 2), "utf8");
@@ -2630,7 +2651,110 @@ function writeCounterAppearances(dictionary, idToRow) {
   });
 }
 
+function updateHordeOnly() {
+  const nativeItems = [];
+  walkPrefabs(path.join(repoRoot, HORDE_PREFAB_ROOT), HORDE_PREFAB_ROOT, nativeItems, new Map(), new Set(Object.keys(HORDE_PREFABS)));
+  for (const [id, spec] of Object.entries(HORDE_PREFABS)) {
+    const item = nativeItems.find((it) => it.id === id);
+    if (!item || !/^[a-f0-9]{32}$/.test(item.guid) || item.layoutTier !== "core") {
+      throw new Error(`Missing or invalid native Horde prefab: ${id}`);
+    }
+    item.nameZh = spec.nameZh;
+    item.nameEn = id === "gate" ? "Horde Lockable Gate" : "Horde Service Window";
+  }
+  const targetGuids = new Set(nativeItems.map((it) => it.guid));
+  if (nativeItems.length !== 2 || targetGuids.size !== 2) throw new Error("Expected exactly two native Horde GUIDs");
+
+  // Plan both mirrors before writing; retain all unrelated entries and metadata.
+  const updates = [];
+  for (const dir of [OUT_DIR, DIST_DIR]) {
+    if (dir === DIST_DIR && !fs.existsSync(dir)) continue;
+    const originals = new Map();
+    const read = (name) => {
+      if (path.isAbsolute(name) || name.split(/[\\/]/).includes("..")) throw new Error(`Invalid catalog path: ${name}`);
+      const text = fs.readFileSync(path.join(dir, name), "utf8");
+      originals.set(name, text);
+      return JSON.parse(text.replace(/^\uFEFF/, ""));
+    };
+    const manifest = read("catalog.json");
+    manifest.schemaVersion = SCHEMA_VERSION;
+    const chunkNames = manifest.itemChunks;
+    if (!Array.isArray(chunkNames) || !chunkNames.length || new Set(chunkNames).size !== chunkNames.length) {
+      throw new Error(`Expected an existing chunked catalog in ${dir}`);
+    }
+    const chunks = chunkNames.map(read);
+    for (const [index, chunk] of chunks.entries()) {
+      if (!Array.isArray(chunk.items) || chunk.itemCount !== chunk.items.length || chunk.index !== index) {
+        throw new Error(`Invalid catalog chunk: ${chunkNames[index]}`);
+      }
+    }
+    const before = chunks.flatMap((chunk) => chunk.items);
+    if (manifest.itemCount !== before.length) throw new Error(`Catalog count mismatch in ${dir}`);
+    const replacements = nativeItems.map((native) => {
+      const previous = before.find((it) => it.guid === native.guid);
+      const item = { ...previous, ...native, icon: previous?.icon ?? false };
+      delete item.needsStub;
+      return item;
+    });
+    const items = [...replacements, ...before.filter((it) => !targetGuids.has(it.guid))];
+    const affectedCategories = new Set([...replacements, ...before.filter((it) => targetGuids.has(it.guid))].map((it) => it.category));
+    for (const category of affectedCategories) {
+      const count = (list) => new Set(list.filter((it) => it.category === category).map((it) => it.id)).size;
+      const delta = count(items) - count(before);
+      const group = manifest.paletteGroups.find((it) => it.key === category);
+      const nextCount = (group?.itemCount ?? count(before)) + delta;
+      // Keep one existing group (and its metadata), removing groups emptied by migration.
+      manifest.paletteGroups = manifest.paletteGroups.filter((it) => it.key !== category || (it === group && nextCount > 0));
+      if (nextCount <= 0) continue;
+      if (group) group.itemCount = nextCount;
+      else {
+        const def = CORE_PALETTE.find((it) => it.key === category);
+        if (!def) throw new Error(`Missing Horde palette definition: ${category}`);
+        const order = CORE_PALETTE.findIndex((it) => it.key === category);
+        const insertionIndex = manifest.paletteGroups.findIndex((it) => {
+          const index = CORE_PALETTE.findIndex((def) => def.key === it.key);
+          return index < 0 || index > order;
+        });
+        manifest.paletteGroups.splice(insertionIndex < 0 ? manifest.paletteGroups.length : insertionIndex, 0,
+          { ...def, layoutTier: "core", itemCount: nextCount });
+      }
+    }
+    manifest.itemCount = items.length;
+    const chunkSize = Math.max(...chunks.map((chunk) => chunk.items.length));
+    if (!chunkSize) throw new Error(`Empty catalog in ${dir}`);
+    const nextChunkCount = Math.ceil(items.length / chunkSize);
+    const nextNames = [];
+    for (let index = 0; index < Math.max(chunks.length, nextChunkCount); index++) {
+      const name = chunkNames[index] ?? `catalog/items.${index}.json`;
+      const chunk = chunks[index] ?? { schemaVersion: manifest.schemaVersion, index };
+      const slice = items.slice(index * chunkSize, (index + 1) * chunkSize);
+      // Keep an existing empty tail rather than deleting a file with possible extra metadata.
+      updates.push({ dir, name, payload: { ...chunk, schemaVersion: SCHEMA_VERSION, itemCount: slice.length, items: slice }, originals });
+      nextNames.push(name);
+    }
+    manifest.itemChunks = nextNames;
+    updates.push({ dir, name: "catalog.json", payload: manifest, originals });
+    console.log(`Horde only (${path.basename(dir)}): ${before.length} -> ${items.length} items, ${nextNames.length} chunks`);
+  }
+  const writes = [];
+  for (const { dir, name, payload, originals } of updates) {
+    const previous = originals.get(name);
+    if (previous !== undefined && JSON.stringify(JSON.parse(previous.replace(/^\uFEFF/, ""))) === JSON.stringify(payload)) continue;
+    const dest = path.join(dir, name);
+    if (previous === undefined ? fs.existsSync(dest) : fs.readFileSync(dest, "utf8") !== previous) {
+      throw new Error(`Catalog changed during update: ${dest}`);
+    }
+    writes.push({ dest, text: JSON.stringify(payload, null, 2) + (previous?.endsWith("\n") ? "\n" : "") });
+  }
+  if (!DRY_RUN) for (const { dest, text } of writes) fs.writeFileSync(dest, text, "utf8");
+  console.log(`Horde only: ${writes.length} catalog files ${DRY_RUN ? "would change; no files written" : "changed"}`);
+}
+
 function main() {
+  if (process.argv.includes("--horde-only")) {
+    updateHordeOnly();
+    return;
+  }
   const manual = fs.existsSync(MANUAL_PATH) ? fs.readFileSync(MANUAL_PATH, "utf8") : "";
   const idToRow = parseManualTable(manual);
   const dictionary = loadDictionary();
@@ -2692,6 +2816,7 @@ function main() {
     const dir = path.join(common04Root, sub);
     if (fs.existsSync(dir)) walkPrefabs(dir, `Assets/common04/${sub}`, items, measuredFootprints);
   }
+  walkPrefabs(path.join(repoRoot, HORDE_PREFAB_ROOT), HORDE_PREFAB_ROOT, items, measuredFootprints, new Set(Object.keys(HORDE_PREFABS)));
   const commonW4PrefabRoot = path.join(repoRoot, "Assets/commonW4/prefabs");
   if (fs.existsSync(commonW4PrefabRoot)) {
     walkPrefabs(commonW4PrefabRoot, "Assets/commonW4/prefabs", items, measuredFootprints);
@@ -2754,6 +2879,10 @@ function main() {
     const names = lookupName(dictionary, idToRow, item.id);
     item.nameZh = names.nameZh;
     item.nameEn = names.nameEn;
+    if (item.assetPath === `${HORDE_PREFAB_ROOT}/${item.id}.prefab`) {
+      item.nameZh = HORDE_PREFABS[item.id].nameZh;
+      item.nameEn = item.id === "gate" ? "Horde Lockable Gate" : "Horde Service Window";
+    }
     // 装饰层双维度分类（调色板「按类型 / 按用途」分组视图）
     if (item.layoutTier === "decor" || item.layoutTier === "floor") {
       item.typeKind = classifyTypeKind(item);
@@ -2762,6 +2891,10 @@ function main() {
   }
 
   items.sort((a, b) => {
+    // Frontend catalogById keeps the first entry; native Horde wins over old decor.
+    const nativeA = a.assetPath === `${HORDE_PREFAB_ROOT}/${a.id}.prefab`;
+    const nativeB = b.assetPath === `${HORDE_PREFAB_ROOT}/${b.id}.prefab`;
+    if (nativeA !== nativeB) return nativeA ? -1 : 1;
     const c = a.category.localeCompare(b.category);
     if (c !== 0) return c;
     if (a.category === "utensils" || a.category.startsWith("utensils/")) {
@@ -2776,6 +2909,23 @@ function main() {
     }
     return a.id.localeCompare(b.id);
   });
+
+  if (DRY_RUN) {
+    for (const [id, spec] of Object.entries(HORDE_PREFABS)) {
+      const matches = items.filter((item) => item.id === id);
+      const item = matches[0];
+      if (!item || item.assetPath !== `${HORDE_PREFAB_ROOT}/${id}.prefab`
+        || item.layoutTier !== "core" || item.customStubKind !== spec.kind || item.needsStub
+        || item.footprint.cellsX !== 2 || item.footprint.cellsZ !== 1 || !/^[a-f0-9]{32}$/.test(item.guid)) {
+        throw new Error(`Invalid native Horde catalog entry: ${id}`);
+      }
+      console.log(JSON.stringify(item));
+    }
+    const hordeItems = items.filter((item) => item.assetPath.startsWith("Assets/common04/game_environment/"));
+    if (hordeItems.length !== 2) throw new Error("Horde catalog must contain only the two placeable prefabs");
+    console.log(`Dry run: ${items.length} palette items; native Horde contracts passed; no files written.`);
+    return;
+  }
 
   const byCategory = {};
   for (const item of items) {

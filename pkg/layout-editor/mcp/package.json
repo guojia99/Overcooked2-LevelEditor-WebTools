@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "tsx src/server.ts"
+    "dev": "tsx src/server.ts",
+    "test": "npm run build && node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1"

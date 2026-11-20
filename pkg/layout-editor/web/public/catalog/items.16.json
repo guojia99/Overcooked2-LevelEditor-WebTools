@@ -1,8 +1,49 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 16,
   "itemCount": 200,
   "items": [
+    {
+      "id": "throne_kevinschair_01",
+      "guid": "e67f9dae8d04fbf4ca8586b3e1425165",
+      "assetPath": "Assets/common01/prefabs/art/throne/throne_kevinschair_01.prefab",
+      "category": "art",
+      "theme": "throne",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 3,
+        "cellsZ": 3,
+        "sizeY": 3.181330919265747
+      },
+      "height": 3.181,
+      "baseY": 0.022,
+      "layoutTier": "decor",
+      "nameZh": "凯文王座椅",
+      "nameEn": "throne kevinschair 1",
+      "typeKind": "furniture",
+      "usage": "landmark",
+      "icon": false
+    },
+    {
+      "id": "throne_picture_01",
+      "guid": "a06a0f76d55c5f54b9c2f06cdd2eab04",
+      "assetPath": "Assets/common01/prefabs/art/throne/throne_picture_01.prefab",
+      "category": "art",
+      "theme": "throne",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 2,
+        "cellsZ": 2,
+        "sizeY": 0.1516777127981186
+      },
+      "height": 0.152,
+      "layoutTier": "decor",
+      "nameZh": "王座挂画",
+      "nameEn": "throne picture 1",
+      "typeKind": "other",
+      "usage": "landmark",
+      "icon": false
+    },
     {
       "id": "throne_torch",
       "guid": "3a9d27d90539338498f5d5ed2646840b",
@@ -3946,41 +3987,6 @@
       "layoutTier": "core",
       "nameZh": "洗茶杯水槽",
       "nameEn": "Teacup Sink",
-      "icon": false
-    },
-    {
-      "id": "workstation_mug_return",
-      "guid": "f88b1d0679b4473778fb38035edb4c8c",
-      "assetPath": "Assets/commonW1/prefabs/dlc03/counters/workstation_mug_return.prefab",
-      "category": "counters/sinks",
-      "theme": null,
-      "defaultParent": "Design/Counters",
-      "footprint": {
-        "cellsX": 1,
-        "cellsZ": 1
-      },
-      "height": 0.503,
-      "layoutTier": "core",
-      "nameZh": "马克杯回收台",
-      "nameEn": "Mug Return Station",
-      "icon": false
-    },
-    {
-      "id": "workstation_sink_mug_01_wood",
-      "guid": "49354d3fd6a94884fba5706962e22816",
-      "assetPath": "Assets/commonW1/prefabs/dlc03/counters/workstation_sink_mug_01_wood.prefab",
-      "category": "counters/sinks",
-      "theme": null,
-      "defaultParent": "Design/Counters",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 1
-      },
-      "height": 1.352,
-      "baseY": -0.076,
-      "layoutTier": "core",
-      "nameZh": "马克杯水槽（木制）",
-      "nameEn": "Mug Sink (Wooden)",
       "icon": false
     }
   ]

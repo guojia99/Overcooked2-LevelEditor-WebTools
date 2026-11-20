@@ -1,0 +1,74 @@
+// Minimal Unity mocks around extracted production methods; this is not a Unity integration test.
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEditor;
+using LevelEditor;
+using LevelEditorStub;
+namespace UnityEngine {
+ public class Object { public string name = "mock"; public virtual int GetInstanceID() { return GetHashCode(); } }
+ public class Component : Object { public GameObject gameObject; }
+ public class GameObject : Object {
+  public GameObject Parent; public List<Component> Components = new List<Component>();
+  public T GetComponent<T>() where T: Component { return GetComponent(typeof(T)) as T; }
+  public Component GetComponent(Type t) { return Components.Find(delegate(Component c) { return t.IsAssignableFrom(c.GetType()); }); }
+  public T[] GetComponents<T>() where T: Component { return Components.FindAll(delegate(Component c) { return c is T; }).ConvertAll<T>(delegate(Component c) { return (T)c; }).ToArray(); }
+  public Component Add(Type t) { var c = (Component)Activator.CreateInstance(t); c.gameObject = this; Components.Add(c); return c; }
+ }
+ public struct Vector3 { public float x,y,z; }
+}
+namespace UnityEditor {
+ public static class Undo { public static T AddComponent<T>(GameObject g) where T:Component { return (T)g.Add(typeof(T)); } public static Component AddComponent(GameObject g, Type t) { return g.Add(t); } public static void RecordObject(object o,string n) {} public static void DestroyObjectImmediate(Component c) { c.gameObject.Components.Remove(c); } }
+ public static class PrefabUtility { public static object GetPrefabParent(GameObject g) { return g.Parent; } }
+ public static class EditorUtility { public static void SetDirty(object o) {} }
+ public class SerializedObject { PseudoPrefabServingStationHordeStub s; public SerializedObject(PseudoPrefabServingStationHordeStub a) { s=a; } public SerializedProperty FindProperty(string n) { return new SerializedProperty(s,-1); } public void ApplyModifiedProperties() {} }
+ public class SerializedProperty { PseudoPrefabServingStationHordeStub s; int i; public SerializedProperty(PseudoPrefabServingStationHordeStub a,int b) {s=a;i=b;} public int arraySize {set {Array.Resize(ref s.plateReturns,value);}} public SerializedProperty GetArrayElementAtIndex(int n) {return new SerializedProperty(s,n);} public object objectReferenceValue {set{s.plateReturns[i]=(PseudoPrefabPlateReturnStub)value;}} }
+}
+namespace LevelEditorStub {
+ public class PseudoPrefabSO:UnityEngine.Object {}
+ public class PseudoPrefabStub:Component { public PseudoPrefabSO pseudoPrefabSO; }
+ public class PseudoPrefabServingStationStub:PseudoPrefabStub { public PseudoPrefabPlateReturnStub plateReturn; public PseudoPrefabPlateReturnStub[] plateReturns; }
+ public class PseudoPrefabServingStationHordeStub:PseudoPrefabServingStationStub { public Vector3 orderUIOffset,healthUIOffset; }
+ public class PseudoPrefabLockableStub:PseudoPrefabStub { public int unlockCost=100; }
+ public class PseudoPrefabPlateReturnStub:PseudoPrefabStub {public object dirtyPlateStackSO,cleanPlateStackSO;}
+ public class PseudoPrefabDispenserStub:PseudoPrefabStub { public UnityEngine.Object spawnerItemPrefabSO; }
+ public class PseudoPrefabSOArray:Component {public UnityEngine.Object[] pseudoPrefabSOs;}
+}
+namespace LevelEditor {
+ public class PseudoPrefab:Component {}
+ public class PseudoPrefabServingStation:PseudoPrefab {}
+ public class PseudoPrefabServingStationHorde:PseudoPrefabServingStation {}
+ public class PseudoPrefabLockable:PseudoPrefab {}
+ public class PseudoPrefabDispenser:PseudoPrefab {}
+}
+class LayoutVector3 { public float x,y,z; public Vector3 ToVector3(){return new Vector3{x=x,y=y,z=z};} public static LayoutVector3 From(Vector3 v){return new LayoutVector3{x=v.x,y=v.y,z=v.z};} }
+class LayoutServingStationStubDto {public LayoutVector3 orderUIOffset,healthUIOffset; public string plateReturnInstanceId;public string[] plateReturnInstanceIds;}
+class LayoutLockableStubDto {public int unlockCost;}
+class LayoutItemDto {public string stubKind,prefabAssetPath;public LayoutServingStationStubDto servingStation;public LayoutLockableStubDto lockable;}
+static class LayoutEditorLog {public static void Log(string s){} public static void LogWarning(string s){}}
+static class Subject {
+ public static void Apply(GameObject go, LayoutItemDto item) { __APPLY__ }
+ public static LayoutItemDto Export(GameObject go) { var item = new LayoutItemDto(); ExportInner(go,item);return item; }
+ static void ExportInner(GameObject go, LayoutItemDto item) { __EXPORT__ }
+ static void ExportPseudoPrefabGuidIfPresent(GameObject go,LayoutItemDto item){}
+ static void ExportSoArrayIfPresent(GameObject go,LayoutItemDto item){}
+ static bool TryGetSpecialDispenserPrefabId(GameObject go,out string id){id=null;return false;}
+ static void EnsurePlateReturnStackSOs(PseudoPrefabPlateReturnStub s,GameObject g){}
+ __METHODS__
+}
+class Program {
+ static int checks;
+ static void Check(bool b,string name){checks++;if(!b)throw new Exception(name);}
+ static T Add<T>(GameObject g) where T:Component {return (T)g.Add(typeof(T));}
+ static void Main(){
+  var g=new GameObject(); var so=new PseudoPrefabSO();var old=Add<PseudoPrefabServingStationStub>(g);old.pseudoPrefabSO=so;Add<PseudoPrefabServingStation>(g);
+  var native=Add<PseudoPrefabServingStationHordeStub>(g);native.orderUIOffset=new Vector3{x=1,y=2,z=3};native.healthUIOffset=new Vector3{x=-4,y=5,z=-6};var runtime=Add<PseudoPrefabServingStationHorde>(g);
+  var ret=Add<PseudoPrefabPlateReturnStub>(new GameObject());old.plateReturn=ret;
+  Check(Subject.PromoteDerivedStub(g),"dual repair changes");Check(g.GetComponents<PseudoPrefabServingStationStub>().Length==1,"one native stub");Check(g.GetComponents<PseudoPrefab>().Length==1 && g.GetComponent<PseudoPrefab>()==runtime,"preserve native runtime");Check(native.pseudoPrefabSO==so && native.plateReturn==ret && native.plateReturns.Length==1,"preserve SO and old binding");
+  for(int i=0;i<20;i++){Check(!Subject.PromoteDerivedStub(g),"idempotent promote");Subject.Apply(g,new LayoutItemDto{stubKind="ServingStation",servingStation=new LayoutServingStationStubDto()});var dto=Subject.Export(g);Check(dto.servingStation.orderUIOffset.x==1 && dto.servingStation.healthUIOffset.z==-6 && dto.servingStation.plateReturnInstanceIds.Length==1,"null and export lossless");Subject.Apply(g,dto);}
+  var ordinary=new GameObject();var stub=Add<PseudoPrefabStub>(ordinary);stub.pseudoPrefabSO=so;Add<PseudoPrefab>(ordinary);Subject.Apply(ordinary,new LayoutItemDto{stubKind="ServingStation"});Check(ordinary.GetComponent<PseudoPrefabServingStationHordeStub>()==null && ordinary.GetComponent<PseudoPrefabServingStation>()!=null,"ordinary station unchanged");Check(!Subject.PromoteDerivedStub(ordinary),"ordinary stable");
+  var fresh=new GameObject();Add<PseudoPrefabStub>(fresh).pseudoPrefabSO=so;Subject.Apply(fresh,new LayoutItemDto{stubKind="ServingStation",prefabAssetPath="Assets/common04/game_environment/horde/prefabs/Service_Window.prefab"});Check(fresh.GetComponents<PseudoPrefabServingStationStub>().Length==1 && fresh.GetComponent<PseudoPrefabServingStationHorde>()!=null,"fresh native only");
+  var gate=new GameObject();Add<PseudoPrefabStub>(gate).pseudoPrefabSO=so;Subject.Apply(gate,new LayoutItemDto{stubKind="Lockable"});Check(gate.GetComponent<PseudoPrefabLockableStub>().unlockCost==100,"native gate default");foreach(int cost in new[]{-10,0,100,int.MaxValue}){Subject.Apply(gate,new LayoutItemDto{stubKind="Lockable",lockable=new LayoutLockableStubDto{unlockCost=cost}});Check(Subject.Export(gate).lockable.unlockCost==Math.Max(0,cost),"gate boundary");Check(!Subject.PromoteDerivedStub(gate),"gate stable");}
+  Console.WriteLine("PASS C#: "+checks+" actual method checks (native priority, duplicate repair, bindings, offsets, 20 round trips, ordinary station, gate boundaries).");
+ }
+}

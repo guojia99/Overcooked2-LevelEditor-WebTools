@@ -113,7 +113,7 @@ public static class LayoutEditorCustomIngredients
     {
         if (info == null)
             return false;
-        foreach (var r in info.recipes ?? new ScriptableObject[0])
+        foreach (var r in DependencyRecipes(info))
         {
             if (ReferencesCommonW2Deep(r))
                 return true;
@@ -174,7 +174,7 @@ public static class LayoutEditorCustomIngredients
     {
         if (info == null)
             return false;
-        foreach (var r in info.recipes ?? new ScriptableObject[0])
+        foreach (var r in DependencyRecipes(info))
         {
             if (ReferencesCommonW3Deep(r))
                 return true;
@@ -255,7 +255,7 @@ public static class LayoutEditorCustomIngredients
         // OC1/AYCE BGM：LevelInfo.inLevelMusicSO 指向 commonW5 音乐 SO。
         if (info.inLevelMusicSO != null && IsCommonW5Asset(AssetDatabase.GetAssetPath(info.inLevelMusicSO)))
             return true;
-        foreach (var r in info.recipes ?? new ScriptableObject[0])
+        foreach (var r in DependencyRecipes(info))
         {
             if (ReferencesCommonW5Deep(r))
                 return true;
@@ -594,13 +594,8 @@ public static class LayoutEditorCustomIngredients
         EnsureWebDependencies(levelSet, info);
     }
 
-    /// <summary>把关卡引用到的 common03 资产所需 bundle 加入 LevelInfoSO.dependencies：
-    ///  common03 本体（stub 资产所在包）+ 各被引用资产 bundleName 指向的游戏原 bundle
-    ///  （菜谱/食材/道具伪 SO 的真实 prefab 所在）+ 菜谱叶食材的游戏 bundle
-    ///  + 场景 doc 引用收集到的 bundle（EnsureDocCopies）。
-    ///  仅当 bundle 已存在于 StreamingAssets 才写入，缺失跳过（避免宿主
-    ///  PseudoPrefabManager.GetAssetBundle 抛 KeyNotFoundException）——
-    ///  common03 未构建（Tools/Build AssetBundles 未跑）时本体依赖自动缺席。</summary>
+    /// <summary>Collect existing native bundleXX references from recipes and scene data.
+    /// Shared/custom bundle delivery and preview loading use separate paths.</summary>
     public static void EnsureWebDependencies(string levelSet, LevelInfoSO info)
     {
         EnsureWebDependencies(levelSet, info, false);
@@ -612,26 +607,34 @@ public static class LayoutEditorCustomIngredients
     {
         if (info == null)
             return;
+        // Legacy salad consumers read recipes directly, including Campaign scripted orders.
+        // Keep the active native menu intact and never re-enter Store.SyncRecipeData.
+        var projection = UnityEngine.Object.Instantiate(info);
+        try
+        {
+            projection.recipes = LayoutEditorLevelModeStore.CollectAllRecipes(info);
+            EnsureWebDependenciesCore(levelSet, projection, replaceExisting);
+            info.optionalRecipeMatchListItems = projection.optionalRecipeMatchListItems;
+            info.dependencies = projection.dependencies;
+            EditorUtility.SetDirty(info);
+        }
+        finally { UnityEngine.Object.DestroyImmediate(projection); }
+    }
+
+    private static ScriptableObject[] DependencyRecipes(LevelInfoSO info)
+    {
+        return LayoutEditorLevelModeStore.CollectAllRecipes(info);
+    }
+
+    private static void EnsureWebDependenciesCore(string levelSet, LevelInfoSO info, bool replaceExisting)
+    {
+        var recipes = DependencyRecipes(info);
         var deps = replaceExisting
             ? new List<string>()
             : new List<string>(info.dependencies ?? new string[0]);
         if (levelSet != null)
         {
-            var customBundle = levelSet + "/custom_recipes";
-            if (LayoutEditorOptionalBundlePreflight.NeedsDedicatedBundle(levelSet, "custom_recipes")
-                && !deps.Contains(customBundle))
-                deps.Add(customBundle);
-            var customContentBundle = levelSet + "/" + CustomContentDirName;
-            // 自定义内容可能刚创建、bundle 尚未构建：依赖必须先写入，导出时
-            // BuildAssetBundles 会产出该 bundle；否则导出后运行时缺依赖。
-            if (LayoutEditorOptionalBundlePreflight.NeedsDedicatedBundle(levelSet, CustomContentDirName))
-            {
-                if (!deps.Contains(customContentBundle))
-                    deps.Add(customContentBundle);
-                if (!deps.Contains(Common04BundleName))
-                    deps.Add(Common04BundleName);
-            }
-            foreach (var r in info.recipes ?? new ScriptableObject[0])
+            foreach (var r in recipes)
             {
                 var custom = r as CustomRecipeSO;
                 if (custom == null || custom.platingStepSO == null)
@@ -661,9 +664,9 @@ public static class LayoutEditorCustomIngredients
         foreach (var b in _pendingDocBundles)
             AddDependency(deps, b);
 
-        if (info.recipes != null)
+        if (recipes.Length > 0)
         {
-            foreach (var r in info.recipes)
+            foreach (var r in recipes)
             {
                 if (r == null)
                     continue;
@@ -738,7 +741,32 @@ public static class LayoutEditorCustomIngredients
         }
         LayoutEditorSaladSauceFactory.SyncOptionals(info);
         LayoutEditorSaladSauceFactory.AddDependencies(info, deps);
-        info.dependencies = deps.ToArray();
+        {
+            // Nested recipes, steps, plating and active Horde enemies can all
+            // reference wrappers outside common03; register only existing native bundles.
+            var paths = new List<string>();
+            // Do not traverse player-config assets: their inactive mode fields may
+            // still reference old scripted menus or Horde graphs.
+            var roots = new List<UnityEngine.Object>(LayoutEditorLevelModeStore.CollectAllRecipes(info));
+            roots.AddRange(LayoutEditorLevelModeStore.CollectHordeEnemies(info));
+            if (info.allIngredients != null) roots.AddRange(info.allIngredients);
+            if (info.allCookingSteps != null) roots.AddRange(info.allCookingSteps);
+            if (info.includeRecipeMatchLists != null) roots.AddRange(info.includeRecipeMatchLists);
+            if (info.optionalRecipeMatchListItems != null) roots.AddRange(info.optionalRecipeMatchListItems);
+            foreach (var root in roots)
+            {
+                var path = AssetDatabase.GetAssetPath(root);
+                if (!string.IsNullOrEmpty(path)) paths.Add(path);
+            }
+            if (paths.Count > 0)
+                foreach (var path in AssetDatabase.GetDependencies(paths.ToArray(), true))
+                {
+                    var pseudo = AssetDatabase.LoadAssetAtPath<PseudoPrefabSO>(path);
+                    if (pseudo != null) AddDependency(deps, pseudo.bundleName);
+                    AddDependency(deps, AssetDatabase.GetImplicitAssetBundleName(path));
+                }
+        }
+        info.dependencies = LayoutEditorNativeDependencies.Filter(deps);
         EditorUtility.SetDirty(info);
     }
 
@@ -771,7 +799,7 @@ public static class LayoutEditorCustomIngredients
 
     private static void AddDependency(List<string> deps, string bundleName)
     {
-        if (string.IsNullOrEmpty(bundleName))
+        if (!LayoutEditorNativeDependencies.IsNativeBundle(bundleName))
             return;
         if (deps.Contains(bundleName))
             return;

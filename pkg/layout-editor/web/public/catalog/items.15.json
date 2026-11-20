@@ -1,8 +1,50 @@
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "index": 15,
   "itemCount": 200,
   "items": [
+    {
+      "id": "rooftiles_corner_04",
+      "guid": "9ab4f048ae465fa0446672be67dfab93",
+      "assetPath": "Assets/common03/prefabs/art/dlc11_summer/rooftiles_corner_04.prefab",
+      "category": "art",
+      "theme": "dlc11_summer",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 1.1131752729415894
+      },
+      "height": 1.113,
+      "baseY": -0.553,
+      "layoutTier": "decor",
+      "nameZh": "屋顶瓦转角 4",
+      "nameEn": "rooftiles corner 4",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
+    {
+      "id": "rooftiles_straight_01",
+      "guid": "7255be0d6c1056b4587a18606a872cc1",
+      "assetPath": "Assets/common01/prefabs/art/city_sushi/rooftiles_straight_01.prefab",
+      "category": "art",
+      "theme": "city_sushi",
+      "defaultParent": "Art",
+      "footprint": {
+        "cellsX": 1,
+        "cellsZ": 1,
+        "sizeY": 1.117577314376831
+      },
+      "height": 1.118,
+      "baseY": -0.474,
+      "layoutTier": "decor",
+      "nameZh": "直瓦屋顶",
+      "nameEn": "rooftiles straight 1",
+      "typeKind": "ground",
+      "usage": "flooring",
+      "icon": false
+    },
     {
       "id": "rope_01",
       "guid": "e1bf8e87a90133447b6f4117a9922e51",
@@ -4054,47 +4096,6 @@
       "layoutTier": "decor",
       "nameZh": "王座游戏机 1",
       "nameEn": "throne gamesconsole 1",
-      "typeKind": "other",
-      "usage": "landmark",
-      "icon": false
-    },
-    {
-      "id": "throne_kevinschair_01",
-      "guid": "e67f9dae8d04fbf4ca8586b3e1425165",
-      "assetPath": "Assets/common01/prefabs/art/throne/throne_kevinschair_01.prefab",
-      "category": "art",
-      "theme": "throne",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 3,
-        "cellsZ": 3,
-        "sizeY": 3.181330919265747
-      },
-      "height": 3.181,
-      "baseY": 0.022,
-      "layoutTier": "decor",
-      "nameZh": "凯文王座椅",
-      "nameEn": "throne kevinschair 1",
-      "typeKind": "furniture",
-      "usage": "landmark",
-      "icon": false
-    },
-    {
-      "id": "throne_picture_01",
-      "guid": "a06a0f76d55c5f54b9c2f06cdd2eab04",
-      "assetPath": "Assets/common01/prefabs/art/throne/throne_picture_01.prefab",
-      "category": "art",
-      "theme": "throne",
-      "defaultParent": "Art",
-      "footprint": {
-        "cellsX": 2,
-        "cellsZ": 2,
-        "sizeY": 0.1516777127981186
-      },
-      "height": 0.152,
-      "layoutTier": "decor",
-      "nameZh": "王座挂画",
-      "nameEn": "throne picture 1",
       "typeKind": "other",
       "usage": "landmark",
       "icon": false
